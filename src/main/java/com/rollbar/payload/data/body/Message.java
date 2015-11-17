@@ -25,7 +25,7 @@ public class Message extends Extensible implements BodyContents {
     public Message(String body, HashMap<String, Object> members) throws ArgumentNullException {
         super(members);
         Validate.isNotNullOrWhitespace(body, "body");
-        put(BODY_KEY, body);
+        this.members.put(BODY_KEY, body);
     }
 
     public String body() {

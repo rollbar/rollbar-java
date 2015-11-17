@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class Properties {
-    private static String getAssemblyVersion() {
+    public static String getAssemblyVersion() {
         final String file = "assembly.properties";
         try {
             InputStream stream = Properties.class
@@ -25,6 +25,4 @@ public class Properties {
             return null;
         }
     }
-
-    public static final String assemblyVersion = getAssemblyVersion();
 }

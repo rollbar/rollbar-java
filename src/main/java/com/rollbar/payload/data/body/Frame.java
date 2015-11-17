@@ -3,21 +3,24 @@ package com.rollbar.payload.data.body;
 import com.rollbar.payload.utilities.ArgumentNullException;
 import com.rollbar.payload.utilities.Validate;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 
 public class Frame {
     public static Frame[] fromThrowable(Throwable error) throws ArgumentNullException {
         Validate.isNotNull(error, "error");
         StackTraceElement[] elements = error.getStackTrace();
-        Frame[] result = new Frame[elements.length];
-        for(int i = 0; i < elements.length; ++i) {
-            result[i] = fromStackTraceElement(elements[i]);
+        ArrayList<Frame> result = new ArrayList<Frame>();
+        for(StackTraceElement element : elements) {
+            result.add(fromStackTraceElement(element));
         }
-        return result;
+        Collections.reverse(result);
+        return result.toArray(new Frame[result.size()]);
     }
 
     public static Frame fromStackTraceElement(StackTraceElement stackTraceElement) throws ArgumentNullException {
-        String filename = stackTraceElement.getFileName();
+        String filename = stackTraceElement.getClassName() + ".java";
         Integer lineNumber = stackTraceElement.getLineNumber();
         String method = stackTraceElement.getMethodName();
 

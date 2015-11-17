@@ -4,7 +4,7 @@ import com.rollbar.payload.utilities.Properties;
 
 public class Notifier {
     public static final String defaultName = "rollbar";
-    public static final String defaultVersion = Properties.assemblyVersion;
+    public static final String defaultVersion = Properties.getAssemblyVersion();
 
     private final String name;
     private final String version;

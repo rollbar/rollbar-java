@@ -1,4 +1,4 @@
-package com.rollbar.http;
+package com.rollbar.payload.utilities;
 
 import com.rollbar.payload.Payload;
 
