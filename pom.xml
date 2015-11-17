@@ -6,7 +6,7 @@
 
     <groupId>com.rollbar</groupId>
     <artifactId>rollbar</artifactId>
-    <version>0.1</version>
+    <version>0.0.1</version>
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
