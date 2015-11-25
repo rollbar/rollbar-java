@@ -11,6 +11,7 @@ import static org.junit.Assert.*;
 /**
  * Created by chris on 11/20/15.
  */
+@SuppressWarnings("unchecked")
 public class TestThat {
     public static <T, U> void getAndSetWorks(T t, U first, U second, GetAndSet<T, U> getAndSet) {
         assertTrue("first and second must be different for accurate test results", !first.equals(second));
