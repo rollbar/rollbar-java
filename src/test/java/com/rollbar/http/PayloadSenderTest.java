@@ -37,7 +37,7 @@ public class PayloadSenderTest {
     }
 
     @Test
-    public void SendValidPayload() {
+    public void SendValidWorks() {
         try {
             RollbarResponse response = sender.Send("{\n" +
                     "  \"access_token\": \"e3a49f757f86465097c000cb2de9de08\",\n" +

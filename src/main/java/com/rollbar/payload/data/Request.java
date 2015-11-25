@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Request extends Extensible {
+public class Request extends Extensible<Request> {
     public static final String URL_KEY = "url";
     public static final String METHOD_KEY = "method";
     public static final String HEADERS_KEY = "headers";
@@ -40,6 +40,15 @@ public class Request extends Extensible {
         return keys;
     }
 
+    @Override
+    public Request copy() {
+        return new Request(members);
+    }
+
+    private Request(HashMap<String, Object> members) {
+        super(members);
+    }
+
     public Request() {
         this(null, null, null, null, null, null, null, null, null, null);
     }
@@ -54,15 +63,15 @@ public class Request extends Extensible {
                    HashMap<String, String> get, String queryString, HashMap<String, Object> post, String body,
                    InetAddress userIp, HashMap<String, Object> members) {
         super(members);
-        put(URL_KEY, url);
-        put(METHOD_KEY, method);
-        put(HEADERS_KEY, headers);
-        put(PARAMS_KEY, params);
-        put(GET_KEY, get);
-        put(QUERY_STRING_KEY, queryString);
-        put(POST_KEY, post);
-        put(BODY_KEY, body);
-        put(USER_IP_KEY, userIp.getHostAddress());
+        this.members.put(URL_KEY, url);
+        this.members.put(METHOD_KEY, method);
+        this.members.put(HEADERS_KEY, headers == null ? null : new HashMap<String, String>(headers));
+        this.members.put(PARAMS_KEY, params == null ? null : new HashMap<String, String>(params));
+        this.members.put(GET_KEY, get == null ? null : new HashMap<String, String>(get));
+        this.members.put(QUERY_STRING_KEY, queryString);
+        this.members.put(POST_KEY, post == null ? null : new HashMap<String, Object>(post));
+        this.members.put(BODY_KEY, body);
+        this.members.put(USER_IP_KEY, userIp == null ? null : userIp.getHostAddress());
     }
 
     public String url() {
@@ -70,7 +79,7 @@ public class Request extends Extensible {
     }
 
     public Request url(String url) {
-        return new Request(url, method(), headers(), params(), get(), queryString(), post(), body(), userIp(), members);
+        return new Request(url, method(), headers(), params(), getGet(), queryString(), post(), body(), userIp(), members);
     }
 
     public String method() {
@@ -78,7 +87,7 @@ public class Request extends Extensible {
     }
 
     public Request method(String method) {
-        return new Request(url(), method, headers(), params(), get(), queryString(), post(), body(), userIp(), members);
+        return new Request(url(), method, headers(), params(), getGet(), queryString(), post(), body(), userIp(), members);
     }
 
     public HashMap<String, String> headers() {
@@ -88,7 +97,7 @@ public class Request extends Extensible {
     }
 
     public Request headers(HashMap<String, String> headers) {
-        return new Request(url(), method(), headers, params(), get(), queryString(), post(), body(), userIp(), members);
+        return new Request(url(), method(), headers, params(), getGet(), queryString(), post(), body(), userIp(), members);
     }
 
     public HashMap<String, String> params() {
@@ -98,16 +107,16 @@ public class Request extends Extensible {
     }
 
     public Request params(HashMap<String, String> params) {
-        return new Request(url(), method(), headers(), params, get(), queryString(), post(), body(), userIp(), members);
+        return new Request(url(), method(), headers(), params, getGet(), queryString(), post(), body(), userIp(), members);
     }
 
-    public HashMap<String, String> get() {
+    public HashMap<String, String> getGet() {
         @SuppressWarnings("unchecked")
         HashMap<String, String> get = (HashMap<String, String>) get(GET_KEY);
         return get;
     }
 
-    public Request get(HashMap<String, String> get) {
+    public Request setGet(HashMap<String, String> get) {
         return new Request(url(), method(), headers(), params(), get, queryString(), post(), body(), userIp(), members);
     }
 
@@ -116,7 +125,7 @@ public class Request extends Extensible {
     }
 
     public Request queryString(String queryString) {
-        return new Request(url(), method(), headers(), params(), get(), queryString, post(), body(), userIp(), members);
+        return new Request(url(), method(), headers(), params(), getGet(), queryString, post(), body(), userIp(), members);
     }
 
     public HashMap<String, Object> post() {
@@ -126,7 +135,7 @@ public class Request extends Extensible {
     }
 
     public Request post(HashMap<String, Object> post) {
-        return new Request(url(), method(), headers(), params(), get(), queryString(), post, body(), userIp(), members);
+        return new Request(url(), method(), headers(), params(), getGet(), queryString(), post, body(), userIp(), members);
     }
 
     public String body() {
@@ -134,12 +143,13 @@ public class Request extends Extensible {
     }
 
     public Request body(String body) {
-        return new Request(url(), method(), headers(), params(), get(), queryString(), post(), body, userIp(), members);
+        return new Request(url(), method(), headers(), params(), getGet(), queryString(), post(), body, userIp(), members);
     }
 
     public InetAddress userIp() {
+        Object ip = get(USER_IP_KEY);
         try {
-            return InetAddress.getByName((String) get(USER_IP_KEY));
+            return ip == null ? null : InetAddress.getByName((String) get(USER_IP_KEY));
         }
         catch (java.net.UnknownHostException e) {
             return null;
@@ -147,6 +157,6 @@ public class Request extends Extensible {
     }
 
     public Request userIp(InetAddress userIp) {
-        return new Request(url(), method(), headers(), params(), get(), queryString(), post(), body(), userIp, members);
+        return new Request(url(), method(), headers(), params(), getGet(), queryString(), post(), body(), userIp, members);
     }
 }

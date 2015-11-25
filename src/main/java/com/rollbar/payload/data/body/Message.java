@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Message extends Extensible implements BodyContents {
+public class Message extends Extensible<Message> implements BodyContents {
     public static final String BODY_KEY = "body";
 
     @Override
@@ -16,6 +16,15 @@ public class Message extends Extensible implements BodyContents {
         Set<String> result = new HashSet<String>(4);
         result.add(BODY_KEY);
         return result;
+    }
+
+    @Override
+    public Message copy() {
+        return new Message(members);
+    }
+
+    private Message(HashMap<String, Object> members) {
+        super(members);
     }
 
     public Message(String body) throws ArgumentNullException {

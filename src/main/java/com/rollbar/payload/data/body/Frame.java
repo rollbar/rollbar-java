@@ -1,5 +1,6 @@
 package com.rollbar.payload.data.body;
 
+import com.google.gson.annotations.SerializedName;
 import com.rollbar.payload.utilities.ArgumentNullException;
 import com.rollbar.payload.utilities.Validate;
 
@@ -28,28 +29,31 @@ public class Frame {
     }
 
     private final String filename;
-    private final Integer lineno;
-    private final Integer colno;
+    @SerializedName("lineno")
+    private final Integer lineNumber;
+    @SerializedName("colno")
+    private final Integer columnNumber;
     private final String method;
     private final String code;
     private final CodeContext context;
     private final Object[] args;
-    private final HashMap<String, Object> kwargs;
+    @SerializedName("kwargs")
+    private final HashMap<String, Object> keywordArgs;
 
     public Frame(String filename) throws ArgumentNullException {
         this(filename, null, null, null, null, null, null, null);
     }
 
-    public Frame(String filename, Integer lineNumber, Integer columnNumber, String method, String code, CodeContext context, Object[] args, HashMap<String, Object> kwargs) throws ArgumentNullException {
+    public Frame(String filename, Integer lineNumber, Integer columnNumber, String method, String code, CodeContext context, Object[] args, HashMap<String, Object> keywordArgs) throws ArgumentNullException {
         Validate.isNotNullOrWhitespace(filename, "filename");
         this.filename = filename;
-        this.lineno = lineNumber;
-        this.colno = columnNumber;
+        this.lineNumber = lineNumber;
+        this.columnNumber = columnNumber;
         this.method = method;
         this.code = code;
         this.context = context;
         this.args = args == null ? null : args.clone();
-        this.kwargs = kwargs == null ? null : new HashMap<String, Object>(kwargs);
+        this.keywordArgs = keywordArgs == null ? null : new HashMap<String, Object>(keywordArgs);
     }
 
     public String filename() {
@@ -57,28 +61,28 @@ public class Frame {
     }
 
     public Frame filename(String filename) throws ArgumentNullException {
-        return new Frame(filename, lineno, colno, method, code, context, args, kwargs);
+        return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
     }
 
     public Integer lineNumber() {
-        return lineno;
+        return lineNumber;
     }
 
     public Frame lineNumber(Integer lineNumber) {
         try {
-            return new Frame(filename, lineNumber, colno, method, code, context, args, kwargs);
+            return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
         } catch (ArgumentNullException e) {
             throw new IllegalStateException("filename cannot be null");
         }
     }
 
     public Integer columnNumber() {
-        return colno;
+        return columnNumber;
     }
 
     public Frame columnNumber(Integer columnNumber) {
         try {
-            return new Frame(filename, lineno, columnNumber, method, code, context, args, kwargs);
+            return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
         } catch (ArgumentNullException e) {
             throw new IllegalStateException("filename cannot be null");
         }
@@ -90,7 +94,7 @@ public class Frame {
 
     public Frame method(String method) {
         try {
-            return new Frame(filename, lineno, colno, method, code, context, args, kwargs);
+            return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
         } catch (ArgumentNullException e) {
             throw new IllegalStateException("filename cannot be null");
         }
@@ -102,7 +106,7 @@ public class Frame {
 
     public Frame code(String code) {
         try {
-            return new Frame(filename, lineno, colno, method, code, context, args, kwargs);
+            return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
         } catch (ArgumentNullException e) {
             throw new IllegalStateException("filename cannot be null");
         }
@@ -114,7 +118,7 @@ public class Frame {
 
     public Frame context(CodeContext context) {
         try {
-            return new Frame(filename, lineno, colno, method, code, context, args, kwargs);
+            return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
         } catch (ArgumentNullException e) {
             throw new IllegalStateException("filename cannot be null");
         }
@@ -126,19 +130,19 @@ public class Frame {
 
     public Frame args(Object[] args) {
         try {
-            return new Frame(filename, lineno, colno, method, code, context, args, kwargs);
+            return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
         } catch (ArgumentNullException e) {
             throw new IllegalStateException("filename cannot be null");
         }
     }
 
-    public HashMap<String, Object> kwargs() {
-        return kwargs == null ? null : new HashMap<String, Object>(kwargs);
+    public HashMap<String, Object> keywordArgs() {
+        return keywordArgs == null ? null : new HashMap<String, Object>(keywordArgs);
     }
 
-    public Frame kwargs(HashMap<String, Object> kwargs) {
+    public Frame keywordArgs(HashMap<String, Object> keywordArgs) {
         try {
-            return new Frame(filename, lineno, colno, method, code, context, args, kwargs);
+            return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
         } catch (ArgumentNullException e) {
             throw new IllegalStateException("filename cannot be null");
         }

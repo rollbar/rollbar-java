@@ -1,12 +1,11 @@
 package com.rollbar.payload.utilities;
 
 /**
- * Validates Strings
- * Created by chris on 11/10/15.
+ * Validates arguments.
  */
 public class Validate {
     public static void isNotNullOrWhitespace(String x, String name) throws ArgumentNullException {
-        if (x == null || x.isEmpty()) {
+        if (x == null || x.trim().isEmpty()) {
             throw new ArgumentNullException(name);
         }
     }

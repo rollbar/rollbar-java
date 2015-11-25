@@ -33,13 +33,13 @@ public class PayloadSender implements Sender {
             content = GetResponseContent(connection);
 
         } catch (IOException e) {
-            throw new ConnectionFailedException(connection.getURL(), ConnectionFailedException.Reason.ResponseReadingFailed, e);
+            throw new ConnectionFailedException(connection.getURL(), "Reading the Response Failed", e);
         }
-        RollbarResponseCode code = null;
+        RollbarResponseCode code;
         try {
             code = RollbarResponseCode.fromInt(result);
         } catch (InvalidResponseCodeException e) {
-            throw new ConnectionFailedException(connection.getURL(), ConnectionFailedException.Reason.UnknownResponseCode, e);
+            throw new ConnectionFailedException(connection.getURL(), "Unknown Response Code Received", e);
         }
 
         JsonParser parser = new JsonParser();
@@ -62,10 +62,10 @@ public class PayloadSender implements Sender {
         }
         final InputStreamReader reader = new InputStreamReader(inputStream,"utf-8");
         final BufferedReader bis = new BufferedReader(reader);
-        StringBuffer buffer = new StringBuffer();
-        String line = null;
+        StringBuilder buffer = new StringBuilder();
+        String line;
         while ((line = bis.readLine()) != null) {
-            buffer.append(line + "\n");
+            buffer.append(line).append("\n");
         }
         bis.close();
         return buffer.toString();
@@ -83,17 +83,17 @@ public class PayloadSender implements Sender {
         try {
             out = connection.getOutputStream();
         } catch (IOException e) {
-            throw new ConnectionFailedException(url, ConnectionFailedException.Reason.OpeningBodyWriter, e);
+            throw new ConnectionFailedException(url, "OpeningBodyWriter", e);
         }
         try {
             out.write(bytes, 0, bytes.length);
         } catch (IOException e) {
-            throw new ConnectionFailedException(url, ConnectionFailedException.Reason.WritingToBody, e);
+            throw new ConnectionFailedException(url, "WritingToBody", e);
         }
         try {
             out.close();
         } catch (IOException e) {
-            throw new ConnectionFailedException(url, ConnectionFailedException.Reason.ClosingBodyWriter, e);
+            throw new ConnectionFailedException(url, "Closing Body Writer", e);
         }
     }
 
@@ -107,7 +107,7 @@ public class PayloadSender implements Sender {
         try {
             connection.setRequestMethod("POST");
         } catch (ProtocolException e) {
-            throw new ConnectionFailedException(url, ConnectionFailedException.Reason.SettingPOSTFailed, e);
+            throw new ConnectionFailedException(url, "Setting method to POST Failed", e);
         }
         connection.setDoOutput(true);
     }
@@ -117,7 +117,7 @@ public class PayloadSender implements Sender {
         try {
             connection = (HttpURLConnection) url.openConnection();
         } catch (IOException e) {
-            throw new ConnectionFailedException(url, ConnectionFailedException.Reason.Initialization, e);
+            throw new ConnectionFailedException(url, "Initializing URL Connection", e);
         }
         return connection;
     }

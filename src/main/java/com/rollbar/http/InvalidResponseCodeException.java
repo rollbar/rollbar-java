@@ -1,13 +1,14 @@
 package com.rollbar.http;
 
-/**
- * Created by chris on 11/13/15.
- */
 public class InvalidResponseCodeException extends Exception {
-    private int value;
+    private final int value;
 
     public InvalidResponseCodeException(int value) {
-        super(String.format("%d is an unknown response code"));
+        super(String.format("%d is an unknown response code", value));
         this.value = value;
+    }
+
+    public int value() {
+        return this.value;
     }
 }

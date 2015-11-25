@@ -5,7 +5,7 @@ import com.rollbar.payload.utilities.ArgumentNullException;
 import com.rollbar.payload.utilities.InvalidLengthException;
 import com.rollbar.payload.utilities.Validate;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -32,8 +32,8 @@ public class Data {
         this(environment, body, null, (Long) null, null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
-    public Data(String environment, Body body, Level level, Date date, String codeVersion, String platform, String language, String framework, String context, Request request, Person person, Server server, HashMap<String, Object> custom, String fingerprint, String title, UUID uuid, Notifier notifier) throws ArgumentNullException, InvalidLengthException {
-        this(environment, body, level, date == null ? null : (date.getTime() / 1000), codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid == null ? null : uuid.toString(), notifier);
+    public Data(String environment, Body body, Level level, Instant date, String codeVersion, String platform, String language, String framework, String context, Request request, Person person, Server server, HashMap<String, Object> custom, String fingerprint, String title, UUID uuid, Notifier notifier) throws ArgumentNullException, InvalidLengthException {
+        this(environment, body, level, date == null ? null : date.getEpochSecond(), codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid == null ? null : uuid.toString(), notifier);
     }
 
     private Data(String environment, Body body, Level level, Long timestamp, String codeVersion, String platform, String language, String framework, String context, Request request, Person person, Server server, HashMap<String, Object> custom, String fingerprint, String title, String uuid, Notifier notifier) throws ArgumentNullException, InvalidLengthException {
@@ -97,13 +97,13 @@ public class Data {
         }
     }
 
-    public Long timestamp() {
-        return this.timestamp;
+    public Instant timestamp() {
+        return this.timestamp == null ? null : Instant.ofEpochSecond(this.timestamp);
     }
 
-    public Data timestamp(Date date) {
+    public Data timestamp(Instant date) {
         try {
-            return new Data(environment, body, level, date == null ? null : date.getTime() / 1000, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
+            return new Data(environment, body, level, date == null ? null : date.getEpochSecond(), codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
         } catch (ArgumentNullException e) {
             throw new IllegalStateException("environment and body can't null");
         } catch (InvalidLengthException e) {

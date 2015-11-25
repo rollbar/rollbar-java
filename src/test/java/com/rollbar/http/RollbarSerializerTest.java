@@ -1,13 +1,13 @@
 package com.rollbar.http;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.rollbar.payload.Payload;
 import com.rollbar.payload.data.Data;
 import com.rollbar.payload.data.Notifier;
 import com.rollbar.payload.data.body.Body;
+import com.rollbar.payload.data.body.Message;
 import com.rollbar.payload.utilities.ArgumentNullException;
 import com.rollbar.payload.utilities.InvalidLengthException;
 import com.rollbar.payload.utilities.RollbarSerializer;
@@ -28,11 +28,11 @@ public class RollbarSerializerTest {
         try {
             final HashMap<String, Object> members = new HashMap<String, Object>();
             members.put("extra", "has-extra");
-            final Body body = Body.message(testMessage, members);
+            final Body body = Body.fromString(testMessage, members);
             final Data data = new Data(environment, body)
                     .notifier(new Notifier());
 
-            String json = new RollbarSerializer().serialize(new Payload(accessToken, data));
+            String json = new RollbarSerializer(false).serialize(new Payload(accessToken, data));
             assertEquals(basicExpected, json);
         } catch (ArgumentNullException e) {
             fail("Message isn't null");
@@ -73,15 +73,31 @@ public class RollbarSerializerTest {
         try {
             final Body body = Body.fromError(getChainedError());
             final Data data = new Data(environment, body);
-            String json = new RollbarSerializer(true).serialize(new Payload(accessToken, data));
+            String json = new RollbarSerializer().serialize(new Payload(accessToken, data));
             JsonObject parsed = (JsonObject) new JsonParser().parse(json);
             assertEquals(accessToken, parsed.get("access_token").getAsString());
             assertEquals(environment, parsed.getAsJsonObject("data").get("environment").getAsString());
             final JsonObject b = parsed.getAsJsonObject("data").getAsJsonObject("body");
-            final JsonElement e = b.get("trace_chain");
             assertEquals(2, b.getAsJsonArray("trace_chain").size());
         } catch (ArgumentNullException e) {
             fail("getError always returns an error");
+        } catch (InvalidLengthException e) {
+            fail("Doesn't apply here");
+        }
+    }
+
+    @Test
+    public void TestExtensibleSerialize() {
+        try {
+            final Message msg = new Message("Message").put("extra", "value");
+            final Body body = new Body(msg);
+            final Data data = new Data(environment, body);
+            String json = new RollbarSerializer(false).serialize(new Payload(accessToken, data));
+            JsonObject parsed = (JsonObject) new JsonParser().parse(json);
+            final String b = parsed.getAsJsonObject("data").getAsJsonObject("body").getAsJsonObject("message").get("extra").getAsString();
+            assertEquals("value", b);
+        } catch (ArgumentNullException e) {
+            fail("Doesn't apply here");
         } catch (InvalidLengthException e) {
             fail("Doesn't apply here");
         }

@@ -33,8 +33,12 @@ public class Person {
         return this.id;
     }
 
-    public Person id(String id) throws InvalidLengthException, ArgumentNullException {
-        return new Person(id, username, email);
+    public Person id(String id) throws ArgumentNullException {
+        try {
+            return new Person(id, username, email);
+        } catch (InvalidLengthException e) {
+            throw new IllegalStateException("username isn't changing, so this error shouldn't occur");
+        }
     }
 
     public String username() {
@@ -53,11 +57,13 @@ public class Person {
         return this.email;
     }
 
-    public Person email(String email) throws InvalidLengthException {
+    public Person email(String email) {
         try {
             return new Person(id, username, email);
         } catch (ArgumentNullException e) {
             throw new IllegalStateException("id can't be null");
+        } catch (InvalidLengthException e) {
+            throw new IllegalStateException("username can't be the wrong length");
         }
     }
 }

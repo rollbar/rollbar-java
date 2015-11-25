@@ -28,7 +28,7 @@ public class Notifier {
     }
 
     public String version() {
-        return this.name;
+        return this.version;
     }
 
     public Notifier version(String version) {

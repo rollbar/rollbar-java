@@ -1,8 +1,5 @@
 package com.rollbar.payload.data.body;
 
-/**
- * Created by chris on 11/13/15.
- */
 public class CodeContext {
     private final String[] pre;
     private final String[] post;

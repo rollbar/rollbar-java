@@ -12,7 +12,7 @@ public enum RollbarResponseCode {
 
     private final int value;
 
-    private RollbarResponseCode(int value) {
+    RollbarResponseCode(int value) {
         this.value = value;
     }
 
