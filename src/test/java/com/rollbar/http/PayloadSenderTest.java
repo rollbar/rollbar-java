@@ -13,7 +13,7 @@ public class PayloadSenderTest {
 
     public PayloadSenderTest() throws MalformedURLException, ArgumentNullException {
         try {
-            sender = new PayloadSender("https://api.rollbar.com/api/1/item/");
+            sender = new PayloadSender();
         } catch (ArgumentNullException e) {
             fail("This shouldn't happen since I didn't pass null to PayloadSender");
             throw e;

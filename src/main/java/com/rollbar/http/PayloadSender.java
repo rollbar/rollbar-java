@@ -9,14 +9,43 @@ import com.rollbar.payload.utilities.Validate;
 import java.io.*;
 import java.net.*;
 
+/**
+ * Sends payloads (synchronously) to Rollbar. This serves both as a reference implementation for {@link Sender}
+ * and the default implementation.
+ */
 public class PayloadSender implements Sender {
+    public static final String DEFAULT_API_ENDPOINT = "https://api.rollbar.com/api/1/item/";
+
     private final URL url;
 
+    /**
+     * Default constructor, sends to the public api endpoint.
+     * @throws ArgumentNullException if url is null
+     * @throws MalformedURLException if url is not a valid URL
+     */
+    public PayloadSender() throws MalformedURLException, ArgumentNullException {
+        this(DEFAULT_API_ENDPOINT);
+    }
+
+    /**
+     * Constructor
+     * @param url The Rollbar endpoint to POST items to.
+     * @throws ArgumentNullException if url is null
+     * @throws MalformedURLException if url is not a valid URL
+     */
     public PayloadSender(String url) throws ArgumentNullException, MalformedURLException {
         Validate.isNotNull(url, "url");
         this.url = new URL(url);
     }
 
+    /**
+     * Sends the json (rollbar payload) to the endpoint configured in the constructor.
+     * Returns the (parsed) response from Rollbar.
+     * @param json the serialized JSON payload
+     * @return the response from Rollbar {@link RollbarResponse}
+     * @throws ConnectionFailedException if the connection fails at any point along the way {@link ConnectionFailedException}
+     * @throws UnsupportedEncodingException if json.getBytes("UTF-8") fails
+     */
     public RollbarResponse Send(String json) throws ConnectionFailedException, UnsupportedEncodingException {
         HttpURLConnection connection = getConnection();
 
