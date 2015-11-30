@@ -3,7 +3,14 @@ package com.rollbar.payload.utilities;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * A class that gets properties from the properties file.
+ */
 public class Properties {
+    /**
+     * Get the assembly verison in the assembly.properties file. Should update automatically with each Maven release.
+     * @return the version
+     */
     public static String getAssemblyVersion() {
         final String file = "assembly.properties";
         try {
