@@ -1,8 +1,5 @@
 package com.rollbar.payload.utilities;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonSerializationContext;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -90,7 +87,11 @@ public abstract class Extensible<T extends Extensible<T>> {
         return keys;
     }
 
-    JsonElement asJsonElement(JsonSerializationContext jsonSerializationContext) {
-        return jsonSerializationContext.serialize(members);
+    /**
+     * Get a copy of the members.
+     * @return a copy of the members in this Extensible.
+     */
+    public HashMap<String, Object> getMembers() {
+        return new HashMap<String, Object>(members);
     }
 }
