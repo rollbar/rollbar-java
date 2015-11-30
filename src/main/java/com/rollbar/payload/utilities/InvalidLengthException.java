@@ -1,6 +1,6 @@
 package com.rollbar.payload.utilities;
 
-public class InvalidLengthException extends Exception {
+public class InvalidLengthException extends IllegalArgumentException {
     public static InvalidLengthException TooLong(String parameter, int len) {
         final String msgFmt = "%s too long (over %d)";
         return new InvalidLengthException(String.format(msgFmt, parameter, len));
