@@ -28,7 +28,6 @@ public final class Payload {
     }
 
     /**
-     * Get the access token
      * @return the access token
      */
     public String accessToken() {
@@ -36,7 +35,6 @@ public final class Payload {
     }
 
     /**
-     * Get the Data
      * @return the data
      */
     public Data data() {
@@ -44,8 +42,8 @@ public final class Payload {
     }
 
     /**
-     * Set the access token on a clone of this object
-     * @param token the token to override this one with
+     * Set the access token
+     * @param token the new access token
      * @return a copy of this Payload with the token overridden
      * @throws ArgumentNullException if {@code token} is null
      */
@@ -54,9 +52,9 @@ public final class Payload {
     }
 
     /**
-     * Set the data on a clone of this object
-     * @param data the data to override this one with
-     * @return a copy of this Payload with the token overriden
+     * Set the data
+     * @param data the new data
+     * @return a copy of this Payload with the data overridden
      * @throws ArgumentNullException if {@code data} is null
      */
     public Payload data(Data data) throws ArgumentNullException {
