@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Represents the server object sent to Rollbar
+ */
 public class Server extends Extensible<Server> {
     public static final String HOST_KEY = "host";
     public static final String ROOT_KEY = "root";
@@ -29,14 +32,32 @@ public class Server extends Extensible<Server> {
         super(members);
     }
 
+    /**
+     * Constructor for an empty server
+     */
     public Server() {
         this(null, null, null, null, null);
     }
 
+    /**
+     * Constructor
+     * @param host the host
+     * @param root the file system root
+     * @param branch the current source control branch
+     * @param codeVersion the current source control version (SHA, or name)
+     */
     public Server(String host, String root, String branch, String codeVersion) {
         this(host, root, branch, codeVersion, new HashMap<String, Object>());
     }
 
+    /**
+     * Constructor
+     * @param host the host
+     * @param root the file system root
+     * @param branch the current source control branch
+     * @param codeVersion the current source control version (SHA, or name)
+     * @param members the extensible members
+     */
     public Server(String host, String root, String branch, String codeVersion, HashMap<String, Object> members) {
         super(members);
         this.members.put(HOST_KEY, host);
@@ -45,34 +66,67 @@ public class Server extends Extensible<Server> {
         this.members.put(CODE_VERSION_KEY, codeVersion);
     }
 
+    /**
+     * The host the code is running on
+     * @return
+     */
     public String host() {
         return (String) get(HOST_KEY);
     }
 
+    /**
+     * Set the host the code is running on.
+     * @param host the new host
+     * @return the server with host overridden
+     */
     public Server host(String host) {
         return new Server(host, root(), branch(), codeVersion(), members);
     }
 
+    /**
+     * @return the root
+     */
     public String root() {
         return (String) get(ROOT_KEY);
     }
 
+    /**
+     * Set the root
+     * @param root the new host
+     * @return the server with root overridden
+     */
     public Server root(String root) {
         return new Server(host(), root, branch(), codeVersion(), members);
     }
 
+    /**
+     * @return the branch
+     */
     public String branch() {
         return (String) get(BRANCH_KEY);
     }
 
+    /**
+     * Set the branch
+     * @param branch the new host
+     * @return the server with branch overridden
+     */
     public Server branch(String branch) {
         return new Server(host(), root(), branch, codeVersion(), members);
     }
 
+    /**
+     * @return the code version
+     */
     public String codeVersion() {
         return (String) get(CODE_VERSION_KEY);
     }
 
+    /**
+     * Set the code version
+     * @param codeVersion the new code version
+     * @return the server with code version overridden
+     */
     public Server codeVersion(String codeVersion) {
         return new Server(host(), root(), branch(), codeVersion, members);
     }
