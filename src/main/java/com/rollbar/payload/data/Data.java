@@ -59,7 +59,7 @@ public class Data {
      * @param custom custom data that will aid in debugging the error
      * @param fingerprint override the default and custom grouping with a string, if over 255 characters will be hashed
      * @param title the title, max length 255 characters, overrides the default and custom ones set by rollbar
-     * @param uuid override the error UUID, unqiue to each project, used to deduplicate occurrences
+     * @param uuid override the error UUID, unique to each project, used to deduplicate occurrences
      * @param notifier information about this notifier, esp. if creating a framework specific notifier
      * @throws ArgumentNullException if environment or body is null
      * @throws InvalidLengthException if environment or title is over 255 characters, or uuid is over 32 characters
@@ -116,11 +116,7 @@ public class Data {
     }
 
     public Data body(Body body) throws ArgumentNullException {
-        try {
-            return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
-        } catch (InvalidLengthException e) {
-            throw new IllegalStateException("body can't be null");
-        }
+        return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
     }
 
     /**
@@ -131,13 +127,7 @@ public class Data {
     }
 
     public Data level(Level level) {
-        try {
-            return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
-        } catch (ArgumentNullException e) {
-            throw new IllegalStateException("environment and body can't null");
-        } catch (InvalidLengthException e) {
-            throw new IllegalStateException("title and environment can't exceed 255 characters");
-        }
+        return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
     }
 
     /**
@@ -148,13 +138,7 @@ public class Data {
     }
 
     public Data timestamp(Instant date) {
-        try {
-            return new Data(environment, body, level, date == null ? null : date.getEpochSecond(), codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
-        } catch (ArgumentNullException e) {
-            throw new IllegalStateException("environment and body can't null");
-        } catch (InvalidLengthException e) {
-            throw new IllegalStateException("title and environment can't exceed 255 characters");
-        }
+        return new Data(environment, body, level, date == null ? null : date.getEpochSecond(), codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
     }
 
     /**
@@ -165,13 +149,7 @@ public class Data {
     }
 
     public Data codeVersion(String codeVersion) {
-        try {
-            return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
-        } catch (ArgumentNullException e) {
-            throw new IllegalStateException("environment and body can't null");
-        } catch (InvalidLengthException e) {
-            throw new IllegalStateException("title and environment can't exceed 255 characters");
-        }
+        return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
     }
 
     /**
@@ -182,13 +160,7 @@ public class Data {
     }
 
     public Data platform(String platform) {
-        try {
-            return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
-        } catch (ArgumentNullException e) {
-            throw new IllegalStateException("environment and body can't null");
-        } catch (InvalidLengthException e) {
-            throw new IllegalStateException("title and environment can't exceed 255 characters");
-        }
+        return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
     }
 
     /**
@@ -199,13 +171,7 @@ public class Data {
     }
 
     public Data language(String language) {
-        try {
-            return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
-        } catch (ArgumentNullException e) {
-            throw new IllegalStateException("environment and body can't null");
-        } catch (InvalidLengthException e) {
-            throw new IllegalStateException("title and environment can't exceed 255 characters");
-        }
+        return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
     }
 
     /**
@@ -216,13 +182,7 @@ public class Data {
     }
 
     public Data framework(String framework) {
-        try {
-            return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
-        } catch (ArgumentNullException e) {
-            throw new IllegalStateException("environment and body can't null");
-        } catch (InvalidLengthException e) {
-            throw new IllegalStateException("title and environment can't exceed 255 characters");
-        }
+        return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
     }
 
     /**
@@ -233,13 +193,7 @@ public class Data {
     }
 
     public Data context(String context) {
-        try {
-            return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
-        } catch (ArgumentNullException e) {
-            throw new IllegalStateException("environment and body can't null");
-        } catch (InvalidLengthException e) {
-            throw new IllegalStateException("title and environment can't exceed 255 characters");
-        }
+        return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
     }
 
     /**
@@ -250,13 +204,7 @@ public class Data {
     }
 
     public Data request(Request request) {
-        try {
-            return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
-        } catch (ArgumentNullException e) {
-            throw new IllegalStateException("environment and body can't null");
-        } catch (InvalidLengthException e) {
-            throw new IllegalStateException("title and environment can't exceed 255 characters");
-        }
+        return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
     }
 
     /**
@@ -267,13 +215,7 @@ public class Data {
     }
 
     public Data person(Person person) {
-        try {
-            return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
-        } catch (ArgumentNullException e) {
-            throw new IllegalStateException("environment and body can't null");
-        } catch (InvalidLengthException e) {
-            throw new IllegalStateException("title and environment can't exceed 255 characters");
-        }
+        return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
     }
 
     /**
@@ -284,13 +226,7 @@ public class Data {
     }
 
     public Data server(Server server) {
-        try {
-            return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
-        } catch (ArgumentNullException e) {
-            throw new IllegalStateException("environment and body can't null");
-        } catch (InvalidLengthException e) {
-            throw new IllegalStateException("title and environment can't exceed 255 characters");
-        }
+        return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
     }
 
     /**
@@ -301,13 +237,7 @@ public class Data {
     }
 
     public Data custom(HashMap<String, Object> custom) {
-        try {
-            return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
-        } catch (ArgumentNullException e) {
-            throw new IllegalStateException("environment and body can't null");
-        } catch (InvalidLengthException e) {
-            throw new IllegalStateException("title and environment can't exceed 255 characters");
-        }
+        return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
     }
 
     /**
@@ -318,13 +248,7 @@ public class Data {
     }
 
     public Data fingerprint(String fingerprint) {
-        try {
-            return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
-        } catch (ArgumentNullException e) {
-            throw new IllegalStateException("environment and body can't null");
-        } catch (InvalidLengthException e) {
-            throw new IllegalStateException("title and environment can't exceed 255 characters");
-        }
+        return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
     }
 
     /**
@@ -335,28 +259,18 @@ public class Data {
     }
 
     public Data title(String title) throws InvalidLengthException {
-        try {
-            return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
-        } catch (ArgumentNullException e) {
-            throw new IllegalStateException("body and environment can't be null!");
-        }
+        return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
     }
 
     /**
-     * @return override the error UUID, unqiue to each project, used to deduplicate occurrences
+     * @return override the error UUID, unique to each project, used to deduplicate occurrences
      */
-    public UUID uuid() {
+    public UUID uuid() throws InvalidLengthException {
         return UUID.fromString(this.uuid);
     }
 
     public Data uuid(UUID uuid) {
-        try {
-            return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid == null ? null : uuid.toString(), notifier);
-        } catch (ArgumentNullException e) {
-            throw new IllegalStateException("environment and body can't null");
-        } catch (InvalidLengthException e) {
-            throw new IllegalStateException("title and environment can't exceed 255 characters");
-        }
+        return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid == null ? null : uuid.toString(), notifier);
     }
 
     /**
@@ -367,12 +281,6 @@ public class Data {
     }
 
     public Data notifier(Notifier notifier) {
-        try {
-            return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
-        } catch (ArgumentNullException e) {
-            throw new IllegalStateException("environment and body can't null");
-        } catch (InvalidLengthException e) {
-            throw new IllegalStateException("title and environment can't exceed 255 characters");
-        }
+        return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
     }
 }
