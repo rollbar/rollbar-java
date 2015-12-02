@@ -9,6 +9,9 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.UUID;
 
+/**
+ * Represents the actual data being posted to Rollbar
+ */
 public class Data {
     private final String environment;
     private final Body body;
@@ -28,12 +31,41 @@ public class Data {
     private final String uuid;
     private final Notifier notifier;
 
+    /**
+     * Constructor
+     * @param environment not nullable, string representing the current environment (e.g.: production, debug, test)
+     * @param body not nullable, the actual data being sent to rollbar (not metadata, about the request, server, etc.)
+     * @throws ArgumentNullException if neither body or environment is null, or if environment is empty or whitespace
+     * @throws InvalidLengthException if the environment is longer than 255 characters
+     */
     public Data(String environment, Body body) throws ArgumentNullException, InvalidLengthException {
         this(environment, body, null, (Long) null, null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
-    public Data(String environment, Body body, Level level, Instant date, String codeVersion, String platform, String language, String framework, String context, Request request, Person person, Server server, HashMap<String, Object> custom, String fingerprint, String title, UUID uuid, Notifier notifier) throws ArgumentNullException, InvalidLengthException {
-        this(environment, body, level, date == null ? null : date.getEpochSecond(), codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid == null ? null : uuid.toString(), notifier);
+    /**
+     * Constructor
+     * @param environment not nullable, string representing the current environment (e.g.: production, debug, test)
+     * @param body not nullable, the actual data being sent to rollbar (not metadata, about the request, server, etc.)
+     * @param level the rollbar error level
+     * @param timestamp the moment the bug happened, visible in ui as client_timestamp
+     * @param codeVersion the currently running version of the code
+     * @param platform the platform running (most likely JVM and a version)
+     * @param language the language running (most likely java, but any JVM language might be here)
+     * @param framework the framework being run (e.g. Play, Spring, etc)
+     * @param context custom identifier to help find where the error came from, Controller class name, for instance.
+     * @param request data about the Http Request that caused this, if applicable
+     * @param person data about the user that experienced the error, if possible
+     * @param server data about the machine on which the error occurred
+     * @param custom custom data that will aid in debugging the error
+     * @param fingerprint override the default and custom grouping with a string, if over 255 characters will be hashed
+     * @param title the title, max length 255 characters, overrides the default and custom ones set by rollbar
+     * @param uuid override the error UUID, unqiue to each project, used to deduplicate occurrences
+     * @param notifier information about this notifier, esp. if creating a framework specific notifier
+     * @throws ArgumentNullException if environment or body is null
+     * @throws InvalidLengthException if environment or title is over 255 characters, or uuid is over 32 characters
+     */
+    public Data(String environment, Body body, Level level, Instant timestamp, String codeVersion, String platform, String language, String framework, String context, Request request, Person person, Server server, HashMap<String, Object> custom, String fingerprint, String title, UUID uuid, Notifier notifier) throws ArgumentNullException, InvalidLengthException {
+        this(environment, body, level, timestamp == null ? null : timestamp.getEpochSecond(), codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid == null ? null : uuid.toString(), notifier);
     }
 
     private Data(String environment, Body body, Level level, Long timestamp, String codeVersion, String platform, String language, String framework, String context, Request request, Person person, Server server, HashMap<String, Object> custom, String fingerprint, String title, String uuid, Notifier notifier) throws ArgumentNullException, InvalidLengthException {
@@ -43,7 +75,9 @@ public class Data {
         if (title != null) {
             Validate.maxLength(title, 255, "title");
         }
-
+        if (uuid != null) {
+            Validate.maxLength(uuid, 32, "uuid");
+        }
         this.environment = environment;
         this.body = body;
         this.level = level;
@@ -63,6 +97,9 @@ public class Data {
         this.notifier = notifier;
     }
 
+    /**
+     * @return string representing the current environment (e.g.: production, debug, test)
+     */
     public String environment() {
         return this.environment;
     }
@@ -71,6 +108,9 @@ public class Data {
         return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
     }
 
+    /**
+     * @return not nullable, the actual data being sent to rollbar (not metadata, about the request, server, etc.)
+     */
     public Body body() {
         return this.body;
     }
@@ -83,6 +123,9 @@ public class Data {
         }
     }
 
+    /**
+     * @return the rollbar error level
+     */
     public Level level() {
         return this.level;
     }
@@ -97,6 +140,9 @@ public class Data {
         }
     }
 
+    /**
+     * @return the moment the bug happened, visible in ui as client_timestamp
+     */
     public Instant timestamp() {
         return this.timestamp == null ? null : Instant.ofEpochSecond(this.timestamp);
     }
@@ -111,6 +157,9 @@ public class Data {
         }
     }
 
+    /**
+     * @return the currently running version of the code
+     */
     public String codeVersion() {
         return this.codeVersion;
     }
@@ -125,6 +174,9 @@ public class Data {
         }
     }
 
+    /**
+     * @return the platform running (most likely JVM and a version)
+     */
     public String platform() {
         return this.platform;
     }
@@ -139,6 +191,9 @@ public class Data {
         }
     }
 
+    /**
+     * @return the language running (most likely java, but any JVM language might be here)
+     */
     public String language() {
         return this.language;
     }
@@ -153,6 +208,9 @@ public class Data {
         }
     }
 
+    /**
+     * @return the framework being run (e.g. Play, Spring, etc)
+     */
     public String framework() {
         return this.framework;
     }
@@ -167,6 +225,9 @@ public class Data {
         }
     }
 
+    /**
+     * @return custom identifier to help find where the error came from, Controller class name, for instance.
+     */
     public String context() {
         return this.context;
     }
@@ -181,6 +242,9 @@ public class Data {
         }
     }
 
+    /**
+     * @return data about the Http Request that caused this, if applicable
+     */
     public Request request() {
         return this.request;
     }
@@ -195,6 +259,9 @@ public class Data {
         }
     }
 
+    /**
+     * @return data about the user that experienced the error, if possible
+     */
     public Person person() {
         return this.person;
     }
@@ -209,6 +276,9 @@ public class Data {
         }
     }
 
+    /**
+     * @return data about the machine on which the error occurred
+     */
     public Server server() {
         return this.server;
     }
@@ -223,6 +293,9 @@ public class Data {
         }
     }
 
+    /**
+     * @return custom data that will aid in debugging the error
+     */
     public HashMap<String, Object> custom() {
         return custom == null ? null : new HashMap<String, Object>(this.custom);
     }
@@ -237,6 +310,9 @@ public class Data {
         }
     }
 
+    /**
+     * @return override the default and custom grouping with a string, if over 255 characters will be hashed
+     */
     public String fingerprint() {
         return this.fingerprint;
     }
@@ -251,6 +327,9 @@ public class Data {
         }
     }
 
+    /**
+     * @return the title, max length 255 characters, overrides the default and custom ones set by rollbar
+     */
     public String title() {
         return this.title;
     }
@@ -263,6 +342,9 @@ public class Data {
         }
     }
 
+    /**
+     * @return override the error UUID, unqiue to each project, used to deduplicate occurrences
+     */
     public UUID uuid() {
         return UUID.fromString(this.uuid);
     }
@@ -277,6 +359,9 @@ public class Data {
         }
     }
 
+    /**
+     * @return information about this notifier, esp. if creating a framework specific notifier
+     */
     public Notifier notifier() {
         return this.notifier;
     }
