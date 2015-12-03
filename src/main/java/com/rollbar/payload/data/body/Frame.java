@@ -118,11 +118,7 @@ public class Frame {
     * @return a copy of this Frame with the lineNumber overridden
     */
     public Frame lineNumber(Integer lineNumber) {
-        try {
-            return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
-        } catch (ArgumentNullException e) {
-            throw new IllegalStateException("filename cannot be null");
-        }
+        return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
     }
 
     /**
@@ -138,11 +134,7 @@ public class Frame {
     * @return a copy of this Frame with the columnNumber overridden
     */
     public Frame columnNumber(Integer columnNumber) {
-        try {
-            return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
-        } catch (ArgumentNullException e) {
-            throw new IllegalStateException("filename cannot be null");
-        }
+        return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
     }
 
     /**
@@ -158,11 +150,7 @@ public class Frame {
     * @return a copy of this Frame with the method overridden
     */
     public Frame method(String method) {
-        try {
-            return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
-        } catch (ArgumentNullException e) {
-            throw new IllegalStateException("filename cannot be null");
-        }
+        return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
     }
 
     /**
@@ -178,11 +166,7 @@ public class Frame {
     * @return a copy of this Frame with the code overridden
     */
     public Frame code(String code) {
-        try {
-            return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
-        } catch (ArgumentNullException e) {
-            throw new IllegalStateException("filename cannot be null");
-        }
+        return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
     }
 
     /**
@@ -198,11 +182,7 @@ public class Frame {
     * @return a copy of this Frame with the context overridden
     */
     public Frame context(CodeContext context) {
-        try {
-            return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
-        } catch (ArgumentNullException e) {
-            throw new IllegalStateException("filename cannot be null");
-        }
+        return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
     }
 
     /**
@@ -218,11 +198,7 @@ public class Frame {
     * @return a copy of this Frame with the args overridden
     */
     public Frame args(Object[] args) {
-        try {
-            return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
-        } catch (ArgumentNullException e) {
-            throw new IllegalStateException("filename cannot be null");
-        }
+        return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
     }
 
     /**
@@ -238,10 +214,6 @@ public class Frame {
     * @return a copy of this Frame with the keywordArgs overridden
     */
     public Frame keywordArgs(HashMap<String, Object> keywordArgs) {
-        try {
-            return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
-        } catch (ArgumentNullException e) {
-            throw new IllegalStateException("filename cannot be null");
-        }
+        return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
     }
 }
