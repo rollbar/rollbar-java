@@ -5,7 +5,17 @@ import com.rollbar.payload.utilities.Validate;
 
 import java.util.HashMap;
 
+/**
+ * A container for the actual error(s), message, or crash report that caused this error.
+ */
 public class Body {
+    /**
+     * Create a Body from an error. If {@link Throwable#getCause()} isn't null will return a Trace Chain,
+     * otherwise returns a Trace
+     * @param error the error to turn into a `Body`
+     * @return the Rollbar Body constructed from the error
+     * @throws ArgumentNullException if error is null
+     */
     public static Body fromError(Throwable error) throws ArgumentNullException {
         Validate.isNotNull(error, "error");
         if (error.getCause() == null) {
@@ -25,15 +35,34 @@ public class Body {
         return new Body(trace);
     }
 
+    /**
+     * Create a Body from a string message.
+     * @param message the message to convert into a Rollbar Message
+     * @return a body containing a message containing this message body
+     * @throws ArgumentNullException if message is null or whitespace
+     */
     public static Body fromString(String message) throws ArgumentNullException {
         return Body.fromString(message, null);
     }
 
+    /**
+     * Create a Body from a string message and additional arguments
+     * @param message the message to convert into a Rollbar Message
+     * @param extra the extra data to send to Rollbar
+     * @return a body containing a message containing this message body and extra arguments
+     * @throws ArgumentNullException if message is null or whitespace
+     */
     public static Body fromString(String message, HashMap<String, Object> extra) throws ArgumentNullException {
         final BodyContents contents = new Message(message, extra);
         return new Body(contents);
     }
 
+    /**
+     * Create a crash report body from a string
+     * @param raw the crash report content
+     * @return a body made from the crash report
+     * @throws ArgumentNullException if raw is null
+     */
     public static Body fromCrashReportString(String raw) throws ArgumentNullException {
         final CrashReport contents = new CrashReport(raw);
         return new Body(contents);
@@ -41,19 +70,37 @@ public class Body {
 
     private final BodyContents contents;
 
+    /**
+     * Constructor
+     * @param contents the contents of this body (either Trace, TraceChain, Message, or CrashReport)
+     * @throws ArgumentNullException if contents is nul
+     */
     public Body(BodyContents contents) throws ArgumentNullException {
         Validate.isNotNull(contents, "contents");
         this.contents = contents;
     }
 
+    /**
+     * @return the contents
+     */
     public BodyContents contents() {
         return contents;
     }
 
+    /**
+     * Set the contents in a copy of this Body
+     * @param contents the contents
+     * @return a copy of this Body with the new contents
+     * @throws ArgumentNullException if contents is null
+     */
     public Body contents(BodyContents contents) throws ArgumentNullException {
         return new Body(contents);
     }
 
+    /**
+     * Get the contents as a Trace, returns null if the contents is *not* a Trace
+     * @return the contents as a Trace
+     */
     public Trace trace() {
         if (contents instanceof Trace) {
             return (Trace) contents;
@@ -61,6 +108,10 @@ public class Body {
         return null;
     }
 
+    /**
+     * Get the contents as a TraceChain, returns null if the contents is *not* a TraceChain
+     * @return the contents as a TraceChain
+     */
     public TraceChain traceChain() {
         if (contents instanceof TraceChain) {
             return (TraceChain) contents;
@@ -68,6 +119,10 @@ public class Body {
         return null;
     }
 
+    /**
+     * Get the contents as a Message, returns null if the contents is *not* a Message
+     * @return the contents as a Message
+     */
     public Message message() {
         if (contents instanceof Message) {
             return (Message) contents;
@@ -75,6 +130,10 @@ public class Body {
         return null;
     }
 
+    /**
+     * Get the contents as a CrashReport, returns null if the contents is *not* a CrashReport
+     * @return the contents as a CrashReport
+     */
     public CrashReport crashReport() {
         if (contents instanceof CrashReport) {
             return (CrashReport) contents;
