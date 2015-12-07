@@ -26,6 +26,14 @@ public class RollbarResponse {
         return new RollbarResponse(code, reason);
     }
 
+    /**
+     * The static factory method for a payload that wasn't sent because it was filtered.
+     * @return a RollbarResponse indicating the payload wasn't sent
+     */
+    public static RollbarResponse notSent() {
+        return new RollbarResponse(RollbarResponseCode.Filtered, "Payload not sent, because it was filtered.");
+    }
+
     private RollbarResponse(RollbarResponseCode statusCode, String result) {
         this.statusCode = statusCode;
         this.result = result;

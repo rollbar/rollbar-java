@@ -38,7 +38,12 @@ public enum RollbarResponseCode {
     /**
      * An error occurred on Rollbar's end.
      */
-    InternalServerError(500);
+    InternalServerError(500),
+
+    /**
+     * Indicates that the Payload was not sent to Rollbar
+     */
+    Filtered(-1);
 
     private final int value;
 
