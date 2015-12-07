@@ -65,7 +65,7 @@ public class Data {
      * @throws InvalidLengthException if environment or title is over 255 characters, or uuid is over 32 characters
      */
     public Data(String environment, Body body, Level level, Instant timestamp, String codeVersion, String platform, String language, String framework, String context, Request request, Person person, Server server, HashMap<String, Object> custom, String fingerprint, String title, UUID uuid, Notifier notifier) throws ArgumentNullException, InvalidLengthException {
-        this(environment, body, level, timestamp == null ? null : timestamp.getEpochSecond(), codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid == null ? null : uuid.toString(), notifier);
+        this(environment, body, level, timestamp == null ? null : timestamp.getEpochSecond(), codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid == null ? null : uuid.toString().replace("-", ""), notifier);
     }
 
     private Data(String environment, Body body, Level level, Long timestamp, String codeVersion, String platform, String language, String framework, String context, Request request, Person person, Server server, HashMap<String, Object> custom, String fingerprint, String title, String uuid, Notifier notifier) throws ArgumentNullException, InvalidLengthException {
@@ -345,7 +345,11 @@ public class Data {
      * @return override the error UUID, unique to each project, used to deduplicate occurrences
      */
     public UUID uuid() {
-        return UUID.fromString(this.uuid);
+        if (this.uuid == null) return null;
+        // Thanks to http://stackoverflow.com/a/18987428/456188
+        return UUID.fromString(this.uuid.replaceAll(
+                "(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})",
+                "$1-$2-$3-$4-$5"));
     }
 
     /**
@@ -355,7 +359,7 @@ public class Data {
     * @throws InvalidLengthException if uuid is over 32 characters
     */
     public Data uuid(UUID uuid) throws InvalidLengthException {
-        return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid == null ? null : uuid.toString(), notifier);
+        return new Data(environment, body, level, timestamp(), codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
     }
 
     /**
