@@ -11,21 +11,18 @@ import static org.junit.Assert.*;
 public class PayloadSenderTest {
     private final PayloadSender sender;
 
-    public PayloadSenderTest() throws MalformedURLException, ArgumentNullException {
+    public PayloadSenderTest() throws ArgumentNullException {
         try {
             sender = new PayloadSender();
         } catch (ArgumentNullException e) {
             fail("This shouldn't happen since I didn't pass null to PayloadSender");
-            throw e;
-        } catch (MalformedURLException e) {
-            fail("This shouldn't happen since I passed a valid URL to PayloadSender");
             throw e;
         }
     }
     @Test
     public void SendInvalidWorks() {
         try {
-            RollbarResponse response = sender.Send("{}");
+            RollbarResponse response = sender.send("{}");
             assertEquals(RollbarResponseCode.BadRequest, response.statusCode());
             assertNotNull(response.errorMessage());
             assertNull(response.uuid());
@@ -39,7 +36,7 @@ public class PayloadSenderTest {
     @Test
     public void SendValidWorks() {
         try {
-            RollbarResponse response = sender.Send("{\n" +
+            RollbarResponse response = sender.send("{\n" +
                     "  \"access_token\": \"e3a49f757f86465097c000cb2de9de08\",\n" +
                     "  \"data\": {\n" +
                     "    \"environment\": \"production\",\n" +

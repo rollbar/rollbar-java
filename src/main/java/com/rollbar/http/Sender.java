@@ -13,5 +13,5 @@ public interface Sender {
      * @throws ConnectionFailedException if the connection failed before receiving a response from Rollbar.
      * @throws UnsupportedEncodingException if the json couldn't be encoded as UTF8.
      */
-    RollbarResponse Send(String jsonPayload) throws ConnectionFailedException, UnsupportedEncodingException;
+    RollbarResponse send(String jsonPayload) throws ConnectionFailedException, UnsupportedEncodingException;
 }
