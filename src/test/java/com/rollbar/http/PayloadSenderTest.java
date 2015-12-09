@@ -3,9 +3,6 @@ package com.rollbar.http;
 import com.rollbar.payload.utilities.ArgumentNullException;
 import org.junit.Test;
 
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-
 import static org.junit.Assert.*;
 
 public class PayloadSenderTest {
@@ -28,8 +25,6 @@ public class PayloadSenderTest {
             assertNull(response.uuid());
         } catch (ConnectionFailedException e) {
             fail("This shouldn't happen unless you're not connected to the internet.");
-        } catch (UnsupportedEncodingException e) {
-            fail("UTF-8 should support '{}'");
         }
     }
 
@@ -56,8 +51,6 @@ public class PayloadSenderTest {
             assertNull(response.errorMessage());
         } catch (ConnectionFailedException e) {
             fail("This shouldn't happen unless you're not connected to the internet.");
-        } catch (UnsupportedEncodingException e) {
-            fail("UTF-8 should support the payload");
         }
     }
 }

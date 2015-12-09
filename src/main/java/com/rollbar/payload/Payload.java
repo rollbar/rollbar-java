@@ -1,14 +1,76 @@
 package com.rollbar.payload;
 
+import com.rollbar.http.ConnectionFailedException;
+import com.rollbar.http.PayloadSender;
+import com.rollbar.http.RollbarResponse;
+import com.rollbar.http.Sender;
 import com.rollbar.payload.data.Data;
+import com.rollbar.payload.data.Level;
+import com.rollbar.payload.data.Notifier;
+import com.rollbar.payload.data.body.Body;
 import com.rollbar.payload.utilities.ArgumentNullException;
+import com.rollbar.payload.utilities.RollbarSerializer;
 import com.rollbar.payload.utilities.Validate;
+
+import java.time.Instant;
+import java.util.HashMap;
 
 /**
  * Represents the payload to send to Rollbar. A successfully constructed Payload matches Rollbar's spec, and should be
  * successful when serialized and POSTed to the correct endpoint.
  */
 public final class Payload {
+    private static Sender sender = new PayloadSender();
+
+    /**
+     * Call to set the sender used by all Payloads when `send` is called.
+     * Note: This should be thread safe. That is easiest when the sender keeps *no* instance data.
+     * @param sender not nullable, the sender to use instead of the default
+     */
+    public static void setSender(Sender sender) {
+        Validate.isNotNull(sender, "sender");
+        Payload.sender = sender;
+    }
+
+    /**
+     * A shortcut factory for creating a payload
+     * @param accessToken not nullable, the server_post access token to send this payload to
+     * @param environment not nullable, the environment the code is currently running under
+     * @param error not nullable, the error being reported
+     * @param custom any custom data to be sent (null is OK)
+     * @return the payload
+     */
+    public static Payload fromError(String accessToken, String environment, Throwable error, HashMap<String, Object> custom) {
+        Validate.isNotNullOrWhitespace(accessToken, "accessToken");
+        Validate.isNotNullOrWhitespace(environment, "environment");
+        Validate.isNotNull(error, "error");
+
+        Body body = Body.fromError(error);
+        Level level = error instanceof Error ? Level.CRITICAL : Level.ERROR;
+        String platform = System.getProperty("java.version");
+        Data d = new Data(environment, body, level, Instant.now(), null, platform, "java", null, null, null, null, null, custom, null, null, null, new Notifier());
+        return new Payload(accessToken, d);
+    }
+
+    /**
+     * A shortcut factory for creating a payload
+     * @param accessToken not nullable, the server_post access token to send this payload to
+     * @param environment not nullable, the environment the code is currently running under
+     * @param message not nullable, the message to log to Rollbar
+     * @param custom any custom data to be sent (null is OK)
+     * @return the payload
+     */
+    public static Payload fromMessage(String accessToken, String environment, String message, HashMap<String, Object> custom) {
+        Validate.isNotNullOrWhitespace(accessToken, "accessToken");
+        Validate.isNotNullOrWhitespace(environment, "environment");
+        Validate.isNotNull(message, "message");
+
+        Body body = Body.fromString(message, custom);
+        String platform = System.getProperty("java.version");
+        Data d = new Data(environment, body, Level.WARNING, Instant.now(), null, platform, "java", null, null, null, null, null, null, null, null, null, new Notifier());
+        return new Payload(accessToken, d);
+    }
+
     private final String accessToken;
     private final Data data;
 
@@ -59,5 +121,22 @@ public final class Payload {
      */
     public Payload data(Data data) throws ArgumentNullException {
         return new Payload(this.accessToken, data);
+    }
+
+    /**
+     * Convert this object to JSON that can be sent to Rollbar
+     * @return the json representation of this object
+     */
+    public String toJson() {
+        return new RollbarSerializer().serialize(this);
+    }
+
+    /**
+     * Send this payload to Rollbar by the default Sender and Serializer
+     * @return the response from Rollbar
+     * @throws ConnectionFailedException if the connection to Rollbar failed
+     */
+    public RollbarResponse send() throws ConnectionFailedException {
+        return sender.send(this.toJson());
     }
 }

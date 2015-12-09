@@ -2,6 +2,7 @@ package com.rollbar.http;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.rollbar.payload.Payload;
 import com.rollbar.payload.utilities.ArgumentNullException;
 import com.rollbar.payload.utilities.Validate;
 
@@ -49,10 +50,17 @@ public class PayloadSender implements Sender {
      * @throws ConnectionFailedException if the connection fails at any point along the way {@link ConnectionFailedException}
      * @throws UnsupportedEncodingException if json.getBytes("UTF-8") fails
      */
-    public RollbarResponse send(String json) throws ConnectionFailedException, UnsupportedEncodingException {
+    public RollbarResponse send(String json) throws ConnectionFailedException {
         HttpURLConnection connection = getConnection();
 
-        sendJson(connection, json.getBytes("UTF-8"));
+        final byte[] bytes;
+        try {
+            bytes = json.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException("Rollbar Requires UTF8 Encoding and your JVM does not support UTF8, please update your JVM");
+        }
+
+        sendJson(connection, bytes);
 
         return readResponse(connection);
     }
