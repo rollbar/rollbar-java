@@ -5,7 +5,7 @@ import java.net.URL;
 /**
  * Represents a failure to send a payload because of a connection failure.
  */
-public class ConnectionFailedException extends Throwable {
+public class ConnectionFailedException extends Exception {
     /**
      * Constructor
      * @param url the url to which the connection failed
