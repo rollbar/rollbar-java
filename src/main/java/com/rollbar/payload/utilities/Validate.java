@@ -34,6 +34,7 @@ public class Validate {
      * @param x The string to test
      * @param min the minimum length
      * @param name the name of the argument that's being tested.
+     * @param <T> the type of the array
      * @throws InvalidLengthException if {@code x} is shorter than {@code max}
      */
     public static <T> void minLength(T[] x, int min, String name) throws InvalidLengthException {

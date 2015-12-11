@@ -18,7 +18,8 @@ public enum RollbarResponseCode {
      */
     Unauthorized(401),
     /**
-     * Invalid access token. Bad format, invalid scope,  for type of request (Client -> Server, or vice versa).
+     * Invalid access token. Bad format, invalid scope, for type of request (e.g. posting to post_client_token,
+     * for server side error).
      * See the {@link RollbarResponse} message.
      */
     AccessDenied(403),

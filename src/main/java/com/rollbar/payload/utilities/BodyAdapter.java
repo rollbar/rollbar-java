@@ -17,7 +17,7 @@ public class BodyAdapter  implements JsonSerializer<Body> {
      * @param body the body to serialize
      * @param type the type being serialized
      * @param jsonSerializationContext the context doing the serializing
-     * @return
+     * @return the serialized Body
      */
     public JsonElement serialize(Body body, Type type, JsonSerializationContext jsonSerializationContext) {
         HashMap<String, Object> toSerialize = new HashMap<String, Object>();

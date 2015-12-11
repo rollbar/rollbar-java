@@ -67,8 +67,7 @@ public class Server extends Extensible<Server> {
     }
 
     /**
-     * The host the code is running on
-     * @return
+     * @return The host the code is running on
      */
     public String host() {
         return (String) get(HOST_KEY);

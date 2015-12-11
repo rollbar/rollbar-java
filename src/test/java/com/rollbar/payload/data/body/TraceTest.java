@@ -5,7 +5,6 @@ import com.rollbar.TestThat;
 import com.rollbar.payload.utilities.ArgumentNullException;
 import org.junit.Before;
 import org.junit.Test;
-import sun.plugin.dom.exception.InvalidStateException;
 
 import static org.junit.Assert.fail;
 
@@ -22,8 +21,8 @@ public class TraceTest {
 
     private Throwable getISE() {
         try {
-            throw new InvalidStateException("Oops");
-        } catch (InvalidStateException e) {
+            throw new IllegalStateException("Oops");
+        } catch (IllegalStateException e) {
             return e;
         }
     }

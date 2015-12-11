@@ -82,8 +82,7 @@ public class RollbarResponse {
     }
 
     /**
-     * Get whether or not the RollbarResponse represents a successful POST to Rollbar.
-     * @return
+     * @return whether or not the RollbarResponse represents a successful POST to Rollbar.
      */
     public boolean isSuccessful() {
         return statusCode == RollbarResponseCode.Success;

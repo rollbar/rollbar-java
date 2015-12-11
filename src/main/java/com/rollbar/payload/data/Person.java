@@ -30,7 +30,7 @@ public class Person {
      * @param username the affected user's username
      * @param email the affected user's email address
      * @throws InvalidLengthException if {@code username} or {@code email} are longer than 255 characters
-     * @throws ArgumentNullException if {@id} is null
+     * @throws ArgumentNullException if {@code id} is null
      */
     public Person(String id, String username, String email) throws InvalidLengthException, ArgumentNullException {
         Validate.isNotNullOrWhitespace(id, "id");
@@ -88,7 +88,7 @@ public class Person {
 
     /**
      * Set the email on a copy of this Person
-     * @param email
+     * @param email the new email
      * @return a copy of this person with the new email
      * @throws InvalidLengthException if {@code email} is longer than 255 characters
      */

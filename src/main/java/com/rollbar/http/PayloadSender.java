@@ -2,7 +2,6 @@ package com.rollbar.http;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.rollbar.payload.Payload;
 import com.rollbar.payload.utilities.ArgumentNullException;
 import com.rollbar.payload.utilities.Validate;
 
@@ -21,7 +20,6 @@ public class PayloadSender implements Sender {
     /**
      * Default constructor, sends to the public api endpoint.
      * @throws ArgumentNullException if url is null
-     * @throws MalformedURLException if url is not a valid URL
      */
     public PayloadSender() {
         try {
@@ -48,7 +46,6 @@ public class PayloadSender implements Sender {
      * @param json the serialized JSON payload
      * @return the response from Rollbar {@link RollbarResponse}
      * @throws ConnectionFailedException if the connection fails at any point along the way {@link ConnectionFailedException}
-     * @throws UnsupportedEncodingException if json.getBytes("UTF-8") fails
      */
     public RollbarResponse send(String json) throws ConnectionFailedException {
         HttpURLConnection connection = getConnection();
