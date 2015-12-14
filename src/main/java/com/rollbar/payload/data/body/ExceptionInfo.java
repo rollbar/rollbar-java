@@ -1,13 +1,16 @@
 package com.rollbar.payload.data.body;
 
-import com.google.gson.annotations.SerializedName;
 import com.rollbar.payload.utilities.ArgumentNullException;
+import com.rollbar.payload.utilities.JsonSerializable;
 import com.rollbar.payload.utilities.Validate;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Represents *non-stacktrace* information about an exception, like class, description, and message.
  */
-public class ExceptionInfo {
+public class ExceptionInfo implements JsonSerializable {
     /**
      * Create an exception info from a throwable.
      * @param error the throwable
@@ -21,7 +24,6 @@ public class ExceptionInfo {
         return new ExceptionInfo(className, message, null);
     }
 
-    @SerializedName("class")
     private final String className;
     private final String message;
     private final String description;
@@ -96,5 +98,13 @@ public class ExceptionInfo {
      */
     public ExceptionInfo description(String description) {
         return new ExceptionInfo(className, message, description);
+    }
+
+    public Map<String, Object> asJson() {
+        Map<String, Object> obj = new LinkedHashMap<String, Object>();
+        obj.put("class", className());
+        obj.put("message", message());
+        obj.put("description", description());
+        return obj;
     }
 }

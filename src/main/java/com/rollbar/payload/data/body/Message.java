@@ -4,8 +4,8 @@ import com.rollbar.payload.utilities.ArgumentNullException;
 import com.rollbar.payload.utilities.Extensible;
 import com.rollbar.payload.utilities.Validate;
 
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -23,10 +23,10 @@ public class Message extends Extensible<Message> implements BodyContents {
 
     @Override
     public Message copy() {
-        return new Message(members);
+        return new Message(getMembers());
     }
 
-    private Message(HashMap<String, Object> members) {
+    private Message(Map<String, Object> members) {
         super(members);
     }
 
@@ -36,7 +36,7 @@ public class Message extends Extensible<Message> implements BodyContents {
      * @throws ArgumentNullException if body is null
      */
     public Message(String body) throws ArgumentNullException {
-        this(body, new HashMap<String, Object>());
+        this(body, null);
     }
 
     /**
@@ -45,10 +45,10 @@ public class Message extends Extensible<Message> implements BodyContents {
      * @param members additional information to send with the message
      * @throws ArgumentNullException if body is null
      */
-    public Message(String body, HashMap<String, Object> members) throws ArgumentNullException {
+    public Message(String body, Map<String, Object> members) throws ArgumentNullException {
         super(members);
         Validate.isNotNullOrWhitespace(body, "body");
-        this.members.put(BODY_KEY, body);
+        putKnown(BODY_KEY, body);
     }
 
     /**
@@ -65,6 +65,6 @@ public class Message extends Extensible<Message> implements BodyContents {
      * @throws ArgumentNullException if body is null
      */
     public Message body(String body) throws ArgumentNullException {
-        return new Message(body, members);
+        return new Message(body, getMembers());
     }
 }

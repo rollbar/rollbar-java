@@ -1,12 +1,16 @@
 package com.rollbar.payload.data.body;
 
 import com.rollbar.payload.utilities.ArgumentNullException;
+import com.rollbar.payload.utilities.JsonSerializable;
 import com.rollbar.payload.utilities.Validate;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Represents a crash report (currently only for iOS, eventually Android, and maybe (if possible) core and memory dumps)
  */
-public class CrashReport implements BodyContents {
+public class CrashReport implements BodyContents, JsonSerializable {
     private final String raw;
 
     /**
@@ -34,5 +38,11 @@ public class CrashReport implements BodyContents {
      */
     public CrashReport raw(String raw) throws ArgumentNullException {
         return new CrashReport(raw);
+    }
+
+    public Map<String, Object> asJson() {
+        Map<String, Object> obj = new LinkedHashMap<String, Object>();
+        obj.put("raw", raw());
+        return obj;
     }
 }

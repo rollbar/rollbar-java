@@ -2,14 +2,17 @@ package com.rollbar.payload.data.body;
 
 import com.rollbar.payload.utilities.ArgumentNullException;
 import com.rollbar.payload.utilities.InvalidLengthException;
+import com.rollbar.payload.utilities.JsonSerializable;
 import com.rollbar.payload.utilities.Validate;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Represents a chain of errors (typically from Exceptions with {@link Exception#getCause()} returning some value)
  */
-public class TraceChain implements BodyContents {
+public class TraceChain implements BodyContents, JsonSerializable {
     /**
      * Generate a TraceChain from a throwable with multiple causes
      * @param error the error to record
@@ -57,5 +60,9 @@ public class TraceChain implements BodyContents {
      */
     public TraceChain traces(Trace[] traces) throws ArgumentNullException, InvalidLengthException {
         return new TraceChain(traces);
+    }
+
+    public Trace[] asJson() {
+        return traces();
     }
 }

@@ -3,8 +3,8 @@ package com.rollbar.payload.data;
 import com.rollbar.payload.utilities.Extensible;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -25,10 +25,10 @@ public class Server extends Extensible<Server> {
 
     @Override
     public Server copy() {
-        return new Server(members);
+        return new Server(getMembers());
     }
 
-    private Server(HashMap<String, Object> members) {
+    private Server(Map<String, Object> members) {
         super(members);
     }
 
@@ -47,7 +47,7 @@ public class Server extends Extensible<Server> {
      * @param codeVersion the current source control version (SHA, or name)
      */
     public Server(String host, String root, String branch, String codeVersion) {
-        this(host, root, branch, codeVersion, new HashMap<String, Object>());
+        this(host, root, branch, codeVersion, null);
     }
 
     /**
@@ -58,12 +58,12 @@ public class Server extends Extensible<Server> {
      * @param codeVersion the current source control version (SHA, or name)
      * @param members the extensible members
      */
-    public Server(String host, String root, String branch, String codeVersion, HashMap<String, Object> members) {
+    public Server(String host, String root, String branch, String codeVersion, Map<String, Object> members) {
         super(members);
-        this.members.put(HOST_KEY, host);
-        this.members.put(ROOT_KEY, root);
-        this.members.put(BRANCH_KEY, branch);
-        this.members.put(CODE_VERSION_KEY, codeVersion);
+        putKnown(HOST_KEY, host);
+        putKnown(ROOT_KEY, root);
+        putKnown(BRANCH_KEY, branch);
+        putKnown(CODE_VERSION_KEY, codeVersion);
     }
 
     /**
@@ -79,7 +79,7 @@ public class Server extends Extensible<Server> {
      * @return the server with host overridden
      */
     public Server host(String host) {
-        return new Server(host, root(), branch(), codeVersion(), members);
+        return new Server(host, root(), branch(), codeVersion(), getMembers());
     }
 
     /**
@@ -95,7 +95,7 @@ public class Server extends Extensible<Server> {
      * @return the server with root overridden
      */
     public Server root(String root) {
-        return new Server(host(), root, branch(), codeVersion(), members);
+        return new Server(host(), root, branch(), codeVersion(), getMembers());
     }
 
     /**
@@ -111,7 +111,7 @@ public class Server extends Extensible<Server> {
      * @return the server with branch overridden
      */
     public Server branch(String branch) {
-        return new Server(host(), root(), branch, codeVersion(), members);
+        return new Server(host(), root(), branch, codeVersion(), getMembers());
     }
 
     /**
@@ -127,6 +127,6 @@ public class Server extends Extensible<Server> {
      * @return the server with code version overridden
      */
     public Server codeVersion(String codeVersion) {
-        return new Server(host(), root(), branch(), codeVersion, members);
+        return new Server(host(), root(), branch(), codeVersion, getMembers());
     }
 }

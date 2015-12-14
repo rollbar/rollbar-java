@@ -7,7 +7,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.omg.CORBA.OBJECT_NOT_EXIST;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -124,17 +125,17 @@ public class FrameTest {
 
     @Test
     public void testKeywordArgs() throws Exception {
-        HashMap<String, Object> one = new HashMap<String, Object>();
+        LinkedHashMap<String, Object> one = new LinkedHashMap<String, Object>();
         one.put("Hello", "World");
-        HashMap<String, Object> two = new HashMap<String, Object>();
+        LinkedHashMap<String, Object> two = new LinkedHashMap<String, Object>();
         two.put("arr", new String[] { "Ugh", "What", "a", "mess" });
         two.put("val", 15);
-        TestThat.getAndSetWorks(f, one, two, new GetAndSet<Frame, HashMap<String, Object>>() {
-            public HashMap<String, Object> get(Frame frame) {
+        TestThat.getAndSetWorks(f, one, two, new GetAndSet<Frame, Map<String, Object>>() {
+            public Map<String, Object> get(Frame frame) {
                 return frame.keywordArgs();
             }
 
-            public Frame set(Frame frame, HashMap<String, Object> val) {
+            public Frame set(Frame frame, Map<String, Object> val) {
                 return frame.keywordArgs(val);
             }
         });

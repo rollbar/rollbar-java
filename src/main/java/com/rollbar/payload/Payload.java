@@ -11,15 +11,17 @@ import com.rollbar.payload.data.body.Body;
 import com.rollbar.payload.utilities.ArgumentNullException;
 import com.rollbar.payload.utilities.RollbarSerializer;
 import com.rollbar.payload.utilities.Validate;
+import com.rollbar.payload.utilities.JsonSerializable;
 
 import java.time.Instant;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Represents the payload to send to Rollbar. A successfully constructed Payload matches Rollbar's spec, and should be
  * successful when serialized and POSTed to the correct endpoint.
  */
-public final class Payload {
+public final class Payload implements JsonSerializable {
     private static Sender sender = new PayloadSender();
 
     /**
@@ -40,7 +42,7 @@ public final class Payload {
      * @param custom any custom data to be sent (null is OK)
      * @return the payload
      */
-    public static Payload fromError(String accessToken, String environment, Throwable error, HashMap<String, Object> custom) {
+    public static Payload fromError(String accessToken, String environment, Throwable error, LinkedHashMap<String, Object> custom) {
         Validate.isNotNullOrWhitespace(accessToken, "accessToken");
         Validate.isNotNullOrWhitespace(environment, "environment");
         Validate.isNotNull(error, "error");
@@ -60,7 +62,7 @@ public final class Payload {
      * @param custom any custom data to be sent (null is OK)
      * @return the payload
      */
-    public static Payload fromMessage(String accessToken, String environment, String message, HashMap<String, Object> custom) {
+    public static Payload fromMessage(String accessToken, String environment, String message, LinkedHashMap<String, Object> custom) {
         Validate.isNotNullOrWhitespace(accessToken, "accessToken");
         Validate.isNotNullOrWhitespace(environment, "environment");
         Validate.isNotNull(message, "message");
@@ -138,5 +140,12 @@ public final class Payload {
      */
     public RollbarResponse send() throws ConnectionFailedException {
         return sender.send(this.toJson());
+    }
+
+    public Map<String, Object> asJson() {
+        Map<String, Object> obj = new LinkedHashMap<String, Object>();
+        obj.put("access_token", accessToken());
+        obj.put("data", data());
+        return obj;
     }
 }

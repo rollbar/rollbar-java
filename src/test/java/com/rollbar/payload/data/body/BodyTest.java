@@ -2,7 +2,7 @@ package com.rollbar.payload.data.body;
 
 import org.junit.Test;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 import static org.junit.Assert.*;
 
@@ -47,7 +47,7 @@ public class BodyTest {
 
     @Test
     public void testMessageWithExtras() throws Exception {
-        HashMap<String, Object> extras = new HashMap<String, Object>();
+        LinkedHashMap<String, Object> extras = new LinkedHashMap<String, Object>();
         extras.put("HELLO", "WORLD");
         Body fromStr = Body.fromString("Send a message", extras);
         assertNotNull(fromStr);

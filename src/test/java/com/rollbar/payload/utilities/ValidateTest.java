@@ -69,7 +69,7 @@ public class ValidateTest {
 
     @Test(expected = ArgumentNullException.class)
     public void testIsNotNull() throws Exception {
-        Validate.isNotNull((Object) null, "argName");
+        Validate.isNotNull(null, "argName");
     }
 
     @Test

@@ -16,15 +16,15 @@ import static org.junit.Assert.*;
 public class RequestTest {
 
     private Request r;
-    private HashMap<String, String> headers;
-    private HashMap<String, String> params;
+    private LinkedHashMap<String, String> headers;
+    private LinkedHashMap<String, String> params;
 
     @Before
     public void setUp() throws Exception {
         r = new Request();
-        headers = new HashMap<String, String>();
+        headers = new LinkedHashMap<String, String>();
         headers.put("Hello", "World");
-        params = new HashMap<String, String>();
+        params = new LinkedHashMap<String, String>();
         params.put("query", "where is carmen san diego?");
     }
 
@@ -73,16 +73,16 @@ public class RequestTest {
 
     @Test
     public void testHeaders() throws Exception {
-        HashMap<String, String> one = new HashMap<String, String>();
+        LinkedHashMap<String, String> one = new LinkedHashMap<String, String>();
         one.put("Hello", "world");
-        HashMap<String, String> two = new HashMap<String, String>();
+        LinkedHashMap<String, String> two = new LinkedHashMap<String, String>();
         two.put("Goodbye", "universe");
-        TestThat.getAndSetWorks(r, one, two, new GetAndSet<Request, HashMap<String, String>>() {
-            public HashMap<String, String> get(Request request) {
+        TestThat.getAndSetWorks(r, one, two, new GetAndSet<Request, Map<String, String>>() {
+            public Map<String, String> get(Request request) {
                 return request.headers();
             }
 
-            public Request set(Request request, HashMap<String, String> val) {
+            public Request set(Request request, Map<String, String> val) {
                 return request.headers(val);
             }
         });
@@ -90,16 +90,16 @@ public class RequestTest {
 
     @Test
     public void testParams() throws Exception {
-        HashMap<String, String> one = new HashMap<String, String>();
+        LinkedHashMap<String, String> one = new LinkedHashMap<String, String>();
         one.put("Hello", "world");
-        HashMap<String, String> two = new HashMap<String, String>();
+        LinkedHashMap<String, String> two = new LinkedHashMap<String, String>();
         two.put("Goodbye", "universe");
-        TestThat.getAndSetWorks(r, one, two, new GetAndSet<Request, HashMap<String, String>>() {
-            public HashMap<String, String> get(Request request) {
+        TestThat.getAndSetWorks(r, one, two, new GetAndSet<Request, Map<String, String>>() {
+            public Map<String, String> get(Request request) {
                 return request.params();
             }
 
-            public Request set(Request request, HashMap<String, String> val) {
+            public Request set(Request request, Map<String, String> val) {
                 return request.params(val);
             }
         });
@@ -107,16 +107,16 @@ public class RequestTest {
 
     @Test
     public void testGet() throws Exception {
-        HashMap<String, String> one = new HashMap<String, String>();
+        LinkedHashMap<String, String> one = new LinkedHashMap<String, String>();
         one.put("Hello", "world");
-        HashMap<String, String> two = new HashMap<String, String>();
+        LinkedHashMap<String, String> two = new LinkedHashMap<String, String>();
         two.put("Goodbye", "universe");
-        TestThat.getAndSetWorks(r, one, two, new GetAndSet<Request, HashMap<String, String>>() {
-            public HashMap<String, String> get(Request request) {
+        TestThat.getAndSetWorks(r, one, two, new GetAndSet<Request, Map<String, String>>() {
+            public Map<String, String> get(Request request) {
                 return request.getGet();
             }
 
-            public Request set(Request request, HashMap<String, String> val) {
+            public Request set(Request request, Map<String, String> val) {
                 return request.setGet(val);
             }
         });
@@ -137,18 +137,18 @@ public class RequestTest {
 
     @Test
     public void testPost() throws Exception {
-        HashMap<String, Object> one = new HashMap<String, Object>();
+        LinkedHashMap<String, Object> one = new LinkedHashMap<String, Object>();
         one.put("Hello", "world");
         one.put("TMOLTUAE", 42);
-        HashMap<String, Object> two = new HashMap<String, Object>();
+        LinkedHashMap<String, Object> two = new LinkedHashMap<String, Object>();
         two.put("Goodbye", "universe");
         two.put("pi", 3.1415);
-        TestThat.getAndSetWorks(r, one, two, new GetAndSet<Request, HashMap<String, Object>>() {
-            public HashMap<String, Object> get(Request request) {
+        TestThat.getAndSetWorks(r, one, two, new GetAndSet<Request, Map<String, Object>>() {
+            public Map<String, Object> get(Request request) {
                 return request.post();
             }
 
-            public Request set(Request request, HashMap<String, Object> val) {
+            public Request set(Request request, Map<String, Object> val) {
                 return request.post(val);
             }
         });
@@ -183,13 +183,13 @@ public class RequestTest {
     @Test
     public void testConstructor() throws Exception {
         String url = "www.rollbar.com/api/1/items_post?custom_param=10";
-        HashMap<String, String> headers = new HashMap<String, String>();
+        LinkedHashMap<String, String> headers = new LinkedHashMap<String, String>();
         headers.put("Location", "www.rollabr.com");
-        HashMap<String, String> params = new HashMap<String, String>();
+        LinkedHashMap<String, String> params = new LinkedHashMap<String, String>();
         params.put("custom_param", "10");
-        HashMap<String, Object> post = new HashMap<String, Object>();
+        LinkedHashMap<String, Object> post = new LinkedHashMap<String, Object>();
         post.put("access_token", "bcde15ef019347bafe1230000");
-        post.put("data", new HashMap<String, Object>()); // Truncated a bit ;)
+        post.put("data", new LinkedHashMap<String, Object>()); // Truncated a bit ;)
         InetAddress userIp = InetAddress.getByName("localhost");
         Request r = new Request(url, "POST", headers, params, null, "?custom_param=10", post, "{ \"access_token\": \"bcde15ef019347bafe1230000\", \"data\": {} }", userIp);
         assertEquals(url, r.url());

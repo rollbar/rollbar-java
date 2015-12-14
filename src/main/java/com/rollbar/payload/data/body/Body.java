@@ -1,14 +1,16 @@
 package com.rollbar.payload.data.body;
 
 import com.rollbar.payload.utilities.ArgumentNullException;
+import com.rollbar.payload.utilities.JsonSerializable;
 import com.rollbar.payload.utilities.Validate;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * A container for the actual error(s), message, or crash report that caused this error.
  */
-public class Body {
+public class Body implements JsonSerializable {
     /**
      * Create a Body from an error. If {@link Throwable#getCause()} isn't null will return a Trace Chain,
      * otherwise returns a Trace
@@ -52,7 +54,7 @@ public class Body {
      * @return a body containing a message containing this message body and extra arguments
      * @throws ArgumentNullException if message is null or whitespace
      */
-    public static Body fromString(String message, HashMap<String, Object> extra) throws ArgumentNullException {
+    public static Body fromString(String message, LinkedHashMap<String, Object> extra) throws ArgumentNullException {
         final BodyContents contents = new Message(message, extra);
         return new Body(contents);
     }
@@ -139,5 +141,19 @@ public class Body {
             return (CrashReport) contents;
         }
         return null;
+    }
+
+    public Map<String, Object> asJson() {
+        Map<String, Object> obj = new LinkedHashMap<String, Object>();
+        obj.put(key(), contents());
+        return obj;
+    }
+
+    private String key() {
+        return toSnakeCase(contents.getClass().getSimpleName());
+    }
+
+    private static String toSnakeCase(String simpleName) {
+        return String.join("_", simpleName.split("(?=\\p{Lu})")).toLowerCase();
     }
 }

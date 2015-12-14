@@ -3,10 +3,7 @@ package com.rollbar.payload.data;
 import com.rollbar.payload.utilities.Extensible;
 
 import java.net.InetAddress;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Represents the HTTP request that triggered the error
@@ -45,14 +42,14 @@ public class Request extends Extensible<Request> {
 
     @Override
     public Request copy() {
-        return new Request(members);
+        return new Request(getMembers());
     }
 
     /**
      * Constructor
      * @param members map of custom arguments
      */
-    private Request(HashMap<String, Object> members) {
+    private Request(Map<String, Object> members) {
         super(members);
     }
 
@@ -75,10 +72,10 @@ public class Request extends Extensible<Request> {
      * @param body the raw POST body
      * @param userIp the ip address of the affected user
      */
-    public Request(String url, String method, HashMap<String, String> headers, HashMap<String, String> params,
-                   HashMap<String, String> get, String queryString, HashMap<String, Object> post, String body,
+    public Request(String url, String method, Map<String, String> headers, Map<String, String> params,
+                   Map<String, String> get, String queryString, Map<String, Object> post, String body,
                    InetAddress userIp) {
-        this(url, method, headers, params, get, queryString, post, body, userIp, new HashMap<String, Object>());
+        this(url, method, headers, params, get, queryString, post, body, userIp, null);
     }
 
     /**
@@ -94,19 +91,19 @@ public class Request extends Extensible<Request> {
      * @param userIp the ip address of the affected user
      * @param members the custom arguments
      */
-    public Request(String url, String method, HashMap<String, String> headers, HashMap<String, String> params,
-                   HashMap<String, String> get, String queryString, HashMap<String, Object> post, String body,
-                   InetAddress userIp, HashMap<String, Object> members) {
+    public Request(String url, String method, Map<String, String> headers, Map<String, String> params,
+                   Map<String, String> get, String queryString, Map<String, Object> post, String body,
+                   InetAddress userIp, Map<String, Object> members) {
         super(members);
-        this.members.put(URL_KEY, url);
-        this.members.put(METHOD_KEY, method);
-        this.members.put(HEADERS_KEY, headers == null ? null : new HashMap<String, String>(headers));
-        this.members.put(PARAMS_KEY, params == null ? null : new HashMap<String, String>(params));
-        this.members.put(GET_KEY, get == null ? null : new HashMap<String, String>(get));
-        this.members.put(QUERY_STRING_KEY, queryString);
-        this.members.put(POST_KEY, post == null ? null : new HashMap<String, Object>(post));
-        this.members.put(BODY_KEY, body);
-        this.members.put(USER_IP_KEY, userIp == null ? null : userIp.getHostAddress());
+        putKnown(URL_KEY, url);
+        putKnown(METHOD_KEY, method);
+        putKnown(HEADERS_KEY, headers == null ? null : new LinkedHashMap<String, String>(headers));
+        putKnown(PARAMS_KEY, params == null ? null : new LinkedHashMap<String, String>(params));
+        putKnown(GET_KEY, get == null ? null : new LinkedHashMap<String, String>(get));
+        putKnown(QUERY_STRING_KEY, queryString);
+        putKnown(POST_KEY, post == null ? null : new LinkedHashMap<String, Object>(post));
+        putKnown(BODY_KEY, body);
+        putKnown(USER_IP_KEY, userIp == null ? null : userIp.getHostAddress());
     }
 
     /**
@@ -122,7 +119,7 @@ public class Request extends Extensible<Request> {
      * @return a copy of this request with the new url
      */
     public Request url(String url) {
-        return new Request(url, method(), headers(), params(), getGet(), queryString(), post(), body(), userIp(), members);
+        return new Request(url, method(), headers(), params(), getGet(), queryString(), post(), body(), userIp(), getMembers());
     }
 
     /**
@@ -138,15 +135,15 @@ public class Request extends Extensible<Request> {
      * @return a copy of this request with the new HTTP method
      */
     public Request method(String method) {
-        return new Request(url(), method, headers(), params(), getGet(), queryString(), post(), body(), userIp(), members);
+        return new Request(url(), method, headers(), params(), getGet(), queryString(), post(), body(), userIp(), getMembers());
     }
 
     /**
      * @return the HTTP headers
      */
-    public HashMap<String, String> headers() {
+    public Map<String, String> headers() {
         @SuppressWarnings("unchecked")
-        HashMap<String, String> headers = (HashMap<String, String>) get(HEADERS_KEY);
+        LinkedHashMap<String, String> headers = (LinkedHashMap<String, String>) get(HEADERS_KEY);
         return headers;
     }
 
@@ -155,16 +152,16 @@ public class Request extends Extensible<Request> {
      * @param headers the HTTP headers
      * @return a copy of this request with the new HTTP headers
      */
-    public Request headers(HashMap<String, String> headers) {
-        return new Request(url(), method(), headers, params(), getGet(), queryString(), post(), body(), userIp(), members);
+    public Request headers(Map<String, String> headers) {
+        return new Request(url(), method(), headers, params(), getGet(), queryString(), post(), body(), userIp(), getMembers());
     }
 
     /**
      * @return the routing parameters, typically parsed out of the URL by your routing module
      */
-    public HashMap<String, String> params() {
+    public Map<String, String> params() {
         @SuppressWarnings("unchecked")
-        HashMap<String, String> params = (HashMap<String, String>) get(PARAMS_KEY);
+        LinkedHashMap<String, String> params = (LinkedHashMap<String, String>) get(PARAMS_KEY);
         return params;
     }
 
@@ -173,17 +170,17 @@ public class Request extends Extensible<Request> {
      * @param params the routing parameters
      * @return a copy of this request with the new routing parameters
      */
-    public Request params(HashMap<String, String> params) {
-        return new Request(url(), method(), headers(), params, getGet(), queryString(), post(), body(), userIp(), members);
+    public Request params(Map<String, String> params) {
+        return new Request(url(), method(), headers(), params, getGet(), queryString(), post(), body(), userIp(), getMembers());
     }
 
     /**
      * Get the parsed query string parameters
      * @return the parsed query string parameters
      */
-    public HashMap<String, String> getGet() {
+    public Map<String, String> getGet() {
         @SuppressWarnings("unchecked")
-        HashMap<String, String> get = (HashMap<String, String>) get(GET_KEY);
+        LinkedHashMap<String, String> get = (LinkedHashMap<String, String>) get(GET_KEY);
         return get;
     }
 
@@ -192,8 +189,8 @@ public class Request extends Extensible<Request> {
      * @param get the parsed query string parameters
      * @return a copy of this request with the new parsed query string parameters
      */
-    public Request setGet(HashMap<String, String> get) {
-        return new Request(url(), method(), headers(), params(), get, queryString(), post(), body(), userIp(), members);
+    public Request setGet(Map<String, String> get) {
+        return new Request(url(), method(), headers(), params(), get, queryString(), post(), body(), userIp(), getMembers());
     }
 
     /**
@@ -209,15 +206,15 @@ public class Request extends Extensible<Request> {
      * @return a copy of this request with the new raw query string
      */
     public Request queryString(String queryString) {
-        return new Request(url(), method(), headers(), params(), getGet(), queryString, post(), body(), userIp(), members);
+        return new Request(url(), method(), headers(), params(), getGet(), queryString, post(), body(), userIp(), getMembers());
     }
 
     /**
      * @return the parsed POST parameters
      */
-    public HashMap<String, Object> post() {
+    public Map<String, Object> post() {
         @SuppressWarnings("unchecked")
-        HashMap<String, Object> post = (HashMap<String, Object>) get(POST_KEY);
+        LinkedHashMap<String, Object> post = (LinkedHashMap<String, Object>) get(POST_KEY);
         return post;
     }
 
@@ -226,8 +223,8 @@ public class Request extends Extensible<Request> {
      * @param post the parsed POST parameters
      * @return a copy of this request with the new parsed POST parameters
      */
-    public Request post(HashMap<String, Object> post) {
-        return new Request(url(), method(), headers(), params(), getGet(), queryString(), post, body(), userIp(), members);
+    public Request post(Map<String, Object> post) {
+        return new Request(url(), method(), headers(), params(), getGet(), queryString(), post, body(), userIp(), getMembers());
     }
 
     /**
@@ -243,7 +240,7 @@ public class Request extends Extensible<Request> {
      * @return a copy of this request with the new raw POST body
      */
     public Request body(String body) {
-        return new Request(url(), method(), headers(), params(), getGet(), queryString(), post(), body, userIp(), members);
+        return new Request(url(), method(), headers(), params(), getGet(), queryString(), post(), body, userIp(), getMembers());
     }
 
     /**
@@ -265,6 +262,6 @@ public class Request extends Extensible<Request> {
      * @return a copy of this request with the new affected user's IP Address
      */
     public Request userIp(InetAddress userIp) {
-        return new Request(url(), method(), headers(), params(), getGet(), queryString(), post(), body(), userIp, members);
+        return new Request(url(), method(), headers(), params(), getGet(), queryString(), post(), body(), userIp, getMembers());
     }
 }

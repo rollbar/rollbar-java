@@ -2,12 +2,16 @@ package com.rollbar.payload.data;
 
 import com.rollbar.payload.utilities.ArgumentNullException;
 import com.rollbar.payload.utilities.InvalidLengthException;
+import com.rollbar.payload.utilities.JsonSerializable;
 import com.rollbar.payload.utilities.Validate;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Represents the user affected by an error
  */
-public class Person {
+public class Person implements JsonSerializable {
     private final String id;
     private final String username;
     private final String email;
@@ -94,5 +98,14 @@ public class Person {
      */
     public Person email(String email) throws InvalidLengthException {
         return new Person(id, username, email);
+    }
+
+    public Map<String, Object> asJson() {
+        Map<String, Object> obj = new LinkedHashMap<String, Object>();
+        obj.put("id", id());
+
+        if (username != null) obj.put("username", username());
+        if (email != null) obj.put("email", email());
+        return obj;
     }
 }

@@ -141,8 +141,8 @@ public class TestThat {
         if (membersField != null) {
             membersField.setAccessible(true);
             try {
-                HashMap<String, Object> membersFirst = (HashMap<String, Object>) membersField.get(first);
-                HashMap<String, Object> membersSecond = (HashMap<String, Object>) membersField.get(second);
+                Map<String, Object> membersFirst = (Map<String, Object>) membersField.get(first);
+                Map<String, Object> membersSecond = (Map<String, Object>) membersField.get(second);
                 for(String key: membersFirst.keySet()) {
                     addIfKeysDiffer(differingFields, membersFirst, membersSecond, key);
                 }
@@ -152,7 +152,7 @@ public class TestThat {
             } catch (IllegalAccessException e) {
                 fail("This can't happen since I setAccessible to true");
             } catch (ClassCastException e) {
-                fail("members *are* return HashMap<String, Object>");
+                fail("members *are* return LinkedHashMap<String, Object>");
             }
             membersField.setAccessible(false);
         }
@@ -165,7 +165,7 @@ public class TestThat {
         }
     }
 
-    private static void addIfKeysDiffer(HashSet<String> differingFields, HashMap<String, Object> membersFirst, HashMap<String, Object> membersSecond, String key) {
+    private static void addIfKeysDiffer(HashSet<String> differingFields, Map<String, Object> membersFirst, Map<String, Object> membersSecond, String key) {
         Object one = membersFirst.getOrDefault(key, null);
         Object two = membersSecond.getOrDefault(key, null);
         if (areDifferent(one, two)) {
