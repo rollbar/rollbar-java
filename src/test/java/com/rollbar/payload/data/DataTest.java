@@ -10,7 +10,8 @@ import org.junit.Test;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
@@ -218,16 +219,16 @@ public class DataTest {
 
     @Test
     public void testCustom() throws Exception {
-        HashMap<String, Object> one = new HashMap<String, Object>();
+        LinkedHashMap<String, Object> one = new LinkedHashMap<String, Object>();
         one.put("test", 1);
-        HashMap<String, Object> two = new HashMap<String, Object>();
+        LinkedHashMap<String, Object> two = new LinkedHashMap<String, Object>();
         two.put("Another", "HI THERE!");
-        TestThat.getAndSetWorks(d, one, two, new GetAndSet<Data, HashMap<String, Object>>() {
-            public HashMap<String, Object> get(Data data) {
+        TestThat.getAndSetWorks(d, one, two, new GetAndSet<Data, Map<String, Object>>() {
+            public Map<String, Object> get(Data data) {
                 return data.custom();
             }
 
-            public Data set(Data data, HashMap<String, Object> val) {
+            public Data set(Data data, Map<String, Object> val) {
                 return data.custom(val);
             }
         });
@@ -300,6 +301,6 @@ public class DataTest {
 
     @Test
     public void testConstructor() throws Exception {
-        Data d = new Data("environment", Body.fromString("String"), Level.CRITICAL, Instant.now(), "version", "platform", "language", "framework", "CONTEXT", new Request(), new Person("ID"), new Server(), new HashMap<String, Object>(), "fingerprint", "title", UUID.randomUUID(), new Notifier());
+        Data d = new Data("environment", Body.fromString("String"), Level.CRITICAL, Instant.now(), "version", "platform", "language", "framework", "CONTEXT", new Request(), new Person("ID"), new Server(), new LinkedHashMap<String, Object>(), "fingerprint", "title", UUID.randomUUID(), new Notifier());
     }
 }

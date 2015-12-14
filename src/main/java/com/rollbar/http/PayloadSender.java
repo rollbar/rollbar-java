@@ -1,12 +1,12 @@
 package com.rollbar.http;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.rollbar.payload.utilities.ArgumentNullException;
 import com.rollbar.payload.utilities.Validate;
 
 import java.io.*;
 import java.net.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Sends payloads (synchronously) to Rollbar. This serves both as a reference implementation for {@link Sender}
@@ -62,6 +62,9 @@ public class PayloadSender implements Sender {
         return readResponse(connection);
     }
 
+    private static final Pattern messagePattern = Pattern.compile("\"message\"\\s*:\\s*\"([^\"]*)\"");
+    private static final Pattern uuidPattern = Pattern.compile("\"uuid\"\\s*:\\s*\"([^\"]*)\"");
+
     private RollbarResponse readResponse(HttpURLConnection connection) throws ConnectionFailedException {
         int result;
         String content;
@@ -78,15 +81,15 @@ public class PayloadSender implements Sender {
         } catch (InvalidResponseCodeException e) {
             throw new ConnectionFailedException(connection.getURL(), "Unknown Response Code Received", e);
         }
+        boolean err = result >= 400;
+        Pattern p = err ? messagePattern : uuidPattern;
+        Matcher m = p.matcher(content);
+        m.find();
 
-        JsonParser parser = new JsonParser();
-        JsonObject obj = (JsonObject)parser.parse(content);
-        if (result >= 400) {
-            String message = obj.get("message").getAsString();
-            return code.response(message);
+        if (err) {
+            return code.response(m.group(1));
         } else {
-            String uuid = obj.get("result").getAsJsonObject().get("uuid").getAsString();
-            return RollbarResponse.success(uuid);
+            return RollbarResponse.success(m.group(1));
         }
     }
 

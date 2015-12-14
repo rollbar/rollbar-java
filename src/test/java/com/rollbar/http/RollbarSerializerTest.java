@@ -13,7 +13,7 @@ import com.rollbar.payload.utilities.InvalidLengthException;
 import com.rollbar.payload.utilities.RollbarSerializer;
 import org.junit.Test;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 import static org.junit.Assert.*;
 
@@ -26,7 +26,7 @@ public class RollbarSerializerTest {
     @Test
     public void TestBasicSerialize() {
         try {
-            final HashMap<String, Object> members = new HashMap<String, Object>();
+            final LinkedHashMap<String, Object> members = new LinkedHashMap<String, Object>();
             members.put("extra", "has-extra");
             final Body body = Body.fromString(testMessage, members);
             final Data data = new Data(environment, body)

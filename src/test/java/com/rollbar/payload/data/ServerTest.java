@@ -105,13 +105,13 @@ public class ServerTest {
         Server s = server.branch("branch")
                 .root("root")
                 .put("extra", 15);
-        ArrayList<String> keys = new ArrayList<String>((Collection<? extends String>) s.keys(true));
+        ArrayList<String> keys = new ArrayList<String>(s.keys(true));
         java.util.Collections.sort(keys);
         String[] actual = keys.toArray(new String[keys.size()]);
         String[] expected = new String[] { "extra" };
         assertArrayEquals(expected, actual);
 
-        keys =  new ArrayList<String>((Collection<? extends String>) s.keys(false));
+        keys =  new ArrayList<String>(s.keys(false));
         java.util.Collections.sort(keys);
         actual = keys.toArray(new String[keys.size()]);
         expected = new String[] { Server.BRANCH_KEY, Server.CODE_VERSION_KEY, "extra", Server.HOST_KEY, Server.ROOT_KEY };
