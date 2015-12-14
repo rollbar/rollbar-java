@@ -1,11 +1,6 @@
 package com.rollbar.payload.utilities;
 
-import com.google.gson.internal.LinkedTreeMap;
-
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * Base class for classes that can be extended with arbitrary metadata (as per the
@@ -116,7 +111,7 @@ public abstract class Extensible<T extends Extensible<T>> implements JsonSeriali
     }
 
     public Map<String, Object> asJson() {
-        LinkedTreeMap<String, Object> json = new LinkedTreeMap<String, Object>();
+        LinkedHashMap<String, Object> json = new LinkedHashMap<String, Object>();
         for(String key : knownMembers()) {
             if (this.members.containsKey(key) && this.members.getOrDefault(key, null) != null) {
                 json.put(key, this.members.getOrDefault(key, null));
