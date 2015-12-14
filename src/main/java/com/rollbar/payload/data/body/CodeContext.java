@@ -1,9 +1,14 @@
 package com.rollbar.payload.data.body;
 
+import com.rollbar.payload.utilities.JsonSerializable;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  * Represents the context around the code where the error occurred (lines before, 'pre', and after, 'post')
  */
-public class CodeContext {
+public class CodeContext implements JsonSerializable {
     private final String[] pre;
     private final String[] post;
 
@@ -54,5 +59,12 @@ public class CodeContext {
      */
     public CodeContext post(String[] post) {
         return new CodeContext(pre, post);
+    }
+
+    public Map<String, Object> asJson() {
+        Map<String, Object> obj = new LinkedHashMap<String, Object>();
+        obj.put("pre", pre());
+        obj.put("post", post());
+        return obj;
     }
 }

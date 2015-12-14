@@ -1,12 +1,16 @@
 package com.rollbar.payload.data.body;
 
 import com.rollbar.payload.utilities.ArgumentNullException;
+import com.rollbar.payload.utilities.JsonSerializable;
 import com.rollbar.payload.utilities.Validate;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Represent a Stack Trace to send to Rollbar
  */
-public class Trace implements BodyContents {
+public class Trace implements BodyContents, JsonSerializable {
     /**
      * Create a stack trace from a throwable
      * @param error the Throwable to create a stack trace from
@@ -70,5 +74,12 @@ public class Trace implements BodyContents {
      */
     public Trace exception(ExceptionInfo exception) throws ArgumentNullException {
         return new Trace(frames, exception);
+    }
+
+    public Map<String, Object> asJson() {
+        Map<String, Object> obj = new LinkedHashMap<String, Object>();
+        obj.put("frames", frames());
+        obj.put("exception", exception());
+        return obj;
     }
 }

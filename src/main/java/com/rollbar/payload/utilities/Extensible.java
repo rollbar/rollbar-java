@@ -1,8 +1,11 @@
 package com.rollbar.payload.utilities;
 
-import java.util.HashMap;
-import java.util.HashSet;
+import com.google.gson.internal.LinkedTreeMap;
+
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * Base class for classes that can be extended with arbitrary metadata (as per the
@@ -10,13 +13,17 @@ import java.util.Set;
  * This class, unlike the rest of the classes is mutable. Extra caution is therefore warranted.
  * @param <T> The extensible type itself.
  */
-public abstract class Extensible<T extends Extensible<T>> {
+public abstract class Extensible<T extends Extensible<T>> implements JsonSerializable {
     /**
      * Constructor
-     * @param members the HashMap of all members already in this object
+     * @param members the LinkedHashMap of all members already in this object
      */
-    protected Extensible(HashMap<String, Object> members) {
-        this.members = members == null ? new HashMap<String, Object>() : new HashMap<String, Object>(members);
+    protected Extensible(Map<String, Object> members) {
+        if (members == null) {
+            this.members = new TreeMap<String, Object>();
+        } else {
+            this.members = new TreeMap<String, Object>(members);
+        }
     }
 
     /**
@@ -39,9 +46,9 @@ public abstract class Extensible<T extends Extensible<T>> {
     }
 
     /**
-     * The HashMap containing all members.
+     * The LinkedHashMap containing all members.
      */
-    protected final HashMap<String, Object> members;
+    private final TreeMap<String, Object> members;
 
     /**
      * Get the member, or null if not present.
@@ -69,9 +76,22 @@ public abstract class Extensible<T extends Extensible<T>> {
             final String msgFmt = "'%s' is a known member and must be set with the corresponding method";
             throw new IllegalArgumentException(String.format(msgFmt, name));
         }
-        T returnVal = this.copy();
+        Extensible<T> returnVal = this.copy();
         returnVal.members.put(name, value);
-        return returnVal;
+        return (T)returnVal;
+    }
+
+    /**
+     * MUTATING. Use only in Constructor.
+     * @param name the key
+     * @param value the value
+     */
+    protected void putKnown(String name, Object value) {
+        if (!isKnownMember(name)) {
+            final String msg = "Can only set known values with this method. %s not known";
+            throw new IllegalArgumentException(String.format(msg, name));
+        }
+        this.members.put(name, value);
     }
 
     /**
@@ -80,7 +100,7 @@ public abstract class Extensible<T extends Extensible<T>> {
      * @return the keys
      */
     public Set<String> keys(boolean withoutKnownMembers) {
-        Set<String> keys = new HashSet<String>(members.keySet());
+        Set<String> keys = new TreeSet<String>(members.keySet());
         if (withoutKnownMembers) {
             keys.removeAll(knownMembers());
         }
@@ -91,7 +111,22 @@ public abstract class Extensible<T extends Extensible<T>> {
      * Get a copy of the members.
      * @return a copy of the members in this Extensible.
      */
-    public HashMap<String, Object> getMembers() {
-        return new HashMap<String, Object>(members);
+    public Map<String, Object> getMembers() {
+        return new TreeMap<String, Object>(members);
+    }
+
+    public Map<String, Object> asJson() {
+        LinkedTreeMap<String, Object> json = new LinkedTreeMap<String, Object>();
+        for(String key : knownMembers()) {
+            if (this.members.containsKey(key) && this.members.getOrDefault(key, null) != null) {
+                json.put(key, this.members.getOrDefault(key, null));
+            }
+        }
+        for(Map.Entry<String, Object> entry : this.members.entrySet()) {
+            if (!json.containsKey(entry.getKey())) {
+                json.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return json;
     }
 }

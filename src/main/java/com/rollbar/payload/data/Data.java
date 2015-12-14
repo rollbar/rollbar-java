@@ -3,16 +3,18 @@ package com.rollbar.payload.data;
 import com.rollbar.payload.data.body.Body;
 import com.rollbar.payload.utilities.ArgumentNullException;
 import com.rollbar.payload.utilities.InvalidLengthException;
+import com.rollbar.payload.utilities.JsonSerializable;
 import com.rollbar.payload.utilities.Validate;
 
 import java.time.Instant;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
  * Represents the actual data being posted to Rollbar
  */
-public class Data {
+public class Data implements JsonSerializable {
     private final String environment;
     private final Body body;
     private final Level level;
@@ -25,7 +27,7 @@ public class Data {
     private final Request request;
     private final Person person;
     private final Server server;
-    private final HashMap<String, Object> custom;
+    private final LinkedHashMap<String, Object> custom;
     private final String fingerprint;
     private final String title;
     private final String uuid;
@@ -64,11 +66,11 @@ public class Data {
      * @throws ArgumentNullException if environment or body is null
      * @throws InvalidLengthException if environment or title is over 255 characters, or uuid is over 32 characters
      */
-    public Data(String environment, Body body, Level level, Instant timestamp, String codeVersion, String platform, String language, String framework, String context, Request request, Person person, Server server, HashMap<String, Object> custom, String fingerprint, String title, UUID uuid, Notifier notifier) throws ArgumentNullException, InvalidLengthException {
+    public Data(String environment, Body body, Level level, Instant timestamp, String codeVersion, String platform, String language, String framework, String context, Request request, Person person, Server server, Map<String, Object> custom, String fingerprint, String title, UUID uuid, Notifier notifier) throws ArgumentNullException, InvalidLengthException {
         this(environment, body, level, timestamp == null ? null : timestamp.getEpochSecond(), codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid == null ? null : uuid.toString().replace("-", ""), notifier);
     }
 
-    private Data(String environment, Body body, Level level, Long timestamp, String codeVersion, String platform, String language, String framework, String context, Request request, Person person, Server server, HashMap<String, Object> custom, String fingerprint, String title, String uuid, Notifier notifier) throws ArgumentNullException, InvalidLengthException {
+    private Data(String environment, Body body, Level level, Long timestamp, String codeVersion, String platform, String language, String framework, String context, Request request, Person person, Server server, Map<String, Object> custom, String fingerprint, String title, String uuid, Notifier notifier) throws ArgumentNullException, InvalidLengthException {
         Validate.isNotNullOrWhitespace(environment, "environment");
         Validate.maxLength(environment, 255, "environment");
         Validate.isNotNull(body, "body");
@@ -90,7 +92,7 @@ public class Data {
         this.request = request;
         this.person = person;
         this.server = server;
-        this.custom = custom == null ? null : new HashMap<String, Object>(custom);
+        this.custom = custom == null ? null : new LinkedHashMap<String, Object>(custom);
         this.fingerprint = fingerprint;
         this.title = title;
         this.uuid = uuid;
@@ -295,8 +297,8 @@ public class Data {
     /**
      * @return custom data that will aid in debugging the error
      */
-    public HashMap<String, Object> custom() {
-        return custom == null ? null : new HashMap<String, Object>(this.custom);
+    public Map<String, Object> custom() {
+        return custom == null ? null : new LinkedHashMap<String, Object>(this.custom);
     }
 
     /**
@@ -304,7 +306,7 @@ public class Data {
     * @param custom custom data that will aid in debugging the error
     * @return copy of this Data with custom overridden
     */
-    public Data custom(HashMap<String, Object> custom) {
+    public Data custom(Map<String, Object> custom) {
         return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
     }
 
@@ -376,5 +378,28 @@ public class Data {
     */
     public Data notifier(Notifier notifier) {
         return new Data(environment, body, level, timestamp, codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
+    }
+
+    public Map<String, Object> asJson() {
+        Map<String, Object> obj = new LinkedHashMap<String, Object>();
+        obj.put("environment", environment());
+        obj.put("body", body());
+
+        if (level != null) obj.put("level", level());
+        if (timestamp != null) obj.put("timestamp", timestamp());
+        if (codeVersion != null) obj.put("code_version", codeVersion());
+        if (platform != null) obj.put("platform", platform());
+        if (language != null) obj.put("language", language());
+        if (framework != null) obj.put("framework", framework());
+        if (context != null) obj.put("context", context());
+        if (request != null) obj.put("request", request());
+        if (person != null) obj.put("person", person());
+        if (server != null) obj.put("server", server());
+        if (custom != null) obj.put("custom", custom());
+        if (fingerprint != null) obj.put("fingerprint", fingerprint());
+        if (title != null) obj.put("title", title());
+        if (uuid != null) obj.put("uuid", uuid());
+        if (notifier != null) obj.put("notifier", notifier());
+        return obj;
     }
 }

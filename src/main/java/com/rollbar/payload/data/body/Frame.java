@@ -1,17 +1,18 @@
 package com.rollbar.payload.data.body;
 
-import com.google.gson.annotations.SerializedName;
 import com.rollbar.payload.utilities.ArgumentNullException;
+import com.rollbar.payload.utilities.JsonSerializable;
 import com.rollbar.payload.utilities.Validate;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Represents a single frame from a stack trace
  */
-public class Frame {
+public class Frame implements JsonSerializable {
     /**
      * Get an array of frames from an error
      * @param error the error
@@ -44,16 +45,13 @@ public class Frame {
     }
 
     private final String filename;
-    @SerializedName("lineno")
     private final Integer lineNumber;
-    @SerializedName("colno")
     private final Integer columnNumber;
     private final String method;
     private final String code;
     private final CodeContext context;
     private final Object[] args;
-    @SerializedName("kwargs")
-    private final HashMap<String, Object> keywordArgs;
+    private final LinkedHashMap<String, Object> keywordArgs;
 
     /**
      * Constructor
@@ -76,7 +74,7 @@ public class Frame {
      * @param keywordArgs the keyword arguments to the method from the stack frame (if available in your language)
      * @throws ArgumentNullException if filename is null
      */
-    public Frame(String filename, Integer lineNumber, Integer columnNumber, String method, String code, CodeContext context, Object[] args, HashMap<String, Object> keywordArgs) throws ArgumentNullException {
+    public Frame(String filename, Integer lineNumber, Integer columnNumber, String method, String code, CodeContext context, Object[] args, Map<String, Object> keywordArgs) throws ArgumentNullException {
         Validate.isNotNullOrWhitespace(filename, "filename");
         this.filename = filename;
         this.lineNumber = lineNumber;
@@ -85,7 +83,7 @@ public class Frame {
         this.code = code;
         this.context = context;
         this.args = args == null ? null : args.clone();
-        this.keywordArgs = keywordArgs == null ? null : new HashMap<String, Object>(keywordArgs);
+        this.keywordArgs = keywordArgs == null ? null : new LinkedHashMap<String, Object>(keywordArgs);
     }
 
     /**
@@ -204,8 +202,8 @@ public class Frame {
     /**
     * @return the keyword arguments to the method from the stack frame (if available in your language)
     */
-    public HashMap<String, Object> keywordArgs() {
-        return keywordArgs == null ? null : new HashMap<String, Object>(keywordArgs);
+    public Map<String, Object> keywordArgs() {
+        return keywordArgs == null ? null : new LinkedHashMap<String, Object>(keywordArgs);
     }
 
     /**
@@ -213,7 +211,20 @@ public class Frame {
     * @param keywordArgs the keyword arguments to the method from the stack frame (if available in your language)
     * @return a copy of this Frame with the keywordArgs overridden
     */
-    public Frame keywordArgs(HashMap<String, Object> keywordArgs) {
+    public Frame keywordArgs(Map<String, Object> keywordArgs) {
         return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
+    }
+
+    public Map<String, Object> asJson() {
+        Map<String, Object> obj = new LinkedHashMap<String, Object>();
+        obj.put("filename", filename());
+        obj.put("lineno", lineNumber());
+        obj.put("colno", columnNumber());
+        obj.put("method", method());
+        obj.put("code", code());
+        obj.put("context", context());
+        obj.put("args", args());
+        obj.put("kwargs", keywordArgs());
+        return obj;
     }
 }
