@@ -9,7 +9,7 @@
 
     <groupId>com.rollbar</groupId>
     <artifactId>rollbar</artifactId>
-    <version>0.2.0</version>
+    <version>0.2.2</version>
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
@@ -51,6 +51,18 @@
     </distributionManagement>
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>

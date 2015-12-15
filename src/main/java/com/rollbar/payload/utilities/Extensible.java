@@ -73,7 +73,9 @@ public abstract class Extensible<T extends Extensible<T>> implements JsonSeriali
         }
         Extensible<T> returnVal = this.copy();
         returnVal.members.put(name, value);
-        return (T)returnVal;
+        @SuppressWarnings("unchecked")
+        T returned = (T) returnVal;
+        return returned;
     }
 
     /**
