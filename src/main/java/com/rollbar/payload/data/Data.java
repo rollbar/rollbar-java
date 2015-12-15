@@ -385,8 +385,8 @@ public class Data implements JsonSerializable {
         obj.put("environment", environment());
         obj.put("body", body());
 
-        if (level != null) obj.put("level", level());
-        if (timestamp != null) obj.put("timestamp", timestamp());
+        if (level != null) obj.put("level", level().asJson());
+        if (timestamp != null) obj.put("timestamp", timestamp);
         if (codeVersion != null) obj.put("code_version", codeVersion());
         if (platform != null) obj.put("platform", platform());
         if (language != null) obj.put("language", language());
@@ -398,7 +398,7 @@ public class Data implements JsonSerializable {
         if (custom != null) obj.put("custom", custom());
         if (fingerprint != null) obj.put("fingerprint", fingerprint());
         if (title != null) obj.put("title", title());
-        if (uuid != null) obj.put("uuid", uuid());
+        if (uuid != null) obj.put("uuid", uuid);
         if (notifier != null) obj.put("notifier", notifier());
         return obj;
     }
