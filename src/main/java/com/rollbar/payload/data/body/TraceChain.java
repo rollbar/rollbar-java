@@ -20,10 +20,22 @@ public class TraceChain implements BodyContents, JsonSerializable {
      * @throws ArgumentNullException if error is null
      */
     public static TraceChain fromThrowable(Throwable error) throws ArgumentNullException {
+        return fromThrowable(error, null);
+    }
+
+    /**
+     * Generate a TraceChain from a throwable with multiple causes
+     * @param error the error to record
+     * @param description a human readable description of the first error in the chain
+     * @throws ArgumentNullException if error is null
+     * @return the trace chain representing the Throwable
+     */
+    public static TraceChain fromThrowable(Throwable error, String description) throws ArgumentNullException {
         Validate.isNotNull(error, "error");
         ArrayList<Trace> chain = new ArrayList<Trace>();
         do {
-            chain.add(Trace.fromThrowable(error));
+            chain.add(Trace.fromThrowable(error, description));
+            description = null;
             error = error.getCause();
         } while(error != null);
         Trace[] traces = chain.toArray(new Trace[chain.size()]);

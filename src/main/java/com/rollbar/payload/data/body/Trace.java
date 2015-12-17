@@ -18,10 +18,21 @@ public class Trace implements BodyContents, JsonSerializable {
      * @throws ArgumentNullException if error is null
      */
     public static Trace fromThrowable(Throwable error) throws ArgumentNullException {
+        return fromThrowable(error, null);
+    }
+
+    /**
+     * Create a stack trace from a throwable
+     * @param error the Throwable to create a stack trace from
+     * @param description human readable description of the error
+     * @return the Trace representing the Throwable
+     * @throws ArgumentNullException if error is null
+     */
+    public static Trace fromThrowable(Throwable error, String description) throws ArgumentNullException {
         Validate.isNotNull(error, "error");
 
         Frame[] frames = Frame.fromThrowable(error);
-        ExceptionInfo exceptionInfo = ExceptionInfo.fromThrowable(error);
+        ExceptionInfo exceptionInfo = ExceptionInfo.fromThrowable(error, description);
 
         return new Trace(frames, exceptionInfo);
     }

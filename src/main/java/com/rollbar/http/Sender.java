@@ -7,18 +7,16 @@ import com.rollbar.payload.Payload;
  */
 public interface Sender {
     /**
-     * Send the payload to Rollbar
+     * Send the payload to Rollbar returning the response
      * @param payload the payload to send
      * @return a {@link RollbarResponse} indicating what happened.
-     * @throws ConnectionFailedException if the connection failed before receiving a response from Rollbar.
      */
     RollbarResponse send(Payload payload);
 
     /**
-     * Send the json payload (already serialized
-     * @param payload
+     * Send the json payload, handle the response with an object
+     * @param payload the payload being sent
      * @param handler an object that can handle a rollbar response handler
-     * @throws ConnectionFailedException
      */
     void send(Payload payload, RollbarResponseHandler handler);
 }

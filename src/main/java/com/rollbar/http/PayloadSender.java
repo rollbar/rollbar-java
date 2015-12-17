@@ -14,6 +14,9 @@ import java.util.regex.Pattern;
  * and the default implementation.
  */
 public class PayloadSender implements Sender {
+    /**
+     * If you don't set the url this is the URL that gets used.
+     */
     public static final String DEFAULT_API_ENDPOINT = "https://api.rollbar.com/api/1/item/";
 
     private final URL url;
@@ -46,7 +49,6 @@ public class PayloadSender implements Sender {
      * Returns the (parsed) response from Rollbar.
      * @param payload the serialized JSON payload
      * @return the response from Rollbar {@link RollbarResponse}
-     * @throws ConnectionFailedException if the connection fails at any point along the way {@link ConnectionFailedException}
      */
     public RollbarResponse send(Payload payload) {
         HttpURLConnection connection = null;

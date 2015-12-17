@@ -19,21 +19,34 @@ public class Body implements JsonSerializable {
      * @throws ArgumentNullException if error is null
      */
     public static Body fromError(Throwable error) throws ArgumentNullException {
+        return fromError(error, null);
+    }
+
+    /**
+     * Create a Body from an error with a human readable descriptpion. If {@link Throwable#getCause()} isn't null will
+     * return a Trace Chain
+     * @param error the error to turn into a Body
+     * @param description the human readable description of the top level error in the chain (or the error itself if not
+     *                    a chained error).
+     * @return the Rollbar Body constructed from the error
+     * @throws ArgumentNullException if error is null
+     */
+    public static Body fromError(Throwable error, String description) throws ArgumentNullException {
         Validate.isNotNull(error, "error");
         if (error.getCause() == null) {
-            return Body.trace(error);
+            return Body.trace(error, description);
         } else {
-            return Body.traceChain(error);
+            return Body.traceChain(error, description);
         }
     }
 
-    private static Body traceChain(Throwable error) throws ArgumentNullException {
-        final TraceChain chain = TraceChain.fromThrowable(error);
+    private static Body traceChain(Throwable error, String description) throws ArgumentNullException {
+        final TraceChain chain = TraceChain.fromThrowable(error, description);
         return new Body(chain);
     }
 
-    private static Body trace(Throwable error) throws ArgumentNullException {
-        final Trace trace = Trace.fromThrowable(error);
+    private static Body trace(Throwable error, String description) throws ArgumentNullException {
+        final Trace trace = Trace.fromThrowable(error, description);
         return new Body(trace);
     }
 
