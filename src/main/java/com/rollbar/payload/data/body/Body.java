@@ -54,7 +54,7 @@ public class Body implements JsonSerializable {
      * @return a body containing a message containing this message body and extra arguments
      * @throws ArgumentNullException if message is null or whitespace
      */
-    public static Body fromString(String message, LinkedHashMap<String, Object> extra) throws ArgumentNullException {
+    public static Body fromString(String message, Map<String, Object> extra) throws ArgumentNullException {
         final BodyContents contents = new Message(message, extra);
         return new Body(contents);
     }
