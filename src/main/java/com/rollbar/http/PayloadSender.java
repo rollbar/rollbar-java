@@ -1,5 +1,6 @@
 package com.rollbar.http;
 
+import com.rollbar.payload.Payload;
 import com.rollbar.payload.utilities.ArgumentNullException;
 import com.rollbar.payload.utilities.Validate;
 
@@ -43,23 +44,41 @@ public class PayloadSender implements Sender {
     /**
      * Sends the json (rollbar payload) to the endpoint configured in the constructor.
      * Returns the (parsed) response from Rollbar.
-     * @param json the serialized JSON payload
+     * @param payload the serialized JSON payload
      * @return the response from Rollbar {@link RollbarResponse}
      * @throws ConnectionFailedException if the connection fails at any point along the way {@link ConnectionFailedException}
      */
-    public RollbarResponse send(String json) throws ConnectionFailedException {
-        HttpURLConnection connection = getConnection();
+    public RollbarResponse send(Payload payload) {
+        HttpURLConnection connection = null;
+        try {
+            connection = getConnection();
+        } catch (ConnectionFailedException e) {
+            return RollbarResponse.failure(RollbarResponseCode.ConnectionFailed, e.getMessage());
+        }
 
         final byte[] bytes;
         try {
-            bytes = json.getBytes("UTF-8");
+            bytes = payload.toJson().getBytes("UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new IllegalStateException("Rollbar Requires UTF8 Encoding and your JVM does not support UTF8, please update your JVM");
         }
 
-        sendJson(connection, bytes);
+        try {
+            sendJson(connection, bytes);
+        } catch (ConnectionFailedException e) {
+            return RollbarResponse.failure(RollbarResponseCode.ConnectionFailed, e.getMessage());
+        }
 
-        return readResponse(connection);
+        try {
+            return readResponse(connection);
+        } catch (ConnectionFailedException e) {
+            return RollbarResponse.failure(RollbarResponseCode.ConnectionFailed, e.getMessage());
+        }
+    }
+
+    public void send(Payload payload, RollbarResponseHandler handler) {
+        RollbarResponse response = send(payload);
+        handler.handleResponse(response);
     }
 
     private static final Pattern messagePattern = Pattern.compile("\"message\"\\s*:\\s*\"([^\"]*)\"");

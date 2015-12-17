@@ -1,9 +1,6 @@
 package com.rollbar.payload;
 
-import com.rollbar.http.ConnectionFailedException;
-import com.rollbar.http.PayloadSender;
-import com.rollbar.http.RollbarResponse;
-import com.rollbar.http.Sender;
+import com.rollbar.http.*;
 import com.rollbar.payload.data.Data;
 import com.rollbar.payload.data.Level;
 import com.rollbar.payload.data.Notifier;
@@ -136,10 +133,17 @@ public final class Payload implements JsonSerializable {
     /**
      * Send this payload to Rollbar by the default Sender and Serializer
      * @return the response from Rollbar
-     * @throws ConnectionFailedException if the connection to Rollbar failed
      */
-    public RollbarResponse send() throws ConnectionFailedException {
-        return sender.send(this.toJson());
+    public RollbarResponse send() {
+        return sender.send(this);
+    }
+
+    /**
+     * Send this payload to Rollbar. Handle the response with the handler.
+     * @param handler the handler for
+     */
+    public void send(RollbarResponseHandler handler) {
+        sender.send(this, handler);
     }
 
     public Map<String, Object> asJson() {

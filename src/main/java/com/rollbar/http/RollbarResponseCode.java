@@ -42,9 +42,14 @@ public enum RollbarResponseCode {
     InternalServerError(500),
 
     /**
-     * Indicates that the Payload was not sent to Rollbar
+     * Indicates that the Payload was not sent to Rollbar because it was filtered
      */
-    Filtered(-1);
+    Filtered(-1),
+
+    /**
+     * Indicates that the Payload was not sent to Rollbar because the connection failed
+     */
+    ConnectionFailed(-2);
 
     private final int value;
 
