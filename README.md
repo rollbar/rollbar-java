@@ -6,14 +6,88 @@ can be sent correctly.
 
 ## Installation
 
-Installation is through Maven or cloning the repo, compiling it, and including it in your project manually.
+Installation is through Maven:
+
+```xml
+<dependency>
+    <groupId>com.rollbar</groupId>
+    <artifactId>rollbar</artifactId>
+</dependency>
+```
 
 ## Usage
 
-Rollbar provides a set of classes for building and sending error reports to Rollbar.
+Construct a `Rollbar` and call `handleUncaughtErrors` on it:
 
-Since catching the errors to report is so framework specific we've kept this package separate from the packages that
-integrate directly into your framework, be it Spring, Swing, Play, or something completely custom.
+```java
+public class MainClass {
+    public static final Rollbar rollbar = new Rollbar("ACCESS_TOKEN", "production");
+    public int main(String[] args) {
+        rollbar.handleUncaughtErrors();
+        OtherClass.runProgram();
+        return 0;
+    }
+}
+```
+
+If you're running a Web application or using a framework that handles errors in a special way you'll need to get an
+instance of a `Rollbar` using whatever technique is appropriate for your framework. For Spring, for instance, a properly
+configured Rollbar bean along with the following class will do the trick:
+
+```java
+@ControllerAdvice
+class RollbarExceptionHandler {
+    private final Rollbar rollbar;
+
+    public RollbarExceptionHandler(Rollbar rollbar) {
+        this.rollbar = rollbar;
+    }
+
+    @ExceptionHandler(value = Exception.class)
+    public ModelAndView defaultErrorHandler(HttpServletRequest req, Exception e) throws Exception {
+        if (AnnotationUtils.findAnnotation(e.getClass(), ResponseStatus.class) != null)
+            throw e;
+
+        rollbar.log(e);
+
+        throw e;
+    }
+}
+```
+
+You might configure your bean with something like this:
+
+```java
+package com.yourcompany.product;
+
+import org.springframework.beans.factory.FactoryBean;
+import com.rollbar.Rollbar;
+
+public class RollbarBean implements FactoryBean<Rollbar> {
+	private Rollbar rollbar = new Rollbar("YOUR_ACCESS_TOKEN_HERE", "production");
+
+	@Override
+	public Rollbar getObject() throws Exception {
+		return rollbar;
+	}
+
+	@Override
+	public Class<? extends Rollbar> getObjectType() {
+		return rollbar.getClass();
+	}
+
+	@Override
+	public boolean isSingleton() {
+		return false;
+	}
+}
+```
+
+You can, of course, always choose to configure this with XML.
+
+## Custom Usage
+
+Rollbar also provides a set of classes for building and sending error reports to Rollbar.
 
 The simplest way to use this is with a `try/catch` like so:
 
@@ -67,8 +141,8 @@ public class Program {
 }
 ```
 
-Note that that snippet monitors a **single** thread. If your framework starts a thread per request, or uses different
-threads for different parts of your UI you'll need to take that into consideration.
+Note that the above snippet monitors a **single** thread. If your framework starts a thread per request, or uses
+different threads for different parts of your UI you'll need to take that into consideration.
 
 ## Tips for Optimal Usage
 
@@ -82,7 +156,8 @@ threads for different parts of your UI you'll need to take that into considerati
    performance issues!). If you are only going to alter one or two fields then using these setters is a great time
    saver, and you should feel free to use them. If you are fully customizing a portion of your payload with lots of
    custom data, however, you should use the constructor that exposes all the fields available to the class.
- * The fluent interface uses `property()` as the getter, and `proerty(TypeName val)` as the setter, rather than the
+
+ * The fluent interface uses `property()` as the getter, and `property(TypeName val)` as the setter, rather than the
    typical Java `getProperty()` and `setProperty()` convention. This should help remind the user that the setter isn't
    doing a simple set operation, and results in an attractive (to the Author) fluent interface:
 
@@ -107,7 +182,6 @@ threads for different parts of your UI you'll need to take that into considerati
    use a library (like Apache or Google's HttpClient library).
  * If you integrate your library into a library for which there is no sub-library on Maven, consider creating a package
    so others can benefit from your expertise!
-
 ## Contributing
 
 This library was written by someone who knows C# much better than Java. Feel free to issue stylistic PRs, or offer
