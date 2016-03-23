@@ -10,7 +10,7 @@ import com.rollbar.payload.utilities.RollbarSerializer;
 import com.rollbar.payload.utilities.Validate;
 import com.rollbar.payload.utilities.JsonSerializable;
 
-import java.time.Instant;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -47,7 +47,7 @@ public final class Payload implements JsonSerializable {
         Body body = Body.fromError(error);
         Level level = error instanceof Error ? Level.CRITICAL : Level.ERROR;
         String platform = System.getProperty("java.version");
-        Data d = new Data(environment, body, level, Instant.now(), null, platform, "java", null, null, null, null, null, custom, null, null, null, new Notifier());
+        Data d = new Data(environment, body, level, new Date(), null, platform, "java", null, null, null, null, null, custom, null, null, null, new Notifier());
         return new Payload(accessToken, d);
     }
 
@@ -66,7 +66,7 @@ public final class Payload implements JsonSerializable {
 
         Body body = Body.fromString(message, custom);
         String platform = System.getProperty("java.version");
-        Data d = new Data(environment, body, Level.WARNING, Instant.now(), null, platform, "java", null, null, null, null, null, null, null, null, null, new Notifier());
+        Data d = new Data(environment, body, Level.WARNING, new Date(), null, platform, "java", null, null, null, null, null, null, null, null, null, new Notifier());
         return new Payload(accessToken, d);
     }
 

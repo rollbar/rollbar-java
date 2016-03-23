@@ -2,6 +2,7 @@ package com.rollbar.payload.data.body;
 
 import com.rollbar.payload.utilities.ArgumentNullException;
 import com.rollbar.payload.utilities.JsonSerializable;
+import com.rollbar.payload.utilities.StringUtils;
 import com.rollbar.payload.utilities.Validate;
 
 import java.util.LinkedHashMap;
@@ -25,7 +26,7 @@ public class Body implements JsonSerializable {
     /**
      * Create a Body from an error with a human readable descriptpion. If {@link Throwable#getCause()} isn't null will
      * return a Trace Chain
-     * @param error the error to turn into a Body
+     * @param error       the error to turn into a Body
      * @param description the human readable description of the top level error in the chain (or the error itself if not
      *                    a chained error).
      * @return the Rollbar Body constructed from the error
@@ -63,7 +64,7 @@ public class Body implements JsonSerializable {
     /**
      * Create a Body from a string message and additional arguments
      * @param message the message to convert into a Rollbar Message
-     * @param extra the extra data to send to Rollbar
+     * @param extra   the extra data to send to Rollbar
      * @return a body containing a message containing this message body and extra arguments
      * @throws ArgumentNullException if message is null or whitespace
      */
@@ -167,6 +168,6 @@ public class Body implements JsonSerializable {
     }
 
     private static String toSnakeCase(String simpleName) {
-        return String.join("_", simpleName.split("(?=\\p{Lu})")).toLowerCase();
+        return StringUtils.join("_", simpleName.split("(?=\\p{Lu})")).toLowerCase();
     }
 }

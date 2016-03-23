@@ -8,8 +8,7 @@ import com.rollbar.payload.utilities.InvalidLengthException;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -84,14 +83,14 @@ public class DataTest {
 
     @Test
     public void testTimestamp() throws Exception {
-        Instant one = Instant.ofEpochSecond(Instant.now().getEpochSecond());
-        Instant two = one.minus(7, ChronoUnit.DAYS);
-        TestThat.getAndSetWorks(d, one, two, new GetAndSet<Data, Instant>() {
-            public Instant get(Data data) {
+        Date one = new Date(System.currentTimeMillis() / 1000 * 1000);
+        Date two = new Date(one.getTime() - 7 * 24 * 60 * 60 * 1000);
+        TestThat.getAndSetWorks(d, one, two, new GetAndSet<Data, Date>() {
+            public Date get(Data data) {
                 return data.timestamp();
             }
 
-            public Data set(Data data, Instant val) {
+            public Data set(Data data, Date val) {
                 return data.timestamp(val);
             }
         });
@@ -301,6 +300,6 @@ public class DataTest {
 
     @Test
     public void testConstructor() throws Exception {
-        Data d = new Data("environment", Body.fromString("String"), Level.CRITICAL, Instant.now(), "version", "platform", "language", "framework", "CONTEXT", new Request(), new Person("ID"), new Server(), new LinkedHashMap<String, Object>(), "fingerprint", "title", UUID.randomUUID(), new Notifier());
+        Data d = new Data("environment", Body.fromString("String"), Level.CRITICAL, new Date(), "version", "platform", "language", "framework", "CONTEXT", new Request(), new Person("ID"), new Server(), new LinkedHashMap<String, Object>(), "fingerprint", "title", UUID.randomUUID(), new Notifier());
     }
 }
