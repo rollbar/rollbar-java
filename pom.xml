@@ -9,7 +9,7 @@
 
     <groupId>com.rollbar</groupId>
     <artifactId>rollbar</artifactId>
-    <version>0.3.0</version>
+    <version>0.4.0</version>
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
