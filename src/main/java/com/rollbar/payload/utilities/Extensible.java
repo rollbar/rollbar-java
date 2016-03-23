@@ -51,7 +51,7 @@ public abstract class Extensible<T extends Extensible<T>> implements JsonSeriali
      * @return null or the member at that key
      */
     public Object get(String name) {
-        return members.getOrDefault(name, null);
+        return members.get(name);
     }
 
     /**
@@ -115,8 +115,8 @@ public abstract class Extensible<T extends Extensible<T>> implements JsonSeriali
     public Map<String, Object> asJson() {
         LinkedHashMap<String, Object> json = new LinkedHashMap<String, Object>();
         for(String key : knownMembers()) {
-            if (this.members.containsKey(key) && this.members.getOrDefault(key, null) != null) {
-                json.put(key, this.members.getOrDefault(key, null));
+            if (this.members.containsKey(key) && this.members.get(key) != null) {
+                json.put(key, this.members.get(key));
             }
         }
         for(Map.Entry<String, Object> entry : this.members.entrySet()) {

@@ -6,7 +6,7 @@ import com.rollbar.payload.utilities.InvalidLengthException;
 import com.rollbar.payload.utilities.JsonSerializable;
 import com.rollbar.payload.utilities.Validate;
 
-import java.time.Instant;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -66,8 +66,8 @@ public class Data implements JsonSerializable {
      * @throws ArgumentNullException if environment or body is null
      * @throws InvalidLengthException if environment or title is over 255 characters, or uuid is over 32 characters
      */
-    public Data(String environment, Body body, Level level, Instant timestamp, String codeVersion, String platform, String language, String framework, String context, Request request, Person person, Server server, Map<String, Object> custom, String fingerprint, String title, UUID uuid, Notifier notifier) throws ArgumentNullException, InvalidLengthException {
-        this(environment, body, level, timestamp == null ? null : timestamp.getEpochSecond(), codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid == null ? null : uuid.toString().replace("-", ""), notifier);
+    public Data(String environment, Body body, Level level, Date timestamp, String codeVersion, String platform, String language, String framework, String context, Request request, Person person, Server server, Map<String, Object> custom, String fingerprint, String title, UUID uuid, Notifier notifier) throws ArgumentNullException, InvalidLengthException {
+        this(environment, body, level, timestamp == null ? null : (timestamp.getTime() / 1000), codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid == null ? null : uuid.toString().replace("-", ""), notifier);
     }
 
     private Data(String environment, Body body, Level level, Long timestamp, String codeVersion, String platform, String language, String framework, String context, Request request, Person person, Server server, Map<String, Object> custom, String fingerprint, String title, String uuid, Notifier notifier) throws ArgumentNullException, InvalidLengthException {
@@ -153,8 +153,8 @@ public class Data implements JsonSerializable {
     /**
      * @return the moment the bug happened, visible in ui as client_timestamp
      */
-    public Instant timestamp() {
-        return this.timestamp == null ? null : Instant.ofEpochSecond(this.timestamp);
+    public Date timestamp() {
+        return this.timestamp == null ? null : new Date(this.timestamp * 1000);
     }
 
     /**
@@ -162,8 +162,8 @@ public class Data implements JsonSerializable {
     * @param date the moment the bug happened, visible in ui as client_timestamp
     * @return copy of this Data with date overridden
     */
-    public Data timestamp(Instant date) {
-        return new Data(environment, body, level, date == null ? null : date.getEpochSecond(), codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
+    public Data timestamp(Date date) {
+        return new Data(environment, body, level, date == null ? null : (date.getTime() / 1000), codeVersion, platform, language, framework, context, request, person, server, custom, fingerprint, title, uuid, notifier);
     }
 
     /**

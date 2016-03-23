@@ -7,7 +7,7 @@ import com.rollbar.payload.data.body.Body;
 import com.rollbar.payload.utilities.ArgumentNullException;
 import com.rollbar.payload.utilities.Validate;
 
-import java.time.Instant;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -529,7 +529,7 @@ public class Rollbar {
             custom = finalCustom;
         }
 
-        Data data = new Data(getEnvironment(), body, level, Instant.now(), getCodeVersion(), getPlatform(),
+        Data data = new Data(getEnvironment(), body, level, new Date(), getCodeVersion(), getPlatform(),
                              getLanguage(), getFramework(), getContext(), getRequest(), getPerson(), getServer(),
                              custom, null, null, null, getNotifier());
         Payload p = new Payload(getAccessToken(), data);

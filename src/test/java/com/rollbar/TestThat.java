@@ -1,6 +1,7 @@
 package com.rollbar;
 
 import com.rollbar.payload.utilities.Extensible;
+import com.rollbar.payload.utilities.StringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -42,7 +43,6 @@ public class TestThat {
      * Returns a null string if not equivalent, or the differing item if they aren't.
      * @param beforeResult
      * @param afterResult
-     * @param <T>
      * @param <U>
      * @return null if equivalent, the difference if they aren't
      */
@@ -65,7 +65,7 @@ public class TestThat {
             intersect.retainAll(firstGetMap.keySet());
             exclusion.removeAll(intersect);
             if (!exclusion.isEmpty()) {
-                String missed = String.join(", ", exclusion);
+                String missed = StringUtils.join(", ", exclusion);
                 return String.format("Keys in map type mismatched, differ at: %s", missed);
             }
 
@@ -161,13 +161,13 @@ public class TestThat {
             fail("No differing fields!");
         }
         if (differingFields.size() > 1) {
-            fail(String.format("More than one field differs! (%s)", String.join(", ", differingFields)));
+            fail(String.format("More than one field differs! (%s)", StringUtils.join(", ", differingFields)));
         }
     }
 
     private static void addIfKeysDiffer(HashSet<String> differingFields, Map<String, Object> membersFirst, Map<String, Object> membersSecond, String key) {
-        Object one = membersFirst.getOrDefault(key, null);
-        Object two = membersSecond.getOrDefault(key, null);
+        Object one = membersFirst.get(key);
+        Object two = membersSecond.get(key);
         if (areDifferent(one, two)) {
             differingFields.add(key);
         }
