@@ -12,6 +12,6 @@
   <description>For connecting your applications built on the JVM to Rollbar for Error Reporting</description>
 
   <modules>
-    <module>rollbar</module>
+    <module>rollbar-payload</module>
   </modules>
 </project>
