@@ -13,5 +13,6 @@
 
   <modules>
     <module>rollbar-payload</module>
+    <module>rollbar-sender</module>
   </modules>
 </project>
