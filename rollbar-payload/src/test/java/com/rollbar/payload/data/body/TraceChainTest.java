@@ -2,13 +2,13 @@ package com.rollbar.payload.data.body;
 
 import com.rollbar.testing.*;
 
-import com.rollbar.http.ConnectionFailedException;
 import com.rollbar.utilities.ArgumentNullException;
 import com.rollbar.utilities.InvalidLengthException;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import java.net.ConnectException;
 import java.net.URL;
 
 import static org.junit.Assert.*;
@@ -28,7 +28,7 @@ public class TraceChainTest {
     @Test
     public void testTraces() throws Exception {
         Trace one = Trace.fromThrowable(new ArgumentNullException("null_argument"));
-        Trace two = Trace.fromThrowable(new ConnectionFailedException(new URL("http://www.google.com"), "oops", null));
+        Trace two = Trace.fromThrowable(new ConnectException("oops"));
         TestThat.getAndSetWorks(t, new Trace[] { one }, new Trace[] { two }, new GetAndSet<TraceChain, Trace[]>() {
             public Trace[] get(TraceChain traceChain) {
                 return traceChain.traces();

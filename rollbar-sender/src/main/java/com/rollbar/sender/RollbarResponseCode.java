@@ -1,4 +1,4 @@
-package com.rollbar.http;
+package com.rollbar.sender;
 
 /**
  * Represents expected response codes from POSTing an item to Rollbar

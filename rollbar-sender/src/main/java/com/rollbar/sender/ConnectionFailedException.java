@@ -1,4 +1,4 @@
-package com.rollbar.http;
+package com.rollbar.sender;
 
 import java.net.URL;
 

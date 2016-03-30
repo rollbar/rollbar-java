@@ -1,4 +1,4 @@
-package com.rollbar.http;
+package com.rollbar.sender;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -57,8 +57,8 @@ public class RollbarSerializerTest {
             final JsonObject lastFrame = frames.get(frames.size() - 1).getAsJsonObject();
             final JsonObject secondToLastFrame = frames.get(frames.size() - 2).getAsJsonObject();
 
-            assertEquals("com.rollbar.http.RollbarSerializerTest.java", lastFrame.get("filename").getAsString());
-            assertEquals("com.rollbar.http.RollbarSerializerTest.java", secondToLastFrame.get("filename").getAsString());
+            assertEquals("com.rollbar.sender.RollbarSerializerTest.java", lastFrame.get("filename").getAsString());
+            assertEquals("com.rollbar.sender.RollbarSerializerTest.java", secondToLastFrame.get("filename").getAsString());
             assertEquals("throwException", lastFrame.get("method").getAsString());
             assertEquals("getError", secondToLastFrame.get("method").getAsString());
         } catch (ArgumentNullException e) {

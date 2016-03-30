@@ -1,9 +1,11 @@
 package com.rollbar;
 
-import com.rollbar.http.*;
 import com.rollbar.payload.Payload;
 import com.rollbar.payload.data.*;
 import com.rollbar.payload.data.body.Body;
+import com.rollbar.sender.PayloadSender;
+import com.rollbar.sender.RollbarResponseHandler;
+import com.rollbar.sender.Sender;
 import com.rollbar.utilities.ArgumentNullException;
 import com.rollbar.utilities.Validate;
 

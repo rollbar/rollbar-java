@@ -16,8 +16,7 @@
     <url>http://www.rollbar.com</url>
 
     <groupId>com.rollbar</groupId>
-    <artifactId>rollbar</artifactId>
-    <version>0.4.0</version>
+    <artifactId>rollbar-payload</artifactId>
 
     <dependencies>
         <dependency>

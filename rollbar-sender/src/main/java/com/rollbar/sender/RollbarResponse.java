@@ -1,4 +1,4 @@
-package com.rollbar.http;
+package com.rollbar.sender;
 
 /**
  * The RollbarResponse is the response received from Rollbar after sending a report.

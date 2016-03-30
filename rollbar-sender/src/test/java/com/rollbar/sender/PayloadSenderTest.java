@@ -1,8 +1,9 @@
-package com.rollbar.http;
+package com.rollbar.sender;
 
 import com.rollbar.payload.Payload;
 import com.rollbar.payload.data.Notifier;
 import com.rollbar.utilities.ArgumentNullException;
+
 import org.junit.Test;
 
 import static org.junit.Assert.*;

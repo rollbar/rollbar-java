@@ -1,4 +1,4 @@
-package com.rollbar.http;
+package com.rollbar.sender;
 
 /**
  * Represents an unexpected return value from the Rollbar API.

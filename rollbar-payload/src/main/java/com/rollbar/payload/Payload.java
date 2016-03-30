@@ -1,6 +1,5 @@
 package com.rollbar.payload;
 
-import com.rollbar.http.*;
 import com.rollbar.payload.data.Data;
 import com.rollbar.payload.data.Level;
 import com.rollbar.payload.data.Notifier;
@@ -18,18 +17,6 @@ import java.util.Map;
  * successful when serialized and POSTed to the correct endpoint.
  */
 public final class Payload implements JsonSerializable {
-    private static Sender sender = new PayloadSender();
-
-    /**
-     * Call to set the sender used by all Payloads when `send` is called.
-     * Note: This should be thread safe. That is easiest when the sender keeps *no* instance data.
-     * @param sender not nullable, the sender to use instead of the default
-     */
-    public static void setSender(Sender sender) {
-        Validate.isNotNull(sender, "sender");
-        Payload.sender = sender;
-    }
-
     /**
      * A shortcut factory for creating a payload
      * @param accessToken not nullable, the server_post access token to send this payload to
@@ -127,22 +114,6 @@ public final class Payload implements JsonSerializable {
      */
     public String toJson() {
         return new RollbarSerializer().serialize(this);
-    }
-
-    /**
-     * Send this payload to Rollbar by the default Sender and Serializer
-     * @return the response from Rollbar
-     */
-    public RollbarResponse send() {
-        return sender.send(this);
-    }
-
-    /**
-     * Send this payload to Rollbar. Handle the response with the handler.
-     * @param handler the handler for
-     */
-    public void send(RollbarResponseHandler handler) {
-        sender.send(this, handler);
     }
 
     public Map<String, Object> asJson() {

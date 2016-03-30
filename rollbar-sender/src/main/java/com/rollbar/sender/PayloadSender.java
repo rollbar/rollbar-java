@@ -1,4 +1,4 @@
-package com.rollbar.http;
+package com.rollbar.sender;
 
 import com.rollbar.payload.Payload;
 import com.rollbar.utilities.ArgumentNullException;
