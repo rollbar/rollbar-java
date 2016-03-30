@@ -1,16 +1,16 @@
-package com.rollbar.sender;
+package com.rollbar.payload;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.rollbar.payload.Payload;
+
 import com.rollbar.payload.data.Data;
 import com.rollbar.payload.data.Notifier;
 import com.rollbar.payload.data.body.Body;
 import com.rollbar.payload.data.body.Message;
 import com.rollbar.utilities.ArgumentNullException;
 import com.rollbar.utilities.InvalidLengthException;
-import com.rollbar.payload.RollbarSerializer;
+
 import org.junit.Test;
 
 import java.util.LinkedHashMap;
@@ -57,8 +57,8 @@ public class RollbarSerializerTest {
             final JsonObject lastFrame = frames.get(frames.size() - 1).getAsJsonObject();
             final JsonObject secondToLastFrame = frames.get(frames.size() - 2).getAsJsonObject();
 
-            assertEquals("com.rollbar.sender.RollbarSerializerTest.java", lastFrame.get("filename").getAsString());
-            assertEquals("com.rollbar.sender.RollbarSerializerTest.java", secondToLastFrame.get("filename").getAsString());
+            assertEquals("com.rollbar.payload.RollbarSerializerTest.java", lastFrame.get("filename").getAsString());
+            assertEquals("com.rollbar.payload.RollbarSerializerTest.java", secondToLastFrame.get("filename").getAsString());
             assertEquals("throwException", lastFrame.get("method").getAsString());
             assertEquals("getError", secondToLastFrame.get("method").getAsString());
         } catch (ArgumentNullException e) {
