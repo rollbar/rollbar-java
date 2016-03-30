@@ -6,12 +6,16 @@
 
     <groupId>com.rollbar</groupId>
     <artifactId>rollbar-parent</artifactId>
-    <version>0.0.1-alpha</version>
+    <version>${currentVersion}</version>
 
     <packaging>pom</packaging>
 
     <name>Parent POM for Rollbar Modules</name>
     <description>For Rollbar modules to inherit from</description>
+
+    <properties>
+        <currentVersion>0.5.0</currentVersion>
+    </properties>
 
     <build>
         <plugins>

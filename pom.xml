@@ -4,7 +4,7 @@
 	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <groupId>com.rollbar</groupId>
   <artifactId>java-rollbar</artifactId>
-  <version>0.0.1-alpha</version>
+  <version>n/a</version>
   <packaging>pom</packaging>
   <modelVersion>4.0.0</modelVersion>
 
