@@ -8,9 +8,9 @@ import com.rollbar.payload.data.Data;
 import com.rollbar.payload.data.Notifier;
 import com.rollbar.payload.data.body.Body;
 import com.rollbar.payload.data.body.Message;
-import com.rollbar.payload.utilities.ArgumentNullException;
-import com.rollbar.payload.utilities.InvalidLengthException;
-import com.rollbar.payload.utilities.RollbarSerializer;
+import com.rollbar.utilities.ArgumentNullException;
+import com.rollbar.utilities.InvalidLengthException;
+import com.rollbar.payload.RollbarSerializer;
 import org.junit.Test;
 
 import java.util.LinkedHashMap;

@@ -1,13 +1,11 @@
 package com.rollbar.payload.data;
 
-import com.rollbar.GetAndSet;
-import com.rollbar.TestThat;
+import com.rollbar.testing.GetAndSet;
+import com.rollbar.testing.TestThat;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
 
 import static org.junit.Assert.*;
 

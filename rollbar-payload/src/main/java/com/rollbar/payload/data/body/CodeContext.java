@@ -1,6 +1,6 @@
 package com.rollbar.payload.data.body;
 
-import com.rollbar.payload.utilities.JsonSerializable;
+import com.rollbar.utilities.JsonSerializable;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

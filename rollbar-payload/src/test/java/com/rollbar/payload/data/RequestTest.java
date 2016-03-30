@@ -1,7 +1,7 @@
 package com.rollbar.payload.data;
 
-import com.rollbar.GetAndSet;
-import com.rollbar.TestThat;
+import com.rollbar.testing.*;
+
 import org.junit.Before;
 import org.junit.Test;
 

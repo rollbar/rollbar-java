@@ -2,7 +2,7 @@ package com.rollbar.http;
 
 import com.rollbar.payload.Payload;
 import com.rollbar.payload.data.Notifier;
-import com.rollbar.payload.utilities.ArgumentNullException;
+import com.rollbar.utilities.ArgumentNullException;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

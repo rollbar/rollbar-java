@@ -1,4 +1,4 @@
-package com.rollbar.payload.utilities;
+package com.rollbar.utilities;
 
 /**
  * Indicates a null argument was passed when it shouldn't have been.

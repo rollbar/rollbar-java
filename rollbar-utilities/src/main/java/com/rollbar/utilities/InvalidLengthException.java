@@ -1,4 +1,4 @@
-package com.rollbar.payload.utilities;
+package com.rollbar.utilities;
 
 /**
  * An IllegalArgumentException indicating an argument that's too long or too short.

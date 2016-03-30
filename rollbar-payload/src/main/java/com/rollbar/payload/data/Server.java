@@ -1,6 +1,6 @@
 package com.rollbar.payload.data;
 
-import com.rollbar.payload.utilities.Extensible;
+import com.rollbar.utilities.Extensible;
 
 import java.util.Collections;
 import java.util.HashSet;

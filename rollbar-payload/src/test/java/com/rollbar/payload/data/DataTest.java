@@ -1,10 +1,10 @@
 package com.rollbar.payload.data;
 
-import com.rollbar.GetAndSet;
-import com.rollbar.TestThat;
+import com.rollbar.testing.GetAndSet;
+import com.rollbar.testing.TestThat;
 import com.rollbar.payload.data.body.Body;
-import com.rollbar.payload.utilities.ArgumentNullException;
-import com.rollbar.payload.utilities.InvalidLengthException;
+import com.rollbar.utilities.ArgumentNullException;
+import com.rollbar.utilities.InvalidLengthException;
 import org.junit.Before;
 import org.junit.Test;
 

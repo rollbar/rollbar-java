@@ -1,10 +1,8 @@
-package com.rollbar.payload.utilities;
+package com.rollbar.utilities;
 
-import org.hamcrest.Matcher;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-import static org.hamcrest.CoreMatchers.*;
+import org.junit.Assert;
 
 /**
  * Created by chris on 11/20/15.
@@ -31,7 +29,7 @@ public class ValidateTest {
             Validate.isNotNullOrWhitespace("  \t\n", "argName");
         } catch (ArgumentNullException e) {
             String msg = e.getMessage();
-            assertTrue(String.format("'%s' does not contain 'argName'", msg), msg != null && msg.contains("argName"));
+            Assert.assertTrue(String.format("'%s' does not contain 'argName'", msg), msg != null && msg.contains("argName"));
         }
     }
 
@@ -46,8 +44,8 @@ public class ValidateTest {
             Validate.maxLength("Test", 2, "argName");
         } catch (InvalidLengthException e) {
             String msg = e.getMessage();
-            assertTrue(String.format("'%s' does not contain 'over 2'", msg), msg != null && msg.contains("over 2"));
-            assertTrue(String.format("'%s' does not contain 'argName'", msg), msg.contains("argName"));
+            Assert.assertTrue(String.format("'%s' does not contain 'over 2'", msg), msg != null && msg.contains("over 2"));
+            Assert.assertTrue(String.format("'%s' does not contain 'argName'", msg), msg.contains("argName"));
         }
     }
 
@@ -62,8 +60,8 @@ public class ValidateTest {
             Validate.minLength(new Character[0], 2, "argName");
         } catch (InvalidLengthException e) {
             String msg = e.getMessage();
-            assertTrue(String.format("'%s' does not contain 'under 2'", msg), msg != null && msg.contains("under 2"));
-            assertTrue(String.format("'%s' does not contain 'argName'", msg), msg.contains("argName"));
+            Assert.assertTrue(String.format("'%s' does not contain 'under 2'", msg), msg != null && msg.contains("under 2"));
+            Assert.assertTrue(String.format("'%s' does not contain 'argName'", msg), msg.contains("argName"));
         }
     }
 
@@ -78,7 +76,7 @@ public class ValidateTest {
             Validate.isNotNull(null, "argName");
         } catch (ArgumentNullException e) {
             String msg = e.getMessage();
-            assertTrue(String.format("'%s' does not contain 'argName'", msg), msg != null && msg.contains("argName"));
+            Assert.assertTrue(String.format("'%s' does not contain 'argName'", msg), msg != null && msg.contains("argName"));
         }
     }
 

@@ -5,10 +5,9 @@ import com.rollbar.payload.data.Data;
 import com.rollbar.payload.data.Level;
 import com.rollbar.payload.data.Notifier;
 import com.rollbar.payload.data.body.Body;
-import com.rollbar.payload.utilities.ArgumentNullException;
-import com.rollbar.payload.utilities.RollbarSerializer;
-import com.rollbar.payload.utilities.Validate;
-import com.rollbar.payload.utilities.JsonSerializable;
+import com.rollbar.utilities.ArgumentNullException;
+import com.rollbar.utilities.Validate;
+import com.rollbar.utilities.JsonSerializable;
 
 import java.util.Date;
 import java.util.LinkedHashMap;

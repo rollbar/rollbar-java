@@ -1,9 +1,9 @@
 package com.rollbar.payload.data.body;
 
-import com.rollbar.payload.utilities.ArgumentNullException;
-import com.rollbar.payload.utilities.JsonSerializable;
-import com.rollbar.payload.utilities.StringUtils;
-import com.rollbar.payload.utilities.Validate;
+import com.rollbar.utilities.ArgumentNullException;
+import com.rollbar.utilities.JsonSerializable;
+import com.rollbar.utilities.StringUtils;
+import com.rollbar.utilities.Validate;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

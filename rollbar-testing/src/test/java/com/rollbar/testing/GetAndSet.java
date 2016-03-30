@@ -1,4 +1,4 @@
-package com.rollbar;
+package com.rollbar.testing;
 
 /**
  * Created by chris on 11/20/15.

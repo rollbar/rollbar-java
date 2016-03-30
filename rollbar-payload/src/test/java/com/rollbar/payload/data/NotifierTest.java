@@ -1,11 +1,9 @@
 package com.rollbar.payload.data;
 
-import com.rollbar.GetAndSet;
-import com.rollbar.TestThat;
+import com.rollbar.testing.GetAndSet;
+import com.rollbar.testing.TestThat;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by chris on 11/20/15.

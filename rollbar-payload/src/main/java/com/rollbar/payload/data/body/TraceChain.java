@@ -1,13 +1,11 @@
 package com.rollbar.payload.data.body;
 
-import com.rollbar.payload.utilities.ArgumentNullException;
-import com.rollbar.payload.utilities.InvalidLengthException;
-import com.rollbar.payload.utilities.JsonSerializable;
-import com.rollbar.payload.utilities.Validate;
+import com.rollbar.utilities.ArgumentNullException;
+import com.rollbar.utilities.InvalidLengthException;
+import com.rollbar.utilities.JsonSerializable;
+import com.rollbar.utilities.Validate;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * Represents a chain of errors (typically from Exceptions with {@link Exception#getCause()} returning some value)

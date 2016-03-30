@@ -14,5 +14,7 @@
   <modules>
     <module>rollbar-payload</module>
     <module>rollbar-sender</module>
+    <module>rollbar-utilities</module>
+    <module>rollbar-testing</module>
   </modules>
 </project>

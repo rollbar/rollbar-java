@@ -1,4 +1,4 @@
-package com.rollbar.payload.utilities;
+package com.rollbar.utilities;
 
 /**
  * An object that can be serialized to JSON

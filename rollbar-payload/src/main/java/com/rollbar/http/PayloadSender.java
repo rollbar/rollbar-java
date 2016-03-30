@@ -1,8 +1,8 @@
 package com.rollbar.http;
 
 import com.rollbar.payload.Payload;
-import com.rollbar.payload.utilities.ArgumentNullException;
-import com.rollbar.payload.utilities.Validate;
+import com.rollbar.utilities.ArgumentNullException;
+import com.rollbar.utilities.Validate;
 
 import java.io.*;
 import java.net.*;

@@ -4,8 +4,8 @@ import com.rollbar.http.*;
 import com.rollbar.payload.Payload;
 import com.rollbar.payload.data.*;
 import com.rollbar.payload.data.body.Body;
-import com.rollbar.payload.utilities.ArgumentNullException;
-import com.rollbar.payload.utilities.Validate;
+import com.rollbar.utilities.ArgumentNullException;
+import com.rollbar.utilities.Validate;
 
 import java.util.Date;
 import java.util.LinkedHashMap;

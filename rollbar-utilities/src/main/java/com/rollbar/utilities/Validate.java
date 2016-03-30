@@ -1,4 +1,4 @@
-package com.rollbar.payload.utilities;
+package com.rollbar.utilities;
 
 /**
  * Validates arguments. Throws runtime exceptions when the validation fails.

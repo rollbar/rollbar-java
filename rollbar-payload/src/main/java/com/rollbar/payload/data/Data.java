@@ -1,10 +1,10 @@
 package com.rollbar.payload.data;
 
 import com.rollbar.payload.data.body.Body;
-import com.rollbar.payload.utilities.ArgumentNullException;
-import com.rollbar.payload.utilities.InvalidLengthException;
-import com.rollbar.payload.utilities.JsonSerializable;
-import com.rollbar.payload.utilities.Validate;
+import com.rollbar.utilities.ArgumentNullException;
+import com.rollbar.utilities.InvalidLengthException;
+import com.rollbar.utilities.JsonSerializable;
+import com.rollbar.utilities.Validate;
 
 import java.util.Date;
 import java.util.LinkedHashMap;

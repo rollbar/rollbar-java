@@ -1,11 +1,11 @@
-package com.rollbar;
-
-import com.rollbar.payload.utilities.Extensible;
-import com.rollbar.payload.utilities.StringUtils;
+package com.rollbar.testing;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
+
+import com.rollbar.utilities.StringUtils;
+import com.rollbar.utilities.Extensible;
 
 import static org.junit.Assert.*;
 

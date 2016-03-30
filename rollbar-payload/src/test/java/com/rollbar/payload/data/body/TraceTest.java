@@ -1,8 +1,8 @@
 package com.rollbar.payload.data.body;
 
-import com.rollbar.GetAndSet;
-import com.rollbar.TestThat;
-import com.rollbar.payload.utilities.ArgumentNullException;
+import com.rollbar.testing.GetAndSet;
+import com.rollbar.testing.TestThat;
+import com.rollbar.utilities.ArgumentNullException;
 import org.junit.Before;
 import org.junit.Test;
 

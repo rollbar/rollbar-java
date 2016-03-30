@@ -1,6 +1,6 @@
-package com.rollbar.payload.utilities;
+package com.rollbar.payload;
 
-import com.rollbar.payload.Payload;
+import com.rollbar.utilities.JsonSerializable;
 
 import java.util.*;
 
