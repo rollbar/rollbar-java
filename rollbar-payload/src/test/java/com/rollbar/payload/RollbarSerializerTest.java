@@ -11,6 +11,7 @@ import com.rollbar.payload.data.body.Message;
 import com.rollbar.utilities.ArgumentNullException;
 import com.rollbar.utilities.InvalidLengthException;
 
+import com.rollbar.utilities.RollbarSerializer;
 import org.junit.Test;
 
 import java.util.LinkedHashMap;

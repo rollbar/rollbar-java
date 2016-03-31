@@ -1,13 +1,11 @@
-package com.rollbar.payload;
-
-import com.rollbar.utilities.JsonSerializable;
+package com.rollbar.utilities;
 
 import java.util.*;
 
 /**
  * A Payload Serializer
  */
-public class RollbarSerializer implements PayloadSerializer {
+public class RollbarSerializer implements JsonSerializer {
     private final boolean prettyPrint;
 
     /**
@@ -26,12 +24,12 @@ public class RollbarSerializer implements PayloadSerializer {
     }
 
     /**
-     * @param payload the {@link Payload} to serialize
+     * @param payload the {@link JsonSerializable} to serialize
      * @return the json representation of the payload
      */
-    public String serialize(Payload payload) {
+    public String serialize(JsonSerializable payload) {
         StringBuilder builder = new StringBuilder();
-        serializeObject(payload.asJson(), builder, 0);
+        serializeValue(builder, payload, 0);
         return builder.toString();
     }
 
