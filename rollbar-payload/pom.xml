@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.rollbar</groupId>
+        <artifactId>rollbar-parent</artifactId>
+        <version>${currentVersion}</version>
+        <relativePath>../parent-pom.xml</relativePath>
+    </parent>
+
+    <name>rollbar-payload</name>
+    <description>A set of classes that allow reporting errors to Rollbar.</description>
+    <url>http://www.rollbar.com</url>
+
+    <groupId>com.rollbar</groupId>
+    <artifactId>rollbar-payload</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.rollbar</groupId>
+            <artifactId>rollbar-utilities</artifactId>
+            <version>${currentVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.rollbar</groupId>
+            <artifactId>rollbar-testing</artifactId>
+            <version>${currentVersion}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
