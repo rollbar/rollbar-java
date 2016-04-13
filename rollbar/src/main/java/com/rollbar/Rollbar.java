@@ -96,11 +96,14 @@ public class Rollbar {
         this.request = request;
         this.person = person;
         this.server = server;
-        this.custom =  custom == null ? defaultCustom() : wrapCustom(custom);
         this.notifier = notifier == null ? new Notifier() : notifier;
         this.responseHandler = responseHandler;
         this.filter = filter;
         this.transform = transform;
+
+        if (custom != null) {
+            this.custom = new LinkedHashMap<String, Object>(custom);
+        }
     }
 
     /**
@@ -987,11 +990,4 @@ public class Rollbar {
         return new Rollbar(accessToken, environment, sender, codeVersion, platform, language, framework, context, request, person, server, custom, notifier, responseHandler, filter, transform);
     }
 
-    private LinkedHashMap<String, Object> wrapCustom(Map<String, Object> custom) {
-        return new LinkedHashMap<String, Object>(custom);
-    }
-
-    private LinkedHashMap<String, Object> defaultCustom() {
-        return new LinkedHashMap<String, Object>();
-    }
 }
