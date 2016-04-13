@@ -22,6 +22,9 @@ be relatively straightforward.
 
  ## Installing
 
+
+### Maven
+
  All these can be installed as Maven projects. Simply add the
  dependency to your pom file:
 
@@ -34,6 +37,10 @@ be relatively straightforward.
    </dependency>
 </dependencies>
  ```
+
+### Gradle
+
+```compile('com.rollbar:rollbar:0.5.0')```
 
 You can, of course, build it yourself and depend on the .jar manually.
 
