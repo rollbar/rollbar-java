@@ -83,6 +83,8 @@ public class Rollbar {
                    PayloadFilter filter, PayloadTransform transform) {
         Validate.isNotNullOrWhitespace(accessToken, "accessToken");
         Validate.isNotNullOrWhitespace(environment, "environment");
+
+
         this.sender = sender == null ? new PayloadSender() : sender;
         this.accessToken = accessToken;
         this.environment = environment;
@@ -94,7 +96,7 @@ public class Rollbar {
         this.request = request;
         this.person = person;
         this.server = server;
-        this.custom = new LinkedHashMap<String, Object>(custom);
+        this.custom =  custom == null ? defaultCustom() : wrapCustom(custom);
         this.notifier = notifier == null ? new Notifier() : notifier;
         this.responseHandler = responseHandler;
         this.filter = filter;
@@ -983,5 +985,13 @@ public class Rollbar {
      */
     public Rollbar transform(PayloadTransform transform) {
         return new Rollbar(accessToken, environment, sender, codeVersion, platform, language, framework, context, request, person, server, custom, notifier, responseHandler, filter, transform);
+    }
+
+    private LinkedHashMap<String, Object> wrapCustom(Map<String, Object> custom) {
+        return new LinkedHashMap<String, Object>(custom);
+    }
+
+    private LinkedHashMap<String, Object> defaultCustom() {
+        return new LinkedHashMap<String, Object>();
     }
 }
