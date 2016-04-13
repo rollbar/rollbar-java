@@ -10,37 +10,39 @@ The library is split into small modules to enable re-use as much as
 possible. If you want to change a single piece of how it works it should
 be relatively straightforward.
 
- * `rollbar-utilties` contains code shared by the other modules.
- * `rollbar-testing` contains shared test code.
- * `rollbar-sender` implements sending occurrences to Rollbar. No external
-   dependencies make this lightweight, but a good candidate for an
-   upgrade.
- * `rollbar-payload` implements a Payload object that can be serialized to
-   JSON. It does so with no external dependencies.
- * `rollbar` brings together all the pieces from above to make it easy to
-   install and start recording errors.
+* `rollbar-utilties` contains code shared by the other modules.
+* `rollbar-testing` contains shared test code.
+* `rollbar-sender` implements sending occurrences to Rollbar. No external
+dependencies make this lightweight, but a good candidate for an
+upgrade.
+* `rollbar-payload` implements a Payload object that can be serialized to
+JSON. It does so with no external dependencies.
+* `rollbar` brings together all the pieces from above to make it easy to
+install and start recording errors.
 
- ## Installing
+## Installing
 
 
 ### Maven
 
- All these can be installed as Maven projects. Simply add the
- dependency to your pom file:
+All these can be installed as Maven projects. Simply add the
+dependency to your pom file:
 
- ```xml
- <dependencies>
-   <dependency>
-      <groupId>com.rollbar</groupId>
-       <artifactId>rollbar</artifactId>
-       <version>0.5.0</version>
-   </dependency>
+```xml
+<dependencies>
+<dependency>
+  <groupId>com.rollbar</groupId>
+   <artifactId>rollbar</artifactId>
+   <version>0.5.0</version>
+</dependency>
 </dependencies>
- ```
+```
 
 ### Gradle
 
-```compile('com.rollbar:rollbar:0.5.0')```
+```groovy
+compile('com.rollbar:rollbar:0.5.0')
+```
 
 You can, of course, build it yourself and depend on the .jar manually.
 
