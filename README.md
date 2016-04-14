@@ -22,6 +22,9 @@ install and start recording errors.
 
 ## Installing
 
+You can, of course, build it yourself and depend on the .jar manually,
+however, the modules are up on maven central and can be installed in
+most tool chains pretty trivially.
 
 ### Maven
 
@@ -44,7 +47,10 @@ dependency to your pom file:
 compile('com.rollbar:rollbar:0.5.0')
 ```
 
-You can, of course, build it yourself and depend on the .jar manually.
+## Usage
+
+For actual usage, the easiest way to get started is with the `rollbar`
+package. See the [documentation there](https://github.com/rollbar/rollbar-java/tree/master/rollbar).
 
 ## Contributing
 
