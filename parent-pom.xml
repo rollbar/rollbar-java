@@ -14,7 +14,7 @@
     <description>For Rollbar modules to inherit from</description>
 
     <properties>
-        <currentVersion>0.5.0</currentVersion>
+        <currentVersion>0.5.1</currentVersion>
     </properties>
 
     <build>
@@ -64,7 +64,7 @@
                 <executions>
                     <execution>
                         <id>sign-artifacts</id>
-                        <phase>verify</phase>
+                        <phase>deploy</phase>
                         <goals>
                             <goal>sign</goal>
                         </goals>
