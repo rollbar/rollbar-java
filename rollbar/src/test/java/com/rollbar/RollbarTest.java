@@ -13,4 +13,10 @@ public class RollbarTest {
         assertEquals("some-access-token", rollbar.getAccessToken());
         assertEquals("some-environment", rollbar.getEnvironment());
     }
+
+    @Test
+    public void itDoesNotThrowANullPointerExceptionWhenLoggingAnException() {
+        Rollbar rollbar = new Rollbar("some-access-token", "some-environment");
+        rollbar.log(new Exception("some exception"));
+    }
 }

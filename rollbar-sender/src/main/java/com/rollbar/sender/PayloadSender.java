@@ -80,7 +80,9 @@ public class PayloadSender implements Sender {
 
     public void send(Payload payload, RollbarResponseHandler handler) {
         RollbarResponse response = send(payload);
-        handler.handleResponse(response);
+        if (handler != null) {
+            handler.handleResponse(response);
+        }
     }
 
     private static final Pattern messagePattern = Pattern.compile("\"message\"\\s*:\\s*\"([^\"]*)\"");
