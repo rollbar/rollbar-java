@@ -36,7 +36,7 @@ dependency to your pom file:
 <dependency>
   <groupId>com.rollbar</groupId>
    <artifactId>rollbar</artifactId>
-   <version>0.5.0</version>
+   <version>0.5.2</version>
 </dependency>
 </dependencies>
 ```
@@ -44,7 +44,7 @@ dependency to your pom file:
 ### Gradle
 
 ```groovy
-compile('com.rollbar:rollbar:0.5.0')
+compile('com.rollbar:rollbar:0.5.2')
 ```
 
 ## Usage
