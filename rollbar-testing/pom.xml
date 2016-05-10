@@ -5,8 +5,7 @@
     <parent>
         <groupId>com.rollbar</groupId>
         <artifactId>rollbar-parent</artifactId>
-        <version>${currentVersion}</version>
-        <relativePath>../parent-pom.xml</relativePath>
+        <version>0.5.2</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -17,7 +16,7 @@
         <dependency>
             <groupId>com.rollbar</groupId>
             <artifactId>rollbar-utilities</artifactId>
-            <version>${currentVersion}</version>
+            <version>0.5.2</version>
         </dependency>
     </dependencies>
 

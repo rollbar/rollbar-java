@@ -7,8 +7,7 @@
     <parent>
         <groupId>com.rollbar</groupId>
         <artifactId>rollbar-parent</artifactId>
-        <version>${currentVersion}</version>
-        <relativePath>../parent-pom.xml</relativePath>
+        <version>0.5.2</version>
     </parent>
 
     <name>rollbar-payload</name>
@@ -22,12 +21,12 @@
         <dependency>
             <groupId>com.rollbar</groupId>
             <artifactId>rollbar-utilities</artifactId>
-            <version>${currentVersion}</version>
+            <version>0.5.2</version>
         </dependency>
         <dependency>
             <groupId>com.rollbar</groupId>
             <artifactId>rollbar-testing</artifactId>
-            <version>${currentVersion}</version>
+            <version>0.5.2</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
