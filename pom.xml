@@ -5,9 +5,12 @@
 
   <groupId>com.rollbar</groupId>
   <artifactId>rollbar-parent</artifactId>
-  <version>0.5.2</version>
+  <version>dev</version>
   <packaging>pom</packaging>
   <modelVersion>4.0.0</modelVersion>
+  <properties>
+    <rollbar.version>0.5.2</rollbar.version>
+  </properties>
 
   <name>java-rollbar</name>
   <description>For connecting your applications built on the JVM to Rollbar for Error Reporting</description>
@@ -43,6 +46,19 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>

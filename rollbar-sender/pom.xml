@@ -5,23 +5,24 @@
     <parent>
         <artifactId>rollbar-parent</artifactId>
         <groupId>com.rollbar</groupId>
-        <version>0.5.2</version>
+        <version>dev</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>rollbar-sender</artifactId>
+    <version>${rollbar.version}</version>
 
     <dependencies>
         <dependency>
             <groupId>com.rollbar</groupId>
             <artifactId>rollbar-payload</artifactId>
-            <version>0.5.2</version>
+            <version>${rollbar.version}</version>
         </dependency>
         <dependency>
             <groupId>com.rollbar</groupId>
             <artifactId>rollbar-utilities</artifactId>
-            <version>0.5.2</version>
+            <version>${rollbar.version}</version>
         </dependency>
     </dependencies>
 </project>

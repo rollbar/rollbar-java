@@ -7,8 +7,9 @@
     <parent>
         <groupId>com.rollbar</groupId>
         <artifactId>rollbar-parent</artifactId>
-        <version>0.5.2</version>
+        <version>dev</version>
     </parent>
 
     <artifactId>rollbar-utilities</artifactId>
+    <version>${rollbar.version}</version>
 </project>
