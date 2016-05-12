@@ -8,6 +8,9 @@
         <version>dev</version>
     </parent>
 
+    <name>rollbar-sender</name>
+    <description>An in-process, no-dependency way to send rollbar errors</description>
+
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>rollbar-sender</artifactId>

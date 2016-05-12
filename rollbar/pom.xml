@@ -8,6 +8,9 @@
         <version>dev</version>
     </parent>
 
+    <name>rollbar</name>
+    <description>Single entry point allowing reporting errors to Rollbar</description>
+
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>rollbar</artifactId>

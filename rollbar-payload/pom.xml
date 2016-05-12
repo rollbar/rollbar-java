@@ -11,8 +11,7 @@
     </parent>
 
     <name>rollbar-payload</name>
-    <description>A set of classes that allow reporting errors to Rollbar.</description>
-    <url>http://www.rollbar.com</url>
+    <description>A set of classes that model a valid payload to send to Rollbar.</description>
 
     <groupId>com.rollbar</groupId>
     <artifactId>rollbar-payload</artifactId>
