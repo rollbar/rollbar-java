@@ -5,29 +5,29 @@
     <parent>
         <artifactId>rollbar-parent</artifactId>
         <groupId>com.rollbar</groupId>
-        <version>${currentVersion}</version>
-        <relativePath>../parent-pom.xml</relativePath>
+        <version>dev</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>rollbar</artifactId>
+    <version>${rollbar.version}</version>
 
     <dependencies>
         <dependency>
             <groupId>com.rollbar</groupId>
             <artifactId>rollbar-payload</artifactId>
-            <version>${currentVersion}</version>
+            <version>${rollbar.version}</version>
         </dependency>
         <dependency>
             <groupId>com.rollbar</groupId>
             <artifactId>rollbar-sender</artifactId>
-            <version>${currentVersion}</version>
+            <version>${rollbar.version}</version>
         </dependency>
         <dependency>
             <groupId>com.rollbar</groupId>
             <artifactId>rollbar-utilities</artifactId>
-            <version>${currentVersion}</version>
+            <version>${rollbar.version}</version>
         </dependency>
     </dependencies>
 </project>
