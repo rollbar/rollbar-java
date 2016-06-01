@@ -88,7 +88,7 @@ public class PayloadSender implements Sender {
     private static final Pattern messagePattern = Pattern.compile("\"message\"\\s*:\\s*\"([^\"]*)\"");
     private static final Pattern uuidPattern = Pattern.compile("\"uuid\"\\s*:\\s*\"([^\"]*)\"");
 
-    private RollbarResponse readResponse(HttpURLConnection connection) throws ConnectionFailedException {
+    private static RollbarResponse readResponse(HttpURLConnection connection) throws ConnectionFailedException {
         int result;
         String content;
         try {
@@ -160,7 +160,7 @@ public class PayloadSender implements Sender {
         }
     }
 
-    private void setJsonSendAndReceive(HttpURLConnection connection) {
+    private static void setJsonSendAndReceive(HttpURLConnection connection) {
         connection.setRequestProperty("Accept-Charset", "utf-8");
         connection.setRequestProperty("Content-Type", "application/json; charset=utf-8");
         connection.setRequestProperty("Accept", "application/json");

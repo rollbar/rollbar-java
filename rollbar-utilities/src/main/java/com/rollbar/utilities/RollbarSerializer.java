@@ -85,15 +85,15 @@ public class RollbarSerializer implements JsonSerializer {
         }
     }
 
-    private void serializeNumber(StringBuilder builder, Number value) {
+    private static void serializeNumber(StringBuilder builder, Number value) {
         builder.append(value);
     }
 
-    private void serializeBoolean(StringBuilder builder, Boolean value) {
+    private static void serializeBoolean(StringBuilder builder, Boolean value) {
         builder.append(value ? "true" : "false");
     }
 
-    private void serializeNull(StringBuilder builder) {
+    private static void serializeNull(StringBuilder builder) {
         builder.append("null");
     }
 
@@ -113,7 +113,7 @@ public class RollbarSerializer implements JsonSerializer {
         builder.append(']');
     }
 
-    private Map<String, Object> asMap(Map value) {
+    private static Map<String, Object> asMap(Map value) {
         try {
             @SuppressWarnings("unchecked")
             Map<String, Object> obj = (Map<String, Object>) value;
@@ -130,13 +130,13 @@ public class RollbarSerializer implements JsonSerializer {
         }
     }
 
-    private void serializeString(StringBuilder builder, String str) {
+    private static void serializeString(StringBuilder builder, String str) {
         builder.append('"');
         builder.append(str.replace("\"", "\\\""));
         builder.append('"');
     }
 
-    private void indent(StringBuilder builder, int i) {
+    private static void indent(StringBuilder builder, int i) {
         for(int x = 0; x <= i; x++) {
             builder.append("  ");
         }
