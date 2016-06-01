@@ -5,7 +5,12 @@ import java.util.Arrays;
 /**
  * Some helper methods absent in Java 7
  */
-public class StringUtils {
+public final class StringUtils {
+
+    private StringUtils() throws InstantiationException {
+        throw new InstantiationException("This utility class is not created for instantiation");
+    }
+
     public static String join(CharSequence delimiter,
                               Iterable<? extends CharSequence> elements) {
         int length = 0;
