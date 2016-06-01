@@ -35,16 +35,6 @@ public class Request extends Extensible<Request> {
         Collections.addAll(Request.keys, keys);
     }
 
-    @Override
-    protected Set<String> getKnownMembers() {
-        return keys;
-    }
-
-    @Override
-    public Request copy() {
-        return new Request(getMembers());
-    }
-
     /**
      * Constructor
      * @param members map of custom arguments
@@ -104,6 +94,16 @@ public class Request extends Extensible<Request> {
         putKnown(POST_KEY, post == null ? null : new LinkedHashMap<String, Object>(post));
         putKnown(BODY_KEY, body);
         putKnown(USER_IP_KEY, userIp == null ? null : userIp.getHostAddress());
+    }
+
+    @Override
+    protected Set<String> getKnownMembers() {
+        return keys;
+    }
+
+    @Override
+    public Request copy() {
+        return new Request(getMembers());
     }
 
     /**

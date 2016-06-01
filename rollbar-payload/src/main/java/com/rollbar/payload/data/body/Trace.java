@@ -11,6 +11,22 @@ import java.util.Map;
  * Represent a Stack Trace to send to Rollbar
  */
 public class Trace implements BodyContents, JsonSerializable {
+    private final Frame[] frames;
+    private final ExceptionInfo exception;
+
+    /**
+     * Constructor
+     * @param frames not nullable, frames making up the exception
+     * @param exception not nullable, info about the exception
+     * @throws ArgumentNullException if either argument is null
+     */
+    public Trace(Frame[] frames, ExceptionInfo exception) throws ArgumentNullException {
+        Validate.isNotNull(frames, "frames");
+        this.frames = frames.clone();
+        Validate.isNotNull(exception, "exception");
+        this.exception = exception;
+    }
+
     /**
      * Create a stack trace from a throwable
      * @param error the Throwable to create a stack trace from
@@ -35,22 +51,6 @@ public class Trace implements BodyContents, JsonSerializable {
         ExceptionInfo exceptionInfo = ExceptionInfo.fromThrowable(error, description);
 
         return new Trace(frames, exceptionInfo);
-    }
-
-    private final Frame[] frames;
-    private final ExceptionInfo exception;
-
-    /**
-     * Constructor
-     * @param frames not nullable, frames making up the exception
-     * @param exception not nullable, info about the exception
-     * @throws ArgumentNullException if either argument is null
-     */
-    public Trace(Frame[] frames, ExceptionInfo exception) throws ArgumentNullException {
-        Validate.isNotNull(frames, "frames");
-        this.frames = frames.clone();
-        Validate.isNotNull(exception, "exception");
-        this.exception = exception;
     }
 
     /**

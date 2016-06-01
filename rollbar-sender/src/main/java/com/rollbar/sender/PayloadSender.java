@@ -14,6 +14,9 @@ import java.util.regex.Pattern;
  * and the default implementation.
  */
 public class PayloadSender implements Sender {
+    private static final Pattern messagePattern = Pattern.compile("\"message\"\\s*:\\s*\"([^\"]*)\"");
+    private static final Pattern uuidPattern = Pattern.compile("\"uuid\"\\s*:\\s*\"([^\"]*)\"");
+
     /**
      * If you don't set the url this is the URL that gets used.
      */
@@ -84,9 +87,6 @@ public class PayloadSender implements Sender {
             handler.handleResponse(response);
         }
     }
-
-    private static final Pattern messagePattern = Pattern.compile("\"message\"\\s*:\\s*\"([^\"]*)\"");
-    private static final Pattern uuidPattern = Pattern.compile("\"uuid\"\\s*:\\s*\"([^\"]*)\"");
 
     private RollbarResponse readResponse(HttpURLConnection connection) throws ConnectionFailedException {
         int result;

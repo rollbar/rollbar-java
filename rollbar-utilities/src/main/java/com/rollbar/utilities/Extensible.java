@@ -9,6 +9,13 @@ import java.util.*;
  * @param <T> The extensible type itself.
  */
 public abstract class Extensible<T extends Extensible<T>> implements JsonSerializable {
+    private Set<String> knownMembers;
+
+    /**
+     * The LinkedHashMap containing all members.
+     */
+    private final TreeMap<String, Object> members;
+
     /**
      * Constructor
      * @param members the LinkedHashMap of all members already in this object
@@ -27,8 +34,6 @@ public abstract class Extensible<T extends Extensible<T>> implements JsonSeriali
      */
     protected abstract Set<String> getKnownMembers();
 
-    private Set<String> knownMembers;
-
     private Set<String> knownMembers() {
         if (knownMembers == null) {
             knownMembers = getKnownMembers();
@@ -39,11 +44,6 @@ public abstract class Extensible<T extends Extensible<T>> implements JsonSeriali
     private boolean isKnownMember(String name) {
         return knownMembers().contains(name);
     }
-
-    /**
-     * The LinkedHashMap containing all members.
-     */
-    private final TreeMap<String, Object> members;
 
     /**
      * Get the member, or null if not present.
