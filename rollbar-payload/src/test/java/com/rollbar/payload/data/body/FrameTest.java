@@ -139,4 +139,17 @@ public class FrameTest {
             }
         });
     }
+
+    @Test
+    public void testEmptyValues() {
+        Frame frame = new Frame("foo.java");
+        Map<String, Object> json = frame.asJson();
+        assertFalse(json.containsKey("lineno"));
+        assertFalse(json.containsKey("colno"));
+        assertFalse(json.containsKey("method"));
+        assertFalse(json.containsKey("code"));
+        assertFalse(json.containsKey("context"));
+        assertFalse(json.containsKey("args"));
+        assertFalse(json.containsKey("kwargs"));
+    }
 }
