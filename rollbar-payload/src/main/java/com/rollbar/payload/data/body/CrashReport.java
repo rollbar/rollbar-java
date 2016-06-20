@@ -45,4 +45,8 @@ public class CrashReport implements BodyContents, JsonSerializable {
         obj.put("raw", raw());
         return obj;
     }
+
+    public String getKeyName() {
+        return "crash_report";
+    }
 }

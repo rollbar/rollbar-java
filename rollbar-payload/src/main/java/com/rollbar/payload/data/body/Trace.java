@@ -93,4 +93,8 @@ public class Trace implements BodyContents, JsonSerializable {
         obj.put("exception", exception());
         return obj;
     }
+
+    public String getKeyName() {
+        return "trace";
+    }
 }

@@ -75,4 +75,8 @@ public class TraceChain implements BodyContents, JsonSerializable {
     public Trace[] asJson() {
         return traces();
     }
+
+    public String getKeyName() {
+        return "trace_chain";
+    }
 }

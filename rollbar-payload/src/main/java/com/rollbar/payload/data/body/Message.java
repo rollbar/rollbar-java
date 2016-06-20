@@ -67,4 +67,8 @@ public class Message extends Extensible<Message> implements BodyContents {
     public Message body(String body) throws ArgumentNullException {
         return new Message(body, getMembers());
     }
+
+    public String getKeyName() {
+        return "message";
+    }
 }
