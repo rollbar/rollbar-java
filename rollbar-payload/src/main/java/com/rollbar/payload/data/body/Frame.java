@@ -217,22 +217,30 @@ public class Frame implements JsonSerializable {
 
     public Map<String, Object> asJson() {
         Map<String, Object> obj = new LinkedHashMap<String, Object>();
-        if (filename() != null)
-            obj.put("filename", filename());
-        if (lineNumber() != null)
-            obj.put("lineno", lineNumber());
-        if (columnNumber() != null)
-            obj.put("colno", columnNumber());
-        if (method() != null)
-            obj.put("method", method());
-        if (code() != null)
-            obj.put("code", code());
-        if (context() != null)
-            obj.put("context", context());
-        if (args() != null)
-            obj.put("args", args());
-        if (keywordArgs() != null)
-            obj.put("kwargs", keywordArgs());
+        String filename = filename();
+        if (filename != null)
+            obj.put("filename", filename);
+        Integer lineNumber = lineNumber();
+        if (lineNumber != null)
+            obj.put("lineno", lineNumber);
+        Integer columnNumber = columnNumber();
+        if (columnNumber != null)
+            obj.put("colno", columnNumber);
+        String method = method();
+        if (method != null)
+            obj.put("method", method);
+        String code = code();
+        if (code != null)
+            obj.put("code", code);
+        CodeContext context = context();
+        if (context != null)
+            obj.put("context", context);
+        Object[] args = args();
+        if (args != null)
+            obj.put("args", args);
+        Map<String, Object> keywordArgs = keywordArgs();
+        if (keywordArgs != null)
+            obj.put("kwargs", keywordArgs);
         return obj;
     }
 }
