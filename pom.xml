@@ -9,7 +9,7 @@
   <packaging>pom</packaging>
   <modelVersion>4.0.0</modelVersion>
   <properties>
-    <rollbar.version>0.5.2</rollbar.version>
+    <rollbar.version>0.5.3</rollbar.version>
   </properties>
 
   <name>java-rollbar</name>
