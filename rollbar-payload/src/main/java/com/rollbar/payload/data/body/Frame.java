@@ -216,15 +216,34 @@ public class Frame implements JsonSerializable {
     }
 
     public Map<String, Object> asJson() {
+
         Map<String, Object> obj = new LinkedHashMap<String, Object>();
-        obj.put("filename", filename());
-        obj.put("lineno", lineNumber());
-        obj.put("colno", columnNumber());
-        obj.put("method", method());
-        obj.put("code", code());
-        obj.put("context", context());
-        obj.put("args", args());
-        obj.put("kwargs", keywordArgs());
+        String filename = filename();
+        Integer lineNumber = lineNumber();
+        Integer columnNumber = columnNumber();
+        String method = method();
+        String code = code();
+        CodeContext context = context();
+        Object[] args = args();
+        Map<String, Object> keywordArgs = keywordArgs();
+
+        if (filename != null)
+            obj.put("filename", filename);
+        if (lineNumber != null)
+            obj.put("lineno", lineNumber);
+        if (columnNumber != null)
+            obj.put("colno", columnNumber);
+        if (method != null)
+            obj.put("method", method);
+        if (code != null)
+            obj.put("code", code);
+        if (context != null)
+            obj.put("context", context);
+        if (args != null)
+            obj.put("args", args);
+        if (keywordArgs != null)
+            obj.put("kwargs", keywordArgs);
+
         return obj;
     }
 }

@@ -19,4 +19,10 @@ public class RollbarTest {
         Rollbar rollbar = new Rollbar("some-access-token", "some-environment");
         rollbar.log(new Exception("some exception"));
     }
+
+    @Test
+    public void sendItemToRollbar() {
+        Rollbar rollbar = new Rollbar("e3a49f757f86465097c000cb2de9de08", "testing");
+        rollbar.error(new Exception("this is a test exception")); // should not throw an exception
+    }
 }

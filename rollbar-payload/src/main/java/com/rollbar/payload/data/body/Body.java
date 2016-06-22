@@ -164,10 +164,6 @@ public class Body implements JsonSerializable {
     }
 
     private String key() {
-        return toSnakeCase(contents.getClass().getSimpleName());
-    }
-
-    private static String toSnakeCase(String simpleName) {
-        return StringUtils.join("_", simpleName.split("(?=\\p{Lu})")).toLowerCase();
+        return contents.getKeyName();
     }
 }
