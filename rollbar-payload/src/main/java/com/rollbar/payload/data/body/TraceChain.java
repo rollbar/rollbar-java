@@ -11,6 +11,20 @@ import java.util.ArrayList;
  * Represents a chain of errors (typically from Exceptions with {@link Exception#getCause()} returning some value)
  */
 public class TraceChain implements BodyContents, JsonSerializable {
+    private final Trace[] traces;
+
+    /**
+     * Constructor
+     * @param traces the traces making up this trace chain
+     * @throws ArgumentNullException if traces are null
+     * @throws InvalidLengthException if there are no traces in the array
+     */
+    public TraceChain(Trace[] traces) throws ArgumentNullException, InvalidLengthException {
+        Validate.isNotNull(traces, "traces");
+        Validate.minLength(traces, 1, "traces");
+        this.traces = traces.clone();
+    }
+
     /**
      * Generate a TraceChain from a throwable with multiple causes
      * @param error the error to record
@@ -38,20 +52,6 @@ public class TraceChain implements BodyContents, JsonSerializable {
         } while(error != null);
         Trace[] traces = chain.toArray(new Trace[chain.size()]);
         return new TraceChain(traces);
-    }
-
-    private final Trace[] traces;
-
-    /**
-     * Constructor
-     * @param traces the traces making up this trace chain
-     * @throws ArgumentNullException if traces are null
-     * @throws InvalidLengthException if there are no traces in the array
-     */
-    public TraceChain(Trace[] traces) throws ArgumentNullException, InvalidLengthException {
-        Validate.isNotNull(traces, "traces");
-        Validate.minLength(traces, 1, "traces");
-        this.traces = traces.clone();
     }
 
     /**

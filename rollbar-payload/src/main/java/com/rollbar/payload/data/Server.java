@@ -16,18 +16,6 @@ public class Server extends Extensible<Server> {
     public static final String BRANCH_KEY = "branch";
     public static final String CODE_VERSION_KEY = "code_version";
 
-    @Override
-    protected Set<String> getKnownMembers() {
-        Set<String> result = new HashSet<String>(4);
-        Collections.addAll(result, HOST_KEY, ROOT_KEY, BRANCH_KEY, CODE_VERSION_KEY);
-        return result;
-    }
-
-    @Override
-    public Server copy() {
-        return new Server(getMembers());
-    }
-
     private Server(Map<String, Object> members) {
         super(members);
     }
@@ -64,6 +52,18 @@ public class Server extends Extensible<Server> {
         putKnown(ROOT_KEY, root);
         putKnown(BRANCH_KEY, branch);
         putKnown(CODE_VERSION_KEY, codeVersion);
+    }
+
+    @Override
+    protected Set<String> getKnownMembers() {
+        Set<String> result = new HashSet<String>(4);
+        Collections.addAll(result, HOST_KEY, ROOT_KEY, BRANCH_KEY, CODE_VERSION_KEY);
+        return result;
+    }
+
+    @Override
+    public Server copy() {
+        return new Server(getMembers());
     }
 
     /**

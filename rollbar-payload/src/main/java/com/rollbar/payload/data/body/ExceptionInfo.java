@@ -11,30 +11,6 @@ import java.util.Map;
  * Represents *non-stacktrace* information about an exception, like class, description, and message.
  */
 public class ExceptionInfo implements JsonSerializable {
-    /**
-     * Create an exception info from a throwable.
-     * @param error the throwable
-     * @throws ArgumentNullException if the error is null
-     * @return an exception info with information gathered from the error
-     */
-    public static ExceptionInfo fromThrowable(Throwable error) throws ArgumentNullException {
-        return fromThrowable(error, null);
-    }
-
-    /**
-     * Create an exception info from an error and a (human readable) description of the error
-     * @param error the error
-     * @param description the human readable description of the error
-     * @throws ArgumentNullException if the error is null
-     * @return the ExceptionInfo built from the error and the description
-     */
-    public static ExceptionInfo fromThrowable(Throwable error, String description) throws ArgumentNullException {
-        Validate.isNotNull(error, "error");
-        String className = error.getClass().getSimpleName();
-        String message = error.getMessage();
-        return new ExceptionInfo(className, message, description);
-    }
-
     private final String className;
     private final String message;
     private final String description;
@@ -60,6 +36,30 @@ public class ExceptionInfo implements JsonSerializable {
         this.className = className;
         this.message = message;
         this.description = description;
+    }
+
+    /**
+     * Create an exception info from a throwable.
+     * @param error the throwable
+     * @throws ArgumentNullException if the error is null
+     * @return an exception info with information gathered from the error
+     */
+    public static ExceptionInfo fromThrowable(Throwable error) throws ArgumentNullException {
+        return fromThrowable(error, null);
+    }
+
+    /**
+     * Create an exception info from an error and a (human readable) description of the error
+     * @param error the error
+     * @param description the human readable description of the error
+     * @throws ArgumentNullException if the error is null
+     * @return the ExceptionInfo built from the error and the description
+     */
+    public static ExceptionInfo fromThrowable(Throwable error, String description) throws ArgumentNullException {
+        Validate.isNotNull(error, "error");
+        String className = error.getClass().getSimpleName();
+        String message = error.getMessage();
+        return new ExceptionInfo(className, message, description);
     }
 
     /**
