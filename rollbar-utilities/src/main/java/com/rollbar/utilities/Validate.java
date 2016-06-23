@@ -3,7 +3,12 @@ package com.rollbar.utilities;
 /**
  * Validates arguments. Throws runtime exceptions when the validation fails.
  */
-public class Validate {
+public final class Validate {
+
+    private Validate() throws InstantiationException {
+        throw new InstantiationException("This utility class is not created for instantiation");
+    }
+
     /**
      * Asserts that the String is not null or purely whitespace.
      * @param x the string to validate
