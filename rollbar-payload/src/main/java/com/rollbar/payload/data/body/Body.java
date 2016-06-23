@@ -12,6 +12,18 @@ import java.util.Map;
  * A container for the actual error(s), message, or crash report that caused this error.
  */
 public class Body implements JsonSerializable {
+    private final BodyContents contents;
+
+    /**
+     * Constructor
+     * @param contents the contents of this body (either Trace, TraceChain, Message, or CrashReport)
+     * @throws ArgumentNullException if contents is nul
+     */
+    public Body(BodyContents contents) throws ArgumentNullException {
+        Validate.isNotNull(contents, "contents");
+        this.contents = contents;
+    }
+
     /**
      * Create a Body from an error. If {@link Throwable#getCause()} isn't null will return a Trace Chain,
      * otherwise returns a Trace
@@ -82,18 +94,6 @@ public class Body implements JsonSerializable {
     public static Body fromCrashReportString(String raw) throws ArgumentNullException {
         final CrashReport contents = new CrashReport(raw);
         return new Body(contents);
-    }
-
-    private final BodyContents contents;
-
-    /**
-     * Constructor
-     * @param contents the contents of this body (either Trace, TraceChain, Message, or CrashReport)
-     * @throws ArgumentNullException if contents is nul
-     */
-    public Body(BodyContents contents) throws ArgumentNullException {
-        Validate.isNotNull(contents, "contents");
-        this.contents = contents;
     }
 
     /**

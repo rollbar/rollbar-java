@@ -13,37 +13,6 @@ import java.util.Map;
  * Represents a single frame from a stack trace
  */
 public class Frame implements JsonSerializable {
-    /**
-     * Get an array of frames from an error
-     * @param error the error
-     * @return the frames representing the error's stack trace
-     * @throws ArgumentNullException if error is null
-     */
-    public static Frame[] fromThrowable(Throwable error) throws ArgumentNullException {
-        Validate.isNotNull(error, "error");
-        StackTraceElement[] elements = error.getStackTrace();
-        ArrayList<Frame> result = new ArrayList<Frame>();
-        for(StackTraceElement element : elements) {
-            result.add(fromStackTraceElement(element));
-        }
-        Collections.reverse(result);
-        return result.toArray(new Frame[result.size()]);
-    }
-
-    /**
-     * Get a Frame from a StackTraceElement
-     * @param stackTraceElement the StackTraceElement (a.k.a.: stack frame)
-     * @return the Frame representing the StackTraceElement
-     * @throws ArgumentNullException if stackTraceElement is null
-     */
-    public static Frame fromStackTraceElement(StackTraceElement stackTraceElement) throws ArgumentNullException {
-        String filename = stackTraceElement.getClassName() + ".java";
-        Integer lineNumber = stackTraceElement.getLineNumber();
-        String method = stackTraceElement.getMethodName();
-
-        return new Frame(filename, lineNumber, null, method, null, null, null, null);
-    }
-
     private final String filename;
     private final Integer lineNumber;
     private final Integer columnNumber;
@@ -84,6 +53,37 @@ public class Frame implements JsonSerializable {
         this.context = context;
         this.args = args == null ? null : args.clone();
         this.keywordArgs = keywordArgs == null ? null : new LinkedHashMap<String, Object>(keywordArgs);
+    }
+
+    /**
+     * Get an array of frames from an error
+     * @param error the error
+     * @return the frames representing the error's stack trace
+     * @throws ArgumentNullException if error is null
+     */
+    public static Frame[] fromThrowable(Throwable error) throws ArgumentNullException {
+        Validate.isNotNull(error, "error");
+        StackTraceElement[] elements = error.getStackTrace();
+        ArrayList<Frame> result = new ArrayList<Frame>();
+        for(StackTraceElement element : elements) {
+            result.add(fromStackTraceElement(element));
+        }
+        Collections.reverse(result);
+        return result.toArray(new Frame[result.size()]);
+    }
+
+    /**
+     * Get a Frame from a StackTraceElement
+     * @param stackTraceElement the StackTraceElement (a.k.a.: stack frame)
+     * @return the Frame representing the StackTraceElement
+     * @throws ArgumentNullException if stackTraceElement is null
+     */
+    public static Frame fromStackTraceElement(StackTraceElement stackTraceElement) throws ArgumentNullException {
+        String filename = stackTraceElement.getClassName() + ".java";
+        Integer lineNumber = stackTraceElement.getLineNumber();
+        String method = stackTraceElement.getMethodName();
+
+        return new Frame(filename, lineNumber, null, method, null, null, null, null);
     }
 
     /**

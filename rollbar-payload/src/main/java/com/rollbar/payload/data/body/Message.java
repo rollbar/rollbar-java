@@ -14,18 +14,6 @@ import java.util.Set;
 public class Message extends Extensible<Message> implements BodyContents {
     public static final String BODY_KEY = "body";
 
-    @Override
-    protected Set<String> getKnownMembers() {
-        Set<String> result = new HashSet<String>(4);
-        result.add(BODY_KEY);
-        return result;
-    }
-
-    @Override
-    public Message copy() {
-        return new Message(getMembers());
-    }
-
     private Message(Map<String, Object> members) {
         super(members);
     }
@@ -49,6 +37,18 @@ public class Message extends Extensible<Message> implements BodyContents {
         super(members);
         Validate.isNotNullOrWhitespace(body, "body");
         putKnown(BODY_KEY, body);
+    }
+
+    @Override
+    protected Set<String> getKnownMembers() {
+        Set<String> result = new HashSet<String>(4);
+        result.add(BODY_KEY);
+        return result;
+    }
+
+    @Override
+    public Message copy() {
+        return new Message(getMembers());
     }
 
     /**

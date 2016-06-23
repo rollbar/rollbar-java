@@ -7,6 +7,11 @@ public class RollbarResponse {
     private final RollbarResponseCode statusCode;
     private final String result;
 
+    private RollbarResponse(RollbarResponseCode statusCode, String result) {
+        this.statusCode = statusCode;
+        this.result = result;
+    }
+
     /**
      * The static factory method for a successful post to Rollbar
      * @param uuid the occurrence id that will result from the POST
@@ -32,11 +37,6 @@ public class RollbarResponse {
      */
     public static RollbarResponse notSent() {
         return new RollbarResponse(RollbarResponseCode.Filtered, "Payload not sent, because it was filtered.");
-    }
-
-    private RollbarResponse(RollbarResponseCode statusCode, String result) {
-        this.statusCode = statusCode;
-        this.result = result;
     }
 
     /**

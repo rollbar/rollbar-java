@@ -18,6 +18,24 @@ import java.util.Map;
  * successful when serialized and POSTed to the correct endpoint.
  */
 public final class Payload implements JsonSerializable {
+    private final String accessToken;
+    private final Data data;
+
+    /**
+     * Constructor
+     * @param accessToken An access token with scope "post_server_item" or "post_client_item". Probably "server" unless
+     *                    your {@link Data#platform()} is "android" or "client". Must not be null or whitespace.
+     * @param data The data to POST to Rollbar. Must not be null.
+     * @throws ArgumentNullException if either argument was null
+     */
+    public Payload(String accessToken, Data data) throws ArgumentNullException {
+        Validate.isNotNullOrWhitespace(accessToken, "accessToken");
+        this.accessToken = accessToken;
+
+        Validate.isNotNull(data, "data");
+        this.data = data;
+    }
+
     /**
      * A shortcut factory for creating a payload
      * @param accessToken not nullable, the server_post access token to send this payload to
@@ -55,24 +73,6 @@ public final class Payload implements JsonSerializable {
         String platform = System.getProperty("java.version");
         Data d = new Data(environment, body, Level.WARNING, new Date(), null, platform, "java", null, null, null, null, null, null, null, null, null, new Notifier());
         return new Payload(accessToken, d);
-    }
-
-    private final String accessToken;
-    private final Data data;
-
-    /**
-     * Constructor
-     * @param accessToken An access token with scope "post_server_item" or "post_client_item". Probably "server" unless
-     *                    your {@link Data#platform()} is "android" or "client". Must not be null or whitespace.
-     * @param data The data to POST to Rollbar. Must not be null.
-     * @throws ArgumentNullException if either argument was null
-     */
-    public Payload(String accessToken, Data data) throws ArgumentNullException {
-        Validate.isNotNullOrWhitespace(accessToken, "accessToken");
-        this.accessToken = accessToken;
-
-        Validate.isNotNull(data, "data");
-        this.data = data;
     }
 
     /**
