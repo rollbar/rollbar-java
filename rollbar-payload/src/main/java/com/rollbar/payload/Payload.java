@@ -44,7 +44,7 @@ public final class Payload implements JsonSerializable {
      * @param custom any custom data to be sent (null is OK)
      * @return the payload
      */
-    public static Payload fromError(String accessToken, String environment, Throwable error, LinkedHashMap<String, Object> custom) {
+    public static Payload fromError(String accessToken, String environment, Throwable error, Map<String, Object> custom) {
         Validate.isNotNullOrWhitespace(accessToken, "accessToken");
         Validate.isNotNullOrWhitespace(environment, "environment");
         Validate.isNotNull(error, "error");
@@ -64,7 +64,7 @@ public final class Payload implements JsonSerializable {
      * @param custom any custom data to be sent (null is OK)
      * @return the payload
      */
-    public static Payload fromMessage(String accessToken, String environment, String message, LinkedHashMap<String, Object> custom) {
+    public static Payload fromMessage(String accessToken, String environment, String message, Map<String, Object> custom) {
         Validate.isNotNullOrWhitespace(accessToken, "accessToken");
         Validate.isNotNullOrWhitespace(environment, "environment");
         Validate.isNotNull(message, "message");
