@@ -2,7 +2,6 @@ package com.rollbar.payload.data.body;
 
 import com.rollbar.utilities.ArgumentNullException;
 import com.rollbar.utilities.JsonSerializable;
-import com.rollbar.utilities.StringUtils;
 import com.rollbar.utilities.Validate;
 
 import java.util.LinkedHashMap;
@@ -36,7 +35,7 @@ public class Body implements JsonSerializable {
     }
 
     /**
-     * Create a Body from an error with a human readable descriptpion. If {@link Throwable#getCause()} isn't null will
+     * Create a Body from an error with a human readable description. If {@link Throwable#getCause()} isn't null will
      * return a Trace Chain
      * @param error       the error to turn into a Body
      * @param description the human readable description of the top level error in the chain (or the error itself if not
