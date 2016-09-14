@@ -54,7 +54,7 @@ public class PayloadSender implements Sender {
      * @return the response from Rollbar {@link RollbarResponse}
      */
     public RollbarResponse send(Payload payload) {
-        HttpURLConnection connection = null;
+        HttpURLConnection connection;
         try {
             connection = getConnection();
         } catch (ConnectionFailedException e) {
