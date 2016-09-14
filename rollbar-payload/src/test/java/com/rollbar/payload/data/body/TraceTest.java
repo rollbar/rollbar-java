@@ -12,7 +12,7 @@ import static org.junit.Assert.fail;
  * Created by chris on 11/25/15.
  */
 public class TraceTest {
-    Trace t;
+    private Trace t;
 
     @Before
     public void setUp() throws Exception {
