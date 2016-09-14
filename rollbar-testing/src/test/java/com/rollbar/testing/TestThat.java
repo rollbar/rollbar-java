@@ -1,11 +1,11 @@
 package com.rollbar.testing;
 
+import com.rollbar.utilities.Extensible;
+import com.rollbar.utilities.StringUtils;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
-
-import com.rollbar.utilities.StringUtils;
-import com.rollbar.utilities.Extensible;
 
 import static org.junit.Assert.*;
 
@@ -43,7 +43,6 @@ public class TestThat {
      * Returns a null string if not equivalent, or the differing item if they aren't.
      * @param beforeResult
      * @param afterResult
-     * @param <U>
      * @return null if equivalent, the difference if they aren't
      */
     private static <U> String getDifference(U beforeResult, U afterResult) {
@@ -125,7 +124,7 @@ public class TestThat {
                 continue;
             }
             f.setAccessible(true);
-            Object one = null;
+            Object one;
             try {
                 one = f.get(first);
                 Object two = f.get(second);
