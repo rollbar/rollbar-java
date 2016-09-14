@@ -8,7 +8,7 @@ import org.junit.Test;
  * Created by chris on 11/25/15.
  */
 public class CodeContextTest {
-    CodeContext c = new CodeContext();
+    private final CodeContext c = new CodeContext();
 
     @Test
     public void testPre() throws Exception {
