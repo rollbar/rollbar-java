@@ -20,7 +20,7 @@ public class RequestTest {
     private LinkedHashMap<String, String> params;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         r = new Request();
         headers = new LinkedHashMap<String, String>();
         headers.put("Hello", "World");
@@ -184,7 +184,7 @@ public class RequestTest {
     public void testConstructor() throws Exception {
         String url = "www.rollbar.com/api/1/items_post?custom_param=10";
         LinkedHashMap<String, String> headers = new LinkedHashMap<String, String>();
-        headers.put("Location", "www.rollabr.com");
+        headers.put("Location", "www.rollbar.com");
         LinkedHashMap<String, String> params = new LinkedHashMap<String, String>();
         params.put("custom_param", "10");
         LinkedHashMap<String, Object> post = new LinkedHashMap<String, Object>();
