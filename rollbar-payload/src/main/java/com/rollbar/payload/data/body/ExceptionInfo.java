@@ -105,7 +105,7 @@ public class ExceptionInfo implements JsonSerializable {
     /**
      * Set the description on a copy of this ExceptionInfo
      * @param description the new description
-     * @return a copy of this ExceptionInfo with description overriden
+     * @return a copy of this ExceptionInfo with description overridden
      */
     public ExceptionInfo description(String description) {
         return new ExceptionInfo(className, message, description);
