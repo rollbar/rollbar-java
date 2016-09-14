@@ -9,7 +9,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.net.ConnectException;
-import java.net.URL;
 
 import static org.junit.Assert.*;
 
