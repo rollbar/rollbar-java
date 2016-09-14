@@ -13,7 +13,7 @@ public class NotifierTest {
     private Notifier notifier;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         notifier = new Notifier("RollbarJava", "alpha");
     }
 
