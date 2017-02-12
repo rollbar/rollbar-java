@@ -90,8 +90,8 @@ public class Rollbar {
         this.environment = environment;
         this.codeVersion = codeVersion;
         this.platform = platform;
-        this.language = language;
-        this.framework = framework == null ? "java" : framework;
+        this.language = language == null ? "java" : language;
+        this.framework = framework;
         this.context = context;
         this.request = request;
         this.person = person;
