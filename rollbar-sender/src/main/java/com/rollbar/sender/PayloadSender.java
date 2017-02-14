@@ -24,6 +24,9 @@ public class PayloadSender implements Sender {
 
     private final URL url;
 
+    private String proxy;
+    private int port;
+
     /**
      * Default constructor, sends to the public api endpoint.
      * @throws ArgumentNullException if url is null
@@ -45,6 +48,19 @@ public class PayloadSender implements Sender {
     public PayloadSender(String url) throws ArgumentNullException, MalformedURLException {
         Validate.isNotNull(url, "url");
         this.url = new URL(url);
+    }
+
+    /**
+     * <p>Sets a proxy for the PayloadSender.</p>
+     * If a proxy url is defined then the PayloadSender will try to use that proxy to send the Payload.<br>
+     * @param proxyURL A Strign containning the url of the proxy
+     * @param port int qith the port of the proxy.
+     * @return the PayloadSender
+     */
+    public PayloadSender setProxy(final String proxyURL, final int port){
+        this.proxy = proxyURL;
+        this.port = port;
+        return this;
     }
 
     /**
@@ -178,7 +194,12 @@ public class PayloadSender implements Sender {
     private HttpURLConnection getHttpURLConnection() throws ConnectionFailedException {
         HttpURLConnection connection;
         try {
-            connection = (HttpURLConnection) url.openConnection();
+            if (proxy != null){
+                SocketAddress socketAddress = new InetSocketAddress(proxy, port);
+                connection = (HttpURLConnection) url.openConnection(new Proxy(Proxy.Type.HTTP, socketAddress));
+            } else {
+                connection = (HttpURLConnection) url.openConnection();
+            }
         } catch (IOException e) {
             throw new ConnectionFailedException(url, "Initializing URL Connection", e);
         }
