@@ -58,8 +58,10 @@ public class RollbarSerializerTest {
             final JsonObject lastFrame = frames.get(frames.size() - 1).getAsJsonObject();
             final JsonObject secondToLastFrame = frames.get(frames.size() - 2).getAsJsonObject();
 
-            assertEquals("com.rollbar.payload.RollbarSerializerTest.java", lastFrame.get("filename").getAsString());
-            assertEquals("com.rollbar.payload.RollbarSerializerTest.java", secondToLastFrame.get("filename").getAsString());
+            assertEquals("RollbarSerializerTest.java", lastFrame.get("filename").getAsString());
+            assertEquals("RollbarSerializerTest.java", secondToLastFrame.get("filename").getAsString());
+            assertEquals("com.rollbar.payload.RollbarSerializerTest", lastFrame.get("class_name").getAsString());
+            assertEquals("com.rollbar.payload.RollbarSerializerTest", secondToLastFrame.get("class_name").getAsString());
             assertEquals("throwException", lastFrame.get("method").getAsString());
             assertEquals("getError", secondToLastFrame.get("method").getAsString());
         } catch (ArgumentNullException e) {

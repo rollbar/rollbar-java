@@ -93,6 +93,19 @@ public class FrameTest {
     }
 
     @Test
+    public void testClassName() throws Exception {
+        TestThat.getAndSetWorks(f, "java.lang.String", "java.lang.Integer", new GetAndSet<Frame, String>() {
+            public String get(Frame frame) {
+                return frame.className();
+            }
+
+            public Frame set(Frame frame, String val) {
+                return frame.className(val);
+            }
+        });
+    }
+
+    @Test
     public void testContext() throws Exception {
         CodeContext one = new CodeContext(new String[] { "before", "the", "code" }, new String[] { "after", "the", "code" });
         CodeContext two = new CodeContext(new String[] { "przed", "kodem" }, new String[] { "po", "kodu" });
@@ -147,6 +160,7 @@ public class FrameTest {
         assertFalse(json.containsKey("lineno"));
         assertFalse(json.containsKey("colno"));
         assertFalse(json.containsKey("method"));
+        assertFalse(json.containsKey("class_name"));
         assertFalse(json.containsKey("code"));
         assertFalse(json.containsKey("context"));
         assertFalse(json.containsKey("args"));
