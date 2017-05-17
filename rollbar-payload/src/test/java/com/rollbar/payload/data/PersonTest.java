@@ -11,7 +11,7 @@ import static org.junit.Assert.*;
 
 public class PersonTest {
 
-    Person p;
+    private Person p;
 
     @Before
     public void setUp() throws Exception {
@@ -47,7 +47,7 @@ public class PersonTest {
                 try {
                     return item.id(val);
                 } catch (ArgumentNullException e) {
-                    fail("Nothign is null");
+                    fail("Nothing is null");
                 }
                 return null;
             }

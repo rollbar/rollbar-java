@@ -12,7 +12,7 @@ import static org.junit.Assert.*;
  * Created by chris on 11/25/15.
  */
 public class CrashReportTest {
-    CrashReport report;
+    private CrashReport report;
 
     @Before
     public void setUp() throws Exception {

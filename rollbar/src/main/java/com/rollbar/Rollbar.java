@@ -230,7 +230,7 @@ public class Rollbar {
     }
 
     /**
-     * Record an error with extra information attached at the default level retured by {@link Rollbar#level}
+     * Record an error with extra information attached at the default level returned by {@link Rollbar#level}
      * @param error the error
      * @param custom the extra information
      */
@@ -414,7 +414,7 @@ public class Rollbar {
     }
 
     /**
-     * Record a debugging message at the level returned by {@link Rollbar#level} (WARNING unless level is overriden)
+     * Record a debugging message at the level returned by {@link Rollbar#level} (WARNING unless level is overridden)
      * @param message the message
      */
     public void log(String message) {
@@ -477,7 +477,7 @@ public class Rollbar {
 
     /**
      * Record a message with extra information attached at the default level returned by {@link Rollbar#level}, (WARNING
-     * unless level overriden).
+     * unless level overridden).
      * @param message the message
      * @param custom the extra information
      */
@@ -486,7 +486,7 @@ public class Rollbar {
     }
 
     /**
-     * Record a message with extra infomation attached at the specified level
+     * Record a message with extra information attached at the specified level
      * @param message the message
      * @param custom the extra information
      * @param level the level

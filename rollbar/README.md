@@ -105,7 +105,7 @@ public class MyClass {
             try {
                 // Here you can filter or transform the payload as needed before sending it
                 p.send();
-            } catch (ConnectionFailedExeption e) {
+            } catch (ConnectionFailedException e) {
                 Logger.getLogger(MyClass.class.getName()).severe(p.toJson());
             }
             // You can obviously choose to do something *other* than re-throw the exception
@@ -131,7 +131,7 @@ public class Program {
                 try {
                     // Here you can filter or transform the payload as needed before sending it
                     p.send();
-                } catch (ConnectionFailedExeption e) {
+                } catch (ConnectionFailedException e) {
                     Logger.getLogger(MyClass.class.getName()).severe(p.toJson());
                 }
                 throw t;

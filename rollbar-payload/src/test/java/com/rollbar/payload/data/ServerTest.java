@@ -74,7 +74,7 @@ public class ServerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testPutReserved() throws Exception {
-        Server s = server.put(Server.HOST_KEY, "host-name");
+        server.put(Server.HOST_KEY, "host-name");
     }
 
     @Test

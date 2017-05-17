@@ -42,7 +42,7 @@ public enum Level implements Comparable<Level>, JsonSerializable {
     /**
      * Get the numeric value. Higher value, higher priority.
      * Can be used to filter by some minimum Level.
-     * @return the numeric priority, higher numebr, higher priority
+     * @return the numeric priority, higher number, higher priority
      */
     public int level() {
         return level;

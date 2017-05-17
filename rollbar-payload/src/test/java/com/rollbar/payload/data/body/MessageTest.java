@@ -9,7 +9,7 @@ import static org.junit.Assert.*;
  * Created by chris on 11/24/15.
  */
 public class MessageTest {
-    Message m;
+    private Message m;
 
     @Before
     public void setUp() throws Exception {

@@ -39,7 +39,7 @@ public class DataTest {
                 } catch (ArgumentNullException e) {
                     fail("neither is null");
                 } catch (InvalidLengthException e) {
-                    fail("neighter is too long");
+                    fail("neither is too long");
                 }
                 return null;
             }
