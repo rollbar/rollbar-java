@@ -18,6 +18,7 @@ public class Frame implements JsonSerializable {
     private final Integer columnNumber;
     private final String method;
     private final String code;
+    private final String className;
     private final CodeContext context;
     private final Object[] args;
     private final LinkedHashMap<String, Object> keywordArgs;
@@ -28,7 +29,7 @@ public class Frame implements JsonSerializable {
      * @throws ArgumentNullException if filename is null
      */
     public Frame(String filename) throws ArgumentNullException {
-        this(filename, null, null, null, null, null, null, null);
+        this(filename, null, null, null, null, null, null, null, null);
     }
 
     /**
@@ -44,12 +45,30 @@ public class Frame implements JsonSerializable {
      * @throws ArgumentNullException if filename is null
      */
     public Frame(String filename, Integer lineNumber, Integer columnNumber, String method, String code, CodeContext context, Object[] args, Map<String, Object> keywordArgs) throws ArgumentNullException {
+        this(filename, lineNumber, columnNumber, method, code, null, context, args, keywordArgs);
+    }
+
+    /**
+     * Constructor
+     * @param filename the name of the file in which the error occurred
+     * @param lineNumber the line number on which the error occurred
+     * @param columnNumber the column number (if available in your language) on which the error occurred
+     * @param method the method in which the error occurred
+     * @param code the line of code that triggered the error
+     * @param className the name of the class in which the error occurred
+     * @param context extra context around the line of code that triggered the error
+     * @param args the arguments to the method from the stack frame (if available in your language)
+     * @param keywordArgs the keyword arguments to the method from the stack frame (if available in your language)
+     * @throws ArgumentNullException if filename is null
+     */
+    public Frame(String filename, Integer lineNumber, Integer columnNumber, String method, String code, String className, CodeContext context, Object[] args, Map<String, Object> keywordArgs) throws ArgumentNullException {
         Validate.isNotNullOrWhitespace(filename, "filename");
         this.filename = filename;
         this.lineNumber = lineNumber;
         this.columnNumber = columnNumber;
         this.method = method;
         this.code = code;
+        this.className = className;
         this.context = context;
         this.args = args == null ? null : args.clone();
         this.keywordArgs = keywordArgs == null ? null : new LinkedHashMap<String, Object>(keywordArgs);
@@ -79,11 +98,12 @@ public class Frame implements JsonSerializable {
      * @throws ArgumentNullException if stackTraceElement is null
      */
     public static Frame fromStackTraceElement(StackTraceElement stackTraceElement) throws ArgumentNullException {
-        String filename = stackTraceElement.getClassName() + ".java";
+        String filename = stackTraceElement.getFileName();
         Integer lineNumber = stackTraceElement.getLineNumber();
         String method = stackTraceElement.getMethodName();
+        String className = stackTraceElement.getClassName();
 
-        return new Frame(filename, lineNumber, null, method, null, null, null, null);
+        return new Frame(filename, lineNumber, null, method, null, className, null, null, null);
     }
 
     /**
@@ -100,7 +120,7 @@ public class Frame implements JsonSerializable {
     * @throws ArgumentNullException if filename is null
     */
     public Frame filename(String filename) throws ArgumentNullException {
-        return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
+        return new Frame(filename, lineNumber, columnNumber, method, code, className, context, args, keywordArgs);
     }
 
     /**
@@ -116,7 +136,7 @@ public class Frame implements JsonSerializable {
     * @return a copy of this Frame with the lineNumber overridden
     */
     public Frame lineNumber(Integer lineNumber) {
-        return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
+        return new Frame(filename, lineNumber, columnNumber, method, code, className, context, args, keywordArgs);
     }
 
     /**
@@ -132,7 +152,7 @@ public class Frame implements JsonSerializable {
     * @return a copy of this Frame with the columnNumber overridden
     */
     public Frame columnNumber(Integer columnNumber) {
-        return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
+        return new Frame(filename, lineNumber, columnNumber, method, code, className, context, args, keywordArgs);
     }
 
     /**
@@ -148,7 +168,7 @@ public class Frame implements JsonSerializable {
     * @return a copy of this Frame with the method overridden
     */
     public Frame method(String method) {
-        return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
+        return new Frame(filename, lineNumber, columnNumber, method, code, className, context, args, keywordArgs);
     }
 
     /**
@@ -164,7 +184,23 @@ public class Frame implements JsonSerializable {
     * @return a copy of this Frame with the code overridden
     */
     public Frame code(String code) {
-        return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
+        return new Frame(filename, lineNumber, columnNumber, method, code, className, context, args, keywordArgs);
+    }
+
+    /**
+    * @return the name of the class in which the error occurred
+    */
+    public String className() {
+        return className;
+    }
+
+    /**
+    * Set className on a copy of this Frame
+    * @param className the name of the class in which the error occurred
+    * @return a copy of this Frame with the className overridden
+    */
+    public Frame className(String className) {
+        return new Frame(filename, lineNumber, columnNumber, method, code, className, context, args, keywordArgs);
     }
 
     /**
@@ -180,7 +216,7 @@ public class Frame implements JsonSerializable {
     * @return a copy of this Frame with the context overridden
     */
     public Frame context(CodeContext context) {
-        return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
+        return new Frame(filename, lineNumber, columnNumber, method, code, className, context, args, keywordArgs);
     }
 
     /**
@@ -196,7 +232,7 @@ public class Frame implements JsonSerializable {
     * @return a copy of this Frame with the args overridden
     */
     public Frame args(Object[] args) {
-        return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
+        return new Frame(filename, lineNumber, columnNumber, method, code, className, context, args, keywordArgs);
     }
 
     /**
@@ -212,7 +248,7 @@ public class Frame implements JsonSerializable {
     * @return a copy of this Frame with the keywordArgs overridden
     */
     public Frame keywordArgs(Map<String, Object> keywordArgs) {
-        return new Frame(filename, lineNumber, columnNumber, method, code, context, args, keywordArgs);
+        return new Frame(filename, lineNumber, columnNumber, method, code, className, context, args, keywordArgs);
     }
 
     public Map<String, Object> asJson() {
@@ -223,6 +259,7 @@ public class Frame implements JsonSerializable {
         Integer columnNumber = columnNumber();
         String method = method();
         String code = code();
+        String className = className();
         CodeContext context = context();
         Object[] args = args();
         Map<String, Object> keywordArgs = keywordArgs();
@@ -237,6 +274,8 @@ public class Frame implements JsonSerializable {
             obj.put("method", method);
         if (code != null)
             obj.put("code", code);
+        if (className != null)
+            obj.put("class_name", className);
         if (context != null)
             obj.put("context", context);
         if (args != null)
