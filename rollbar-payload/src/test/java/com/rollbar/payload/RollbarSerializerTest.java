@@ -127,7 +127,7 @@ public class RollbarSerializerTest {
         assertTrue(stacktrace.contains("Caused by: java.lang.RuntimeException"));
     }
 
-    public Throwable getError() {
+    private Throwable getError() {
         try {
             throwException();
             return null;
@@ -140,7 +140,7 @@ public class RollbarSerializerTest {
         throw new Exception("Non Chained Exception");
     }
 
-    public Throwable getChainedError() {
+    private Throwable getChainedError() {
         try {
             throwChainedError();
             return null;
@@ -149,7 +149,7 @@ public class RollbarSerializerTest {
         }
     }
 
-    public void throwChainedError() throws Exception {
+    private void throwChainedError() throws Exception {
         try {
             throwException();
         } catch (Exception e) {
