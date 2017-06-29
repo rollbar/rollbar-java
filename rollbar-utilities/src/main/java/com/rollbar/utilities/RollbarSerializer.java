@@ -1,5 +1,7 @@
 package com.rollbar.utilities;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.*;
 
 /**
@@ -83,6 +85,15 @@ public class RollbarSerializer implements JsonSerializer {
         else if (value instanceof Object[]) {
             serializeArray(builder, (Object[]) value, level);
         }
+        else if (value instanceof Throwable) {
+            serializeThrowable(builder, (Throwable) value);
+        }
+    }
+
+    private static void serializeThrowable(StringBuilder builder, Throwable value) {
+        final StringWriter writer = new StringWriter();
+        value.printStackTrace(new PrintWriter(writer));
+        builder.append(String.format("\"%s\"", writer.toString()));
     }
 
     private static void serializeNumber(StringBuilder builder, Number value) {
