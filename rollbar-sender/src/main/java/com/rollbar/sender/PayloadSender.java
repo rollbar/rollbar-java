@@ -53,12 +53,12 @@ public class PayloadSender implements Sender {
     /**
      * <p>Sets a proxy for the PayloadSender.</p>
      * If a proxy url is defined then the PayloadSender will try to use that proxy to send the Payload.<br>
-     * @param proxyURL A Strign containning the url of the proxy
-     * @param port int qith the port of the proxy.
+     * @param hostname A String containing the hostname of the proxy
+     * @param port int the port of the proxy.
      * @return the PayloadSender
      */
-    public PayloadSender setProxy(final String proxyURL, final int port){
-        this.proxy = proxyURL;
+    public PayloadSender setProxy(final String hostname, final int port){
+        this.proxy = hostname;
         this.port = port;
         return this;
     }
@@ -194,14 +194,20 @@ public class PayloadSender implements Sender {
     private HttpURLConnection getHttpURLConnection() throws ConnectionFailedException {
         HttpURLConnection connection;
         try {
-            if (proxy != null){
+            if (proxy != null) {
                 SocketAddress socketAddress = new InetSocketAddress(proxy, port);
                 connection = (HttpURLConnection) url.openConnection(new Proxy(Proxy.Type.HTTP, socketAddress));
             } else {
                 connection = (HttpURLConnection) url.openConnection();
             }
         } catch (IOException e) {
-            throw new ConnectionFailedException(url, "Initializing URL Connection", e);
+            String reason;
+            if (proxy != null) {
+                reason = "Initializing URL Connection with non-null proxy";
+            } else {
+                reason = "Initializing URL Connection";
+            }
+            throw new ConnectionFailedException(url, reason, e);
         }
         return connection;
     }
