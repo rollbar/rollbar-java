@@ -10,6 +10,7 @@
 
     <name>rollbar</name>
     <description>Single entry point allowing reporting errors to Rollbar</description>
+    <url>${github.url}</url>
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -33,4 +34,9 @@
             <version>${rollbar.version}</version>
         </dependency>
     </dependencies>
+    <scm>
+        <connection>scm:git:git@github.com:rollbar/rollbar-java.git</connection>
+        <developerConnection>scm:git:git@github.com:rollbar/rollbar-java.git</developerConnection>
+        <url>github.com/rollbar/rollbar-java</url>
+    </scm>
 </project>
