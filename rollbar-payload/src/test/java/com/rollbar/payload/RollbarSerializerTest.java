@@ -106,6 +106,27 @@ public class RollbarSerializerTest {
         }
     }
 
+    /**
+     * Check that Throwables are serialised as their stacktrace.
+     */
+    @Test
+    public void TestThrowableSerialize() {
+        final Exception exception = new Exception(new RuntimeException());
+        final Message msg = new Message("Message").put("exception", exception);
+        final Body body = new Body(msg);
+        final Data data = new Data(environment, body);
+        final String json = new RollbarSerializer(false).serialize(new Payload(accessToken, data));
+        final JsonObject parsed = (JsonObject) new JsonParser().parse(json);
+        final String stacktrace = parsed
+            .getAsJsonObject("data")
+            .getAsJsonObject("body")
+            .getAsJsonObject("message")
+            .getAsJsonPrimitive("exception").getAsString();
+        assertTrue(stacktrace.startsWith("java.lang.Exception: java.lang.RuntimeException"));
+        assertTrue(stacktrace.contains(getClass().getCanonicalName()));
+        assertTrue(stacktrace.contains("Caused by: java.lang.RuntimeException"));
+    }
+
     @Test
     public void TestCustomTypeSerialize() {
         final CustomClass custom = new CustomClass();
@@ -138,7 +159,7 @@ public class RollbarSerializerTest {
         throw new Exception("Non Chained Exception");
     }
 
-    public Throwable getChainedError() {
+    private Throwable getChainedError() {
         try {
             throwChainedError();
             return null;
@@ -147,7 +168,7 @@ public class RollbarSerializerTest {
         }
     }
 
-    public void throwChainedError() throws Exception {
+    private void throwChainedError() throws Exception {
         try {
             throwException();
         } catch (Exception e) {
