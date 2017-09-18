@@ -26,9 +26,8 @@ public class Frame implements JsonSerializable {
     /**
      * Constructor
      * @param filename the name of the file in which the error occurred
-     * @throws ArgumentNullException if filename is null
      */
-    public Frame(String filename) throws ArgumentNullException {
+    public Frame(String filename) {
         this(filename, null, null, null, null, null, null, null, null);
     }
 
@@ -42,9 +41,8 @@ public class Frame implements JsonSerializable {
      * @param context extra context around the line of code that triggered the error
      * @param args the arguments to the method from the stack frame (if available in your language)
      * @param keywordArgs the keyword arguments to the method from the stack frame (if available in your language)
-     * @throws ArgumentNullException if filename is null
      */
-    public Frame(String filename, Integer lineNumber, Integer columnNumber, String method, String code, CodeContext context, Object[] args, Map<String, Object> keywordArgs) throws ArgumentNullException {
+    public Frame(String filename, Integer lineNumber, Integer columnNumber, String method, String code, CodeContext context, Object[] args, Map<String, Object> keywordArgs) {
         this(filename, lineNumber, columnNumber, method, code, null, context, args, keywordArgs);
     }
 
@@ -59,10 +57,8 @@ public class Frame implements JsonSerializable {
      * @param context extra context around the line of code that triggered the error
      * @param args the arguments to the method from the stack frame (if available in your language)
      * @param keywordArgs the keyword arguments to the method from the stack frame (if available in your language)
-     * @throws ArgumentNullException if filename is null
      */
-    public Frame(String filename, Integer lineNumber, Integer columnNumber, String method, String code, String className, CodeContext context, Object[] args, Map<String, Object> keywordArgs) throws ArgumentNullException {
-        Validate.isNotNullOrWhitespace(filename, "filename");
+    public Frame(String filename, Integer lineNumber, Integer columnNumber, String method, String code, String className, CodeContext context, Object[] args, Map<String, Object> keywordArgs) {
         this.filename = filename;
         this.lineNumber = lineNumber;
         this.columnNumber = columnNumber;
@@ -117,9 +113,8 @@ public class Frame implements JsonSerializable {
     * Set filename on a copy of this Frame
     * @param filename the name of the file in which the error occurred
     * @return a copy of this Frame with the filename overridden
-    * @throws ArgumentNullException if filename is null
     */
-    public Frame filename(String filename) throws ArgumentNullException {
+    public Frame filename(String filename) {
         return new Frame(filename, lineNumber, columnNumber, method, code, className, context, args, keywordArgs);
     }
 
@@ -264,24 +259,31 @@ public class Frame implements JsonSerializable {
         Object[] args = args();
         Map<String, Object> keywordArgs = keywordArgs();
 
-        if (filename != null)
-            obj.put("filename", filename);
-        if (lineNumber != null)
+        obj.put("filename", filename != null ? filename : "[unknown]");
+        if (lineNumber != null) {
             obj.put("lineno", lineNumber);
-        if (columnNumber != null)
+        }
+        if (columnNumber != null) {
             obj.put("colno", columnNumber);
-        if (method != null)
+        }
+        if (method != null) {
             obj.put("method", method);
-        if (code != null)
+        }
+        if (code != null) {
             obj.put("code", code);
-        if (className != null)
+        }
+        if (className != null) {
             obj.put("class_name", className);
-        if (context != null)
+        }
+        if (context != null) {
             obj.put("context", context);
-        if (args != null)
+        }
+        if (args != null) {
             obj.put("args", args);
-        if (keywordArgs != null)
+        }
+        if (keywordArgs != null) {
             obj.put("kwargs", keywordArgs);
+        }
 
         return obj;
     }

@@ -30,12 +30,7 @@ public class FrameTest {
             }
 
             public Frame set(Frame frame, String val) {
-                try {
-                    return frame.filename(val);
-                } catch (ArgumentNullException e) {
-                    fail("Neither is null");
-                    return null;
-                }
+                return frame.filename(val);
             }
         });
     }
@@ -165,5 +160,13 @@ public class FrameTest {
         assertFalse(json.containsKey("context"));
         assertFalse(json.containsKey("args"));
         assertFalse(json.containsKey("kwargs"));
+    }
+
+    @Test
+    public void testNullFilename() {
+        Frame frame = new Frame(null);
+        Map<String, Object> json = frame.asJson();
+        assertTrue(json.containsKey("filename"));
+        assertEquals(json.get("filename"), "[unknown]");
     }
 }
