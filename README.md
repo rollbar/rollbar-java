@@ -10,7 +10,7 @@ The library is split into small modules to enable re-use as much as
 possible. If you want to change a single piece of how it works it should
 be relatively straightforward.
 
-* `rollbar-utilties` contains code shared by the other modules.
+* `rollbar-utilities` contains code shared by the other modules.
 * `rollbar-testing` contains shared test code.
 * `rollbar-sender` implements sending occurrences to Rollbar. No external
 dependencies make this lightweight, but a good candidate for an

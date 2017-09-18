@@ -127,7 +127,26 @@ public class RollbarSerializerTest {
         assertTrue(stacktrace.contains("Caused by: java.lang.RuntimeException"));
     }
 
-    private Throwable getError() {
+    @Test
+    public void TestCustomTypeSerialize() {
+        final CustomClass custom = new CustomClass();
+        final Message msg = new Message("customParams");
+        final Body body = new Body(msg.put("someParam", custom));
+        final Data data = new Data(environment, body);
+        final Payload payload = new Payload(accessToken, data);
+        final String json = new RollbarSerializer().serialize(payload);
+        final JsonObject parsed = (JsonObject) new JsonParser().parse(json);
+        assertEquals(
+            custom.toString(),
+            parsed
+                .getAsJsonObject("data")
+                .getAsJsonObject("body")
+                .getAsJsonObject("message")
+                .getAsJsonPrimitive("someParam").getAsString()
+        );
+    }
+
+    public Throwable getError() {
         try {
             throwException();
             return null;
@@ -154,6 +173,17 @@ public class RollbarSerializerTest {
             throwException();
         } catch (Exception e) {
             throw new Exception("Wrapper Exception", e);
+        }
+    }
+
+    /**
+     * Class which is used for checking custom classes serialization.
+     */
+    public class CustomClass {
+
+        @Override
+        public String toString() {
+            return "custom string representation";
         }
     }
 }

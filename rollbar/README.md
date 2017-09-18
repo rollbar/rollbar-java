@@ -102,9 +102,10 @@ public class MyClass {
             this.monitoredMethod();
         } catch (Throwable t) {
             Payload p = Payload.fromError(SERVER_POST_ACCESS_TOKEN, ENVIRONMENT, t, null);
+            PayloadSender ps = new PayloadSender();
             try {
                 // Here you can filter or transform the payload as needed before sending it
-                p.send();
+                ps.send(p);
             } catch (ConnectionFailedException e) {
                 Logger.getLogger(MyClass.class.getName()).severe(p.toJson());
             }
@@ -128,9 +129,10 @@ public class Program {
         Thread.currentThread().setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             public void uncaughtException(Thread t, Throwable e) {
                 Payload p = Payload.fromError(SERVER_POST_ACCESS_TOKEN, ENVIRONMENT, t, null);
+                PayloadSender ps = new PayloadSender();
                 try {
                     // Here you can filter or transform the payload as needed before sending it
-                    p.send();
+                    ps.send(p);
                 } catch (ConnectionFailedException e) {
                     Logger.getLogger(MyClass.class.getName()).severe(p.toJson());
                 }
