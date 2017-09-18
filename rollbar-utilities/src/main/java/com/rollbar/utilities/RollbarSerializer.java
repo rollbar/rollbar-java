@@ -98,11 +98,10 @@ public class RollbarSerializer implements JsonSerializer {
         }
         else if (value instanceof Object[]) {
             serializeArray(builder, (Object[]) value, level);
+        } else if (value instanceof Throwable) {
+            serializeThrowable(builder, (Throwable) value);
         } else {
             serializeDefault(builder, value);
-        }
-        else if (value instanceof Throwable) {
-            serializeThrowable(builder, (Throwable) value);
         }
     }
 
