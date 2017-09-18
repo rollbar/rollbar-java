@@ -10,11 +10,12 @@
   <modelVersion>4.0.0</modelVersion>
   <properties>
     <rollbar.version>0.5.4</rollbar.version>
+    <github.url>https://github.com/rollbar/rollbar-java</github.url>
   </properties>
 
   <name>java-rollbar</name>
   <description>For connecting your applications built on the JVM to Rollbar for Error Reporting</description>
-  <url>https://github.com/rollbar/rollbar-java</url>
+  <url>${github.url}</url>
 
   <modules>
     <module>rollbar-payload</module>
