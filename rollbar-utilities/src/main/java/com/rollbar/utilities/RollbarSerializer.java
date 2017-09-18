@@ -96,7 +96,13 @@ public class RollbarSerializer implements JsonSerializer {
         }
         else if (value instanceof Object[]) {
             serializeArray(builder, (Object[]) value, level);
+        } else {
+            serializeDefault(builder, value);
         }
+    }
+
+    private static void serializeDefault(StringBuilder builder, Object value) {
+        builder.append(String.format("\"%s\"", value));
     }
 
     private static void serializeNumber(StringBuilder builder, Number value) {
