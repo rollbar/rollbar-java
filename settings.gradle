@@ -1,0 +1,6 @@
+rootProject.name="rolbar-java-sdk"
+
+include ":rollbar-api",
+        ":rollbar-java",
+        ":rollbar-android"
+        
