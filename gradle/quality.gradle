@@ -3,8 +3,9 @@ apply plugin: "findbugs"
 apply plugin: "jacoco"
 
 checkstyle {
+    toolVersion = "8.2"
     sourceSets = [sourceSets.main]
-    configFile = file("$rootDir/tools/checkstyle/checkstyle.xml")
+    configFile = file("$rootDir/tools/checkstyle/google_checks.xml")
 }
 
 findbugs {
