@@ -19,25 +19,27 @@ subprojects {
         }
     }
 
-    publishing {
-        task sourcesJar(type: Jar, dependsOn: classes) {
-            classifier = 'sources'
-            from sourceSets.main.allSource
-        }
+    if(!it.name.startsWith("examples")) {
+        publishing {
+            task sourcesJar(type: Jar, dependsOn: classes) {
+                classifier = 'sources'
+                from sourceSets.main.allSource
+            }
 
-        task javadocJar(type: Jar, dependsOn: javadoc) {
-            classifier = 'javadoc'
-            from javadoc.destinationDir
-        }
+            task javadocJar(type: Jar, dependsOn: javadoc) {
+                classifier = 'javadoc'
+                from javadoc.destinationDir
+            }
 
-        publications {
-            maven(MavenPublication) {
-                groupId 'com.rollbar'
-                version rootProject.version
+            publications {
+                maven(MavenPublication) {
+                    groupId 'com.rollbar'
+                    version rootProject.version
 
-                from components.java
-                artifact sourcesJar
-                artifact javadocJar
+                    from components.java
+                    artifact sourcesJar
+                    artifact javadocJar
+                }
             }
         }
     }
