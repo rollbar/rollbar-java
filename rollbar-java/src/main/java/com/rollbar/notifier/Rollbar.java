@@ -575,6 +575,7 @@ public class Rollbar {
         .platform(config.platform())
         .language(config.language())
         .framework(config.framework())
+        .level(level != null ? level : level(error))
         .body(bodyFactory.from(error, description));
 
     // Gather data from providers.
