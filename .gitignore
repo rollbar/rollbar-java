@@ -42,10 +42,8 @@ Thumbs.db
 .m2
 
 # Build output directies
-/target
-*/target
-/build
-*/build
+**/target
+**/build
 
 # IntelliJ specific files/directories
 out
@@ -66,4 +64,4 @@ atlassian-ide-plugin.xml
 
 
 # Others
-*/.flattened-pom.xml
+**/.flattened-pom.xml

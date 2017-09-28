@@ -1,0 +1,12 @@
+apply plugin: 'application'
+
+jar {
+    baseName = "rollbar-java-example"
+    version =  '1.0.0'
+}
+
+mainClassName = "com.rollbar.example.Application"
+
+dependencies {
+    compile project(":rollbar-java")
+}

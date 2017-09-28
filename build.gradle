@@ -1,4 +1,4 @@
-version = "1.0.0"
+version = "1.0.0-SNAPSHOT"
 
 subprojects {
     apply plugin: "java"
@@ -19,35 +19,46 @@ subprojects {
         }
     }
 
-    publishing {
-        task sourcesJar(type: Jar, dependsOn: classes) {
-            classifier = 'sources'
-            from sourceSets.main.allSource
-        }
+    if(!it.name.startsWith("examples")) {
+        publishing {
+            task sourcesJar(type: Jar, dependsOn: classes) {
+                classifier = 'sources'
+                from sourceSets.main.allSource
+            }
 
-        task javadocJar(type: Jar, dependsOn: javadoc) {
-            classifier = 'javadoc'
-            from javadoc.destinationDir
-        }
+            task javadocJar(type: Jar, dependsOn: javadoc) {
+                classifier = 'javadoc'
+                from javadoc.destinationDir
+            }
 
-        publications {
-            maven(MavenPublication) {
-                groupId 'com.rollbar'
-                version rootProject.version
+            publications {
+                maven(MavenPublication) {
+                    groupId 'com.rollbar'
+                    version rootProject.version
 
-                from components.java
-                artifact sourcesJar
-                artifact javadocJar
+                    from components.java
+                    artifact sourcesJar
+                    artifact javadocJar
+                }
             }
         }
     }
 
     dependencies {
         testCompile group: 'junit', name: 'junit', version: '4.11'
+        testCompile group: 'org.mockito', name: 'mockito-core', version: '2.10.0'
     }
 
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    compileJava {
+        sourceCompatibility = JavaVersion.VERSION_1_7
+        targetCompatibility = JavaVersion.VERSION_1_7
+        options.bootClasspath = "${System.env.JDK7_HOME}/jre/lib/rt.jar"
+    }
+
+    compileTestJava {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
 }
 
 task wrapper(type: Wrapper) {
