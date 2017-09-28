@@ -61,6 +61,19 @@ public class ConfigBuilder {
 
   private SenderCallback senderCallback;
 
+  private boolean handleUncaughtErrors;
+
+  /**
+   * Constructor.
+   */
+  public ConfigBuilder() {
+    // Defaults
+    this.language = "java";
+    this.notifier = new NotifierProvider();
+    this.sender = new SyncSender();
+    this.handleUncaughtErrors = true;
+  }
+
   /**
    * Initializes a config builder instance with the access token supplied.
    * @param accessToken the access token.
@@ -281,6 +294,17 @@ public class ConfigBuilder {
   }
 
   /**
+   * Flag to set the default handler for uncaught errors,
+   * see {@link Thread.UncaughtExceptionHandler}.
+   * @param handleUncaughtErrors true to handle uncaught errors otherwise false.
+   * @return the builder instance.
+   */
+  public ConfigBuilder handleUncaughtErrors(boolean handleUncaughtErrors) {
+    this.handleUncaughtErrors = handleUncaughtErrors;
+    return this;
+  }
+
+  /**
    * Builds the {@link Config config}.
    *
    * @return the config.
@@ -329,12 +353,14 @@ public class ConfigBuilder {
 
     private final SenderCallback senderCallback;
 
+    private final boolean handleUncaughtErrors;
+
     ConfigImpl(ConfigBuilder builder) {
       this.accessToken = builder.accessToken;
       this.environment = builder.environment;
       this.codeVersion = builder.codeVersion;
       this.platform = builder.platform;
-      this.language = builder.language != null ? builder.language : "java";
+      this.language = builder.language;
       this.framework = builder.framework;
       this.context = builder.context;
       this.request = builder.request;
@@ -342,13 +368,14 @@ public class ConfigBuilder {
       this.server = builder.server;
       this.client = builder.client;
       this.custom = builder.custom;
-      this.notifier = builder.notifier != null ? builder.notifier : new NotifierProvider();
+      this.notifier = builder.notifier;
       this.filter = builder.filter;
       this.transformer = builder.transformer;
       this.fingerPrintGenerator = builder.fingerPrintGenerator;
       this.uuidGenerator = builder.uuidGenerator;
-      this.sender = builder.sender != null ? builder.sender : new SyncSender();
+      this.sender = builder.sender;
       this.senderCallback = builder.senderCallback;
+      this.handleUncaughtErrors = builder.handleUncaughtErrors;
     }
 
     @Override
@@ -444,6 +471,11 @@ public class ConfigBuilder {
     @Override
     public SenderCallback senderCallback() {
       return senderCallback;
+    }
+
+    @Override
+    public boolean handleUncaughtErrors() {
+      return handleUncaughtErrors;
     }
   }
 }

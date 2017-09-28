@@ -2,6 +2,7 @@ package com.rollbar.notifier.config;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
 
 import com.rollbar.api.payload.data.Client;
 import com.rollbar.api.payload.data.Notifier;
@@ -11,7 +12,9 @@ import com.rollbar.api.payload.data.Server;
 import com.rollbar.notifier.filter.Filter;
 import com.rollbar.notifier.fingerprint.FingerprintGenerator;
 import com.rollbar.notifier.provider.Provider;
+import com.rollbar.notifier.provider.notifier.NotifierProvider;
 import com.rollbar.notifier.sender.Sender;
+import com.rollbar.notifier.sender.SyncSender;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
 import java.util.Map;
@@ -73,6 +76,16 @@ public class ConfigBuilderTest {
 
   @Mock
   Sender sender;
+
+  @Test
+  public void shouldBuildConfigurationWithDefaults() {
+    Config config = new ConfigBuilder().build();
+
+    assertThat(config.language(), is("java"));
+    assertThat(config.notifier(), is(instanceOf(NotifierProvider.class)));
+    assertThat(config.sender(), is(instanceOf(SyncSender.class)));
+    assertThat(config.handleUncaughtErrors(), is(true));
+  }
 
   @Test
   public void shouldBuildTheConfiguration() {

@@ -148,4 +148,11 @@ public interface Config {
    * @return the sender callback.
    */
   SenderCallback senderCallback();
+
+  /**
+   * Flag to indicate that the Rollbar notifier should handle the uncaught errors.
+   *
+   * @return true to handle otherwise false.
+   */
+  boolean handleUncaughtErrors();
 }

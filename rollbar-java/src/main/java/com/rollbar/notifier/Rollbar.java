@@ -34,6 +34,10 @@ public class Rollbar {
   private Rollbar(Config config, BodyFactory bodyFactory) {
     this.config = config;
     this.bodyFactory = bodyFactory;
+
+    if (config.handleUncaughtErrors()) {
+      this.handleUncaughtErrors();
+    }
   }
 
   /**
