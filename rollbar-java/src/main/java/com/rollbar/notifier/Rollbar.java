@@ -528,7 +528,7 @@ public class Rollbar {
       Level level) {
 
     // Pre filter
-    if (config.filter() != null && config.filter().preProccess(level, error, custom, description)) {
+    if (config.filter() != null && config.filter().preProcess(level, error, custom, description)) {
       return;
     }
 
@@ -557,7 +557,7 @@ public class Rollbar {
     }
 
     // Post filter
-    if (config.filter() != null && config.filter().postProccess(data)) {
+    if (config.filter() != null && config.filter().postProcess(data)) {
       return;
     }
 
