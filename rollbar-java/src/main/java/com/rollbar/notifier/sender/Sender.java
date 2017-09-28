@@ -8,11 +8,10 @@ import com.rollbar.api.payload.Payload;
 public interface Sender {
 
   /**
-   * Sends the payload.
+   * Sends the payload getting notifications on the {@link SenderCallback send callback} passed.
    *
    * @param payload the payload.
-   * @return the result.
+   * @param callback the callback.
    */
-  Result send(Payload payload);
-
+  void send(Payload payload, SenderCallback callback);
 }

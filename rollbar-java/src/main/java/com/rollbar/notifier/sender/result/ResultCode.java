@@ -1,4 +1,4 @@
-package com.rollbar.notifier.sender;
+package com.rollbar.notifier.sender.result;
 
 /**
  * Represents expected response codes from POSTing an item to Rollbar.
@@ -50,6 +50,7 @@ public enum ResultCode {
 
   /**
    * Get a Response Code from the integer value returned by the HTTP request.
+   *
    * @param i the integer value of the response code.
    * @return the ResultCode.
    */

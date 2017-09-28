@@ -1,4 +1,4 @@
-package com.rollbar.notifier.sender;
+package com.rollbar.notifier.sender.result;
 
 import java.util.Objects;
 

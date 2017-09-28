@@ -3,6 +3,8 @@ package com.rollbar.notifier.provider.notifier;
 class VersionHelper {
 
   public String version() {
-    return VersionHelper.class.getPackage().getImplementationVersion();
+    String version = VersionHelper.class.getPackage().getImplementationVersion();
+
+    return version != null ? version : "unknown";
   }
 }

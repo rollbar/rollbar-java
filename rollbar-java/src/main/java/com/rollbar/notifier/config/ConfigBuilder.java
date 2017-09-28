@@ -1,6 +1,5 @@
 package com.rollbar.notifier.config;
 
-import com.rollbar.api.payload.Payload;
 import com.rollbar.api.payload.data.Client;
 import com.rollbar.api.payload.data.Notifier;
 import com.rollbar.api.payload.data.Person;
@@ -10,7 +9,10 @@ import com.rollbar.notifier.Rollbar;
 import com.rollbar.notifier.filter.Filter;
 import com.rollbar.notifier.fingerprint.FingerprintGenerator;
 import com.rollbar.notifier.provider.Provider;
+import com.rollbar.notifier.provider.notifier.NotifierProvider;
 import com.rollbar.notifier.sender.Sender;
+import com.rollbar.notifier.sender.SenderCallback;
+import com.rollbar.notifier.sender.SyncSender;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
 import java.util.Map;
@@ -56,6 +58,8 @@ public class ConfigBuilder {
   private UuidGenerator uuidGenerator;
 
   private Sender sender;
+
+  private SenderCallback senderCallback;
 
   /**
    * Initializes a config builder instance with the access token supplied.
@@ -255,13 +259,24 @@ public class ConfigBuilder {
   }
 
   /**
-   * The provider to retrieve the {@link Sender sender}.
+   * Retrieve the {@link Sender sender}.
    *
    * @param sender the sender.
    * @return the builder instance.
    */
   public ConfigBuilder sender(Sender sender) {
     this.sender = sender;
+    return this;
+  }
+
+  /**
+   * Retrieve the {@link SenderCallback sender callback}.
+   *
+   * @param senderCallback the sender callback.
+   * @return the builder instance.
+   */
+  public ConfigBuilder senderCallback(SenderCallback senderCallback) {
+    this.senderCallback = senderCallback;
     return this;
   }
 
@@ -276,48 +291,50 @@ public class ConfigBuilder {
 
   private static class ConfigImpl implements Config {
 
-    private String accessToken;
+    private final String accessToken;
 
-    private String environment;
+    private final String environment;
 
-    private String codeVersion;
+    private final String codeVersion;
 
-    private String platform;
+    private final String platform;
 
-    private String language;
+    private final String language;
 
-    private String framework;
+    private final String framework;
 
-    private Provider<String> context;
+    private final Provider<String> context;
 
-    private Provider<Request> request;
+    private final Provider<Request> request;
 
-    private Provider<Person> person;
+    private final Provider<Person> person;
 
-    private Provider<Server> server;
+    private final Provider<Server> server;
 
-    private Provider<Client> client;
+    private final Provider<Client> client;
 
-    private Provider<Map<String, Object>> custom;
+    private final Provider<Map<String, Object>> custom;
 
-    private Provider<Notifier> notifier;
+    private final Provider<Notifier> notifier;
 
-    private Filter filter;
+    private final Filter filter;
 
-    private Transformer transformer;
+    private final Transformer transformer;
 
-    private FingerprintGenerator fingerPrintGenerator;
+    private final FingerprintGenerator fingerPrintGenerator;
 
-    private UuidGenerator uuidGenerator;
+    private final UuidGenerator uuidGenerator;
 
-    private Sender sender;
+    private final Sender sender;
+
+    private final SenderCallback senderCallback;
 
     ConfigImpl(ConfigBuilder builder) {
       this.accessToken = builder.accessToken;
       this.environment = builder.environment;
       this.codeVersion = builder.codeVersion;
       this.platform = builder.platform;
-      this.language = builder.language;
+      this.language = builder.language != null ? builder.language : "java";
       this.framework = builder.framework;
       this.context = builder.context;
       this.request = builder.request;
@@ -325,12 +342,13 @@ public class ConfigBuilder {
       this.server = builder.server;
       this.client = builder.client;
       this.custom = builder.custom;
-      this.notifier = builder.notifier;
+      this.notifier = builder.notifier != null ? builder.notifier : new NotifierProvider();
       this.filter = builder.filter;
       this.transformer = builder.transformer;
       this.fingerPrintGenerator = builder.fingerPrintGenerator;
       this.uuidGenerator = builder.uuidGenerator;
-      this.sender = builder.sender;
+      this.sender = builder.sender != null ? builder.sender : new SyncSender();
+      this.senderCallback = builder.senderCallback;
     }
 
     @Override
@@ -421,6 +439,11 @@ public class ConfigBuilder {
     @Override
     public Sender sender() {
       return sender;
+    }
+
+    @Override
+    public SenderCallback senderCallback() {
+      return senderCallback;
     }
   }
 }
