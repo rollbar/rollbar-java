@@ -4,6 +4,7 @@ import com.rollbar.api.payload.Payload;
 import com.rollbar.notifier.sender.exception.SenderException;
 import com.rollbar.notifier.sender.json.JsonSerializer;
 import com.rollbar.notifier.sender.json.JsonSerializerImpl;
+import com.rollbar.notifier.sender.listener.SenderListener;
 import com.rollbar.notifier.sender.result.Result;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,6 +15,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Synchronous implementation of the {@link Sender sender}.
@@ -30,24 +33,41 @@ public class SyncSender implements Sender {
 
   private final String accessToken;
 
+  private final List<SenderListener> listeners;
+
   SyncSender(Builder builder) {
     this.url = builder.url;
     this.jsonSerializer = builder.jsonSerializer;
     this.accessToken = builder.accessToken;
+
+    this.listeners = new ArrayList<>();
   }
 
   @Override
-  public void send(Payload payload, SenderCallback handler) {
+  public void send(Payload payload) {
     try {
       String json = jsonSerializer.toJson(payload);
       Result result = send(json);
-      if (handler != null) {
-        handler.onResult(result);
-      }
+      notifyResult(payload, result);
     } catch (Exception e) {
-      if (handler != null) {
-        handler.onError(new SenderException(e));
-      }
+      notifyError(payload, new SenderException(e));
+    }
+  }
+
+  @Override
+  public void addListener(SenderListener listener) {
+    this.listeners.add(listener);
+  }
+
+  private void notifyResult(Payload payload, Result result) {
+    for (SenderListener listener : listeners) {
+      listener.onResult(payload, result);
+    }
+  }
+
+  private void notifyError(Payload payload, Exception error) {
+    for (SenderListener listener : listeners) {
+      listener.onError(payload, error);
     }
   }
 

@@ -11,7 +11,6 @@ import com.rollbar.notifier.fingerprint.FingerprintGenerator;
 import com.rollbar.notifier.provider.Provider;
 import com.rollbar.notifier.provider.notifier.NotifierProvider;
 import com.rollbar.notifier.sender.Sender;
-import com.rollbar.notifier.sender.SenderCallback;
 import com.rollbar.notifier.sender.SyncSender;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
@@ -58,8 +57,6 @@ public class ConfigBuilder {
   private UuidGenerator uuidGenerator;
 
   private Sender sender;
-
-  private SenderCallback senderCallback;
 
   private boolean handleUncaughtErrors;
 
@@ -274,17 +271,6 @@ public class ConfigBuilder {
   }
 
   /**
-   * Retrieve the {@link SenderCallback sender callback}.
-   *
-   * @param senderCallback the sender callback.
-   * @return the builder instance.
-   */
-  public ConfigBuilder senderCallback(SenderCallback senderCallback) {
-    this.senderCallback = senderCallback;
-    return this;
-  }
-
-  /**
    * Flag to set the default handler for uncaught errors,
    * see {@link Thread.UncaughtExceptionHandler}.
    * @param handleUncaughtErrors true to handle uncaught errors otherwise false.
@@ -342,8 +328,6 @@ public class ConfigBuilder {
 
     private final Sender sender;
 
-    private final SenderCallback senderCallback;
-
     private final boolean handleUncaughtErrors;
 
     ConfigImpl(ConfigBuilder builder) {
@@ -365,7 +349,6 @@ public class ConfigBuilder {
       this.fingerPrintGenerator = builder.fingerPrintGenerator;
       this.uuidGenerator = builder.uuidGenerator;
       this.sender = builder.sender;
-      this.senderCallback = builder.senderCallback;
       this.handleUncaughtErrors = builder.handleUncaughtErrors;
     }
 
@@ -457,11 +440,6 @@ public class ConfigBuilder {
     @Override
     public Sender sender() {
       return sender;
-    }
-
-    @Override
-    public SenderCallback senderCallback() {
-      return senderCallback;
     }
 
     @Override

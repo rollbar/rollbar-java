@@ -632,7 +632,7 @@ public class Rollbar {
 
   private void sendPayload(Payload payload) {
     if (config.sender() != null) {
-      config.sender().send(payload, config.senderCallback());
+      config.sender().send(payload);
     }
   }
 }
