@@ -4,6 +4,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -11,6 +12,7 @@ import static org.mockito.Mockito.when;
 import com.rollbar.api.payload.Payload;
 import com.rollbar.notifier.sender.exception.SenderException;
 import com.rollbar.notifier.sender.json.JsonSerializer;
+import com.rollbar.notifier.sender.listener.SenderListener;
 import com.rollbar.notifier.sender.result.Result;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -49,7 +51,7 @@ public class SyncSenderTest {
   JsonSerializer serializer;
 
   @Mock
-  SenderCallback callback;
+  SenderListener listener;
 
   @Mock
   Payload payload;
@@ -67,6 +69,7 @@ public class SyncSenderTest {
     when(serializer.toJson(payload)).thenReturn(PAYLOAD_JSON);
 
     sut = new SyncSender(url, serializer);
+    sut.addListener(listener);
   }
 
   @Test
@@ -80,9 +83,9 @@ public class SyncSenderTest {
 
     when(serializer.resultFrom(responseCode, responseJson)).thenReturn(result);
 
-    sut.send(payload, callback);
+    sut.send(payload);
 
-    verify(callback).onResult(result);
+    verify(listener).onResult(payload, result);
   }
 
   @Test
@@ -96,9 +99,9 @@ public class SyncSenderTest {
 
     when(serializer.resultFrom(responseCode, responseJson)).thenReturn(result);
 
-    sut.send(payload, callback);
+    sut.send(payload);
 
-    verify(callback).onResult(result);
+    verify(listener).onResult(payload, result);
   }
 
   @Test
@@ -109,10 +112,10 @@ public class SyncSenderTest {
 
     doThrow(sourceError).when(out).write(bytes, 0, bytes.length);
 
-    sut.send(payload, callback);
+    sut.send(payload);
 
     ArgumentCaptor<SenderException> argument = ArgumentCaptor.forClass(SenderException.class);
-    verify(callback).onError(argument.capture());
+    verify(listener).onError(eq(payload), argument.capture());
 
     assertThat(argument.getValue(), is(instanceOf(SenderException.class)));
     assertThat(argument.getValue().getCause(), is(sourceError));

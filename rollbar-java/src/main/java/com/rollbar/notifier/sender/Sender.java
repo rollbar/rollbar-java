@@ -1,6 +1,7 @@
 package com.rollbar.notifier.sender;
 
 import com.rollbar.api.payload.Payload;
+import com.rollbar.notifier.sender.listener.SenderListener;
 
 /**
  * Sender interface to send the payload to Rollbar.
@@ -8,10 +9,17 @@ import com.rollbar.api.payload.Payload;
 public interface Sender {
 
   /**
-   * Sends the payload getting notifications on the {@link SenderCallback send callback} passed.
+   * Sends the payload getting notifications on the {@link SenderListener send callback} passed.
    *
    * @param payload the payload.
-   * @param callback the callback.
    */
-  void send(Payload payload, SenderCallback callback);
+  void send(Payload payload);
+
+  /**
+   * Registers a listener to get notifications of sending payloads through the
+   * {@link SenderListener sender listener}.
+   *
+   * @param listener the listener.
+   */
+  void addListener(SenderListener listener);
 }

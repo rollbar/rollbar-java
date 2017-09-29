@@ -4,16 +4,11 @@ import static com.rollbar.notifier.config.ConfigBuilder.withAccessToken;
 
 import com.rollbar.notifier.Rollbar;
 import com.rollbar.notifier.config.Config;
-import com.rollbar.notifier.sender.SenderCallback;
-import com.rollbar.notifier.sender.SyncSender;
-import com.rollbar.notifier.sender.result.Result;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Application example using rollbar-java notifier.
