@@ -1,5 +1,7 @@
 package com.rollbar.notifier.sender;
 
+import static java.util.Collections.unmodifiableList;
+
 import com.rollbar.api.payload.Payload;
 import com.rollbar.notifier.sender.exception.SenderException;
 import com.rollbar.notifier.sender.listener.SenderListener;
@@ -37,6 +39,11 @@ public abstract class AbstractSender implements Sender {
   @Override
   public final void addListener(SenderListener listener) {
     this.listeners.add(listener);
+  }
+
+  @Override
+  public final List<SenderListener> getListeners() {
+    return unmodifiableList(this.listeners);
   }
 
   @Override

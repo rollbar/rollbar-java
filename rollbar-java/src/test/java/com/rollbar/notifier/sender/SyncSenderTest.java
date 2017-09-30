@@ -123,4 +123,11 @@ public class SyncSenderTest {
     assertThat(argument.getValue(), is(instanceOf(SenderException.class)));
     assertThat(argument.getValue().getCause(), is(sourceError));
   }
+
+  @Test
+  public void shouldClose() throws Exception {
+    sut.close();
+
+    verify(connection).disconnect();
+  }
 }
