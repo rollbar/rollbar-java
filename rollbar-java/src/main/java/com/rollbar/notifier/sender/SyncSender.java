@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * Synchronous implementation of the {@link Sender sender}.
  */
-public class SyncSender implements Sender {
+public class SyncSender extends AbstractSender {
 
   public static final String DEFAULT_API_ENDPOINT = "https://api.rollbar.com/api/1/item/";
 
@@ -74,31 +74,9 @@ public class SyncSender implements Sender {
   }
 
   @Override
-  public void send(Payload payload) {
-    try {
-      String json = serializer.toJson(payload);
-      Result result = send(json);
-      notifyResult(payload, result);
-    } catch (Exception e) {
-      notifyError(payload, new SenderException(e));
-    }
-  }
-
-  @Override
-  public void addListener(SenderListener listener) {
-    this.listeners.add(listener);
-  }
-
-  private void notifyResult(Payload payload, Result result) {
-    for (SenderListener listener : listeners) {
-      listener.onResult(payload, result);
-    }
-  }
-
-  private void notifyError(Payload payload, Exception error) {
-    for (SenderListener listener : listeners) {
-      listener.onError(payload, error);
-    }
+  public Result doSend(Payload payload) throws Exception {
+    String json = serializer.toJson(payload);
+    return send(json);
   }
 
   private Result send(String body) throws IOException {
