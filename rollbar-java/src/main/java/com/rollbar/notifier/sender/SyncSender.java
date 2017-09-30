@@ -79,6 +79,11 @@ public class SyncSender extends AbstractSender {
     return send(json);
   }
 
+  @Override
+  public void close() throws Exception {
+    getConnection().disconnect();
+  }
+
   private Result send(String body) throws IOException {
     HttpURLConnection connection = getConnection();
     byte[] bytes = body.getBytes(UTF_8);

@@ -39,6 +39,11 @@ public abstract class AbstractSender implements Sender {
     this.listeners.add(listener);
   }
 
+  @Override
+  public void close() throws Exception {
+
+  }
+
   private void notifyResult(Payload payload, Result result) {
     for (SenderListener listener : listeners) {
       listener.onResult(payload, result);
