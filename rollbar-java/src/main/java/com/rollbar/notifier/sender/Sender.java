@@ -6,7 +6,7 @@ import com.rollbar.notifier.sender.listener.SenderListener;
 /**
  * Sender interface to send the payload to Rollbar.
  */
-public interface Sender {
+public interface Sender extends AutoCloseable {
 
   /**
    * Sends the payload getting notifications on the {@link SenderListener send callback} passed.
