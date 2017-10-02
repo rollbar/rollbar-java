@@ -128,7 +128,7 @@ public class Request implements JsonSerializable {
       values.put("get", get);
     }
     if (queryString != null) {
-      values.put("queryString", queryString);
+      values.put("query_string", queryString);
     }
     if (post != null) {
       values.put("post", post);
@@ -137,7 +137,7 @@ public class Request implements JsonSerializable {
       values.put("body", body);
     }
     if (userIp != null) {
-      values.put("userIp", userIp);
+      values.put("user_ip", userIp);
     }
 
     return values;
@@ -319,7 +319,7 @@ public class Request implements JsonSerializable {
      * @param queryString the querystring.
      * @return the builder instance.
      */
-    public Builder querystring(String queryString) {
+    public Builder queryString(String queryString) {
       this.queryString = queryString;
       return this;
     }

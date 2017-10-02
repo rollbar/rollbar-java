@@ -3,7 +3,6 @@ package com.rollbar.web.provider;
 import com.rollbar.api.payload.data.Request;
 import com.rollbar.notifier.provider.Provider;
 import com.rollbar.web.listener.RollbarRequestListener;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +29,7 @@ public class RequestProvider implements Provider<Request> {
           .method(method(req))
           .headers(headers(req))
           .get(getParams(req))
-          .querystring(queryString(req))
+          .queryString(queryString(req))
           .userIp(userIp(req))
           .build();
 

@@ -142,7 +142,7 @@ public class Factory {
         .method("GET")
         .headers(headers)
         .get(get)
-        .querystring("param1=value1&param2=value2")
+        .queryString("param1=value1&param2=value2")
         .userIp("192.168.1.1")
         .build();
   }
