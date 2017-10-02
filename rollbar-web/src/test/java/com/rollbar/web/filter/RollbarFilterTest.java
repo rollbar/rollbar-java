@@ -1,5 +1,7 @@
 package com.rollbar.web.filter;
 
+import static com.rollbar.web.filter.RollbarFilter.ACCESS_TOKEN_PARAM_NAME;
+import static com.rollbar.web.filter.RollbarFilter.USER_IP_HEADER_PARAM_NAME;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -8,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import com.rollbar.notifier.Rollbar;
 import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import org.junit.Before;
@@ -36,6 +39,9 @@ public class RollbarFilterTest {
   @Mock
   FilterChain chain;
 
+  @Mock
+  FilterConfig filterConfig;
+
   RollbarFilter sut;
 
   @Before
@@ -43,6 +49,14 @@ public class RollbarFilterTest {
     doThrow(ERROR).when(chain).doFilter(request, response);
 
     sut = new RollbarFilter(rollbar);
+  }
+
+  @Test
+  public void shouldInit() throws Exception {
+    sut.init(filterConfig);
+
+    verify(filterConfig).getInitParameter(ACCESS_TOKEN_PARAM_NAME);
+    verify(filterConfig).getInitParameter(USER_IP_HEADER_PARAM_NAME);
   }
 
   @Test

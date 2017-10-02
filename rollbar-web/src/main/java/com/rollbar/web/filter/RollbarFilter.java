@@ -15,7 +15,15 @@ import javax.servlet.ServletResponse;
 
 public class RollbarFilter implements Filter {
 
+  static final String ACCESS_TOKEN_PARAM_NAME = "access_token";
+
+  static final String USER_IP_HEADER_PARAM_NAME = "user_ip_header";
+
   private Rollbar rollbar;
+
+  public RollbarFilter() {
+    // Empty constructor.
+  }
 
   RollbarFilter(Rollbar rollbar) {
     this.rollbar = rollbar;
@@ -23,10 +31,15 @@ public class RollbarFilter implements Filter {
 
   @Override
   public void init(FilterConfig filterConfig) throws ServletException {
-    String accessToken = filterConfig.getInitParameter("access_token");
+    String accessToken = filterConfig.getInitParameter(ACCESS_TOKEN_PARAM_NAME);
+    String userIpHeaderName = filterConfig.getInitParameter(USER_IP_HEADER_PARAM_NAME);
+
+    RequestProvider requestProvider = new RequestProvider.Builder()
+        .userIpHeaderName(userIpHeaderName)
+        .build();
 
     rollbar = Rollbar.init(withAccessToken(accessToken)
-        .request(new RequestProvider())
+        .request(requestProvider)
         .person(new PersonProvider())
         .build());
   }
@@ -54,4 +67,5 @@ public class RollbarFilter implements Filter {
   public void destroy() {
     rollbar = null;
   }
+
 }

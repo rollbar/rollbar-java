@@ -14,7 +14,7 @@
         <filter-class>com.rollbar.web.filter.RollbarFilter</filter-class>
         <init-param>
             <param-name>access_token</param-name>
-            <param-value>0cd5b5230f1341c9af217dfa7941e8fe</param-value>
+            <param-value>[YOUR_ACCESS_TOKEN>]</param-value>
         </init-param>
     </filter>
     <filter-mapping>

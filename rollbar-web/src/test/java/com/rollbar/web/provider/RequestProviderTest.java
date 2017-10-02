@@ -47,7 +47,6 @@ public class RequestProviderTest {
     }
   }
 
-
   static final String REMOTE_ADDRESS = "127.0.0.1";
 
   @Rule
@@ -80,7 +79,7 @@ public class RequestProviderTest {
     listener = new RollbarRequestListener();
     listener.requestInitialized(requestEvent);
 
-    sut = new RequestProvider();
+    sut = new RequestProvider.Builder().build();
   }
 
   @Test
@@ -96,13 +95,34 @@ public class RequestProviderTest {
   }
 
   @Test
-  public void shouldRetrieveTheRemoteAddrUsingHeaderFirst() {
+  public void shouldRetrieveTheRemoteAddressUsingHeader() {
+    String userIpHeaderName = "X-FORWARDED-FOR";
+
+    RequestProvider sut = new RequestProvider.Builder()
+        .userIpHeaderName(userIpHeaderName)
+        .build();
+
     String remoteAddr = "192.168.1.1";
-    when(request.getHeader("X-FORWARDED-FOR")).thenReturn(remoteAddr);
+    when(request.getHeader(userIpHeaderName)).thenReturn(remoteAddr);
 
     Request result = sut.provide();
 
     assertThat(result.getUserIp(), is(remoteAddr));
   }
 
+  @Test
+  public void shouldRetrieveTheRemoteAddressUsingRequestRemoteAddress() {
+    String userIpHeaderName = "";
+
+    RequestProvider sut = new RequestProvider.Builder()
+        .userIpHeaderName(userIpHeaderName)
+        .build();
+
+    String remoteAddr = "192.168.1.1";
+    when(request.getRemoteAddr()).thenReturn(remoteAddr);
+
+    Request result = sut.provide();
+
+    assertThat(result.getUserIp(), is(remoteAddr));
+  }
 }

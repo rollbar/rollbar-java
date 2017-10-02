@@ -2,6 +2,7 @@ package com.rollbar.web.provider;
 
 import static java.util.Arrays.asList;
 
+import com.rollbar.api.payload.Payload;
 import com.rollbar.api.payload.data.Request;
 import com.rollbar.notifier.provider.Provider;
 import com.rollbar.web.listener.RollbarRequestListener;
@@ -17,10 +18,13 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class RequestProvider implements Provider<Request> {
 
+  private final String userIpHeaderName;
+
   /**
    * Constructor.
    */
-  public RequestProvider() {
+  RequestProvider(Builder builder) {
+    this.userIpHeaderName = builder.userIpHeaderName;
   }
 
   @Override
@@ -41,6 +45,14 @@ public class RequestProvider implements Provider<Request> {
     }
 
     return null;
+  }
+
+  private String userIp(HttpServletRequest request) {
+    if (userIpHeaderName == null || "".equals(userIpHeaderName)) {
+      return request.getRemoteAddr();
+    }
+
+    return request.getHeader(userIpHeaderName);
   }
 
   private static String url(HttpServletRequest request) {
@@ -84,14 +96,30 @@ public class RequestProvider implements Provider<Request> {
     return request.getQueryString();
   }
 
-  private static String userIp(HttpServletRequest request) {
-    String remoteAddr = request.getHeader("X-FORWARDED-FOR");
+  /**
+   * Builder class for {@link RequestProvider}.
+   */
+  public static final class Builder {
 
-    if (remoteAddr == null || "".equals(remoteAddr)) {
-      remoteAddr = request.getRemoteAddr();
+    private String userIpHeaderName;
+
+    /**
+     * The request header name to retrieve the user ip.
+     * @param userIpHeaderName the header name.
+     * @return the builder instance.
+     */
+    public Builder userIpHeaderName(String userIpHeaderName) {
+      this.userIpHeaderName = userIpHeaderName;
+      return this;
     }
 
-    return remoteAddr;
+    /**
+     * Builds the {@link RequestProvider request provider}.
+     *
+     * @return the payload.
+     */
+    public RequestProvider build() {
+      return new RequestProvider(this);
+    }
   }
-
 }
