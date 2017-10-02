@@ -101,7 +101,7 @@ public class BufferedSender implements Sender {
       this.batchSize = DEFAULT_BATCH_SIZE;
       this.flushFreq = DEFAULT_FLUSH_FREQ;
       this.queue = new DiskQueue();
-      this.sender = new SyncSender();
+      this.sender = null;
     }
 
     /**
