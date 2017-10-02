@@ -1,11 +1,15 @@
 package com.rollbar.web.provider;
 
+import static java.util.Arrays.asList;
+
 import com.rollbar.api.payload.data.Request;
 import com.rollbar.notifier.provider.Provider;
 import com.rollbar.web.listener.RollbarRequestListener;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -59,23 +63,14 @@ public class RequestProvider implements Provider<Request> {
     return headers;
   }
 
-  private static Map<String, String> getParams(HttpServletRequest request) {
+  private static Map<String, List<String>> getParams(HttpServletRequest request) {
     if("GET".equalsIgnoreCase(request.getMethod())) {
-      Map<String, String> params = new HashMap<>();
+      Map<String, List<String>> params = new HashMap<>();
 
       Map<String, String[]> paramNames = request.getParameterMap();
-      for (String paramName : paramNames.keySet()) {
-        String[] values = paramNames.get(paramName);
-
-        if (values != null && values.length > 0) {
-          StringBuilder sb = new StringBuilder();
-          for (int i = 0; i < values.length; i++) {
-            sb.append(values[i]);
-            if (i + 1 != values.length) {
-              sb.append(',');
-            }
-          }
-          params.put(paramName, sb.toString());
+      for (Entry<String, String[]> param : paramNames.entrySet()) {
+        if (param.getValue() != null && param.getValue().length > 0) {
+          params.put(param.getKey(), asList(param.getValue()));
         }
       }
 

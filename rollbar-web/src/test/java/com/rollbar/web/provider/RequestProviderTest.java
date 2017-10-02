@@ -1,6 +1,6 @@
 package com.rollbar.web.provider;
 
-import static java.lang.String.join;
+import static java.util.Arrays.asList;
 import static java.util.Collections.enumeration;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import com.rollbar.api.payload.data.Request;
 import com.rollbar.web.listener.RollbarRequestListener;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.servlet.ServletRequestEvent;
 import javax.servlet.http.HttpServletRequest;
@@ -39,11 +40,10 @@ public class RequestProviderTest {
     REQUEST_GET_PARAMS.put("param2", new String[]{"value3"});
   }
 
-  static final Map<String, String> EXPECTED_GET_PARAMS = new HashMap<>();
+  static final Map<String, List<String>> EXPECTED_GET_PARAMS = new HashMap<>();
   static {
     for(String paramName : REQUEST_GET_PARAMS.keySet()) {
-      String[] values = REQUEST_GET_PARAMS.get(paramName);
-      EXPECTED_GET_PARAMS.put(paramName, join(",", values));
+      EXPECTED_GET_PARAMS.put(paramName, asList(REQUEST_GET_PARAMS.get(paramName)));
     }
   }
 

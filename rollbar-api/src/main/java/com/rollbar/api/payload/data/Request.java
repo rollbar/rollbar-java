@@ -2,6 +2,7 @@ package com.rollbar.api.payload.data;
 
 import com.rollbar.api.json.JsonSerializable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -17,7 +18,7 @@ public class Request implements JsonSerializable {
 
   private final Map<String, String> params;
 
-  private final Map<String, String> get;
+  private final Map<String, List<String>> get;
 
   private final String queryString;
 
@@ -75,7 +76,7 @@ public class Request implements JsonSerializable {
    * Getter.
    * @return the parsed query string parameters
    */
-  public Map<String, String> getGet() {
+  public Map<String, List<String>> getGet() {
     return get;
   }
 
@@ -224,7 +225,7 @@ public class Request implements JsonSerializable {
 
     private Map<String, String> params;
 
-    private Map<String, String> get;
+    private Map<String, List<String>> get;
 
     private String queryString;
 
@@ -308,7 +309,7 @@ public class Request implements JsonSerializable {
      * @param get the get.
      * @return the builder instance.
      */
-    public Builder get(Map<String, String> get) {
+    public Builder get(Map<String, List<String>> get) {
       this.get = get;
       return this;
     }
