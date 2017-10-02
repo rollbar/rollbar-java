@@ -73,7 +73,7 @@ public class SyncSenderTest {
   }
 
   @Test
-  public void shouldSendThePayloadWithSucessResult() throws Exception {
+  public void shouldSendThePayloadWithSuccessResult() throws Exception {
     int responseCode = 200;
     String responseJson = "simulated_response_json";
 
@@ -85,6 +85,8 @@ public class SyncSenderTest {
 
     sut.send(payload);
 
+    verifyHttp();
+    verify(connection).getInputStream();
     verify(listener).onResult(payload, result);
   }
 
@@ -101,11 +103,13 @@ public class SyncSenderTest {
 
     sut.send(payload);
 
+    verifyHttp();
+    verify(connection).getErrorStream();
     verify(listener).onResult(payload, result);
   }
 
   @Test
-  public void shouldNotifyErrorDuringSend() throws IOException {
+  public void shouldNotifyErrorDuringSend() throws Exception {
     IOException sourceError = new IOException("Error opening the connection.");
 
     byte[] bytes = PAYLOAD_JSON.getBytes(UTF_8);
@@ -114,6 +118,7 @@ public class SyncSenderTest {
 
     sut.send(payload);
 
+    verifyHttp();
     ArgumentCaptor<SenderException> argument = ArgumentCaptor.forClass(SenderException.class);
     verify(listener).onError(eq(payload), argument.capture());
 
@@ -126,5 +131,13 @@ public class SyncSenderTest {
     sut.close();
 
     verify(connection).disconnect();
+  }
+
+  private void verifyHttp() throws Exception {
+    verify(connection).setRequestProperty("Accept-Charset", UTF_8.name());
+    verify(connection).setRequestProperty("Content-Type", "application/json; charset=" + UTF_8.name());
+    verify(connection).setRequestProperty("Accept", "application/json");
+    verify(connection).setDoOutput(true);
+    verify(connection).setRequestMethod("POST");
   }
 }

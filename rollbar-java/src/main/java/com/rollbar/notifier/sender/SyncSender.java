@@ -31,8 +31,6 @@ public class SyncSender extends AbstractSender {
 
   private final JsonSerializer serializer;
 
-  private final List<SenderListener> listeners;
-
   /**
    * Constructor.
    */
@@ -62,15 +60,11 @@ public class SyncSender extends AbstractSender {
       throw new IllegalArgumentException("The url provided is not valid: " + url, e);
     }
     this.serializer = serializer;
-
-    this.listeners = new ArrayList<>();
   }
 
   SyncSender(URL url, JsonSerializer serializer) {
     this.url = url;
     this.serializer = serializer;
-
-    this.listeners = new ArrayList<>();
   }
 
   @Override
