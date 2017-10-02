@@ -10,6 +10,7 @@ import com.rollbar.notifier.filter.Filter;
 import com.rollbar.notifier.fingerprint.FingerprintGenerator;
 import com.rollbar.notifier.provider.Provider;
 import com.rollbar.notifier.provider.notifier.NotifierProvider;
+import com.rollbar.notifier.provider.timestamp.TimestampProvider;
 import com.rollbar.notifier.sender.Sender;
 import com.rollbar.notifier.sender.SyncSender;
 import com.rollbar.notifier.transformer.Transformer;
@@ -49,6 +50,8 @@ public class ConfigBuilder {
 
   private Provider<Notifier> notifier;
 
+  private Provider<Long> timestamp;
+
   private Filter filter;
 
   private Transformer transformer;
@@ -68,6 +71,7 @@ public class ConfigBuilder {
     // Defaults
     this.language = "java";
     this.notifier = new NotifierProvider();
+    this.timestamp = new TimestampProvider();
     this.sender = new SyncSender();
     this.handleUncaughtErrors = true;
   }
@@ -226,6 +230,16 @@ public class ConfigBuilder {
   }
 
   /**
+   * The provider to retrieve the timestamp.
+   * @param timestamp the timestamp.
+   * @return the builder instance.
+   */
+  public ConfigBuilder timestamp(Provider<Long> timestamp) {
+    this.timestamp = timestamp;
+    return this;
+  }
+
+  /**
    * The provider to retrieve the {@link Filter filter}.
    *
    * @param filter the filter provider.
@@ -328,6 +342,8 @@ public class ConfigBuilder {
 
     private final Provider<Notifier> notifier;
 
+    private final Provider<Long> timestamp;
+
     private final Filter filter;
 
     private final Transformer transformer;
@@ -354,6 +370,7 @@ public class ConfigBuilder {
       this.client = builder.client;
       this.custom = builder.custom;
       this.notifier = builder.notifier;
+      this.timestamp = builder.timestamp;
       this.filter = builder.filter;
       this.transformer = builder.transformer;
       this.fingerPrintGenerator = builder.fingerPrintGenerator;
@@ -425,6 +442,11 @@ public class ConfigBuilder {
     @Override
     public Provider<Notifier> notifier() {
       return notifier;
+    }
+
+    @Override
+    public Provider<Long> timestamp() {
+      return timestamp;
     }
 
     @Override

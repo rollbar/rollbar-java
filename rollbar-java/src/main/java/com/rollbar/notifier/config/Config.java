@@ -107,6 +107,11 @@ public interface Config {
   Provider<Notifier> notifier();
 
   /**
+   * Get the {@link Long timestamp} {@link Provider provider}.
+   */
+  Provider<Long> timestamp();
+
+  /**
    * Get the {@link Filter filter}.
    *
    * @return the filter.

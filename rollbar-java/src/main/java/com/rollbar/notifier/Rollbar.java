@@ -31,7 +31,7 @@ public class Rollbar {
     this(config, new BodyFactory());
   }
 
-  private Rollbar(Config config, BodyFactory bodyFactory) {
+  Rollbar(Config config, BodyFactory bodyFactory) {
     this.config = config;
     this.bodyFactory = bodyFactory;
 
@@ -613,10 +613,13 @@ public class Rollbar {
     // Custom
     Map<String, Object> tmpCustom = new HashMap<>();
     if (config.custom() != null) {
-      tmpCustom.putAll(config.custom().provide());
+      Map<String, Object> customProvided = config.custom().provide();
+      if (customProvided != null) {
+        tmpCustom.putAll(customProvided);
+      }
     }
     if (custom != null) {
-      custom.putAll(custom);
+      tmpCustom.putAll(custom);
     }
     if (tmpCustom.size() > 0) {
       dataBuilder.custom(tmpCustom);
@@ -625,6 +628,11 @@ public class Rollbar {
     // Notifier
     if (config.notifier() != null) {
       dataBuilder.notifier(config.notifier().provide());
+    }
+
+    // Timestamp
+    if (config.timestamp() != null) {
+      dataBuilder.timestamp(config.timestamp().provide());
     }
 
     return dataBuilder.build();
