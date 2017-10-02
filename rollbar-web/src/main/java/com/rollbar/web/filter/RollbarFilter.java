@@ -26,7 +26,6 @@ public class RollbarFilter implements Filter {
     String accessToken = filterConfig.getInitParameter("access_token");
 
     rollbar = Rollbar.init(withAccessToken(accessToken)
-        .language("java")
         .request(new RequestProvider())
         .person(new PersonProvider())
         .build());
