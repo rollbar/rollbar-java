@@ -100,7 +100,7 @@ public class BufferedSender implements Sender {
     public Builder() {
       this.batchSize = DEFAULT_BATCH_SIZE;
       this.flushFreq = DEFAULT_FLUSH_FREQ;
-      this.queue = new DiskQueue();
+      this.queue = new DiskQueue.Builder().build();
       this.sender = null;
     }
 
