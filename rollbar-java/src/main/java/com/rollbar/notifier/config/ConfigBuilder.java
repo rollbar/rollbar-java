@@ -14,6 +14,7 @@ import com.rollbar.notifier.sender.Sender;
 import com.rollbar.notifier.sender.SyncSender;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Map;
 
 /**
@@ -281,7 +282,7 @@ public class ConfigBuilder {
 
   /**
    * Flag to set the default handler for uncaught errors,
-   * see {@link Thread.UncaughtExceptionHandler}.
+   * see {@link UncaughtExceptionHandler}.
    * @param handleUncaughtErrors true to handle uncaught errors otherwise false.
    * @return the builder instance.
    */

@@ -1,11 +1,12 @@
 package com.rollbar.notifier.sender.json;
 
 import com.rollbar.api.payload.Payload;
+import com.rollbar.notifier.sender.Sender;
 import com.rollbar.notifier.sender.result.Result;
 
 /**
- * Serializer to be used by the {@Sender sender}. the payload to send to Rollbar to json and get
- * {@link Result result} from a Rollbar response.
+ * Serializer to be used by the {@link Sender sender}. the payload to send to Rollbar to json and
+ * get {@link Result result} from a Rollbar response.
  */
 public interface JsonSerializer {
 
