@@ -11,7 +11,7 @@ public class PersonProvider implements Provider<Person> {
   public Person provide() {
     HttpServletRequest request = RollbarRequestListener.getServletRequest();
 
-    if(request != null && request.getUserPrincipal() != null) {
+    if (request != null && request.getUserPrincipal() != null) {
       return new Person.Builder()
           .id(request.getUserPrincipal().getName())
           .build();

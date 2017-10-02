@@ -27,7 +27,7 @@ public class RequestProvider implements Provider<Request> {
   public Request provide() {
     HttpServletRequest req = RollbarRequestListener.getServletRequest();
 
-    if(req != null) {
+    if (req != null) {
       Request request = new Request.Builder()
           .url(url(req))
           .method(method(req))
@@ -64,7 +64,7 @@ public class RequestProvider implements Provider<Request> {
   }
 
   private static Map<String, List<String>> getParams(HttpServletRequest request) {
-    if("GET".equalsIgnoreCase(request.getMethod())) {
+    if ("GET".equalsIgnoreCase(request.getMethod())) {
       Map<String, List<String>> params = new HashMap<>();
 
       Map<String, String[]> paramNames = request.getParameterMap();

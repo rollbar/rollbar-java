@@ -14,7 +14,7 @@ public class RollbarRequestListener implements ServletRequestListener {
 
   @Override
   public void requestInitialized(ServletRequestEvent sre) {
-    if(sre.getServletRequest() instanceof HttpServletRequest) {
+    if (sre.getServletRequest() instanceof HttpServletRequest) {
       CURRENT_REQUEST.set((HttpServletRequest) sre.getServletRequest());
     }
   }
