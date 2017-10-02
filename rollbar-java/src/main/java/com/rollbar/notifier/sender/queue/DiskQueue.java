@@ -32,24 +32,9 @@ public class DiskQueue extends AbstractQueue<Payload> {
 
   private final int maxSize;
 
-  /**
-   * Constructor.
-   */
-  public DiskQueue() {
-    this(UNBOUNDED_QUEUE);
-  }
-
-  /**
-   * Constructor.
-   * @param maxSize the maximum size of the queue.
-   */
-  public DiskQueue(int maxSize) {
-    this(maxSize, new File(QUEUE_FOLDER));
-  }
-
-  DiskQueue(int maxSize, File queueFolder) {
-    this.maxSize = maxSize;
-    this.queueFolder = queueFolder;
+  private DiskQueue(Builder builder) {
+    this.maxSize = builder.maxSize;
+    this.queueFolder = builder.queueFolder;
 
     if (!this.queueFolder.exists()) {
       if (this.queueFolder.mkdirs()) {
@@ -155,6 +140,53 @@ public class DiskQueue extends AbstractQueue<Payload> {
       return (Payload) o;
     } catch (Exception e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * Builder class for {@link DiskQueue}.
+   */
+  public static final class Builder {
+
+    private File queueFolder;
+
+    private int maxSize;
+
+    /**
+     * Constructor.
+     */
+    public Builder() {
+      this.maxSize = UNBOUNDED_QUEUE;
+      this.queueFolder = new File(QUEUE_FOLDER);
+    }
+
+    /**
+     * The max size of the queue.
+     * @param maxSize the max size.
+     * @return the builder instance.
+     */
+    public Builder maxSize(int maxSize) {
+      this.maxSize = maxSize;
+      return this;
+    }
+
+    /**
+     * The queue folder where persist the payloads.
+     * @param queueFolder the queue folder.
+     * @return the builder instance.
+     */
+    public Builder queueFolder(File queueFolder) {
+      this.queueFolder = queueFolder;
+      return this;
+    }
+
+    /**
+     * Builds the {@link DiskQueue disk queue}.
+     *
+     * @return the disk queue.
+     */
+    public DiskQueue build() {
+      return new DiskQueue(this);
     }
   }
 

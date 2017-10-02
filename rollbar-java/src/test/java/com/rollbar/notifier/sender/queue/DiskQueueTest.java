@@ -25,7 +25,9 @@ public class DiskQueueTest {
   @Before
   public void setUp() throws Exception {
     queueFolder = folder.newFolder();
-    sut = new DiskQueue(-1, queueFolder);
+    sut = new DiskQueue.Builder()
+        .queueFolder(queueFolder)
+        .build();
   }
 
   @Test
@@ -65,7 +67,10 @@ public class DiskQueueTest {
 
   @Test
   public void shouldOfferNotEnqueueIfFull() {
-    DiskQueue sut = new DiskQueue(1, queueFolder);
+    DiskQueue sut = new DiskQueue.Builder()
+        .maxSize(1)
+        .queueFolder(queueFolder)
+        .build();
 
     Payload payload1 = new Payload.Builder().build();
     Payload payload2 = new Payload.Builder().build();
