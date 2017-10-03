@@ -1,5 +1,6 @@
 package com.rollbar.notifier;
 
+import static com.rollbar.notifier.config.ConfigBuilder.withAccessToken;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.ArgumentMatchers.any;
@@ -102,8 +103,7 @@ public class RollbarTest {
 
   @Before
   public void setUp() {
-    config = new ConfigBuilder()
-        .accessToken(ACCESS_TOKEN)
+    config = withAccessToken(ACCESS_TOKEN)
         .environment(ENVIRONMENT)
         .codeVersion(CODE_VERSION)
         .platform(PLATFORM)
@@ -258,8 +258,7 @@ public class RollbarTest {
 
   @Test
   public void shouldUseTransformedData() {
-    Config config = new ConfigBuilder()
-        .accessToken(ACCESS_TOKEN)
+    Config config = withAccessToken(ACCESS_TOKEN)
         .transformer(transformer)
         .sender(sender)
         .build();
@@ -287,7 +286,7 @@ public class RollbarTest {
 
   @Test
   public void shouldUseTheCorrectLevel() {
-    Config config = new ConfigBuilder()
+    Config config = withAccessToken(ACCESS_TOKEN)
         .timestamp(timestampProvider)
         .language(LANGUAGE)
         .notifier(notifierProvider)
@@ -309,12 +308,15 @@ public class RollbarTest {
         .body(body);
 
     Payload warningPayload = new Payload.Builder()
+        .accessToken(ACCESS_TOKEN)
         .data(dataBuilder.level(Level.WARNING).build())
         .build();
     Payload criticalPayload = new Payload.Builder()
+        .accessToken(ACCESS_TOKEN)
         .data(dataBuilder.level(Level.CRITICAL).build())
         .build();
     Payload errorPayload = new Payload.Builder()
+        .accessToken(ACCESS_TOKEN)
         .data(dataBuilder.level(Level.ERROR).build())
         .build();
 
@@ -330,7 +332,7 @@ public class RollbarTest {
 
   @Test
   public void shouldNotThrowExceptionWithEmptyConfig() {
-    Config config = ConfigBuilder.withAccessToken("access_token").build();
+    Config config = withAccessToken("access_token").build();
 
     Rollbar sut = Rollbar.init(config);
 
@@ -341,7 +343,7 @@ public class RollbarTest {
 
   @Test
   public void shouldInitializeOnceTheInternalInstance() {
-    Config config = new ConfigBuilder().build();
+    Config config = withAccessToken(ACCESS_TOKEN).build();
 
     Rollbar sut = Rollbar.init(config);
     Rollbar other = Rollbar.init(config);
@@ -351,7 +353,7 @@ public class RollbarTest {
 
   @Test
   public void shouldLogWithLogMethod() {
-    Config config = new ConfigBuilder()
+    Config config = withAccessToken(ACCESS_TOKEN)
         .timestamp(timestampProvider)
         .language(LANGUAGE)
         .notifier(notifierProvider)
@@ -360,6 +362,7 @@ public class RollbarTest {
 
     Rollbar sut = new Rollbar(config, bodyFactory);
 
+    Payload.Builder payloadBuilder = new Payload.Builder().accessToken(ACCESS_TOKEN);
     Data.Builder dataBuilder = new Data.Builder()
         .language(LANGUAGE);
 
@@ -377,49 +380,49 @@ public class RollbarTest {
     when(bodyFactory.from(error, description)).thenReturn(body);
 
     sut.log(error);
-    verify(sender).send(new Payload.Builder().data(dataBuilder
+    verify(sender).send(payloadBuilder.data(dataBuilder
         .body(bodyOnlyError)
         .level(sut.level(error))
         .build()
     ).build());
 
     sut.log(error, Level.DEBUG);
-    verify(sender).send(new Payload.Builder().data(dataBuilder
+    verify(sender).send(payloadBuilder.data(dataBuilder
         .body(bodyOnlyError)
         .level(Level.DEBUG)
         .build()
     ).build());
 
     sut.log(description);
-    verify(sender).send(new Payload.Builder().data(dataBuilder
+    verify(sender).send(payloadBuilder.data(dataBuilder
         .body(bodyOnlyDescription)
         .level(sut.level(null))
         .build()
     ).build());
 
     sut.log(description, Level.DEBUG);
-    verify(sender).send(new Payload.Builder().data(dataBuilder
+    verify(sender).send(payloadBuilder.data(dataBuilder
         .body(bodyOnlyDescription)
         .level(Level.DEBUG)
         .build()
     ).build());
 
     sut.log(error, description);
-    verify(sender).send(new Payload.Builder().data(dataBuilder
+    verify(sender).send(payloadBuilder.data(dataBuilder
         .body(body)
         .level(sut.level(error))
         .build()
     ).build());
 
     sut.log(error, description, Level.DEBUG);
-    verify(sender).send(new Payload.Builder().data(dataBuilder
+    verify(sender).send(payloadBuilder.data(dataBuilder
         .body(body)
         .level(Level.DEBUG)
         .build()
     ).build());
 
     sut.log(error, custom);
-    verify(sender).send(new Payload.Builder().data(dataBuilder
+    verify(sender).send(payloadBuilder.data(dataBuilder
         .body(bodyOnlyError)
         .level(sut.level(error))
         .custom(custom)
@@ -427,7 +430,7 @@ public class RollbarTest {
     ).build());
 
     sut.log(error, custom, Level.DEBUG);
-    verify(sender).send(new Payload.Builder().data(dataBuilder
+    verify(sender).send(payloadBuilder.data(dataBuilder
         .body(bodyOnlyError)
         .level(Level.DEBUG)
         .custom(custom)
@@ -435,7 +438,7 @@ public class RollbarTest {
     ).build());
 
     sut.log(description, custom);
-    verify(sender).send(new Payload.Builder().data(dataBuilder
+    verify(sender).send(payloadBuilder.data(dataBuilder
         .body(bodyOnlyDescription)
         .custom(custom)
         .level(sut.level(null))
@@ -443,7 +446,7 @@ public class RollbarTest {
     ).build());
 
     sut.log(description, custom, Level.DEBUG);
-    verify(sender).send(new Payload.Builder().data(dataBuilder
+    verify(sender).send(payloadBuilder.data(dataBuilder
         .body(bodyOnlyDescription)
         .custom(custom)
         .level(Level.DEBUG)
@@ -453,7 +456,7 @@ public class RollbarTest {
 
   @Test
   public void shouldLogWithEachLevels() {
-    Config config = new ConfigBuilder()
+    Config config = withAccessToken(ACCESS_TOKEN)
         .timestamp(timestampProvider)
         .language(LANGUAGE)
         .notifier(notifierProvider)
@@ -468,6 +471,7 @@ public class RollbarTest {
   }
 
   private void verifyCallsBasedOnLevels(Rollbar sut, Level level) {
+    Payload.Builder payloadBuilder = new Payload.Builder().accessToken(ACCESS_TOKEN);
     Data.Builder dataBuilder = new Data.Builder()
         .language(LANGUAGE);
 
@@ -501,7 +505,7 @@ public class RollbarTest {
         sut.debug(error);
         break;
     }
-    verify(sender).send(new Payload.Builder().data(dataBuilder
+    verify(sender).send(payloadBuilder.data(dataBuilder
         .body(bodyOnlyError)
         .level(level)
         .build()
@@ -523,7 +527,7 @@ public class RollbarTest {
         sut.debug(description);
         break;
     }
-    verify(sender).send(new Payload.Builder().data(dataBuilder
+    verify(sender).send(payloadBuilder.data(dataBuilder
         .body(bodyOnlyDescription)
         .level(level)
         .build()
@@ -546,7 +550,7 @@ public class RollbarTest {
         sut.debug(error, description);
         break;
     }
-    verify(sender).send(new Payload.Builder().data(dataBuilder
+    verify(sender).send(payloadBuilder.data(dataBuilder
         .body(body)
         .level(level)
         .build()
@@ -569,7 +573,7 @@ public class RollbarTest {
         sut.debug(error, custom);
         break;
     }
-    verify(sender).send(new Payload.Builder().data(dataBuilder
+    verify(sender).send(payloadBuilder.data(dataBuilder
         .body(bodyOnlyError)
         .level(level)
         .custom(custom)
@@ -593,7 +597,7 @@ public class RollbarTest {
         sut.debug(description, custom);
         break;
     }
-    verify(sender).send(new Payload.Builder().data(dataBuilder
+    verify(sender).send(payloadBuilder.data(dataBuilder
         .body(bodyOnlyDescription)
         .custom(custom)
         .level(level)

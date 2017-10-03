@@ -21,9 +21,8 @@ public interface JsonSerializer {
   /**
    * Parses the response from Rollbar to a {@link Result result}.
    *
-   * @param code the response code.
    * @param response the response.
    * @return the result.
    */
-  Result resultFrom(int code, String response);
+  Result resultFrom(String response);
 }
