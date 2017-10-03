@@ -66,11 +66,14 @@ public class ConfigBuilder {
   /**
    * Constructor.
    */
-  public ConfigBuilder() {
+  private ConfigBuilder(String accessToken) {
     // Defaults
+    this.accessToken = accessToken;
     this.language = "java";
     this.notifier = new NotifierProvider();
-    this.sender = new SyncSender();
+    this.sender = new SyncSender.Builder()
+        .accessToken(accessToken)
+        .build();
     this.handleUncaughtErrors = true;
   }
 
@@ -80,19 +83,7 @@ public class ConfigBuilder {
    * @return the builder instance.
    */
   public static ConfigBuilder withAccessToken(String accessToken) {
-    return new ConfigBuilder()
-        .accessToken(accessToken);
-  }
-
-  /**
-   * An access token with scope "post_server_item" or "post_client_item".
-   *
-   * @param accessToken the access token.
-   * @return the builder instance.
-   */
-  public ConfigBuilder accessToken(String accessToken) {
-    this.accessToken = accessToken;
-    return this;
+    return new ConfigBuilder(accessToken);
   }
 
   /**

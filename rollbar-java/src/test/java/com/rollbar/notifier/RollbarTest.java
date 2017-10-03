@@ -15,7 +15,7 @@ public class RollbarTest {
 
   @Test
   public void shouldNotThrowExceptionWithEmptyConfig() {
-    Config config = new ConfigBuilder().build();
+    Config config = ConfigBuilder.withAccessToken("access_token").build();
 
     Rollbar rollbar = Rollbar.init(config);
 

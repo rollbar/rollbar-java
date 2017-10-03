@@ -79,7 +79,7 @@ public class ConfigBuilderTest {
 
   @Test
   public void shouldBuildConfigurationWithDefaults() {
-    Config config = new ConfigBuilder().build();
+    Config config = ConfigBuilder.withAccessToken(ACCESS_TOKEN).build();
 
     assertThat(config.language(), is("java"));
     assertThat(config.notifier(), is(instanceOf(NotifierProvider.class)));
@@ -89,8 +89,7 @@ public class ConfigBuilderTest {
 
   @Test
   public void shouldBuildTheConfiguration() {
-    Config config = new ConfigBuilder()
-        .accessToken(ACCESS_TOKEN)
+    Config config = ConfigBuilder.withAccessToken(ACCESS_TOKEN)
         .environment(ENVIRONMENT)
         .codeVersion(CODE_VERSION)
         .platform(PLATFORM)
@@ -128,5 +127,15 @@ public class ConfigBuilderTest {
     assertThat(config.fingerPrintGenerator(), is(fingerPrintGenerator));
     assertThat(config.uuidGenerator(), is(uuidGenerator));
     assertThat(config.sender(), is(sender));
+  }
+
+  @Test
+  public void test() {
+    Config config = ConfigBuilder.withAccessToken("mi token")
+        .build();
+
+    Sender sender = config.sender();
+
+    System.out.println(sender);
   }
 }

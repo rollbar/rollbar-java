@@ -66,7 +66,10 @@ public class SyncSenderTest {
 
     when(serializer.toJson(payload)).thenReturn(PAYLOAD_JSON);
 
-    sut = new SyncSender(url, serializer);
+    sut = new SyncSender.Builder()
+        .url(url)
+        .jsonSerializer(serializer)
+        .build();
   }
 
   @Test

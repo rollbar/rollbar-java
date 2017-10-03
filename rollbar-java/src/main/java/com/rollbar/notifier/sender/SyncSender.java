@@ -26,48 +26,20 @@ public class SyncSender implements Sender {
 
   private final URL url;
 
-  private final JsonSerializer serializer;
+  private final JsonSerializer jsonSerializer;
 
-  /**
-   * Constructor.
-   */
-  public SyncSender() {
-    this(DEFAULT_API_ENDPOINT);
-  }
+  private final String accessToken;
 
-  /**
-   * Constructor.
-   *
-   * @param url the Rollbar API endpoint.
-   */
-  public SyncSender(String url) {
-    this(url, new JsonSerializerImpl());
-  }
-
-  /**
-   * Constructor.
-   *
-   * @param url the Rollbar API endpoint.
-   * @param serializer the serializer.
-   */
-  public SyncSender(String url, JsonSerializer serializer) {
-    try {
-      this.url = new URL(url);
-    } catch (MalformedURLException e) {
-      throw new IllegalArgumentException("The url provided is not valid: " + url, e);
-    }
-    this.serializer = serializer;
-  }
-
-  SyncSender(URL url, JsonSerializer serializer) {
-    this.url = url;
-    this.serializer = serializer;
+  SyncSender(Builder builder) {
+    this.url = builder.url;
+    this.jsonSerializer = builder.jsonSerializer;
+    this.accessToken = builder.accessToken;
   }
 
   @Override
   public void send(Payload payload, SenderCallback handler) {
     try {
-      String json = serializer.toJson(payload);
+      String json = jsonSerializer.toJson(payload);
       Result result = send(json);
       if (handler != null) {
         handler.onResult(result);
@@ -89,6 +61,10 @@ public class SyncSender implements Sender {
   private HttpURLConnection getConnection() throws IOException {
     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
+    if (accessToken != null && !"".equals(accessToken)) {
+      connection.setRequestProperty("x-rollbar-access-token", accessToken);
+    }
+
     connection.setRequestProperty("Accept-Charset", UTF_8);
     connection.setRequestProperty("Content-Type", "application/json; charset=" + UTF_8);
     connection.setRequestProperty("Accept", "application/json");
@@ -109,7 +85,7 @@ public class SyncSender implements Sender {
   private Result readResponse(HttpURLConnection connection) throws IOException {
     int resultCode = connection.getResponseCode();
     String resultContent = getResponseContent(connection);
-    return serializer.resultFrom(resultCode, resultContent);
+    return jsonSerializer.resultFrom(resultCode, resultContent);
   }
 
   private static String getResponseContent(HttpURLConnection connection) throws IOException {
@@ -131,6 +107,53 @@ public class SyncSender implements Sender {
     }
     bis.close();
     return buffer.toString();
+  }
+
+  public static final class Builder {
+
+    private URL url;
+
+    private JsonSerializer jsonSerializer;
+
+    private String accessToken;
+
+    public Builder() {
+      this.url = parseUrl(DEFAULT_API_ENDPOINT);
+      this.jsonSerializer = new JsonSerializerImpl();
+    }
+
+    public Builder url(String url) {
+      this.url = parseUrl(url);
+      return this;
+    }
+
+    public Builder url(URL url) {
+      this.url = url;
+      return this;
+    }
+
+    public Builder jsonSerializer(JsonSerializer jsonSerializer) {
+      this.jsonSerializer = jsonSerializer;
+      return this;
+    }
+
+    public Builder accessToken(String accessToken) {
+      this.accessToken = accessToken;
+      return this;
+    }
+
+    public SyncSender build() {
+      return new SyncSender(this);
+    }
+
+    private static URL parseUrl(String url) {
+      try {
+        URL result = new URL(url);
+        return result;
+      } catch (MalformedURLException e) {
+        throw new IllegalArgumentException("The url provided is not valid: " + url, e);
+      }
+    }
   }
 }
 
