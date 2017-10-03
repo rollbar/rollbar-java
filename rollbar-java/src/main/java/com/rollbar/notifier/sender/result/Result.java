@@ -3,25 +3,43 @@ package com.rollbar.notifier.sender.result;
 import java.util.Objects;
 
 /**
- * Represents the result of the send process to Rollbar.
+ * Represents the result returned by Rollbar.
  */
 public class Result {
 
-  private final ResultCode code;
+  private static final int ERROR_CODE = 1;
 
-  private final String body;
+  private final int err;
+
+  private final String content;
 
   private Result(Builder builder) {
-    this.code = builder.code;
-    this.body = builder.body;
+    this.err = builder.err;
+    this.content = builder.content;
   }
 
-  public ResultCode getCode() {
-    return code;
+  /**
+   * The err field of the json returned by Rollbar.
+   * @return the err.
+   */
+  public int getErr() {
+    return err;
   }
 
-  public String getBody() {
-    return body;
+  /**
+   * The content return by Rollbar, message/uuid.
+   * @return the content.
+   */
+  public String getContent() {
+    return content;
+  }
+
+  /**
+   * Indicates if is an error.
+   * @return true if error, otherwise false.
+   */
+  public boolean isError() {
+    return err == ERROR_CODE;
   }
 
   @Override
@@ -33,20 +51,21 @@ public class Result {
       return false;
     }
     Result result = (Result) o;
-    return code == result.code
-        && Objects.equals(body, result.body);
+    return err == result.err
+        &&
+        Objects.equals(content, result.content);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(code, body);
+    return Objects.hash(err, content);
   }
 
   @Override
   public String toString() {
     return "Result{"
-        + "code=" + code
-        + ", body='" + body + '\''
+        + "err=" + err
+        + ", content='" + content + '\''
         + '}';
   }
 
@@ -55,46 +74,29 @@ public class Result {
    */
   public static final class Builder {
 
-    private ResultCode code;
+    private int err;
 
-    private String body;
-
-    /**
-     * Constructor.
-     */
-    public Builder() {
-
-    }
+    private String content;
 
     /**
-     * Contructor.
+     * The err returned by Rollbar.
      *
-     * @param result the {@link Result result} to initialize a new builder instance.
-     */
-    public Builder(Result result) {
-      this.code = result.code;
-      this.body = result.body;
-    }
-
-    /**
-     * The {@link ResultCode code} returned by Rollbar.
-     *
-     * @param code the code.
+     * @param code the err.
      * @return the builder instance.
      */
-    public Builder code(ResultCode code) {
-      this.code = code;
+    public Builder code(int code) {
+      this.err = code;
       return this;
     }
 
     /**
      * The body of the response returned by Rollbar.
      *
-     * @param body the body.
+     * @param content the content.
      * @return the builder instance.
      */
-    public Builder body(String body) {
-      this.body = body;
+    public Builder body(String content) {
+      this.content = content;
       return this;
     }
 

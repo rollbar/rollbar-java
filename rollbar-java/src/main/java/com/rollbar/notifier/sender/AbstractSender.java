@@ -3,9 +3,10 @@ package com.rollbar.notifier.sender;
 import static java.util.Collections.unmodifiableList;
 
 import com.rollbar.api.payload.Payload;
+import com.rollbar.notifier.sender.exception.ApiException;
 import com.rollbar.notifier.sender.exception.SenderException;
 import com.rollbar.notifier.sender.listener.SenderListener;
-import com.rollbar.notifier.sender.result.Result;
+import com.rollbar.notifier.sender.result.Response;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,13 +25,17 @@ public abstract class AbstractSender implements Sender {
    * @return the result.
    * @throws Exception an exception indicating that an error happen.
    */
-  protected abstract Result doSend(Payload payload) throws Exception;
+  protected abstract Response doSend(Payload payload) throws Exception;
 
   @Override
   public final void send(Payload payload) {
     try {
-      Result result = doSend(payload);
-      notifyResult(payload, result);
+      Response response = doSend(payload);
+      if (response.getResult().isError()) {
+        notifyError(payload, new SenderException(new ApiException(response)));
+      } else {
+        notifyResult(payload, response);
+      }
     } catch (Exception e) {
       notifyError(payload, new SenderException(e));
     }
@@ -51,9 +56,9 @@ public abstract class AbstractSender implements Sender {
 
   }
 
-  private void notifyResult(Payload payload, Result result) {
+  private void notifyResult(Payload payload, Response response) {
     for (SenderListener listener : listeners) {
-      listener.onResult(payload, result);
+      listener.onResponse(payload, response);
     }
   }
 

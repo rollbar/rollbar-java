@@ -5,6 +5,7 @@ import com.rollbar.notifier.sender.exception.SenderException;
 import com.rollbar.notifier.sender.json.JsonSerializer;
 import com.rollbar.notifier.sender.json.JsonSerializerImpl;
 import com.rollbar.notifier.sender.listener.SenderListener;
+import com.rollbar.notifier.sender.result.Response;
 import com.rollbar.notifier.sender.result.Result;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -68,7 +69,7 @@ public class SyncSender extends AbstractSender {
   }
 
   @Override
-  public Result doSend(Payload payload) throws Exception {
+  public Response doSend(Payload payload) throws Exception {
     String json = serializer.toJson(payload);
     return send(json);
   }
@@ -78,7 +79,7 @@ public class SyncSender extends AbstractSender {
     getConnection().disconnect();
   }
 
-  private Result send(String body) throws IOException {
+  private Response send(String body) throws IOException {
     HttpURLConnection connection = getConnection();
     byte[] bytes = body.getBytes(UTF_8);
     sendJson(connection, bytes);
@@ -105,10 +106,14 @@ public class SyncSender extends AbstractSender {
     }
   }
 
-  private Result readResponse(HttpURLConnection connection) throws IOException {
-    int resultCode = connection.getResponseCode();
-    String resultContent = getResponseContent(connection);
-    return serializer.resultFrom(resultCode, resultContent);
+  private Response readResponse(HttpURLConnection connection) throws IOException {
+    int status = connection.getResponseCode();
+    String content = getResponseContent(connection);
+    Result result = serializer.resultFrom(content);
+    return new Response.Builder()
+        .status(status)
+        .result(result)
+        .build();
   }
 
   private static String getResponseContent(HttpURLConnection connection) throws IOException {

@@ -10,9 +10,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.rollbar.api.payload.Payload;
+import com.rollbar.notifier.sender.exception.ApiException;
 import com.rollbar.notifier.sender.exception.SenderException;
 import com.rollbar.notifier.sender.json.JsonSerializer;
 import com.rollbar.notifier.sender.listener.SenderListener;
+import com.rollbar.notifier.sender.result.Response;
 import com.rollbar.notifier.sender.result.Result;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -81,31 +83,51 @@ public class SyncSenderTest {
     when(connection.getInputStream())
         .thenReturn(new ByteArrayInputStream(responseJson.getBytes(UTF_8)));
 
-    when(serializer.resultFrom(responseCode, responseJson)).thenReturn(result);
+    when(serializer.resultFrom(responseJson)).thenReturn(result);
 
     sut.send(payload);
 
+    Response expectedResponse = new Response.Builder()
+        .status(responseCode)
+        .result(result)
+        .build();
+
     verifyHttp();
     verify(connection).getInputStream();
-    verify(listener).onResult(payload, result);
+    verify(listener).onResponse(payload, expectedResponse);
   }
 
   @Test
-  public void shouldSendThePayloadWithErrorResult() throws Exception {
+  public void shouldSendThePayloadWithResponseError() throws Exception {
     int responseCode = 400;
     String responseJson = "simulated_response_json";
+    String apiMessage = "simulated_api_error_json";
+    Result result = new Result.Builder()
+        .code(1)
+        .body(apiMessage)
+        .build();
+    Response response = new Response.Builder()
+        .status(responseCode)
+        .result(result)
+        .build();
+
+    ApiException sourceError = new ApiException(response);
 
     when(connection.getResponseCode()).thenReturn(responseCode);
     when(connection.getErrorStream())
         .thenReturn(new ByteArrayInputStream(responseJson.getBytes(UTF_8)));
 
-    when(serializer.resultFrom(responseCode, responseJson)).thenReturn(result);
+    when(serializer.resultFrom(responseJson)).thenReturn(result);
 
     sut.send(payload);
 
     verifyHttp();
     verify(connection).getErrorStream();
-    verify(listener).onResult(payload, result);
+    ArgumentCaptor<SenderException> argument = ArgumentCaptor.forClass(SenderException.class);
+    verify(listener).onError(eq(payload), argument.capture());
+
+    assertThat(argument.getValue(), is(instanceOf(SenderException.class)));
+    assertThat(argument.getValue().getCause(), is(sourceError));
   }
 
   @Test
