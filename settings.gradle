@@ -3,4 +3,6 @@ rootProject.name="rolbar-java-sdk"
 include ":rollbar-api",
         ":rollbar-java",
         ":rollbar-android",
-        ":examples:rollbar-java"
+        "rollbar-web",
+        ":examples:rollbar-java",
+        ":examples:rollbar-web"

@@ -18,6 +18,7 @@ import com.rollbar.api.payload.data.body.Message;
 import com.rollbar.api.payload.data.body.Trace;
 import com.rollbar.api.payload.data.body.TraceChain;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Factory {
@@ -133,16 +134,16 @@ public class Factory {
     headers.put("Accept", "text/html");
     headers.put("Referer", "https://rollbar.com/");
 
-    Map<String, String> get = new HashMap<>();
-    get.put("param1", "value1");
-    get.put("param2", "value2");
+    Map<String, List<String>> get = new HashMap<>();
+    get.put("param1", asList("value1.1", "value1.2"));
+    get.put("param2", asList("value2.1"));
 
     return new Request.Builder()
         .url("https://rollbar.com/project/1")
         .method("GET")
         .headers(headers)
         .get(get)
-        .querystring("param1=value1&param2=value2")
+        .queryString("param1=value1&param2=value2")
         .userIp("192.168.1.1")
         .build();
   }
