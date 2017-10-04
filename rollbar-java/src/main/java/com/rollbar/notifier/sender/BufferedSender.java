@@ -8,6 +8,7 @@ import com.rollbar.notifier.sender.queue.DiskQueue;
 import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
@@ -100,7 +101,7 @@ public class BufferedSender implements Sender {
     public Builder() {
       this.batchSize = DEFAULT_BATCH_SIZE;
       this.flushFreq = DEFAULT_FLUSH_FREQ;
-      this.queue = new DiskQueue.Builder().build();
+      this.queue = new ConcurrentLinkedQueue<>();
       this.sender = null;
     }
 
