@@ -1,6 +1,5 @@
 package com.rollbar.notifier.config;
 
-import com.rollbar.api.payload.Payload;
 import com.rollbar.api.payload.data.Client;
 import com.rollbar.api.payload.data.Notifier;
 import com.rollbar.api.payload.data.Person;
@@ -10,9 +9,13 @@ import com.rollbar.notifier.Rollbar;
 import com.rollbar.notifier.filter.Filter;
 import com.rollbar.notifier.fingerprint.FingerprintGenerator;
 import com.rollbar.notifier.provider.Provider;
+import com.rollbar.notifier.provider.notifier.NotifierProvider;
+import com.rollbar.notifier.provider.timestamp.TimestampProvider;
 import com.rollbar.notifier.sender.Sender;
+import com.rollbar.notifier.sender.SyncSender;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Map;
 
 /**
@@ -47,6 +50,8 @@ public class ConfigBuilder {
 
   private Provider<Notifier> notifier;
 
+  private Provider<Long> timestamp;
+
   private Filter filter;
 
   private Transformer transformer;
@@ -57,25 +62,25 @@ public class ConfigBuilder {
 
   private Sender sender;
 
+  private boolean handleUncaughtErrors;
+
+  /**
+   * Constructor.
+   */
+  private ConfigBuilder(String accessToken) {
+    // Defaults
+    this.accessToken = accessToken;
+    this.language = "java";
+    this.handleUncaughtErrors = true;
+  }
+
   /**
    * Initializes a config builder instance with the access token supplied.
    * @param accessToken the access token.
    * @return the builder instance.
    */
   public static ConfigBuilder withAccessToken(String accessToken) {
-    return new ConfigBuilder()
-        .accessToken(accessToken);
-  }
-
-  /**
-   * An access token with scope "post_server_item" or "post_client_item".
-   *
-   * @param accessToken the access token.
-   * @return the builder instance.
-   */
-  public ConfigBuilder accessToken(String accessToken) {
-    this.accessToken = accessToken;
-    return this;
+    return new ConfigBuilder(accessToken);
   }
 
   /**
@@ -211,6 +216,16 @@ public class ConfigBuilder {
   }
 
   /**
+   * The provider to retrieve the timestamp.
+   * @param timestamp the timestamp.
+   * @return the builder instance.
+   */
+  public ConfigBuilder timestamp(Provider<Long> timestamp) {
+    this.timestamp = timestamp;
+    return this;
+  }
+
+  /**
    * The provider to retrieve the {@link Filter filter}.
    *
    * @param filter the filter provider.
@@ -255,7 +270,7 @@ public class ConfigBuilder {
   }
 
   /**
-   * The provider to retrieve the {@link Sender sender}.
+   * Retrieve the {@link Sender sender}.
    *
    * @param sender the sender.
    * @return the builder instance.
@@ -266,51 +281,78 @@ public class ConfigBuilder {
   }
 
   /**
+   * Flag to set the default handler for uncaught errors,
+   * see {@link UncaughtExceptionHandler}.
+   * @param handleUncaughtErrors true to handle uncaught errors otherwise false.
+   * @return the builder instance.
+   */
+  public ConfigBuilder handleUncaughtErrors(boolean handleUncaughtErrors) {
+    this.handleUncaughtErrors = handleUncaughtErrors;
+    return this;
+  }
+
+  /**
    * Builds the {@link Config config}.
    *
    * @return the config.
    */
   public Config build() {
+    if (this.notifier == null) {
+      this.notifier = new NotifierProvider();
+    }
+    if (this.sender == null) {
+      this.sender = new SyncSender.Builder()
+          .accessToken(accessToken)
+          .build();
+    }
+    if (this.timestamp == null) {
+      this.timestamp = new TimestampProvider();
+    }
+
     return new ConfigImpl(this);
   }
 
   private static class ConfigImpl implements Config {
 
-    private String accessToken;
+    private final String accessToken;
 
-    private String environment;
+    private final String environment;
 
-    private String codeVersion;
+    private final String codeVersion;
 
-    private String platform;
+    private final String platform;
 
-    private String language;
+    private final String language;
 
-    private String framework;
+    private final String framework;
 
-    private Provider<String> context;
+    private final Provider<String> context;
 
-    private Provider<Request> request;
+    private final Provider<Request> request;
 
-    private Provider<Person> person;
+    private final Provider<Person> person;
 
-    private Provider<Server> server;
+    private final Provider<Server> server;
 
-    private Provider<Client> client;
+    private final Provider<Client> client;
 
-    private Provider<Map<String, Object>> custom;
+    private final Provider<Map<String, Object>> custom;
 
-    private Provider<Notifier> notifier;
+    private final Provider<Notifier> notifier;
 
-    private Filter filter;
+    private final Provider<Long> timestamp;
 
-    private Transformer transformer;
+    private final Filter filter;
 
-    private FingerprintGenerator fingerPrintGenerator;
+    private final Transformer transformer;
 
-    private UuidGenerator uuidGenerator;
+    private final FingerprintGenerator fingerPrintGenerator;
 
-    private Sender sender;
+    private final UuidGenerator uuidGenerator;
+
+    private final Sender sender;
+
+    private final boolean handleUncaughtErrors;
 
     ConfigImpl(ConfigBuilder builder) {
       this.accessToken = builder.accessToken;
@@ -326,11 +368,13 @@ public class ConfigBuilder {
       this.client = builder.client;
       this.custom = builder.custom;
       this.notifier = builder.notifier;
+      this.timestamp = builder.timestamp;
       this.filter = builder.filter;
       this.transformer = builder.transformer;
       this.fingerPrintGenerator = builder.fingerPrintGenerator;
       this.uuidGenerator = builder.uuidGenerator;
       this.sender = builder.sender;
+      this.handleUncaughtErrors = builder.handleUncaughtErrors;
     }
 
     @Override
@@ -399,6 +443,11 @@ public class ConfigBuilder {
     }
 
     @Override
+    public Provider<Long> timestamp() {
+      return timestamp;
+    }
+
+    @Override
     public Filter filter() {
       return filter;
     }
@@ -421,6 +470,11 @@ public class ConfigBuilder {
     @Override
     public Sender sender() {
       return sender;
+    }
+
+    @Override
+    public boolean handleUncaughtErrors() {
+      return handleUncaughtErrors;
     }
   }
 }

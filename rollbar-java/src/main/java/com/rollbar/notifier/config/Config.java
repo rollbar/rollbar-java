@@ -107,6 +107,11 @@ public interface Config {
   Provider<Notifier> notifier();
 
   /**
+   * Get the {@link Long timestamp} {@link Provider provider}.
+   */
+  Provider<Long> timestamp();
+
+  /**
    * Get the {@link Filter filter}.
    *
    * @return the filter.
@@ -140,4 +145,11 @@ public interface Config {
    * @return the sender.
    */
   Sender sender();
+
+  /**
+   * Flag to indicate that the Rollbar notifier should handle the uncaught errors.
+   *
+   * @return true to handle otherwise false.
+   */
+  boolean handleUncaughtErrors();
 }

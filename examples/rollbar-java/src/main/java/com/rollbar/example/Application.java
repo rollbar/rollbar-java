@@ -2,16 +2,10 @@ package com.rollbar.example;
 
 import static com.rollbar.notifier.config.ConfigBuilder.withAccessToken;
 
-import com.rollbar.api.payload.Payload;
 import com.rollbar.notifier.Rollbar;
 import com.rollbar.notifier.config.Config;
-import com.rollbar.notifier.provider.Provider;
-import com.rollbar.notifier.sender.Result;
-import com.rollbar.notifier.sender.Sender;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,10 +27,8 @@ public class Application {
     Config config = withAccessToken(System.getenv("ROLLBAR_ACCESSTOKEN"))
         .environment("development")
         .codeVersion("1.0.0")
-        .language("java")
         .build();
     this.rollbar = Rollbar.init(config);
-    this.rollbar.handleUncaughtErrors();
   }
 
   /**
