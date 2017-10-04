@@ -19,7 +19,7 @@ public interface Filter {
    * @param description the description.
    * @return true if filtered otherwise false.
    */
-  boolean preProccess(Level level, Throwable error, Map<String, Object> custom, String description);
+  boolean preProcess(Level level, Throwable error, Map<String, Object> custom, String description);
 
   /**
    * Post-filter hook to decide once the final payload is ready if it should be send to Rollbar.
@@ -27,5 +27,5 @@ public interface Filter {
    * @param data the data.
    * @return true if filtered otherwise false.
    */
-  boolean postProccess(Data data);
+  boolean postProcess(Data data);
 }
