@@ -10,7 +10,6 @@ import com.rollbar.notifier.filter.Filter;
 import com.rollbar.notifier.fingerprint.FingerprintGenerator;
 import com.rollbar.notifier.provider.Provider;
 import com.rollbar.notifier.sender.Sender;
-import com.rollbar.notifier.sender.SenderCallback;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
 import java.util.Map;
@@ -108,6 +107,11 @@ public interface Config {
   Provider<Notifier> notifier();
 
   /**
+   * Get the {@link Long timestamp} {@link Provider provider}.
+   */
+  Provider<Long> timestamp();
+
+  /**
    * Get the {@link Filter filter}.
    *
    * @return the filter.
@@ -141,13 +145,6 @@ public interface Config {
    * @return the sender.
    */
   Sender sender();
-
-  /**
-   * Get the {@link SenderCallback sender callback}.
-   *
-   * @return the sender callback.
-   */
-  SenderCallback senderCallback();
 
   /**
    * Flag to indicate that the Rollbar notifier should handle the uncaught errors.

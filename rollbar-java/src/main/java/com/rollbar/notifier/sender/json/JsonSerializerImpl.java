@@ -5,7 +5,6 @@ import static java.util.regex.Pattern.compile;
 import com.rollbar.api.json.JsonSerializable;
 import com.rollbar.api.payload.Payload;
 import com.rollbar.notifier.sender.result.Result;
-import com.rollbar.notifier.sender.result.ResultCode;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Collection;
@@ -18,6 +17,8 @@ import java.util.regex.Pattern;
  * Implementation of the {@link JsonSerializer json serializer}.
  */
 public class JsonSerializerImpl implements JsonSerializer {
+
+  private static final Pattern CODE_PATTERN = compile("\"err\"\\s*:\\s*(\\d)");
 
   private static final Pattern MESSAGE_PATTERN = compile("\"message\"\\s*:\\s*\"([^\"]*)\"");
 
@@ -64,16 +65,29 @@ public class JsonSerializerImpl implements JsonSerializer {
   }
 
   @Override
-  public Result resultFrom(int code, String response) {
-    boolean err = code >= 400;
-    Pattern p = err ? MESSAGE_PATTERN : UUID_PATTERN;
+  public Result resultFrom(String response) {
+    Matcher codeMatcher = CODE_PATTERN.matcher(response);
+    codeMatcher.find();
+    String codeStr = codeMatcher.group(1);
+    int code;
+    try {
+      code = Integer.parseInt(codeStr);
+    } catch (Exception e) {
+      code = -1;
+    }
+    Pattern p;
+    if (code == 0) {
+      p = UUID_PATTERN;
+    } else {
+      p = MESSAGE_PATTERN;
+    }
     Matcher m = p.matcher(response);
     m.find();
 
     String body = m.group(1);
 
     return new Result.Builder()
-        .code(ResultCode.fromInt(code))
+        .code(code)
         .body(body)
         .build();
   }

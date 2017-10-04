@@ -10,11 +10,12 @@ import com.rollbar.notifier.filter.Filter;
 import com.rollbar.notifier.fingerprint.FingerprintGenerator;
 import com.rollbar.notifier.provider.Provider;
 import com.rollbar.notifier.provider.notifier.NotifierProvider;
+import com.rollbar.notifier.provider.timestamp.TimestampProvider;
 import com.rollbar.notifier.sender.Sender;
-import com.rollbar.notifier.sender.SenderCallback;
 import com.rollbar.notifier.sender.SyncSender;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Map;
 
 /**
@@ -49,6 +50,8 @@ public class ConfigBuilder {
 
   private Provider<Notifier> notifier;
 
+  private Provider<Long> timestamp;
+
   private Filter filter;
 
   private Transformer transformer;
@@ -58,8 +61,6 @@ public class ConfigBuilder {
   private UuidGenerator uuidGenerator;
 
   private Sender sender;
-
-  private SenderCallback senderCallback;
 
   private boolean handleUncaughtErrors;
 
@@ -74,6 +75,7 @@ public class ConfigBuilder {
     this.sender = new SyncSender.Builder()
         .accessToken(accessToken)
         .build();
+    this.timestamp = new TimestampProvider();
     this.handleUncaughtErrors = true;
   }
 
@@ -219,6 +221,16 @@ public class ConfigBuilder {
   }
 
   /**
+   * The provider to retrieve the timestamp.
+   * @param timestamp the timestamp.
+   * @return the builder instance.
+   */
+  public ConfigBuilder timestamp(Provider<Long> timestamp) {
+    this.timestamp = timestamp;
+    return this;
+  }
+
+  /**
    * The provider to retrieve the {@link Filter filter}.
    *
    * @param filter the filter provider.
@@ -274,19 +286,8 @@ public class ConfigBuilder {
   }
 
   /**
-   * Retrieve the {@link SenderCallback sender callback}.
-   *
-   * @param senderCallback the sender callback.
-   * @return the builder instance.
-   */
-  public ConfigBuilder senderCallback(SenderCallback senderCallback) {
-    this.senderCallback = senderCallback;
-    return this;
-  }
-
-  /**
    * Flag to set the default handler for uncaught errors,
-   * see {@link Thread.UncaughtExceptionHandler}.
+   * see {@link UncaughtExceptionHandler}.
    * @param handleUncaughtErrors true to handle uncaught errors otherwise false.
    * @return the builder instance.
    */
@@ -332,6 +333,8 @@ public class ConfigBuilder {
 
     private final Provider<Notifier> notifier;
 
+    private final Provider<Long> timestamp;
+
     private final Filter filter;
 
     private final Transformer transformer;
@@ -341,8 +344,6 @@ public class ConfigBuilder {
     private final UuidGenerator uuidGenerator;
 
     private final Sender sender;
-
-    private final SenderCallback senderCallback;
 
     private final boolean handleUncaughtErrors;
 
@@ -360,12 +361,12 @@ public class ConfigBuilder {
       this.client = builder.client;
       this.custom = builder.custom;
       this.notifier = builder.notifier;
+      this.timestamp = builder.timestamp;
       this.filter = builder.filter;
       this.transformer = builder.transformer;
       this.fingerPrintGenerator = builder.fingerPrintGenerator;
       this.uuidGenerator = builder.uuidGenerator;
       this.sender = builder.sender;
-      this.senderCallback = builder.senderCallback;
       this.handleUncaughtErrors = builder.handleUncaughtErrors;
     }
 
@@ -435,6 +436,11 @@ public class ConfigBuilder {
     }
 
     @Override
+    public Provider<Long> timestamp() {
+      return timestamp;
+    }
+
+    @Override
     public Filter filter() {
       return filter;
     }
@@ -457,11 +463,6 @@ public class ConfigBuilder {
     @Override
     public Sender sender() {
       return sender;
-    }
-
-    @Override
-    public SenderCallback senderCallback() {
-      return senderCallback;
     }
 
     @Override

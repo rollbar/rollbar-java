@@ -4,7 +4,8 @@ import com.rollbar.api.payload.data.Data;
 import java.util.List;
 
 /**
- * Utility to create a pipeline of {@Transformer transformers} to transform the {@link Data data}.
+ * Utility to create a pipeline of {@link Transformer transformers} to transform
+ * the {@link Data data}.
  */
 public class TransformerPipeline implements Transformer {
 
