@@ -37,7 +37,7 @@ public class RequestTest {
       expected.put("get", request.getGet());
     }
     if (request.getQueryString() != null) {
-      expected.put("queryString", request.getQueryString());
+      expected.put("query_string", request.getQueryString());
     }
     if (request.getPost() != null) {
       expected.put("post", request.getPost());
@@ -46,7 +46,7 @@ public class RequestTest {
       expected.put("body", request.getBody());
     }
     if (request.getUserIp() != null) {
-      expected.put("userIp", request.getUserIp());
+      expected.put("user_ip", request.getUserIp());
     }
 
     assertThat(request.asJson(), is(expected));
