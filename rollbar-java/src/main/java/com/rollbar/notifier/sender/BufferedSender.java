@@ -101,7 +101,6 @@ public class BufferedSender implements Sender {
     public Builder() {
       this.batchSize = DEFAULT_BATCH_SIZE;
       this.flushFreq = DEFAULT_FLUSH_FREQ;
-      this.queue = new ConcurrentLinkedQueue<>();
       this.sender = null;
     }
 
@@ -151,6 +150,12 @@ public class BufferedSender implements Sender {
      * @return the buffered sender.
      */
     public BufferedSender build() {
+      if (this.queue == null) {
+        this.queue = new ConcurrentLinkedQueue<>();
+      }
+      if (this.sender == null) {
+        this.sender = new SyncSender.Builder().build();
+      }
       return new BufferedSender(this);
     }
   }

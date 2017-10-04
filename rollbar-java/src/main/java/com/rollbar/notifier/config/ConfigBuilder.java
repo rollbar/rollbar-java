@@ -71,11 +71,6 @@ public class ConfigBuilder {
     // Defaults
     this.accessToken = accessToken;
     this.language = "java";
-    this.notifier = new NotifierProvider();
-    this.sender = new SyncSender.Builder()
-        .accessToken(accessToken)
-        .build();
-    this.timestamp = new TimestampProvider();
     this.handleUncaughtErrors = true;
   }
 
@@ -302,6 +297,18 @@ public class ConfigBuilder {
    * @return the config.
    */
   public Config build() {
+    if (this.notifier == null) {
+      this.notifier = new NotifierProvider();
+    }
+    if (this.sender == null) {
+      this.sender = new SyncSender.Builder()
+          .accessToken(accessToken)
+          .build();
+    }
+    if (this.timestamp == null) {
+      this.timestamp = new TimestampProvider();
+    }
+
     return new ConfigImpl(this);
   }
 

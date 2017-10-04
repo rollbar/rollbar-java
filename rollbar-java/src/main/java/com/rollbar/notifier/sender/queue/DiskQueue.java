@@ -157,7 +157,6 @@ public class DiskQueue extends AbstractQueue<Payload> {
      */
     public Builder() {
       this.maxSize = UNBOUNDED_QUEUE;
-      this.queueFolder = new File(QUEUE_FOLDER);
     }
 
     /**
@@ -186,6 +185,9 @@ public class DiskQueue extends AbstractQueue<Payload> {
      * @return the disk queue.
      */
     public DiskQueue build() {
+      if (this.queueFolder == null) {
+        this.queueFolder = new File(QUEUE_FOLDER);
+      }
       return new DiskQueue(this);
     }
   }
