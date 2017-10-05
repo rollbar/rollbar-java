@@ -22,6 +22,7 @@ public class BufferedSender implements Sender {
   private static final int DEFAULT_BATCH_SIZE = Integer.MAX_VALUE;
 
   private static final long DEFAULT_FLUSH_FREQ = TimeUnit.SECONDS.toMillis(5);
+  private static final long DEFAULT_INITIAL_FLUSH_DELAY = DEFAULT_FLUSH_FREQ;
 
   private final int batchSize;
 
@@ -47,7 +48,7 @@ public class BufferedSender implements Sender {
     // thread as daemons to allow the jvm exit.
     this.executorService =  executorService;
     this.executorService.scheduleWithFixedDelay(new SendTask(batchSize, queue, sender),
-        builder.flushFreq, builder.flushFreq, TimeUnit.MILLISECONDS);
+        builder.initialFlushDelay, builder.flushFreq, TimeUnit.MILLISECONDS);
   }
 
   @Override
@@ -89,6 +90,7 @@ public class BufferedSender implements Sender {
 
     private int batchSize;
 
+    private long initialFlushDelay;
     private long flushFreq;
 
     private Queue<Payload> queue;
@@ -100,6 +102,7 @@ public class BufferedSender implements Sender {
      */
     public Builder() {
       this.batchSize = DEFAULT_BATCH_SIZE;
+      this.initialFlushDelay = DEFAULT_INITIAL_FLUSH_DELAY;
       this.flushFreq = DEFAULT_FLUSH_FREQ;
       this.sender = null;
     }
@@ -111,6 +114,16 @@ public class BufferedSender implements Sender {
      */
     public Builder batchSize(int batchSize) {
       this.batchSize = batchSize;
+      return this;
+    }
+
+    /**
+     * The frequency to wait before the first flush of the queue in millis.
+     * @param initialFlushDelay the flush frequency.
+     * @return the builder instance.
+     */
+    public Builder initialFlushDelay(long initialFlushDelay) {
+      this.initialFlushDelay = initialFlushDelay;
       return this;
     }
 

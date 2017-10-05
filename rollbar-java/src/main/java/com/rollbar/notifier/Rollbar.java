@@ -535,7 +535,7 @@ public class Rollbar {
     // Gather information to build a payload.
     Data data = buildData(error, custom, description, level);
 
-    // Tranform the data
+    // Transform the data
     if (config.transformer() != null) {
       data = config.transformer().transform(data);
     }

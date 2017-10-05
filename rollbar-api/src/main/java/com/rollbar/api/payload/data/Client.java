@@ -11,23 +11,36 @@ import java.util.Map;
  */
 public class Client implements JsonSerializable {
 
-  private final Map<String, Map<String, String>> data;
+  private final Map<String, Map<String, Object>> data;
+  private final Map<String, Object> topLevelData;
 
   private Client(Builder builder) {
     this.data = unmodifiableMap(builder.data);
+    this.topLevelData = unmodifiableMap(builder.topLevelData);
   }
 
   /**
    * Getter.
    * @return the data.
    */
-  public Map<String, Map<String, String>> getData() {
+  public Map<String, Map<String, Object>> getData() {
     return data;
   }
 
+  /**
+   * Getter.
+   * @return the top level data.
+   */
+  public Map<String, Object> getTopLevelData() {
+    return topLevelData;
+  }
+
   @Override
-  public Object asJson() {
-    return data;
+  public Map<String, Object> asJson() {
+    Map<String, Object> values = new HashMap<>();
+    values.putAll(data);
+    values.putAll(topLevelData);
+    return values;
   }
 
   @Override
@@ -41,18 +54,24 @@ public class Client implements JsonSerializable {
 
     Client client = (Client) o;
 
-    return data != null ? data.equals(client.data) : client.data == null;
+    if (data != null ? !data.equals(client.data) : client.data != null) {
+      return false;
+    }
+    return topLevelData != null ? topLevelData.equals(client.topLevelData) : client.topLevelData == null;
   }
 
   @Override
   public int hashCode() {
-    return data != null ? data.hashCode() : 0;
+    int result = data != null ? data.hashCode() : 0;
+    result = 31 * result + (topLevelData != null ? topLevelData.hashCode() : 0);
+    return result;
   }
 
   @Override
   public String toString() {
     return "Client{"
-        + "data=" + data
+        + "topLevelData='" + topLevelData + '\''
+        + ", data='" + data + '\''
         + '}';
   }
 
@@ -61,13 +80,15 @@ public class Client implements JsonSerializable {
    */
   public static final class Builder {
 
-    private Map<String, Map<String, String>> data;
+    private Map<String, Map<String, Object>> data;
+    private Map<String, Object> topLevelData;
 
     /**
      * Constructor.
      */
     public Builder() {
       this.data = new HashMap<>();
+      this.topLevelData = new HashMap<>();
     }
 
     /**
@@ -77,6 +98,7 @@ public class Client implements JsonSerializable {
      */
     public Builder(Client client) {
       this.data = client.data;
+      this.topLevelData = client.topLevelData;
     }
 
     /**
@@ -87,8 +109,8 @@ public class Client implements JsonSerializable {
      * @param value the value of the property for that client.
      * @return the builder instance.
      */
-    public Builder addClient(String clientName, String property, String value) {
-      Map<String, String> values = data.get(clientName);
+    public Builder addClient(String clientName, String property, Object value) {
+      Map<String, Object> values = data.get(clientName);
 
       if (values == null) {
         values = new HashMap<>();
@@ -108,8 +130,8 @@ public class Client implements JsonSerializable {
      * @param properties the properties of the client.
      * @return the builder instance
      */
-    public Builder addClient(String clientName, Map<String, String> properties) {
-      Map<String, String> values = data.get(clientName);
+    public Builder addClient(String clientName, Map<String, Object> properties) {
+      Map<String, Object> values = data.get(clientName);
 
       if (values == null) {
         values = new HashMap<>();
@@ -119,6 +141,18 @@ public class Client implements JsonSerializable {
 
       data.put(clientName, values);
 
+      return this;
+    }
+
+    /**
+     * Add top level client information
+     *
+     * @param property the property.
+     * @param value the value of the property.
+     * @return the builder instance
+     */
+    public Builder addTopLevel(String property, Object value) {
+      topLevelData.put(property, value);
       return this;
     }
 

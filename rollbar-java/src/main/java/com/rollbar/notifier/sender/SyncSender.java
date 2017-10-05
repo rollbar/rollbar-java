@@ -118,7 +118,11 @@ public class SyncSender extends AbstractSender {
     private String accessToken;
 
     public Builder() {
-      this.url = parseUrl(DEFAULT_API_ENDPOINT);
+      this(DEFAULT_API_ENDPOINT);
+    }
+
+    public Builder(String url) {
+      this.url = parseUrl(url);
       this.jsonSerializer = new JsonSerializerImpl();
     }
 

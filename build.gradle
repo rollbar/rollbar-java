@@ -1,8 +1,8 @@
 version = "1.0.0-SNAPSHOT"
 
-subprojects {
-    apply plugin: "java"
-    apply plugin: 'maven-publish'
+configure(subprojects.findAll {it.name != 'rollbar-android'}) {
+    apply plugin: 'java'
+    apply plugin: "maven-publish"
 
     apply from: "$rootDir/gradle/quality.gradle"
 
