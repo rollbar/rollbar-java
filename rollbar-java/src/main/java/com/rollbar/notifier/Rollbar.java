@@ -4,12 +4,17 @@ import com.rollbar.api.payload.Payload;
 import com.rollbar.api.payload.data.Data;
 import com.rollbar.api.payload.data.Level;
 import com.rollbar.notifier.config.Config;
+import com.rollbar.notifier.config.ConfigBuilder;
+import com.rollbar.notifier.config.ConfigProvider;
 import com.rollbar.notifier.uncaughtexception.RollbarUncaughtExceptionHandler;
 import com.rollbar.notifier.util.BodyFactory;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * This is the current Rollbar notifier and the main starting point to send the data to Rollbar.
@@ -19,6 +24,10 @@ public class Rollbar {
   private static volatile Rollbar notifier;
 
   private Config config;
+
+  private final ReadWriteLock configReadWriteLock = new ReentrantReadWriteLock();
+  private final Lock configReadLock = configReadWriteLock.readLock();
+  private final Lock configWriteLock = configReadWriteLock.writeLock();
 
   private BodyFactory bodyFactory;
 
@@ -77,6 +86,25 @@ public class Rollbar {
     UncaughtExceptionHandler uncaughtExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
     thread.setUncaughtExceptionHandler(new RollbarUncaughtExceptionHandler(this,
         uncaughtExceptionHandler));
+  }
+
+  /**
+   * Replace the configuration of this instance.
+   * This {@link ConfigBuilder} passed to configProvider is
+   * preconfigured with the values of the current configuration.
+   * This method potentially block to acquire a write lock when
+   * replacing the configuration.
+   *
+   * @param configProvider the provider of a new configuration
+   */
+  public void configure(ConfigProvider configProvider) {
+    this.configWriteLock.lock();
+    try {
+      ConfigBuilder builder = ConfigBuilder.withConfig(this.config);
+      this.config = configProvider.provide(builder);
+    } finally {
+      this.configWriteLock.unlock();
+    }
   }
 
   /**
@@ -527,13 +555,21 @@ public class Rollbar {
   private void process(Throwable error, Map<String, Object> custom, String description,
       Level level) {
 
+    Config config;
+    this.configReadLock.lock();
+    try {
+      config = this.config;
+    } finally {
+      this.configReadLock.unlock();
+    }
+
     // Pre filter
     if (config.filter() != null && config.filter().preProcess(level, error, custom, description)) {
       return;
     }
 
     // Gather information to build a payload.
-    Data data = buildData(error, custom, description, level);
+    Data data = buildData(config, error, custom, description, level);
 
     // Transform the data
     if (config.transformer() != null) {
@@ -567,10 +603,10 @@ public class Rollbar {
         .data(data).build();
 
     // Send
-    sendPayload(payload);
+    sendPayload(config, payload);
   }
 
-  private Data buildData(Throwable error, Map<String, Object> custom, String description,
+  private Data buildData(Config config, Throwable error, Map<String, Object> custom, String description,
       Level level) {
 
     Data.Builder dataBuilder = new Data.Builder()
@@ -638,7 +674,7 @@ public class Rollbar {
     return dataBuilder.build();
   }
 
-  private void sendPayload(Payload payload) {
+  private void sendPayload(Config config, Payload payload) {
     if (config.sender() != null) {
       config.sender().send(payload);
     }

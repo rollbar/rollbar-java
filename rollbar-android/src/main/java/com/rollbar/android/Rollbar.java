@@ -9,11 +9,10 @@ import android.os.Bundle;
 
 import android.util.Log;
 import com.rollbar.android.provider.ClientProvider;
-import com.rollbar.android.provider.ConfigProvider;
+import com.rollbar.notifier.config.ConfigProvider;
 import com.rollbar.android.provider.NotifierProvider;
 import com.rollbar.android.provider.PersonProvider;
 import com.rollbar.api.payload.data.Level;
-import com.rollbar.api.payload.data.Person;
 import com.rollbar.notifier.config.Config;
 import com.rollbar.notifier.config.ConfigBuilder;
 import com.rollbar.notifier.sender.BufferedSender;
@@ -26,7 +25,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class Rollbar {
-
     private static final String NOTIFIER_VERSION = "0.2.1";
     private static final String ITEM_DIR_NAME = "rollbar-items";
     private static final String ANDROID = "android";
@@ -39,10 +37,11 @@ public class Rollbar {
     private static final String ROLLBAR_NAMESPACE = "com.rollbar.android";
     private static final String MANIFEST_API_KEY = ROLLBAR_NAMESPACE + ".API_KEY";
 
-    private PersonProvider personProvider;
-    private ClientProvider clientProvider;
     private com.rollbar.notifier.Rollbar rollbar;
     private static Rollbar notifier;
+
+    private final int versionCode;
+    private final String versionName;
 
     public static void init(Context context) {
         init(context, null, null);
@@ -93,18 +92,6 @@ public class Rollbar {
     }
 
     public Rollbar(Context context, String accessToken, String environment, boolean registerExceptionHandler, boolean includeLogcat, ConfigProvider configProvider) {
-        int versionCode = 0;
-        String versionName = "";
-        try {
-            String packageName = context.getPackageName();
-            PackageInfo info = context.getPackageManager().getPackageInfo(packageName, 0);
-
-            versionCode = info.versionCode;
-            versionName = info.versionName;
-        } catch (NameNotFoundException e) {
-            Log.e(TAG, "Error getting package info.");
-        }
-
         if (accessToken == null) {
             try {
                 accessToken = loadAccessTokenFromManifest(context);
@@ -113,7 +100,17 @@ public class Rollbar {
             }
         }
 
-        this.clientProvider = new ClientProvider.Builder()
+        PackageInfo info = null;
+        try {
+            String packageName = context.getPackageName();
+            info = context.getPackageManager().getPackageInfo(packageName, 0);
+        } catch (NameNotFoundException e) {
+            Log.e(TAG, "Error getting package info.");
+        }
+        versionCode = info != null ? info.versionCode : 0;
+        versionName = info != null ? info.versionName : "unknown";
+
+        ClientProvider clientProvider = new ClientProvider.Builder()
                 .versionCode(versionCode)
                 .versionName(versionName)
                 .includeLogcat(includeLogcat)
@@ -133,12 +130,10 @@ public class Rollbar {
                 .flushFreq(TimeUnit.SECONDS.toMillis(DEFAULT_ITEM_SCHEDULE_DELAY))
                 .build();
 
-        this.personProvider = new PersonProvider();
-
         ConfigBuilder defaultConfig = ConfigBuilder.withAccessToken(accessToken)
                 .client(clientProvider)
                 .sender(sender)
-                .person(personProvider)
+                .person(new PersonProvider())
                 .platform(ANDROID)
                 .framework(ANDROID)
                 .notifier(new NotifierProvider(NOTIFIER_VERSION))
@@ -155,23 +150,44 @@ public class Rollbar {
         this.rollbar = new com.rollbar.notifier.Rollbar(config);
     }
 
-    @Deprecated
     public void setPersonData(final String id, final String username, final String email) {
-        this.personProvider.setPerson(new Person.Builder()
-                .id(id)
-                .username(username)
-                .email(email)
-                .build());
+        this.rollbar.configure(new ConfigProvider() {
+            @Override
+            public Config provide(ConfigBuilder builder) {
+                return builder
+                        .person(new PersonProvider(id, username, email))
+                        .build();
+            }
+        });
     }
 
-    @Deprecated
     public void clearPersonData() {
-        this.personProvider.setPerson(null);
+        this.rollbar.configure(new ConfigProvider() {
+            @Override
+            public Config provide(ConfigBuilder builder) {
+                return builder
+                        .person(new PersonProvider())
+                        .build();
+            }
+        });
     }
 
-    @Deprecated
-    public void setIncludeLogcat(boolean includeLogcat) {
-        this.clientProvider.setIncludeLogcat(includeLogcat);
+    public void setIncludeLogcat(final boolean includeLogcat) {
+        final int versionCode = this.versionCode;
+        final String versionName = this.versionName;
+        this.rollbar.configure(new ConfigProvider() {
+            @Override
+            public Config provide(ConfigBuilder builder) {
+                ClientProvider clientProvider = new ClientProvider.Builder()
+                        .versionCode(versionCode)
+                        .versionName(versionName)
+                        .includeLogcat(includeLogcat)
+                        .build();
+                return builder
+                        .client(clientProvider)
+                        .build();
+            }
+        });
     }
 
     /**

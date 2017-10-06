@@ -1,7 +1,4 @@
-package com.rollbar.android.provider;
-
-import com.rollbar.notifier.config.Config;
-import com.rollbar.notifier.config.ConfigBuilder;
+package com.rollbar.notifier.config;
 
 public interface ConfigProvider {
     /**
