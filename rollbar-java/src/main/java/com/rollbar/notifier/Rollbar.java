@@ -109,9 +109,7 @@ public class Rollbar {
 
     Config newConfig = configProvider.provide(builder);
 
-    this.configWriteLock.lock();
-    this.config = newConfig;
-    this.configWriteLock.unlock();
+    this.configure(newConfig);
   }
 
   /**
@@ -121,8 +119,11 @@ public class Rollbar {
    */
   public void configure(Config config) {
     this.configWriteLock.lock();
-    this.config = config;
-    this.configWriteLock.unlock();
+    try {
+      this.config = config;
+    } finally {
+      this.configWriteLock.unlock();
+    }
   }
 
   /**
