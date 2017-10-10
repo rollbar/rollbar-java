@@ -1,21 +1,13 @@
-version = "1.0.0-SNAPSHOT"
-
-//project(':rollbar-android') {
-//    apply plugin: "android-maven-publish"
-//
-//    publishing {
-//        publications {
-//            mavenAar(MavenPublication) {
-//                from components.android
-//            }
-//        }
-//    }
+//plugins {
+//    id 'digital.wup.android-maven-publish' version '3.0.0' apply false
 //}
+
+version = "1.0.0-SNAPSHOT"
 
 subprojects {
     if (!it.name.contains('android')) {
         apply plugin: 'java'
-        apply plugin: "maven-publish"
+        apply plugin: 'maven-publish'
 
         apply from: "$rootDir/gradle/quality.gradle"
 
@@ -33,7 +25,20 @@ subprojects {
         }
     }
 
-    if(!it.name.startsWith("examples") && !it.name.contains('android')) {
+//    if(!it.name.startsWith('examples') && it.name.contains('android')) {
+//        apply plugin: 'digital.wup.android-maven-publish'
+//
+//        publishing {
+//            publications {
+//                mavenAar(MavenPublication) {
+//                    println components
+//                    //from components.android
+//                }
+//            }
+//        }
+//    }
+
+    if(!it.name.startsWith('examples') && !it.name.contains('android')) {
         publishing {
             task sourcesJar(type: Jar, dependsOn: classes) {
                 classifier = 'sources'
