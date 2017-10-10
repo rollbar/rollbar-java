@@ -2,6 +2,8 @@ package com.rollbar.api.payload.data;
 
 import com.rollbar.api.json.JsonSerializable;
 
+import java.util.HashMap;
+
 /**
  * The Level of a Rollbar Report.
  */
@@ -37,6 +39,17 @@ public enum Level implements Comparable<Level>, JsonSerializable {
   Level(String jsonName, int level) {
     this.jsonName = jsonName;
     this.level = level;
+  }
+
+  private static final HashMap<String, Level> nameIndex = new HashMap<>(2 * Level.values().length);
+  static {
+    for (Level level : Level.values()) {
+      nameIndex.put(level.jsonName, level);
+    }
+  }
+
+  public static Level lookupByName(String name) {
+    return name != null ? nameIndex.get(name) : null;
   }
 
   /**

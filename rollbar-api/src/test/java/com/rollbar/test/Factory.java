@@ -17,6 +17,8 @@ import com.rollbar.api.payload.data.body.Frame;
 import com.rollbar.api.payload.data.body.Message;
 import com.rollbar.api.payload.data.body.Trace;
 import com.rollbar.api.payload.data.body.TraceChain;
+
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +31,7 @@ public class Factory {
 
   public static CodeContext codeContext() {
     return new CodeContext.Builder()
-        .pre(asList())
+        .pre(Arrays.<String>asList())
         .build();
   }
 
@@ -54,7 +56,7 @@ public class Factory {
         .columnNumber(1)
         .method("methodInFrame")
         .context(codeContext())
-        .args(asList("arg1", 2))
+        .args(Arrays.<Object>asList("arg1", 2))
         .className(Factory.class.getName())
         .build();
   }
@@ -104,13 +106,14 @@ public class Factory {
   }
 
   public static Client client() {
-    Map<String, String> javascriptProps = new HashMap<>();
+    Map<String, Object> javascriptProps = new HashMap<>();
     javascriptProps.put("browser", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_3)");
     javascriptProps.put("code_version", "b6437f45b7bbbb15f5eddc2eace4c71a8625da8c");
 
     return new Client.Builder()
         .addClient("javascript", javascriptProps)
         .addClient("flash", "version", "8.10")
+        .addTopLevel("version_code", "42")
         .build();
   }
 

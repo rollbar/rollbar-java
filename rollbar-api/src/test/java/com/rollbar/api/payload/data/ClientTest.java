@@ -6,6 +6,9 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class ClientTest {
 
   @Test
@@ -20,6 +23,11 @@ public class ClientTest {
   public void shouldReturnAsJson() {
     Client client = client();
 
-    assertThat(client.asJson(), is(client.getData()));
+    Map<String, Object> expected = new HashMap<>();
+
+    if(client.getData() != null) expected.putAll(client.getData());
+    if(client.getTopLevelData() != null) expected.putAll(client.getTopLevelData());
+
+    assertThat(client.asJson(), is(expected));
   }
 }

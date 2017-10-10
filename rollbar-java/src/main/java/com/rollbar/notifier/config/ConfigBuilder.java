@@ -74,6 +74,29 @@ public class ConfigBuilder {
     this.handleUncaughtErrors = true;
   }
 
+  private ConfigBuilder(Config config) {
+    this.accessToken = config.accessToken();
+    this.environment = config.environment();
+    this.codeVersion = config.codeVersion();
+    this.platform = config.platform();
+    this.language = config.language();
+    this.framework = config.framework();
+    this.context = config.context();
+    this.request = config.request();
+    this.person = config.person();
+    this.server = config.server();
+    this.client = config.client();
+    this.custom = config.custom();
+    this.notifier = config.notifier();
+    this.timestamp = config.timestamp();
+    this.filter = config.filter();
+    this.transformer = config.transformer();
+    this.fingerPrintGenerator = config.fingerPrintGenerator();
+    this.uuidGenerator = config.uuidGenerator();
+    this.sender = config.sender();
+    this.handleUncaughtErrors = config.handleUncaughtErrors();
+  }
+
   /**
    * Initializes a config builder instance with the access token supplied.
    * @param accessToken the access token.
@@ -81,6 +104,15 @@ public class ConfigBuilder {
    */
   public static ConfigBuilder withAccessToken(String accessToken) {
     return new ConfigBuilder(accessToken);
+  }
+
+  /**
+   * Initializes a config builder instance with the values set in the supplied config.
+   * @param config an object conforming to the {@link Config} interface.
+   * @return the builder instance.
+   */
+  public static ConfigBuilder withConfig(Config config) {
+    return new ConfigBuilder(config);
   }
 
   /**

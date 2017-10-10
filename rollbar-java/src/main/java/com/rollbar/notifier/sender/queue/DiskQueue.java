@@ -37,7 +37,7 @@ public class DiskQueue extends AbstractQueue<Payload> {
     this.queueFolder = builder.queueFolder;
 
     if (!this.queueFolder.exists()) {
-      if (this.queueFolder.mkdirs()) {
+      if (!this.queueFolder.mkdirs()) {
         throw new RuntimeException("Could not create folder: " + queueFolder);
       }
     }

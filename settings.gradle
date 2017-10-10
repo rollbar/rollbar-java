@@ -1,8 +1,9 @@
-rootProject.name="rolbar-java-sdk"
+rootProject.name="rollbar-java-sdk"
 
 include ":rollbar-api",
         ":rollbar-java",
         ":rollbar-android",
-        "rollbar-web",
+        ":rollbar-web",
         ":examples:rollbar-java",
-        ":examples:rollbar-web"
+        ":examples:rollbar-web",
+        ":examples:rollbar-android"

@@ -1,6 +1,9 @@
 package com.rollbar.api.payload.data.body;
 
 import com.rollbar.api.json.JsonSerializable;
+
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -29,7 +32,9 @@ public class Message implements BodyContent, JsonSerializable {
 
   @Override
   public Object asJson() {
-    return this.body;
+    Map<String, String> message = new HashMap<>();
+    message.put("body", this.body);
+    return message;
   }
 
   @Override

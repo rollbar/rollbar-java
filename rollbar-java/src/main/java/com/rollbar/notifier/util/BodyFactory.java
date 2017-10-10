@@ -1,10 +1,7 @@
 package com.rollbar.notifier.util;
 
-import com.rollbar.api.payload.data.body.Body;
-import com.rollbar.api.payload.data.body.ExceptionInfo;
-import com.rollbar.api.payload.data.body.Frame;
-import com.rollbar.api.payload.data.body.Trace;
-import com.rollbar.api.payload.data.body.TraceChain;
+import com.rollbar.api.payload.data.body.*;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,11 +19,20 @@ public class BodyFactory {
    * @return the body.
    */
   public Body from(Throwable throwable, String description) {
-    if (throwable.getCause() == null) {
-      return new Body.Builder().bodyContent(trace(throwable, description)).build();
-    } else {
-      return new Body.Builder().bodyContent(traceChain(throwable, description)).build();
+    Body.Builder builder = new Body.Builder();
+    if (throwable == null) {
+        return builder.bodyContent(message(description)).build();
     }
+    if (throwable.getCause() == null) {
+        return builder.bodyContent(trace(throwable, description)).build();
+    }
+    return builder.bodyContent(traceChain(throwable, description)).build();
+  }
+
+  private static Message message(String description) {
+      return new Message.Builder()
+              .body(description)
+              .build();
   }
 
   private static Trace trace(Throwable throwable, String description) {
