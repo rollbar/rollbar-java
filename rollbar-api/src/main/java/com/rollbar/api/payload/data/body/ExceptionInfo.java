@@ -131,6 +131,8 @@ public class ExceptionInfo implements JsonSerializable {
 
     /**
      * The name of the exception class.
+     * @param className the name of the class.
+     * @return the builder instance.
      */
     public Builder className(String className) {
       this.className = className;

@@ -98,16 +98,22 @@ public interface Config {
 
   /**
    * Get the custom {@link Provider provider}.
+   *
+   * @return the provider of any custom values.
    */
   Provider<Map<String, Object>> custom();
 
   /**
    * Get the {@link Notifier notifier} {@link Provider provider}.
+   *
+   * @return the provider of the notifier data.
    */
   Provider<Notifier> notifier();
 
   /**
    * Get the {@link Long timestamp} {@link Provider provider}.
+   *
+   * @return the provider of a timestamp.
    */
   Provider<Long> timestamp();
 
