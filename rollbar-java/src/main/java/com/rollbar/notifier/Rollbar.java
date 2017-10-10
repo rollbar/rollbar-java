@@ -92,19 +92,37 @@ public class Rollbar {
    * Replace the configuration of this instance.
    * This {@link ConfigBuilder} passed to configProvider is
    * preconfigured with the values of the current configuration.
-   * This method potentially block to acquire a write lock when
-   * replacing the configuration.
+   * This method potentially blocks to acquire a locks when
+   * safely work with the configuration.
    *
    * @param configProvider the provider of a new configuration
    */
   public void configure(ConfigProvider configProvider) {
-    this.configWriteLock.lock();
+    ConfigBuilder builder;
+
+    this.configReadLock.lock();
     try {
-      ConfigBuilder builder = ConfigBuilder.withConfig(this.config);
-      this.config = configProvider.provide(builder);
+      builder = ConfigBuilder.withConfig(this.config);
     } finally {
-      this.configWriteLock.unlock();
+      this.configReadLock.unlock();
     }
+
+    Config newConfig = configProvider.provide(builder);
+
+    this.configWriteLock.lock();
+    this.config = newConfig;
+    this.configWriteLock.unlock();
+  }
+
+  /**
+   * Replace the configuration of this instance directly.
+   *
+   * @param config the new configuration.
+   */
+  public void configure(Config config) {
+    this.configWriteLock.lock();
+    this.config = config;
+    this.configWriteLock.unlock();
   }
 
   /**
@@ -554,14 +572,9 @@ public class Rollbar {
 
   private void process(Throwable error, Map<String, Object> custom, String description,
       Level level) {
-
-    Config config;
     this.configReadLock.lock();
-    try {
-      config = this.config;
-    } finally {
-      this.configReadLock.unlock();
-    }
+    Config config = this.config;
+    this.configReadLock.unlock();
 
     // Pre filter
     if (config.filter() != null && config.filter().preProcess(level, error, custom, description)) {

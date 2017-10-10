@@ -191,6 +191,25 @@ public class Rollbar {
     }
 
     /**
+     * Update the configuration of this instance.
+     *
+     * @param configProvider an object conforming to {@link ConfigProvider} which will
+     *                       be called with a builder that has all of the current
+     */
+    public void configure(ConfigProvider configProvider) {
+        this.rollbar.configure(configProvider);
+    }
+
+    /**
+     * Update the configuration of this instance directly.
+     *
+     * @param config the new configuration.
+     */
+    public void configure(Config config) {
+        this.rollbar.configure(config);
+    }
+
+    /**
      * Record a critical error.
      *
      * @param error the error.
