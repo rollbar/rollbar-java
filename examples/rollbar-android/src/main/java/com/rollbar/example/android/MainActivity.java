@@ -13,8 +13,6 @@ import com.rollbar.android.Rollbar;
 
 public class MainActivity extends AppCompatActivity {
 
-  private Rollbar rollbar;
-
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -22,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
     Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
     setSupportActionBar(toolbar);
 
-    rollbar = Rollbar.init(this);
+    Rollbar.init(this);
 
     final MainActivity self = this;
     FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -63,6 +61,11 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void clickAction() {
+    Rollbar rollbar = Rollbar.instance();
+    if (rollbar == null) {
+      Log.d("yo", "Rollbar is null, initialize before using");
+      return;
+    }
     rollbar.error("this should exist");
     rollbar.setPersonData("42", "andy", null);
     Log.d("yo", "hey");
