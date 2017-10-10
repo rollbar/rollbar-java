@@ -170,6 +170,15 @@ public class Data implements JsonSerializable {
   /**
    * Getter.
    *
+   * @return the client.
+   */
+  public Client getClient() {
+    return this.client;
+  }
+
+  /**
+   * Getter.
+   *
    * @return the server.
    */
   public Server getServer() {
@@ -260,6 +269,9 @@ public class Data implements JsonSerializable {
     }
     if (server != null) {
       values.put("server", server);
+    }
+    if (client != null) {
+      values.put("client", client);
     }
     if (custom != null) {
       values.put("custom", custom);
