@@ -57,10 +57,6 @@ public class ClientProvider implements Provider<Client> {
                 .build();
     }
 
-    public void setIncludeLogcat(boolean includeLogcat) {
-        this.includeLogcat = includeLogcat;
-    }
-
     private ArrayList<String> getLogcatInfo() {
         ArrayList<String> log = null;
         int pid = android.os.Process.myPid();
