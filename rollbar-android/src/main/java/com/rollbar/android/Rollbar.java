@@ -31,11 +31,11 @@ public class Rollbar {
     private static final String DEFAULT_ENVIRONMENT = "production";
 
     private static final int DEFAULT_ITEM_SCHEDULE_STARTUP_DELAY = 1;
-    private static final int DEFAULT_ITEM_SCHEDULE_DELAY = 30;
+    private static final int DEFAULT_ITEM_SCHEDULE_DELAY = 15;
 
     public static final String TAG = "Rollbar";
     private static final String ROLLBAR_NAMESPACE = "com.rollbar.android";
-    private static final String MANIFEST_API_KEY = ROLLBAR_NAMESPACE + ".API_KEY";
+    private static final String MANIFEST_ACCESS_TOKEN = ROLLBAR_NAMESPACE + ".ACCESS_TOKEN";
 
     private com.rollbar.notifier.Rollbar rollbar;
     private static Rollbar notifier;
@@ -135,7 +135,6 @@ public class Rollbar {
         ConfigBuilder defaultConfig = ConfigBuilder.withAccessToken(accessToken)
                 .client(clientProvider)
                 .sender(sender)
-                .person(new PersonProvider())
                 .platform(ANDROID)
                 .framework(ANDROID)
                 .notifier(new NotifierProvider(NOTIFIER_VERSION))
@@ -168,7 +167,7 @@ public class Rollbar {
             @Override
             public Config provide(ConfigBuilder builder) {
                 return builder
-                        .person(new PersonProvider())
+                        .person(null)
                         .build();
             }
         });
@@ -691,7 +690,7 @@ public class Rollbar {
         Context appContext = context.getApplicationContext();
         ApplicationInfo ai = appContext.getPackageManager().getApplicationInfo(appContext.getPackageName(), PackageManager.GET_META_DATA);
         Bundle data = ai.metaData;
-        return data.getString(MANIFEST_API_KEY);
+        return data.getString(MANIFEST_ACCESS_TOKEN);
     }
 
     private static void ensureInit(Runnable runnable) {
