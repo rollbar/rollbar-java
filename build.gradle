@@ -2,7 +2,7 @@
 //    id 'digital.wup.android-maven-publish' version '3.0.0' apply false
 //}
 
-version = "1.0.0-SNAPSHOT"
+version = "1.0.0-alpha-1"
 
 subprojects {
     if (!it.name.contains('android')) {
