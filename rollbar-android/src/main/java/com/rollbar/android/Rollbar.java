@@ -43,36 +43,38 @@ public class Rollbar {
     private final int versionCode;
     private final String versionName;
 
-    public static void init(Context context) {
-        init(context, null, null);
+    public static Rollbar init(Context context) {
+        return init(context, null, null);
     }
 
-    public static void init(Context context, String accessToken, String environment) {
-        init(context, accessToken, environment, true);
+    public static Rollbar init(Context context, String accessToken, String environment) {
+        return init(context, accessToken, environment, true);
     }
 
-    public static void init(Context context, String accessToken, String environment, boolean registerExceptionHandler) {
-        init(context, accessToken, environment, registerExceptionHandler, false);
+    public static Rollbar init(Context context, String accessToken, String environment, boolean registerExceptionHandler) {
+        return init(context, accessToken, environment, registerExceptionHandler, false);
     }
 
-    public static void init(Context context, String accessToken, String environment, boolean registerExceptionHandler, boolean includeLogcat) {
-        init(context, accessToken, environment, registerExceptionHandler, includeLogcat, null);
+    public static Rollbar init(Context context, String accessToken, String environment, boolean registerExceptionHandler, boolean includeLogcat) {
+        return init(context, accessToken, environment, registerExceptionHandler, includeLogcat, null);
     }
 
-    public static void init(Context context, String accessToken, String environment, boolean registerExceptionHandler, boolean includeLogcat, ConfigProvider provider) {
+    public static Rollbar init(Context context, String accessToken, String environment, boolean registerExceptionHandler, boolean includeLogcat, ConfigProvider provider) {
         if (isInit()) {
             Log.w(TAG, "Rollbar.init() called when it was already initialized.");
         } else {
             notifier = new Rollbar(context, accessToken, environment, registerExceptionHandler, includeLogcat, provider);
         }
+        return notifier;
     }
 
-    public static void init(Context context, ConfigProvider provider) {
+    public static Rollbar init(Context context, ConfigProvider provider) {
         if (isInit()) {
             Log.w(TAG, "Rollbar.init() called when it was already initialized.");
         } else {
             notifier = new Rollbar(context, null, null, true, false, provider);
         }
+        return notifier;
     }
 
     public static boolean isInit() {
@@ -660,7 +662,7 @@ public class Rollbar {
         ensureInit(new Runnable() {
             @Override
             public void run() {
-                notifier.log(throwable, Collections.<String, Object>unmodifiableMap(params), description, Level.lookupByName(level));
+                notifier.log(throwable, params != null ? Collections.<String, Object>unmodifiableMap(params) : null, description, Level.lookupByName(level));
             }
         });
     }
@@ -680,7 +682,7 @@ public class Rollbar {
         ensureInit(new Runnable() {
             @Override
             public void run() {
-                notifier.log(message, Collections.<String, Object>unmodifiableMap(params), Level.lookupByName(level));
+                notifier.log(message, params != null ? Collections.<String, Object>unmodifiableMap(params) : null, Level.lookupByName(level));
             }
         });
     }
