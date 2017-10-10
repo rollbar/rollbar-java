@@ -67,6 +67,5 @@ public class MainActivity extends AppCompatActivity {
     rollbar.setPersonData("42", "andy", null);
     Log.d("yo", "hey");
     rollbar.log(new Error("this is an error"), "another thing to exist");
-    //throw new Error("double bork");
   }
 }
