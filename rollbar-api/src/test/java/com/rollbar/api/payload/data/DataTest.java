@@ -60,6 +60,9 @@ public class DataTest {
     if (data.getServer() != null) {
       expected.put("server", data.getServer());
     }
+    if (data.getClient() != null) {
+      expected.put("client", data.getClient());
+    }
     if (data.getCustom() != null) {
       expected.put("custom", data.getCustom());
     }
