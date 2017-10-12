@@ -134,8 +134,8 @@ subprojects {
 
             publishing {
                 task androidSourcesJar(type: Jar) {
-                    classifier = 'sources'
                     from android.sourceSets.main.java.srcDirs
+                    classifier = 'sources'
                 }
 
                 task androidJavadocs(type: Javadoc) {
@@ -149,16 +149,32 @@ subprojects {
                     from androidJavadocs.destinationDir
                 }
 
-                //android.libraryVariants
+                task androidClassJar(type: Jar) {
+                    from 'build/intermediates/classes/release/'
+                }
+
+                android.libraryVariants
                 publications {
                     jar(MavenPublication) {
                         groupId GROUP
                         version VERSION_NAME
 
-                        artifact androidSourcesJar
-                        artifact androidJavadocsJar
+                        artifact bundleRelease
+                        artifacts {
+                            archives androidClassJar
+                            archives androidSourcesJar
+                            archives androidJavadocsJar
+                        }
+
 
                         pom.withXml {
+                            def dependencies = asNode().appendNode('dependencies')
+                            configurations.compile.allDependencies.each {
+                                def dependency = dependencies.appendNode('dependency')
+                                dependency.appendNode('groupId', GROUP)
+                                dependency.appendNode('artifactId', it.name)
+                                dependency.appendNode('version', VERSION_NAME)
+                            }
                             asNode().children().last() + {
                                 resolveStrategy = Closure.DELEGATE_FIRST
                                 name POM_NAME
@@ -208,7 +224,12 @@ subprojects {
                                     } else {
                                         classifier = null
                                     }
-                                    extension = 'jar.asc'
+                                    def isAar = it.file =~ /\.aar\.asc$/
+                                    if (isAar.find()) {
+                                        extension = 'aar.asc'
+                                    } else {
+                                        extension = 'jar.asc'
+                                    }
                                 }
                             }
                         }
