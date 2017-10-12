@@ -1,4 +1,8 @@
-apply from: "$rootDir/gradle/release.gradle"
+String CI = "${System.env.CI}"
+
+if (CI != "true") {
+  apply from: "$rootDir/gradle/release.gradle"
+}
 
 subprojects {
     if (!it.name.contains('android')) {
