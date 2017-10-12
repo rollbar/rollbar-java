@@ -4,9 +4,9 @@ android:
   components:
     - tools
     - platform-tools
-    - tools
     - build-tools-25.0.3
     - build-tools-26.0.2
+    - tools # this is in here twice on purpose
     - android-26
     - extra-google-m2repository
     - extra-android-m2repository
@@ -14,9 +14,34 @@ android:
     - android-sdk-license-.+
     - '.+'
 
-before_install:
-  - mkdir "$ANDROID_HOME/licenses" || true
-  - echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55" > "$ANDROID_HOME/licenses/android-sdk-license"
-  - echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
+install:
+  - sdkmanager --list || true
+  - sdkmanager --uninstall "system-images;android-15;default;armeabi-v7a"
+  - sdkmanager --uninstall "system-images;android-16;default;armeabi-v7a"
+  - sdkmanager --uninstall "system-images;android-17;default;armeabi-v7a"
+  - sdkmanager --uninstall "system-images;android-18;default;armeabi-v7a"
+  - sdkmanager --uninstall "system-images;android-19;default;armeabi-v7a"
+  - sdkmanager --uninstall "system-images;android-21;default;armeabi-v7a"
+  - sdkmanager --uninstall "extras;google;google_play_services"
+  - sdkmanager --uninstall "extras;android;support"
+  - sdkmanager --uninstall "platforms;android-10"
+  - sdkmanager --uninstall "platforms;android-15"
+  - sdkmanager --uninstall "platforms;android-16"
+  - sdkmanager --uninstall "platforms;android-17"
+  - sdkmanager --uninstall "platforms;android-18"
+  - sdkmanager --uninstall "platforms;android-19"
+  - sdkmanager --uninstall "platforms;android-20"
+  - sdkmanager --uninstall "platforms;android-21"
+  - sdkmanager --uninstall "build-tools;21.1.2"
+  - echo yes | sdkmanager "tools"
+  - echo yes | sdkmanager "platforms;android-25"
+  - echo yes | sdkmanager "platforms;android-26"
+  - echo yes | sdkmanager "extras;android;m2repository"
+  - echo yes | sdkmanager "extras;google;m2repository"
+  - echo yes | sdkmanager "extras;m2repository;com;android;support;constraint;constraint-layout;1.0.2"
+  - echo yes | sdkmanager "extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.2"
+  - cd ${TRAVIS_BUILD_DIR}/${DIR} && ./gradlew --version
+  - cd ${TRAVIS_BUILD_DIR}/${DIR} && ./gradlew clean build
+  - sdkmanager --list || true
 
 script: ./gradlew clean test
