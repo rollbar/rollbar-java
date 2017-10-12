@@ -44,4 +44,6 @@ install:
   - cd ${TRAVIS_BUILD_DIR}/${DIR} && ./gradlew clean build
   - sdkmanager --list || true
 
-script: ./gradlew clean test
+script:
+  - export JDK7_HOME=$(jdk_switcher home openjdk7)
+  - ./gradlew clean test
