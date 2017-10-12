@@ -758,24 +758,45 @@ public class Rollbar {
   }
 
   /**
-   * Old API
+   * report an exception to Rollbar
+   * @param throwable the exception that occurred.
    */
-
   @Deprecated
   public static void reportException(Throwable throwable) {
     reportException(throwable, null, null, null);
   }
 
+  /**
+   * report an exception to Rollbar, specifying the level.
+   *
+   * @param throwable the exception that occurred.
+   * @param level the severity level.
+   */
   @Deprecated
   public static void reportException(final Throwable throwable, final String level) {
     reportException(throwable, level, null, null);
   }
 
+  /**
+   * report an exception to Rollbar, specifying the level, and adding a custom description.
+   * @param throwable the exception that occurred.
+   * @param level the severity level.
+   * @param description the extra description.
+   */
   @Deprecated
   public static void reportException(final Throwable throwable, final String level, final String description) {
     reportException(throwable, level, description, null);
   }
 
+  /**
+   * report an exception to Rollbar, specifying the level, adding a custom description,
+   * and including extra data.
+   *
+   * @param throwable the exception that occurred.
+   * @param level the severity level.
+   * @param description the extra description.
+   * @param params the extra custom data.
+   */
   @Deprecated
   public static void reportException(final Throwable throwable, final String level, final String description, final Map<String, String> params) {
     ensureInit(new Runnable() {
@@ -786,16 +807,34 @@ public class Rollbar {
     });
   }
 
+  /**
+   * Report a message to Rollbar.
+   *
+   * @param message the message to send.
+   */
   @Deprecated
   public static void reportMessage(String message) {
     reportMessage(message, null);
   }
 
+  /**
+   * Report a message to Rollbar, specifying the level.
+   *
+   * @param message the message to send.
+   * @param level the severity level.
+   */
   @Deprecated
   public static void reportMessage(final String message, final String level) {
     reportMessage(message, level, null);
   }
 
+  /**
+   * Report a message to Rollbar, specifying the level, and including extra data.
+   *
+   * @param message the message to send.
+   * @param level the severity level.
+   * @param params the extra data.
+   */
   @Deprecated
   public static void reportMessage(final String message, final String level, final Map<String, String> params) {
     ensureInit(new Runnable() {
