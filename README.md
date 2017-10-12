@@ -1,5 +1,7 @@
 # READ THIS FIRST
 
+[![Build Status](https://travis-ci.org/rollbar/rollbar-java.svg?branch=master)](https://travis-ci.org/rollbar/rollbar-java)
+
 The current library has undergone a major overhaul and is released as an alpha version.
 We do not recommend upgrading yet from any prior version of `rollbar-java` yet. This
 disclaimer will be removed and a non-alpha version will be released when we are confident
