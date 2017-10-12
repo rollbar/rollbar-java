@@ -1,0 +1,46 @@
+apply plugin: "checkstyle"
+apply plugin: "findbugs"
+apply plugin: "jacoco"
+
+checkstyle {
+    toolVersion = "8.2"
+    sourceSets = [sourceSets.main]
+    configFile = file("$rootDir/tools/checkstyle/google_checks.xml")
+}
+
+findbugs {
+    sourceSets = [sourceSets.main]
+    includeFilter = file("$rootDir/tools/findbugs/findbugs.xml")
+}
+
+tasks.withType(Checkstyle) {
+    reports {
+        xml.enabled false
+        html.enabled true
+    }
+}
+
+tasks.withType(FindBugs) {
+    reports {
+        xml.enabled false
+        html.enabled true
+    }
+}
+
+test {
+    jacoco {
+        append = false
+        destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
+        classDumpDir = file("$buildDir/jacoco/classpathdumps")
+    }
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled false
+        csv.enabled false
+        html.destination file("${buildDir}/jacocoHtml")
+    }
+}
+
+test.finalizedBy(project.tasks.jacocoTestReport)

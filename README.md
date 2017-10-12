@@ -1,4 +1,46 @@
+# READ THIS FIRST
+
+The current library has undergone a major overhaul and is released as an alpha version.
+We do not recommend upgrading yet from any prior version of `rollbar-java` yet. This
+disclaimer will be removed and a non-alpha version will be released when we are confident
+in general consumption of this library.
+
+The documentation below has yet to be updated to match the new code in the alpha release.
+However, the code is documented with javadoc and therefore should be usable from viewing
+the documentation in the source.
+
+There are currently four libraries in this repository:
+
+* `rollbar-api`
+* `rollbar-java`
+* `rollbar-web`
+* `rollbar-android`
+
+`rollbar-api` is a set of data objects representing structures that make up the payload
+the backend API understands.
+
+`rollbar-java` has the core functionality for taking input from your code and transmitting
+it to our API. `rollbar-java` depends on `rollbar-api` and provides many points of
+customizing its behavior.
+
+`rollbar-web` is a higher level abstraction built on `rollbar-java` which intended to be
+integrated into web servers based on the Servlet API.
+
+`rollbar-android` is a library for use in an Android environment built on `rollbar-java`.
+
+The example directory contains examples using `rollbar-java` directly as well as using
+`rollbar-web` and `rollbar-android`.
+
+## Installation
+
+```groovy
+compile('com.rollbar:rollbar-java:1.0.0-alpha-1')
+```
+
+## See below for the old library documentation
+
 ## Overview
+
 
 `java-rollbar` is a set of maven modules that allows reporting issues to
 Rollbar in anything that can use Java.
