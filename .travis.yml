@@ -40,10 +40,10 @@ install:
   - echo yes | sdkmanager "extras;google;m2repository"
   - echo yes | sdkmanager "extras;m2repository;com;android;support;constraint;constraint-layout;1.0.2"
   - echo yes | sdkmanager "extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.2"
-  - cd ${TRAVIS_BUILD_DIR}/${DIR} && ./gradlew --version
-  - cd ${TRAVIS_BUILD_DIR}/${DIR} && ./gradlew clean build
+  - export JDK7_HOME=$(jdk_switcher home openjdk7)
+  - ./gradlew --version
+  - ./gradlew clean build
   - sdkmanager --list || true
 
 script:
-  - export JDK7_HOME=$(jdk_switcher home openjdk7)
   - ./gradlew clean test
