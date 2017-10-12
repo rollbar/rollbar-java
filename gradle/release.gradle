@@ -97,8 +97,13 @@ subprojects {
                         } else {
                             repoUrl = getSnapshotRepositoryUrl()
                         }
+
                         maven {
                             url repoUrl
+                            credentials {
+                                username getRepositoryUsername()
+                                password getRepositoryPassword()
+                            }
                         }
                     }
                 }
