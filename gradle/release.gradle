@@ -32,8 +32,10 @@ subprojects {
                     groupId GROUP
                     version VERSION_NAME
 
-                    artifact sourcesJar
-                    artifact javadocJar
+                    artifacts {
+                        archives sourcesJar
+                        archives javadocJar
+                    }
                     from components.java
 
                     pom.withXml {
