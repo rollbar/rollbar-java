@@ -1,6 +1,7 @@
 subprojects {
     if (!it.project.parent.name.equals("examples") &&
             !it.name.contains('android') &&
+            !it.name.contains('web') &&
             !it.name.contains('examples')) {
 
         apply plugin: 'maven-publish'
@@ -123,7 +124,139 @@ subprojects {
     }
 
     if (!it.project.parent.name.equals("examples") &&
+            !it.name.contains('android') &&
+            it.name.contains('web') &&
+            !it.name.contains('examples')) {
+
+        apply plugin: 'maven-publish'
+        apply plugin: 'signing'
+
+        signing {
+            required true
+            sign configurations.archives
+        }
+
+        // pom file name
+        ext {
+            pomFile = file("${project.buildDir}/generated-pom.xml")
+        }
+
+        publishing {
+            task sourcesJar(type: Jar, dependsOn: classes) {
+                classifier = 'sources'
+                from sourceSets.main.allSource
+            }
+
+            task javadocJar(type: Jar, dependsOn: javadoc) {
+                classifier = 'javadoc'
+                from javadoc.destinationDir
+            }
+
+            publications {
+                war(MavenPublication) {
+                    groupId GROUP
+                    version VERSION_NAME
+
+                    artifacts {
+                        archives sourcesJar
+                        archives javadocJar
+                    }
+                    artifact sourcesJar
+                    artifact javadocJar
+                    from components.web
+
+                    pom.withXml {
+                        asNode().children().last() + {
+                            resolveStrategy = Closure.DELEGATE_FIRST
+                            name POM_NAME
+                            description POM_DESCRIPTION
+                            url POM_URL
+                            scm {
+                                url POM_SCM_URL
+                                connection POM_SCM_CONNECTION
+                                developerConnection POM_SCM_DEV_CONNECTION
+                            }
+                            licenses {
+                                license {
+                                    name POM_LICENCE_NAME
+                                    url POM_LICENCE_URL
+                                    distribution POM_LICENCE_DIST
+                                }
+                            }
+                            developers {
+                                developer {
+                                    id POM_DEVELOPER_ID
+                                    name POM_DEVELOPER_NAME
+                                }
+                            }
+                        }
+                    }
+
+                    // Sign the pom.xml and artifacts.
+                    if (signing.required) {
+                        // Sign the pom.xml.
+                        pom.withXml {
+                            writeTo(project.ext.pomFile)
+                            def pomAscFile = signing.sign(project.ext.pomFile).signatureFiles[0]
+                            artifact(pomAscFile) {
+                                classifier = null
+                                extension = 'pom.asc'
+                            }
+                            project.ext.pomFile.delete()
+                        }
+
+                        // Sign the artifacts.
+                        project.tasks.signArchives.signatureFiles.each {
+                            artifact(it) {
+                                def matcher = it.file =~ /-(sources|javadoc)\.jar\.asc$/
+                                if (matcher.find()) {
+                                    classifier = matcher.group(1)
+                                } else {
+                                    classifier = null
+                                }
+                                def isWar = it.file =~ /\.war\.asc$/
+                                if (isWar.find()) {
+                                    extension = 'war.asc'
+                                } else {
+                                    extension = 'jar.asc'
+                                }
+                            }
+                        }
+                    }
+
+                    repositories {
+                        def repoUrl = ""
+                        if (isReleaseBuild()) {
+                            repoUrl = getReleaseRepositoryUrl()
+                        } else {
+                            repoUrl = getSnapshotRepositoryUrl()
+                        }
+
+                        maven {
+                            url repoUrl
+                            credentials {
+                                username getRepositoryUsername()
+                                password getRepositoryPassword()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        model {
+            tasks.publishWarPublicationToMavenLocal {
+                dependsOn(project.tasks.signArchives)
+            }
+            tasks.publishWarPublicationToMavenRepository {
+                dependsOn(project.tasks.signArchives)
+            }
+        }
+    }
+
+    if (!it.project.parent.name.equals("examples") &&
                 it.name.contains('android') &&
+                !it.name.contains('web') &&
                 !it.name.contains('examples')) {
 
             apply plugin: 'maven-publish'
