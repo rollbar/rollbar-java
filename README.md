@@ -33,6 +33,10 @@ integrated into web servers based on the Servlet API.
 The example directory contains examples using `rollbar-java` directly as well as using
 `rollbar-web` and `rollbar-android`.
 
+# Feedback
+
+To report problems or ask a question about the alpha release, please [create an issue](https://github.com/rollbar/rollbar-java/issues/new) and apply the label `1.0.0-alpha` so our team can follow up with you.
+
 ## Installation
 
 ```groovy
