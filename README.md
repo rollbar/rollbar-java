@@ -98,7 +98,7 @@ compile('com.rollbar:rollbar:0.5.4')
 ## Usage
 
 For actual usage, the easiest way to get started is with the `rollbar`
-package. See the [documentation there](https://github.com/rollbar/rollbar-java/tree/master/rollbar).
+package. See the [documentation there](https://github.com/rollbar/rollbar-java/blob/master/README.md).
 
 ## Contributing
 
