@@ -66,7 +66,7 @@ public class BodyFactory {
   }
 
   private static ExceptionInfo info(Throwable throwable, String description) {
-    String className = throwable.getClass().getSimpleName();
+    String className = throwable.getClass().getName();
     String message = throwable.getMessage();
     return new ExceptionInfo.Builder()
         .className(className)

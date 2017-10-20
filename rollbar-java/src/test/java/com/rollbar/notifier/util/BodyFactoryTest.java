@@ -74,7 +74,7 @@ public class BodyFactoryTest {
   private void verifyExceptionInfo(ExceptionInfo exceptionInfo, Throwable throwable,
       String description) {
     ExceptionInfo expected = new ExceptionInfo.Builder()
-        .className(RuntimeException.class.getSimpleName())
+        .className(RuntimeException.class.getName())
         .message(throwable.getMessage())
         .description(description)
         .build();
