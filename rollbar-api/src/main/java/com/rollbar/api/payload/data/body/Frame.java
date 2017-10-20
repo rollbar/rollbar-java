@@ -120,9 +120,8 @@ public class Frame implements JsonSerializable {
   public Object asJson() {
     Map<String, Object> values = new HashMap<>();
 
-    if (filename != null) {
-      values.put("filename", filename);
-    }
+    values.put("filename", filename != null ? filename : "[unknown]");
+
     if (lineNumber != null) {
       values.put("lineno", lineNumber);
     }
