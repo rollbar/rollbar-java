@@ -1,15 +1,13 @@
-# READ THIS FIRST
-
 [![Build Status](https://travis-ci.org/rollbar/rollbar-java.svg?branch=master)](https://travis-ci.org/rollbar/rollbar-java)
 
 The current library has undergone a major overhaul and is released as an alpha version.
-We do not recommend upgrading yet from any prior version of `rollbar-java` yet. This
+We do not recommend upgrading from any prior version of `rollbar-java` yet. This
 disclaimer will be removed and a non-alpha version will be released when we are confident
 in general consumption of this library.
 
-The documentation below has yet to be updated to match the new code in the alpha release.
-However, the code is documented with javadoc and therefore should be usable from viewing
-the documentation in the source.
+The code is documented with javadoc and therefore should be usable from viewing
+the documentation in the source. There are examples in the `examples` directory showing different
+use cases for consuming these libraries.
 
 There are currently four libraries in this repository:
 
@@ -43,36 +41,78 @@ To report problems or ask a question about the alpha release, please [create an 
 compile('com.rollbar:rollbar-java:1.0.0-alpha-1')
 ```
 
-## See below for the old library documentation
+## Upgrading from 0.5.4 or earlier to 1.0.0
 
-## Overview
+This package used to be divided into five modules
 
+* `rollbar-utilities`
+* `rollbar-testing`
+* `rollbar-sender`
+* `rollbar-payload`
+* `rollbar`
 
-`java-rollbar` is a set of maven modules that allows reporting issues to
-Rollbar in anything that can use Java.
+As of 1.0.0 we have changed the project structure to these modules
 
-It's still under development, and many of the design decisions may still
-be altered. If you have an opinion voice it in the issues!
+* `rollbar-api`
+* `rollbar-java`
+* `rollbar-web`
+* `rollbar-android`
 
-The library is split into small modules to enable re-use as much as
-possible. If you want to change a single piece of how it works it should
-be relatively straightforward.
+`rollbar-api` contains roughly the same objects as `rollbar-payload` previously did. The main
+difference being that the objects are now constructed via builders rather than a new allocation in
+every setter. Therefore, any usage of `rollbar-payload` objects is still possible, but the style is
+slightly changed. For example, one of the examples for specifying the server information from the
+old documentation
+https://github.com/rollbar/rollbar-java/tree/496eb59edea7203a246f207986e332ee28d1916c/rollbar
+stated:
 
-* `rollbar-utilities` contains code shared by the other modules.
-* `rollbar-testing` contains shared test code.
-* `rollbar-sender` implements sending occurrences to Rollbar. No external
-dependencies make this lightweight, but a good candidate for an
-upgrade.
-* `rollbar-payload` implements a Payload object that can be serialized to
-JSON. It does so with no external dependencies.
-* `rollbar` brings together all the pieces from above to make it easy to
-install and start recording errors.
+```java
+Server s = new Server()
+    .host("www.rollbar.com")
+    .branch("master")
+    .codeVersion("b01ff9e")
+    .put("TAttUQoLtUaE", 42);
+```
+
+The equivalent is now:
+
+```java
+Server s = new Server.Builder()
+    .host("www.rollbar.com")
+    .branch("master")
+    .codeVersion("b01ff9e")
+    .build();
+```
+
+The Extensible base class from `rollbar-utilities` is no longer used in favor of sticking more
+closely to the spec.
+
+The other use cases from those old docs was calling `send` directly on a `Payload` object:
+
+```java
+// Throwable t
+Payload p = Payload.fromError(SERVER_POST_ACCESS_TOKEN, ENVIRONMENT, t, null);
+p.send();
+```
+
+This is no longer directly supported. The equivalent is to use `Rollbar` directly, either by
+constructing a new instance (`new Rollbar(config)`) or by using the library managed singleton
+(`Rollbar.init(config)`):
+
+```java
+// Throwable t
+Config config = withAccessToken(SERVER_POST_ACCESS_TOKEN)
+        .environment("development")
+        .build();
+Rollbar rollbar = Rollbar.init(config);
+rollbar.error(t);
+```
 
 ## Installing
 
 You can, of course, build it yourself and depend on the .jar manually,
 however, the modules are up on maven central and can be installed in
-most tool chains pretty trivially.
+most tool chains.
 
 ### Maven
 
@@ -83,8 +123,8 @@ dependency to your pom file:
 <dependencies>
 <dependency>
   <groupId>com.rollbar</groupId>
-   <artifactId>rollbar</artifactId>
-   <version>0.5.4</version>
+   <artifactId>rollbar-java</artifactId>
+   <version>1.0.0-alpha-1</version>
 </dependency>
 </dependencies>
 ```
@@ -92,18 +132,18 @@ dependency to your pom file:
 ### Gradle
 
 ```groovy
-compile('com.rollbar:rollbar:0.5.4')
+compile('com.rollbar:rollbar-java:1.0.0-alpha-1')
 ```
 
 ## Usage
 
-For actual usage, the easiest way to get started is with the `rollbar`
-package. See the [documentation there](https://github.com/rollbar/rollbar-java/blob/master/README.md).
+For actual usage, the easiest way to get started is by looking at the examples:
+
+- [rollbar-java](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-java)
+- [rollbar-web](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-web)
+- [rollbar-android](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-android)
 
 ## Contributing
-
-This library was written by someone who knows C# much better than Java. Feel free to issue stylistic PRs, or offer
-suggestions on how we can improve this library.
 
 1. [Fork it](https://github.com/rollbar/rollbar-java)
 2. Create your feature branch (```git checkout -b my-new-feature```).
