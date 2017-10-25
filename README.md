@@ -1,9 +1,8 @@
 [![Build Status](https://travis-ci.org/rollbar/rollbar-java.svg?branch=master)](https://travis-ci.org/rollbar/rollbar-java)
 
-The current library has undergone a major overhaul and is released as an alpha version.
-We do not recommend upgrading from any prior version of `rollbar-java` yet. This
-disclaimer will be removed and a non-alpha version will be released when we are confident
-in general consumption of this library.
+The current library has undergone a major overhaul and is now released as a beta version.
+We recommend upgrading from prior versions of `rollbar-java`, but that process may require some
+work on your end for the more complex use cases of the old library.
 
 The code is documented with javadoc and therefore should be usable from viewing
 the documentation in the source. There are examples in the `examples` directory showing different
@@ -33,12 +32,12 @@ The example directory contains examples using `rollbar-java` directly as well as
 
 # Feedback
 
-To report problems or ask a question about the alpha release, please [create an issue](https://github.com/rollbar/rollbar-java/issues/new) and apply the label `1.0.0-alpha` so our team can follow up with you.
+To report problems or ask a question about the alpha release, please [create an issue](https://github.com/rollbar/rollbar-java/issues/new) and apply the label `1.0.0-beta` so our team can follow up with you.
 
 ## Installation
 
 ```groovy
-compile('com.rollbar:rollbar-java:1.0.0-alpha-1')
+compile('com.rollbar:rollbar-java:1.0.0-beta-1')
 ```
 
 ## Upgrading from 0.5.4 or earlier to 1.0.0
@@ -108,6 +107,39 @@ Rollbar rollbar = Rollbar.init(config);
 rollbar.error(t);
 ```
 
+There is a shim that has the same basic API as the old library located in the `rollbar-java`
+package at `com.rollbar.Rollbar`. This class is marked as deprecated as it is only intended to
+make upgrading slightly more convenient. This old example code should still work thanks to this shim class:
+
+```java
+import com.rollbar.Rollbar;
+public class MainClass {
+    public static final Rollbar rollbar = new Rollbar("ACCESS_TOKEN", "production");
+    public int main(String[] args) {
+        rollbar.handleUncaughtErrors();
+        OtherClass.runProgram();
+        return 0;
+    }
+}
+```
+
+However, we strongly advise upgrading to at least this equivalent using the new library:
+
+```java
+ import com.rollbar.notifier.Rollbar;
+ public class MainClass {
+     public static final Rollbar rollbar = new Rollbar(
+         withAccessToken("ACCESS_TOKEN")
+             .environment("production")
+             .handleUncaughtErrors(true)
+             .build());
+     public int main(String[] args) {
+         OtherClass.runProgram();
+         return 0;
+     }
+ }
+```
+
 ## Installing
 
 You can, of course, build it yourself and depend on the .jar manually,
@@ -124,7 +156,7 @@ dependency to your pom file:
 <dependency>
   <groupId>com.rollbar</groupId>
    <artifactId>rollbar-java</artifactId>
-   <version>1.0.0-alpha-1</version>
+   <version>1.0.0-beta-1</version>
 </dependency>
 </dependencies>
 ```
@@ -132,7 +164,7 @@ dependency to your pom file:
 ### Gradle
 
 ```groovy
-compile('com.rollbar:rollbar-java:1.0.0-alpha-1')
+compile('com.rollbar:rollbar-java:1.0.0-beta-1')
 ```
 
 ## Usage
