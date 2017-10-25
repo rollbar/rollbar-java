@@ -65,7 +65,7 @@ public class ConfigBuilder {
   private boolean handleUncaughtErrors;
 
   /**
-   * Constructor.
+   * Constructor with an access token.
    */
   private ConfigBuilder(String accessToken) {
     // Defaults
@@ -74,6 +74,9 @@ public class ConfigBuilder {
     this.handleUncaughtErrors = true;
   }
 
+  /**
+   * Constructor from another Config.
+   */
   private ConfigBuilder(Config config) {
     this.accessToken = config.accessToken();
     this.environment = config.environment();
@@ -113,6 +116,17 @@ public class ConfigBuilder {
    */
   public static ConfigBuilder withConfig(Config config) {
     return new ConfigBuilder(config);
+  }
+
+  /**
+   * The access token to use.
+   *
+   * @param accessToken the access token.
+   * @return the builder instance.
+   */
+  public ConfigBuilder accessToken(String accessToken) {
+    this.accessToken = accessToken;
+    return this;
   }
 
   /**
