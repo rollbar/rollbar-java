@@ -17,6 +17,13 @@ public class NotifierProvider implements Provider<Notifier> {
                 .build();
     }
 
+    public NotifierProvider(String version, String name) {
+        this.notifier = new Notifier.Builder()
+                .name(name)
+                .version(version)
+                .build();
+    }
+
     @Override
     public Notifier provide() {
         return notifier;
