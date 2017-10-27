@@ -37,7 +37,7 @@ To report problems or ask a question about the alpha release, please [create an 
 ## Installation
 
 ```groovy
-compile('com.rollbar:rollbar-java:1.0.0-beta-1')
+compile('com.rollbar:rollbar-java:1.0.0-beta-2')
 ```
 
 ## Upgrading from 0.5.4 or earlier to 1.0.0
@@ -156,7 +156,7 @@ dependency to your pom file:
 <dependency>
   <groupId>com.rollbar</groupId>
    <artifactId>rollbar-java</artifactId>
-   <version>1.0.0-beta-1</version>
+   <version>1.0.0-beta-2</version>
 </dependency>
 </dependencies>
 ```
@@ -164,7 +164,7 @@ dependency to your pom file:
 ### Gradle
 
 ```groovy
-compile('com.rollbar:rollbar-java:1.0.0-beta-1')
+compile('com.rollbar:rollbar-java:1.0.0-beta-2')
 ```
 
 ## Usage
