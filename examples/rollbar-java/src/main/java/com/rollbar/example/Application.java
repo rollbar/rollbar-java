@@ -1,9 +1,8 @@
 package com.rollbar.example;
 
-import static com.rollbar.notifier.config.ConfigBuilder.withAccessToken;
-
 import com.rollbar.notifier.Rollbar;
 import com.rollbar.notifier.config.Config;
+import com.rollbar.notifier.config.ConfigBuilder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -24,7 +23,7 @@ public class Application {
    */
   public Application() {
     this.greeting = new Greeting();
-    Config config = withAccessToken(System.getenv("ROLLBAR_ACCESSTOKEN"))
+    Config config = ConfigBuilder.withAccessToken(System.getenv("ROLLBAR_ACCESSTOKEN"))
         .environment("development")
         .codeVersion("1.0.0")
         .build();
