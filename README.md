@@ -34,7 +34,7 @@ The example directory contains examples using `rollbar-java` directly as well as
 
 ## Feedback
 
-To report problems or ask a question about the alpha release, please [create an issue](https://github.com/rollbar/rollbar-java/issues/new) and apply the label `1.0.0-beta` so our team can follow up with you.
+To report problems or ask a question about the beta release, please [create an issue](https://github.com/rollbar/rollbar-java/issues/new) and apply the label `1.0.0-beta` so our team can follow up with you.
 
 ## Installation
 
