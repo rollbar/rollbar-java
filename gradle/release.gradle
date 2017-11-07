@@ -171,13 +171,11 @@ subprojects {
 
                         artifact bundleRelease
                         artifacts {
-                            archives androidClassJar
                             archives androidSourcesJar
                             archives androidJavadocsJar
                         }
                         artifact androidSourcesJar
                         artifact androidJavadocsJar
-
 
                         pom.withXml {
                             def dependencies = asNode().appendNode('dependencies')
