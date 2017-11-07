@@ -1,31 +1,29 @@
 package com.rollbar.notifier;
 
 import com.rollbar.api.payload.Payload;
-import com.rollbar.api.payload.data.*;
+import com.rollbar.api.payload.data.Data;
+import com.rollbar.api.payload.data.Level;
 import com.rollbar.notifier.config.Config;
 import com.rollbar.notifier.config.ConfigBuilder;
 import com.rollbar.notifier.config.ConfigProvider;
-import com.rollbar.notifier.filter.Filter;
-import com.rollbar.notifier.provider.Provider;
-import com.rollbar.notifier.sender.BufferedSender;
-import com.rollbar.notifier.sender.Sender;
-import com.rollbar.notifier.sender.listener.SenderListener;
-import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uncaughtexception.RollbarUncaughtExceptionHandler;
 import com.rollbar.notifier.util.BodyFactory;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is the current Rollbar notifier and the main starting point to send the data to Rollbar.
  */
 public class Rollbar {
+
+  private static Logger LOGGER = LoggerFactory.getLogger(Rollbar.class);
 
   private static volatile Rollbar notifier;
 
@@ -67,6 +65,7 @@ public class Rollbar {
       synchronized (Rollbar.class) {
         if (notifier == null) {
           notifier = new Rollbar(config);
+          LOGGER.debug("Rollbar managed notifier created.");
         }
       }
     }
@@ -88,7 +87,7 @@ public class Rollbar {
    */
   public void handleUncaughtErrors(Thread thread) {
     Objects.requireNonNull(thread, "thread");
-
+    LOGGER.debug("Handling uncaught errors for thread: {}.", thread);
     UncaughtExceptionHandler uncaughtExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
     thread.setUncaughtExceptionHandler(new RollbarUncaughtExceptionHandler(this,
         uncaughtExceptionHandler));
@@ -124,6 +123,7 @@ public class Rollbar {
    * @param config the new configuration.
    */
   public void configure(Config config) {
+    LOGGER.debug("Reloading configuration.");
     this.configWriteLock.lock();
     try {
       this.config = config;
@@ -585,14 +585,17 @@ public class Rollbar {
 
     // Pre filter
     if (config.filter() != null && config.filter().preProcess(level, error, custom, description)) {
+      LOGGER.debug("Pre-filtered error: {}", error);
       return;
     }
 
+    LOGGER.debug("Gathering information to build the payload.");
     // Gather information to build a payload.
     Data data = buildData(config, error, custom, description, level);
 
     // Transform the data
     if (config.transformer() != null) {
+      LOGGER.debug("Transforming the data.");
       data = config.transformer().transform(data);
     }
 
@@ -602,11 +605,13 @@ public class Rollbar {
 
       // UUID
       if (config.uuidGenerator() != null) {
+        LOGGER.debug("Generating UUID.");
         dataBuilder.uuid(config.uuidGenerator().from(data));
       }
 
       // Fingerprint
       if (config.fingerPrintGenerator() != null) {
+        LOGGER.debug("Generating fingerprint.");
         dataBuilder.fingerprint(config.fingerPrintGenerator().from(data));
       }
       data = dataBuilder.build();
@@ -614,6 +619,7 @@ public class Rollbar {
 
     // Post filter
     if (config.filter() != null && config.filter().postProcess(data)) {
+      LOGGER.debug("Post-filtered error: {}", error);
       return;
     }
 
@@ -621,6 +627,8 @@ public class Rollbar {
     Payload payload = new Payload.Builder()
         .accessToken(config.accessToken())
         .data(data).build();
+
+    LOGGER.debug("Payload built: {}", payload);
 
     // Send
     sendPayload(config, payload);
@@ -642,33 +650,39 @@ public class Rollbar {
 
     // Context
     if (config.context() != null) {
+      LOGGER.debug("Gathering context info.");
       dataBuilder.context(config.context().provide());
     }
 
     // Request
     if (config.request() != null) {
+      LOGGER.debug("Gathering request info.");
       dataBuilder.request(config.request().provide());
     }
 
     // Person
     if (config.person() != null) {
+      LOGGER.debug("Gathering person info.");
       dataBuilder.person(config.person().provide());
 
     }
 
     // Server
     if (config.server() != null) {
+      LOGGER.debug("Gathering server info.");
       dataBuilder.server(config.server().provide());
     }
 
     // Client
     if (config.client() != null) {
+      LOGGER.debug("Gathering client info.");
       dataBuilder.client(config.client().provide());
     }
 
     // Custom
     Map<String, Object> tmpCustom = new HashMap<>();
     if (config.custom() != null) {
+      LOGGER.debug("Gathering custom info.");
       Map<String, Object> customProvided = config.custom().provide();
       if (customProvided != null) {
         tmpCustom.putAll(customProvided);
@@ -683,11 +697,13 @@ public class Rollbar {
 
     // Notifier
     if (config.notifier() != null) {
+      LOGGER.debug("Gathering notifier info.");
       dataBuilder.notifier(config.notifier().provide());
     }
 
     // Timestamp
     if (config.timestamp() != null) {
+      LOGGER.debug("Gathering timestamp info.");
       dataBuilder.timestamp(config.timestamp().provide());
     }
 
@@ -696,6 +712,7 @@ public class Rollbar {
 
   private void sendPayload(Config config, Payload payload) {
     if (config.sender() != null) {
+      LOGGER.debug("Sending payload.");
       config.sender().send(payload);
     }
   }

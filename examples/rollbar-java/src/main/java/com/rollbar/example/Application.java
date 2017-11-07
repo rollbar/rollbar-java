@@ -8,11 +8,15 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Application example using rollbar-java notifier.
  */
 public class Application {
+
+  private static Logger LOGGER = LoggerFactory.getLogger(Application.class);
 
   private Greeting greeting;
 
@@ -23,10 +27,12 @@ public class Application {
    */
   public Application() {
     this.greeting = new Greeting();
+    LOGGER.info("Configuring Rollbar");
     Config config = ConfigBuilder.withAccessToken(System.getenv("ROLLBAR_ACCESSTOKEN"))
         .environment("development")
         .codeVersion("1.0.0")
         .build();
+    LOGGER.info("Initializing Rollbar");
     this.rollbar = Rollbar.init(config);
   }
 
@@ -35,10 +41,13 @@ public class Application {
    * @param args the args.
    */
   public static void main(String[] args) {
+    LOGGER.info("Starting application");
     Application app = new Application();
+
+    LOGGER.info("Executing application");
     app.execute();
 
-    throw new RuntimeException("Exception finishing execution.");
+    LOGGER.info("Finished application");
   }
 
   private void execute() {

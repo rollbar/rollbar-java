@@ -9,6 +9,8 @@ import com.rollbar.notifier.sender.listener.SenderListener;
 import com.rollbar.notifier.sender.result.Response;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base class to implement {@link Sender senders.}
@@ -16,6 +18,8 @@ import java.util.List;
  * method and not have to deal with listener and notifications to them.
  */
 public abstract class AbstractSender implements Sender {
+
+  private Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
   private final List<SenderListener> listeners = new ArrayList<>();
 
@@ -57,12 +61,14 @@ public abstract class AbstractSender implements Sender {
   }
 
   private void notifyResult(Payload payload, Response response) {
+    LOGGER.debug("Payload sent uuid: {}", response.getResult().getContent());
     for (SenderListener listener : listeners) {
       listener.onResponse(payload, response);
     }
   }
 
   private void notifyError(Payload payload, Exception error) {
+    LOGGER.error("Error sending the payload.", error);
     for (SenderListener listener : listeners) {
       listener.onError(payload, error);
     }

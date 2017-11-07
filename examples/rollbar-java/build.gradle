@@ -9,4 +9,6 @@ mainClassName = "com.rollbar.example.Application"
 
 dependencies {
     compile project(":rollbar-java")
+
+    runtime group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.25'
 }
