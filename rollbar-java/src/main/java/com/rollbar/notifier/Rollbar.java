@@ -87,7 +87,7 @@ public class Rollbar {
    */
   public void handleUncaughtErrors(Thread thread) {
     Objects.requireNonNull(thread, "thread");
-    LOGGER.debug("Handling uncaught errors fot thread: {}.", thread);
+    LOGGER.debug("Handling uncaught errors for thread: {}.", thread);
     UncaughtExceptionHandler uncaughtExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
     thread.setUncaughtExceptionHandler(new RollbarUncaughtExceptionHandler(this,
         uncaughtExceptionHandler));
