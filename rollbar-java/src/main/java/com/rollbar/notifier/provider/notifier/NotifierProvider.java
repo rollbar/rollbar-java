@@ -18,7 +18,7 @@ public class NotifierProvider implements Provider<Notifier> {
     String version = versionHelper.version();
 
     this.notifier = new Notifier.Builder()
-        .name("rollbar")
+        .name("rollbar-java")
         .version(version)
         .build();
   }

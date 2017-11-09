@@ -34,7 +34,7 @@ public class NotifierProviderTest {
   @Test
   public void shouldProvideTheNotifier() {
     Notifier expected = new Notifier.Builder()
-        .name("rollbar")
+        .name("rollbar-java")
         .version(VERSION)
         .build();
 
