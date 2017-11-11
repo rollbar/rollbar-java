@@ -1,7 +1,10 @@
 package com.rollbar.web.filter;
 
 import static com.rollbar.web.filter.RollbarFilter.ACCESS_TOKEN_PARAM_NAME;
+import static com.rollbar.web.filter.RollbarFilter.CONFIG_PROVIDER_CLASS_PARAM_NAME;
 import static com.rollbar.web.filter.RollbarFilter.USER_IP_HEADER_PARAM_NAME;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -9,6 +12,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.rollbar.notifier.Rollbar;
+import com.rollbar.web.config.FakeConfigProvider;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletRequest;
@@ -57,6 +61,25 @@ public class RollbarFilterTest {
 
     verify(filterConfig).getInitParameter(ACCESS_TOKEN_PARAM_NAME);
     verify(filterConfig).getInitParameter(USER_IP_HEADER_PARAM_NAME);
+    verify(filterConfig).getInitParameter(CONFIG_PROVIDER_CLASS_PARAM_NAME);
+  }
+
+  @Test
+  public void shouldUseConfigProviderIfAvailable() throws Exception {
+    when(filterConfig.getInitParameter(CONFIG_PROVIDER_CLASS_PARAM_NAME)).thenReturn(
+        FakeConfigProvider.class.getCanonicalName());
+    sut.init(filterConfig);
+
+    assertTrue(FakeConfigProvider.CALLED);
+  }
+
+  @Test
+  public void shouldNotUseConfigProviderIfError() throws Exception {
+    when(filterConfig.getInitParameter(CONFIG_PROVIDER_CLASS_PARAM_NAME)).thenReturn(
+        "com.rollbar.not.exists");
+    sut.init(filterConfig);
+
+    assertFalse(FakeConfigProvider.CALLED);
   }
 
   @Test
