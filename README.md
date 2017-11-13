@@ -176,6 +176,7 @@ For actual usage, the easiest way to get started is by looking at the examples:
 - [rollbar-java](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-java)
 - [rollbar-web](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-web)
 - [rollbar-android](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-android)
+- [rollbar-scala](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-scala)
 
 ## Contributing
 
