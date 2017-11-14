@@ -1,5 +1,21 @@
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "com.netflix.nebula:nebula-project-plugin:3.4.0"
+    }
+}
+
+apply plugin: "nebula.integtest"
+
 dependencies {
     compile project(':rollbar-api')
 
     compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
+
+    integTestCompile group: 'com.github.tomakehurst', name: 'wiremock', version: '2.11.0'
+    integTestCompile group: 'com.google.code.gson', name: 'gson', version: '2.8.2'
 }
