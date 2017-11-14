@@ -46,4 +46,4 @@ install:
   - sdkmanager --list || true
 
 script:
-  - ./gradlew clean test
+  - ./gradlew clean check
