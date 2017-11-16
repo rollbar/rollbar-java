@@ -16,6 +16,10 @@
             <param-name>access_token</param-name>
             <param-value>[YOUR_ACCESS_TOKEN>]</param-value>
         </init-param>
+        <init-param>
+            <param-name>config_provider</param-name>
+            <param-value>com.rollbar.web.example.config.MyConfigProvider</param-value>
+        </init-param>
     </filter>
     <filter-mapping>
         <filter-name>Rollbar Filter</filter-name>
