@@ -6,4 +6,5 @@ include ":rollbar-api",
         ":rollbar-web",
         ":examples:rollbar-java",
         ":examples:rollbar-web",
-        ":examples:rollbar-android"
+        ":examples:rollbar-android",
+        ":examples:rollbar-scala"

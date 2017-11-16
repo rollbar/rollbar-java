@@ -1,0 +1,15 @@
+apply plugin: 'scala'
+apply plugin: 'application'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile project(":rollbar-java")
+
+    compile "org.scala-lang:scala-library:2.12.4"
+}
+
+mainClassName = "com.rollbar.example.Application"
+
