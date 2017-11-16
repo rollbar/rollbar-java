@@ -381,6 +381,9 @@
   </Match>
   <Match>
     <Bug pattern="MS_PKGPROTECT"/>
+    <Not>
+      <Source name="~.*\.scala" />
+    </Not>
   </Match>
   <Match>
     <Bug pattern="TQ_EXPLICIT_UNKNOWN_SOURCE_VALUE_REACHES_NEVER_SINK"/>
