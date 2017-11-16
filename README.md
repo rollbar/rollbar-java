@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/rollbar/rollbar-java.svg?branch=master)](https://travis-ci.org/rollbar/rollbar-java)
 
-The current library has undergone a major overhaul and is now released as a beta version.
+The current library has undergone a major overhaul between versions 0.5.4 and 1.0.0.
 We recommend upgrading from prior versions of `rollbar-java`, but that process may require some
 work on your end for the more complex use cases of the old library.
 
@@ -34,12 +34,12 @@ The example directory contains examples using `rollbar-java` directly as well as
 
 ## Feedback
 
-To report problems or ask a question about the beta release, please [create an issue](https://github.com/rollbar/rollbar-java/issues/new) and apply the label `1.0.0-beta` so our team can follow up with you.
+To report problems or ask a question please [create an issue](https://github.com/rollbar/rollbar-java/issues/new).
 
 ## Installation
 
 ```groovy
-compile('com.rollbar:rollbar-java:1.0.0-beta-3')
+compile('com.rollbar:rollbar-java:1.0.0')
 ```
 
 ## Upgrading from 0.5.4 or earlier to 1.0.0
@@ -158,7 +158,7 @@ dependency to your pom file:
 <dependency>
   <groupId>com.rollbar</groupId>
    <artifactId>rollbar-java</artifactId>
-   <version>1.0.0-beta-3</version>
+   <version>1.0.0</version>
 </dependency>
 </dependencies>
 ```
@@ -166,7 +166,7 @@ dependency to your pom file:
 ### Gradle
 
 ```groovy
-compile('com.rollbar:rollbar-java:1.0.0-beta-3')
+compile('com.rollbar:rollbar-java:1.0.0')
 ```
 
 ## Usage
