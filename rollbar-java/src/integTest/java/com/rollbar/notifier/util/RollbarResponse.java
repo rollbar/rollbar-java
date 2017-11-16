@@ -1,5 +1,6 @@
 package com.rollbar.notifier.util;
 
+@SuppressWarnings("unused")
 public class RollbarResponse {
 
   private final int err;
