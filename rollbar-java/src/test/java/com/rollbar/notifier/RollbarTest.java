@@ -5,7 +5,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.description;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -14,7 +13,6 @@ import static org.mockito.Mockito.when;
 import com.rollbar.api.payload.Payload;
 import com.rollbar.api.payload.data.Client;
 import com.rollbar.api.payload.data.Data;
-import com.rollbar.api.payload.data.Data.Builder;
 import com.rollbar.api.payload.data.Level;
 import com.rollbar.api.payload.data.Notifier;
 import com.rollbar.api.payload.data.Person;
@@ -22,7 +20,6 @@ import com.rollbar.api.payload.data.Request;
 import com.rollbar.api.payload.data.Server;
 import com.rollbar.api.payload.data.body.Body;
 import com.rollbar.notifier.config.Config;
-import com.rollbar.notifier.config.ConfigBuilder;
 import com.rollbar.notifier.filter.Filter;
 import com.rollbar.notifier.fingerprint.FingerprintGenerator;
 import com.rollbar.notifier.provider.Provider;
@@ -30,7 +27,6 @@ import com.rollbar.notifier.sender.Sender;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.util.BodyFactory;
 import com.rollbar.notifier.uuid.UuidGenerator;
-import java.awt.image.DataBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Before;
@@ -334,7 +330,7 @@ public class RollbarTest {
   public void shouldNotThrowExceptionWithEmptyConfig() {
     Config config = withAccessToken("access_token").build();
 
-    Rollbar sut = Rollbar.init(config);
+    Rollbar sut = new Rollbar(config);
 
     Throwable error = new RuntimeException("Something went wrong.");
 
@@ -349,6 +345,24 @@ public class RollbarTest {
     Rollbar other = Rollbar.init(config);
 
     assertThat(sut == other, is(true));
+  }
+
+  @Test
+  public void shouldNotThrowExceptionIfErrorProcessing() {
+    Config config = withAccessToken("access_token")
+        .transformer(new Transformer() {
+          @Override
+          public Data transform(Data data) {
+            throw new RuntimeException("Unexpected error.");
+          }
+        })
+        .build();
+
+    Rollbar sut = new Rollbar(config);
+
+    Throwable error = new RuntimeException("Something went wrong.");
+
+    sut.log(error, null, null, Level.ERROR);
   }
 
   @Test

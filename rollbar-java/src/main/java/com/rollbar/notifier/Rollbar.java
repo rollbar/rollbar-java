@@ -557,7 +557,11 @@ public class Rollbar {
    * @param level the level to send it at.
    */
   public void log(Throwable error, Map<String, Object> custom, String description, Level level) {
-    process(error, custom, description, level);
+    try {
+      process(error, custom, description, level);
+    } catch (Exception e) {
+      LOGGER.error("Error while processing payload to send to Rollbar: {}", e);
+    }
   }
 
   /**
@@ -576,6 +580,7 @@ public class Rollbar {
     }
     return Level.ERROR;
   }
+
 
   private void process(Throwable error, Map<String, Object> custom, String description,
       Level level) {
