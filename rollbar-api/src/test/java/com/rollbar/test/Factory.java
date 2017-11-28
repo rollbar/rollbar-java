@@ -170,6 +170,7 @@ public class Factory {
         .level(Level.ERROR)
         .codeVersion("1.2.3")
         .platform("linux")
+        .timestamp(System.currentTimeMillis())
         .language("java")
         .framework("spring")
         .request(request())

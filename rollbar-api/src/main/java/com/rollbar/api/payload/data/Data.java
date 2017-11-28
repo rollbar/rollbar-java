@@ -244,7 +244,8 @@ public class Data implements JsonSerializable {
       values.put("level", level.asJson());
     }
     if (timestamp != null) {
-      values.put("timestamp", timestamp);
+      double timestamp_secs = timestamp / 1000.0;
+      values.put("timestamp", timestamp_secs);
     }
     if (codeVersion != null) {
       values.put("code_version", codeVersion);
@@ -474,7 +475,9 @@ public class Data implements JsonSerializable {
     /**
      * The moment the bug happened, visible in ui as client_timestamp.
      *
-     * @param timestamp the timestamp.
+     * @param timestamp the timestamp as a Long with millisecond precision.
+     *        This vaulue is converted to seconds when serialized to JSON
+     *        to conform to the API spec.
      * @return the builder instance.
      */
     public Builder timestamp(Long timestamp) {
