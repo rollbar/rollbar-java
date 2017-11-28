@@ -133,13 +133,17 @@ public class Factory {
   }
 
   public static Request request() {
-    Map<String, String> headers = new HashMap<>();
-    headers.put("Accept", "text/html");
-    headers.put("Referer", "https://rollbar.com/");
-
     Map<String, List<String>> get = new HashMap<>();
     get.put("param1", asList("value1.1", "value1.2"));
     get.put("param2", asList("value2.1"));
+
+    return request(get);
+  }
+
+  public static Request request(Map<String, List<String>> get) {
+    Map<String, String> headers = new HashMap<>();
+    headers.put("Accept", "text/html");
+    headers.put("Referer", "https://rollbar.com/");
 
     return new Request.Builder()
         .url("https://rollbar.com/project/1")
