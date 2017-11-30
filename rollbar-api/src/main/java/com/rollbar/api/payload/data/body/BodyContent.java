@@ -3,7 +3,7 @@ package com.rollbar.api.payload.data.body;
 /**
  * A marker interface for the contents of the rollbar body.
  */
-interface BodyContent {
+public interface BodyContent {
 
   /**
    * The key name of the body content.
