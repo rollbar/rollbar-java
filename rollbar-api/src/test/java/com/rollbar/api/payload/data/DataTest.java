@@ -34,7 +34,8 @@ public class DataTest {
       expected.put("level", data.getLevel().asJson());
     }
     if (data.getTimestamp() != null) {
-      expected.put("timestamp", data.getTimestamp());
+      double timestamp_secs = data.getTimestamp() / 1000.0;
+      expected.put("timestamp", timestamp_secs);
     }
     if (data.getCodeVersion() != null) {
       expected.put("code_version", data.getCodeVersion());
