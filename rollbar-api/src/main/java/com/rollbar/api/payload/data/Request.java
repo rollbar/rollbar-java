@@ -126,7 +126,7 @@ public class Request implements JsonSerializable {
       values.put("params", params);
     }
     if (get != null) {
-      values.put("get", get);
+      values.put("get", processGetParams(get));
     }
     if (queryString != null) {
       values.put("query_string", queryString);
@@ -142,6 +142,20 @@ public class Request implements JsonSerializable {
     }
 
     return values;
+  }
+
+  private Map<String, Object> processGetParams(Map<String, List<String>> map) {
+    Map<String, Object> result = new HashMap<>();
+    for (Map.Entry<String, List<String>> entry : map.entrySet()) {
+      String k = entry.getKey();
+      List<String> v = entry.getValue();
+      if (v.size() == 1) {
+        result.put(k, v.get(0));
+      } else {
+        result.put(k, v);
+      }
+    }
+    return result;
   }
 
   @Override

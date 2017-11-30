@@ -1,11 +1,14 @@
 package com.rollbar.api.payload.data;
 
+import static java.util.Arrays.asList;
+
 import static com.rollbar.test.Factory.request;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 import org.junit.Test;
 
 public class RequestTest {
@@ -20,7 +23,14 @@ public class RequestTest {
 
   @Test
   public void shouldReturnAsJson() {
-    Request request = request();
+    Map<String, List<String>> get = new HashMap<>();
+    get.put("param1", asList("value1.1", "value1.2"));
+    get.put("param2", asList("value2.1"));
+    Map<String, Object> expectedGet = new HashMap<>();
+    expectedGet.put("param1", get.get("param1"));
+    expectedGet.put("param2", "value2.1");
+
+    Request request = request(get);
 
     Map<String, Object> expected = new HashMap<>();
 
@@ -34,7 +44,7 @@ public class RequestTest {
       expected.put("params", request.getParams());
     }
     if (request.getGet() != null) {
-      expected.put("get", request.getGet());
+      expected.put("get", expectedGet);
     }
     if (request.getQueryString() != null) {
       expected.put("query_string", request.getQueryString());
