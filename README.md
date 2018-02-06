@@ -178,6 +178,11 @@ For actual usage, the easiest way to get started is by looking at the examples:
 - [rollbar-android](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-android)
 - [rollbar-scala](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-scala)
 
+
+### Spring 
+
+Check out [this blog post](https://rollbar.com/blog/spring-mvc-exception-handling/) for more information on how to use rollbar-java in your Spring app. 
+
 ## Contributing
 
 1. [Fork it](https://github.com/rollbar/rollbar-java)
