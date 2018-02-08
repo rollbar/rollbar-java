@@ -26,6 +26,7 @@ import com.rollbar.notifier.util.ConstantTimeProvider;
 import com.rollbar.notifier.util.RollbarResponse;
 import com.rollbar.notifier.util.SenderAssertions;
 import com.rollbar.notifier.util.json.BodySerializer;
+import com.rollbar.notifier.util.json.DataSerializer;
 import com.rollbar.notifier.util.json.LevelSerializer;
 import com.rollbar.notifier.util.json.PayloadSerializer;
 import java.util.UUID;
@@ -59,11 +60,13 @@ public class RollbarITest {
     LevelSerializer levelSerializer = new LevelSerializer();
     BodySerializer bodySerializer = new BodySerializer();
     PayloadSerializer payloadSerializer = new PayloadSerializer();
+    DataSerializer dataSerializer = new DataSerializer();
 
     this.gson = new GsonBuilder()
         .registerTypeAdapter(Level.class, levelSerializer)
         .registerTypeAdapter(Body.class, bodySerializer)
         .registerTypeAdapter(Payload.class, payloadSerializer)
+        .registerTypeAdapter(Data.class, dataSerializer)
         .create();
 
     this.timeProvider = new ConstantTimeProvider();
