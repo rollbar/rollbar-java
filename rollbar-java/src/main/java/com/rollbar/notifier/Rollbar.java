@@ -557,8 +557,25 @@ public class Rollbar {
    * @param level the level to send it at.
    */
   public void log(Throwable error, Map<String, Object> custom, String description, Level level) {
+    log(error, custom, description, level, false);
+  }
+
+  /**
+   * Record an error or message with extra data at the level specified. At least ene of `error` or
+   * `description` must be non-null. If error is null, `description` will be sent as a message. If
+   * error is non-null, description will be sent as the description of the error. Custom data will
+   * be attached to message if the error is null. Custom data will extend whatever {@link
+   * Config#custom} returns.
+   *
+   * @param error the error (if any).
+   * @param custom the custom data (if any).
+   * @param description the description of the error, or the message to send.
+   * @param level the level to send it at.
+   * @param isUncaught whether or not this data comes from an uncaught exception.
+   */
+  public void log(Throwable error, Map<String, Object> custom, String description, Level level, boolean isUncaught) {
     try {
-      process(error, custom, description, level);
+      process(error, custom, description, level, isUncaught);
     } catch (Exception e) {
       LOGGER.error("Error while processing payload to send to Rollbar: {}", e);
     }
@@ -583,20 +600,20 @@ public class Rollbar {
 
 
   private void process(Throwable error, Map<String, Object> custom, String description,
-      Level level) {
+      Level level, boolean isUncaught) {
     this.configReadLock.lock();
     Config config = this.config;
     this.configReadLock.unlock();
 
     // Pre filter
-    if (config.filter() != null && config.filter().preProcess(level, error, custom, description)) {
+    if (config.filter() != null && config.filter().preProcess(level, error, custom, description, isUncaught)) {
       LOGGER.debug("Pre-filtered error: {}", error);
       return;
     }
 
     LOGGER.debug("Gathering information to build the payload.");
     // Gather information to build a payload.
-    Data data = buildData(config, error, custom, description, level);
+    Data data = buildData(config, error, custom, description, level, isUncaught);
 
     // Transform the data
     if (config.transformer() != null) {
@@ -640,7 +657,7 @@ public class Rollbar {
   }
 
   private Data buildData(Config config, Throwable error, Map<String, Object> custom, String description,
-      Level level) {
+      Level level, boolean isUncaught) {
 
     Data.Builder dataBuilder = new Data.Builder()
         .environment(config.environment())
@@ -649,7 +666,8 @@ public class Rollbar {
         .language(config.language())
         .framework(config.framework())
         .level(level != null ? level : level(error))
-        .body(bodyFactory.from(error, description));
+        .body(bodyFactory.from(error, description))
+        .isUncaught(isUncaught);
 
     // Gather data from providers.
 

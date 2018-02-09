@@ -133,7 +133,7 @@ public class Rollbar {
     final Rollbar rollbar = this;
     thread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
       public void uncaughtException(Thread t, Throwable e) {
-        rollbar.log(e);
+        rollbar.log(e, null, null, null, true);
       }
     });
   }
@@ -515,6 +515,21 @@ public class Rollbar {
    * @param level the level to send it at
    */
   public void log(Throwable error, Map<String, Object> custom, String description, Level level) {
-    this.rollbar.log(error, custom, description, level);
+    log(error, custom, description, level, false);
+  }
+
+  /**
+   * Record an error or message with extra data at the level specified. At least ene of `error` or `description` must
+   * be non-null. If error is null, `description` will be sent as a message. If error is non-null, description will be
+   * sent as the description of the error.
+   * Custom data will be attached to message if the error is null.
+   * @param error the error (if any)
+   * @param custom the custom data (if any)
+   * @param description the description of the error, or the message to send
+   * @param level the level to send it at
+   * @param isUncaught whether or not this set of data originates from an uncaught exception.
+   */
+  public void log(Throwable error, Map<String, Object> custom, String description, Level level, boolean isUncaught) {
+    this.rollbar.log(error, custom, description, level, isUncaught);
   }
 }

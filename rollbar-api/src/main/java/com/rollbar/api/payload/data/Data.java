@@ -45,6 +45,8 @@ public class Data implements JsonSerializable {
 
   private final String uuid;
 
+  private final boolean isUncaught;
+
   private final Notifier notifier;
 
   private Data(Builder builder) {
@@ -65,6 +67,7 @@ public class Data implements JsonSerializable {
     this.fingerprint = builder.fingerprint;
     this.title = builder.title;
     this.uuid = builder.uuid;
+    this.isUncaught = builder.isUncaught;
     this.notifier = builder.notifier;
   }
 
@@ -224,6 +227,15 @@ public class Data implements JsonSerializable {
   /**
    * Getter.
    *
+   * @return whether or not this data comes from an uncaught exception
+   */
+  public boolean isUncaught() {
+    return isUncaught;
+  }
+
+  /**
+   * Getter.
+   *
    * @return the notifier.
    */
   public Notifier getNotifier() {
@@ -319,6 +331,7 @@ public class Data implements JsonSerializable {
         && Objects.equals(fingerprint, data.fingerprint)
         && Objects.equals(title, data.title)
         && Objects.equals(uuid, data.uuid)
+        && isUncaught == data.isUncaught
         && Objects.equals(notifier, data.notifier);
   }
 
@@ -326,7 +339,7 @@ public class Data implements JsonSerializable {
   public int hashCode() {
     return Objects
         .hash(environment, body, level, timestamp, codeVersion, platform, language, framework,
-            context, request, person, server, client, custom, fingerprint, title, uuid, notifier);
+            context, request, person, server, client, custom, fingerprint, title, uuid, isUncaught, notifier);
   }
 
   @Override
@@ -349,6 +362,7 @@ public class Data implements JsonSerializable {
         + ", fingerprint='" + fingerprint + '\''
         + ", title='" + title + '\''
         + ", uuid='" + uuid + '\''
+        + ", isUncaught='" + isUncaught + '\''
         + ", notifier=" + notifier
         + '}';
   }
@@ -392,6 +406,8 @@ public class Data implements JsonSerializable {
 
     private String uuid;
 
+    private boolean isUncaught;
+
     private Notifier notifier;
 
     /**
@@ -424,6 +440,7 @@ public class Data implements JsonSerializable {
       this.fingerprint = data.fingerprint;
       this.title = data.title;
       this.uuid = data.uuid;
+      this.isUncaught = data.isUncaught;
       this.notifier = data.notifier;
     }
 
@@ -629,6 +646,17 @@ public class Data implements JsonSerializable {
      */
     public Builder uuid(String uuid) {
       this.uuid = uuid;
+      return this;
+    }
+
+    /**
+     * Specify whether this data object originates from an uncaught exception or not.
+     *
+     * @param isUncaught true if this comes from an uncaught exception.
+     * @return the builder instance.
+     */
+    public Builder isUncaught(boolean isUncaught) {
+      this.isUncaught = isUncaught;
       return this;
     }
 

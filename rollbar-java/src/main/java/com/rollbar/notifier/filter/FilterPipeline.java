@@ -37,6 +37,16 @@ public class FilterPipeline implements Filter {
   }
 
   @Override
+  public boolean preProcess(Level level, Throwable error, Map<String, Object> custom,
+      String description, boolean isUncaught) {
+    if (usePipeline()) {
+      return pipeline(level, error, custom, description, isUncaught);
+    }
+
+    return false;
+  }
+
+  @Override
   public boolean postProcess(Data data) {
     if (usePipeline()) {
       return pipeline(data);
@@ -53,6 +63,17 @@ public class FilterPipeline implements Filter {
       String description) {
     for (Filter filter : pipeline) {
       boolean result = filter.preProcess(level, error, custom, description);
+      if (result) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean pipeline(Level level, Throwable error, Map<String, Object> custom,
+      String description, boolean isUncaught) {
+    for (Filter filter : pipeline) {
+      boolean result = filter.preProcess(level, error, custom, description, isUncaught);
       if (result) {
         return true;
       }
