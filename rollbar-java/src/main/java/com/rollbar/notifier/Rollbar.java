@@ -606,7 +606,7 @@ public class Rollbar {
     this.configReadLock.unlock();
 
     // Pre filter
-    if (config.filter() != null && config.filter().preProcess(level, error, custom, description, isUncaught)) {
+    if (config.filter() != null && config.filter().preProcess(level, error, custom, description)) {
       LOGGER.debug("Pre-filtered error: {}", error);
       return;
     }

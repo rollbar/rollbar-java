@@ -17,11 +17,9 @@ public interface Filter {
    * @param error the error.
    * @param custom the custom data.
    * @param description the description.
-   * @param isUncaught whether or not this set of data originates from an uncaught exception.
    * @return true if filtered otherwise false.
    */
-  boolean preProcess(Level level, Throwable error, Map<String, Object> custom, String description,
-      boolean isUncaught);
+  boolean preProcess(Level level, Throwable error, Map<String, Object> custom, String description);
 
   /**
    * Post-filter hook to decide once the final payload is ready if it should be send to Rollbar.

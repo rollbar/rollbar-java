@@ -29,22 +29,21 @@ public class FilterPipelineTest {
     Filter filter1 = mock(Filter.class);
     Filter filter2 = mock(Filter.class);
 
-    when(filter1.preProcess(any(), any(), any(), any(), any())).thenReturn(false);
-    when(filter2.preProcess(any(), any(), any(), any(), any())).thenReturn(true);
+    when(filter1.preProcess(any(), any(), any(), any())).thenReturn(false);
+    when(filter2.preProcess(any(), any(), any(), any())).thenReturn(true);
 
     Level level = Level.ERROR;
     Throwable error = new RuntimeException("Something went wrong.");
     Map<String, Object> custom = emptyMap();
     String description = "Error description";
-    boolean isUncaught = true;
 
     FilterPipeline sut = new FilterPipeline(asList(filter1, filter2));
 
-    boolean result = sut.preProcess(level, error, custom, description, isUncaught);
+    boolean result = sut.preProcess(level, error, custom, description);
 
     assertThat(result, is(true));
-    verify(filter1).preProcess(level, error, custom, description, isUncaught);
-    verify(filter2).preProcess(level, error, custom, description, isUncaught);
+    verify(filter1).preProcess(level, error, custom, description);
+    verify(filter2).preProcess(level, error, custom, description);
   }
 
   @Test
@@ -52,22 +51,21 @@ public class FilterPipelineTest {
     Filter filter1 = mock(Filter.class);
     Filter filter2 = mock(Filter.class);
 
-    when(filter1.preProcess(any(), any(), any(), any(), any())).thenReturn(true);
-    when(filter2.preProcess(any(), any(), any(), any(), any())).thenReturn(false);
+    when(filter1.preProcess(any(), any(), any(), any())).thenReturn(true);
+    when(filter2.preProcess(any(), any(), any(), any())).thenReturn(false);
 
     Level level = Level.ERROR;
     Throwable error = new RuntimeException("Something went wrong.");
     Map<String, Object> custom = emptyMap();
     String description = "Error description";
-    boolean isUncaught = true;
 
     FilterPipeline sut = new FilterPipeline(asList(filter1, filter2));
 
-    boolean result = sut.preProcess(level, error, custom, description, isUncaught);
+    boolean result = sut.preProcess(level, error, custom, description);
 
     assertThat(result, is(true));
-    verify(filter1).preProcess(level, error, custom, description, isUncaught);
-    verify(filter2, never()).preProcess(level, error, custom, description, isUncaught);
+    verify(filter1).preProcess(level, error, custom, description);
+    verify(filter2, never()).preProcess(level, error, custom, description);
   }
 
   @Test
@@ -115,7 +113,7 @@ public class FilterPipelineTest {
     Data data = mock(Data.class);
 
     boolean resultPreProcess = sut.preProcess(Level.ERROR, new RuntimeException(),
-        emptyMap(), "", true);
+        emptyMap(), "");
     boolean resultPostProcess = sut.postProcess(data);
 
     assertThat(resultPreProcess, is(false));
@@ -129,7 +127,7 @@ public class FilterPipelineTest {
     Data data = mock(Data.class);
 
     boolean resultPreProcess = sut.preProcess(Level.ERROR, new RuntimeException(),
-        emptyMap(), "", true);
+        emptyMap(), "");
     boolean resultPostProcess = sut.postProcess(data);
 
     assertThat(resultPreProcess, is(false));

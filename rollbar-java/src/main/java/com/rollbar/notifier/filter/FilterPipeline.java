@@ -28,9 +28,9 @@ public class FilterPipeline implements Filter {
 
   @Override
   public boolean preProcess(Level level, Throwable error, Map<String, Object> custom,
-      String description, boolean isUncaught) {
+      String description) {
     if (usePipeline()) {
-      return pipeline(level, error, custom, description, isUncaught);
+      return pipeline(level, error, custom, description);
     }
 
     return false;
@@ -50,9 +50,9 @@ public class FilterPipeline implements Filter {
   }
 
   private boolean pipeline(Level level, Throwable error, Map<String, Object> custom,
-      String description, boolean isUncaught) {
+      String description) {
     for (Filter filter : pipeline) {
-      boolean result = filter.preProcess(level, error, custom, description, isUncaught);
+      boolean result = filter.preProcess(level, error, custom, description);
       if (result) {
         return true;
       }
