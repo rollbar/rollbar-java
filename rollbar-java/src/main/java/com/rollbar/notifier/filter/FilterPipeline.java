@@ -28,16 +28,6 @@ public class FilterPipeline implements Filter {
 
   @Override
   public boolean preProcess(Level level, Throwable error, Map<String, Object> custom,
-      String description) {
-    if (usePipeline()) {
-      return pipeline(level, error, custom, description);
-    }
-
-    return false;
-  }
-
-  @Override
-  public boolean preProcess(Level level, Throwable error, Map<String, Object> custom,
       String description, boolean isUncaught) {
     if (usePipeline()) {
       return pipeline(level, error, custom, description, isUncaught);
@@ -57,17 +47,6 @@ public class FilterPipeline implements Filter {
 
   private boolean usePipeline() {
     return pipeline != null && !pipeline.isEmpty();
-  }
-
-  private boolean pipeline(Level level, Throwable error, Map<String, Object> custom,
-      String description) {
-    for (Filter filter : pipeline) {
-      boolean result = filter.preProcess(level, error, custom, description);
-      if (result) {
-        return true;
-      }
-    }
-    return false;
   }
 
   private boolean pipeline(Level level, Throwable error, Map<String, Object> custom,
