@@ -573,7 +573,8 @@ public class Rollbar {
    * @param level the level to send it at.
    * @param isUncaught whether or not this data comes from an uncaught exception.
    */
-  public void log(Throwable error, Map<String, Object> custom, String description, Level level, boolean isUncaught) {
+  public void log(Throwable error, Map<String, Object> custom, String description, Level level,
+      boolean isUncaught) {
     try {
       process(error, custom, description, level, isUncaught);
     } catch (Exception e) {
@@ -656,8 +657,8 @@ public class Rollbar {
     sendPayload(config, payload);
   }
 
-  private Data buildData(Config config, Throwable error, Map<String, Object> custom, String description,
-      Level level, boolean isUncaught) {
+  private Data buildData(Config config, Throwable error, Map<String, Object> custom,
+      String description, Level level, boolean isUncaught) {
 
     Data.Builder dataBuilder = new Data.Builder()
         .environment(config.environment())

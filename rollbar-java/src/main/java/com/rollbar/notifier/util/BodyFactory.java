@@ -21,25 +21,25 @@ public class BodyFactory {
   public Body from(Throwable throwable, String description) {
     Body.Builder builder = new Body.Builder();
     if (throwable == null) {
-        return builder.bodyContent(message(description)).build();
+      return builder.bodyContent(message(description)).build();
     }
     if (throwable.getCause() == null) {
-        return builder.bodyContent(trace(throwable, description)).build();
+      return builder.bodyContent(trace(throwable, description)).build();
     }
     return builder.bodyContent(traceChain(throwable, description)).build();
   }
 
   private static Message message(String description) {
-      return new Message.Builder()
-              .body(description)
-              .build();
+    return new Message.Builder()
+      .body(description)
+      .build();
   }
 
   private static Trace trace(Throwable throwable, String description) {
     return new Trace.Builder()
-        .frames(frames(throwable))
-        .exception(info(throwable, description))
-        .build();
+      .frames(frames(throwable))
+      .exception(info(throwable, description))
+      .build();
   }
 
   private static TraceChain traceChain(Throwable throwable, String description) {
