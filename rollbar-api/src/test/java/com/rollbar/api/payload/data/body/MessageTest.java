@@ -29,4 +29,23 @@ public class MessageTest {
     assertThat(message.getKeyName(), is("message"));
     assertThat(message.asJson(), is(expected));
   }
+
+  @Test
+  public void shouldAllowMetadata() {
+    Map<String, Object> metadataMap = new HashMap<>();
+    metadataMap.put("a", "b");
+    metadataMap.put("num", 42);
+    metadataMap.put("body", "should not show up");
+    Message message = new Message.Builder()
+      .body("hello world")
+      .metadata(metadataMap)
+      .build();
+
+    Map<String, Object> expected = new HashMap<>();
+    expected.put("a", "b");
+    expected.put("num", 42);
+    expected.put("body", "hello world");
+
+    assertThat(message.asJson(), is(expected));
+  }
 }

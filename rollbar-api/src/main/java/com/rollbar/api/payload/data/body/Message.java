@@ -1,7 +1,8 @@
 package com.rollbar.api.payload.data.body;
 
-import com.rollbar.api.json.JsonSerializable;
+import static java.util.Collections.unmodifiableMap;
 
+import com.rollbar.api.json.JsonSerializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -12,9 +13,11 @@ import java.util.Objects;
 public class Message implements BodyContent, JsonSerializable {
 
   private final String body;
+  private final Map<String, Object> metadata;
 
   private Message(Builder builder) {
     this.body = builder.body;
+    this.metadata = builder.metadata != null ? unmodifiableMap(builder.metadata) : null;
   }
 
   /**
@@ -25,6 +28,14 @@ public class Message implements BodyContent, JsonSerializable {
     return body;
   }
 
+  /**
+   * Getter.
+   * @return the metadata.
+   */
+  public Map<String, Object> getMetadata() {
+    return metadata;
+  }
+
   @Override
   public String getKeyName() {
     return "message";
@@ -32,7 +43,10 @@ public class Message implements BodyContent, JsonSerializable {
 
   @Override
   public Object asJson() {
-    Map<String, String> message = new HashMap<>();
+    Map<String, Object> message = new HashMap<>();
+    if (this.metadata != null) {
+      message.putAll(this.metadata);
+    }
     message.put("body", this.body);
     return message;
   }
@@ -46,18 +60,24 @@ public class Message implements BodyContent, JsonSerializable {
       return false;
     }
     Message message = (Message) o;
-    return Objects.equals(body, message.body);
+    if (body != null ? !Objects.equals(body, message.body) : message.body != null) {
+      return false;
+    }
+    return metadata != null ? metadata.equals(message.metadata) : message.metadata == null;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(body);
+    int result = body != null ? Objects.hash(body) : 0;
+    result = 31 * result + (metadata != null ? metadata.hashCode() : 0);
+    return result;
   }
 
   @Override
   public String toString() {
     return "Message{"
         + "body='" + body + '\''
+        + ", metadata='" + metadata + '\''
         + '}';
   }
 
@@ -67,6 +87,7 @@ public class Message implements BodyContent, JsonSerializable {
   public static final class Builder {
 
     private String body;
+    private Map<String, Object> metadata;
 
     /**
      * Constructor.
@@ -92,6 +113,17 @@ public class Message implements BodyContent, JsonSerializable {
      */
     public Builder body(String body) {
       this.body = body;
+      return this;
+    }
+
+    /**
+     * Extra metadata to include with the message.
+     *
+     * @param metadata the additional metadata.
+     * @return the builder instance.
+     */
+    public Builder metadata(Map<String, Object> metadata) {
+      this.metadata = metadata;
       return this;
     }
 
