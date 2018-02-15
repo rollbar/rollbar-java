@@ -1,5 +1,6 @@
 package com.rollbar.api.payload.data;
 
+import static java.util.Collections.unmodifiableMap;
 import com.rollbar.api.json.JsonSerializable;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +29,8 @@ public class Request implements JsonSerializable {
 
   private final String userIp;
 
+  private final Map<String, Object> metadata;
+
   private Request(Builder builder) {
     this.url = builder.url;
     this.method = builder.method;
@@ -38,6 +41,7 @@ public class Request implements JsonSerializable {
     this.post = builder.post;
     this.body = builder.body;
     this.userIp = builder.userIp;
+    this.metadata = builder.metadata != null ? unmodifiableMap(builder.metadata) : null;
   }
 
   /**
@@ -112,10 +116,21 @@ public class Request implements JsonSerializable {
     return userIp;
   }
 
+  /**
+   * Getter.
+   * @return the metadata.
+   */
+  public Map<String, Object> getMetadata() {
+    return metadata;
+  }
+
   @Override
   public Map<String, Object> asJson() {
     Map<String, Object> values = new HashMap<>();
 
+    if (metadata != null) {
+      values.putAll(metadata);
+    }
     if (url != null) {
       values.put("url", url);
     }
@@ -194,6 +209,9 @@ public class Request implements JsonSerializable {
     if (body != null ? !body.equals(request.body) : request.body != null) {
       return false;
     }
+    if (metadata != null ? !metadata.equals(request.metadata) : request.metadata != null) {
+      return false;
+    }
     return userIp != null ? userIp.equals(request.userIp) : request.userIp == null;
   }
 
@@ -208,6 +226,7 @@ public class Request implements JsonSerializable {
     result = 31 * result + (post != null ? post.hashCode() : 0);
     result = 31 * result + (body != null ? body.hashCode() : 0);
     result = 31 * result + (userIp != null ? userIp.hashCode() : 0);
+    result = 31 * result + (metadata != null ? metadata.hashCode() : 0);
     return result;
   }
 
@@ -223,6 +242,7 @@ public class Request implements JsonSerializable {
         + ", post=" + post
         + ", body='" + body + '\''
         + ", userIp='" + userIp + '\''
+        + ", metadata='" + metadata + '\''
         + '}';
   }
 
@@ -249,6 +269,8 @@ public class Request implements JsonSerializable {
 
     private String userIp;
 
+    private Map<String, Object> metadata;
+
     /**
      * Constructor.
      */
@@ -271,6 +293,7 @@ public class Request implements JsonSerializable {
       this.post = request.post;
       this.body = request.body;
       this.userIp = request.userIp;
+      this.metadata = request.metadata;
     }
 
     /**
@@ -369,6 +392,17 @@ public class Request implements JsonSerializable {
      */
     public Builder userIp(String userIp) {
       this.userIp = userIp;
+      return this;
+    }
+
+    /**
+     * Extra metadata to include with the request.
+     *
+     * @param metadata the additional metadata.
+     * @return the builder instance.
+     */
+    public Builder metadata(Map<String, Object> metadata) {
+      this.metadata = metadata;
       return this;
     }
 
