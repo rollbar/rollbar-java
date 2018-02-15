@@ -11,7 +11,7 @@ public interface Filter {
 
   /**
    * Pre-filter hook to decide before gathering information and transforming the data if it is
-   * .susceptible of it.
+   * susceptible of it.
    *
    * @param level the level
    * @param error the error.

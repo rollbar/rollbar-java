@@ -26,7 +26,7 @@ public class RollbarUncaughtExceptionHandler implements Thread.UncaughtException
 
   @Override
   public void uncaughtException(Thread thread, Throwable throwable) {
-    rollbar.log(throwable);
+    rollbar.log(throwable, null, null, null, true);
 
     if (delegate != null) {
       delegate.uncaughtException(thread, throwable);

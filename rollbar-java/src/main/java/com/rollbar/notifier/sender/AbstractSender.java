@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractSender implements Sender {
 
-  private Logger LOGGER = LoggerFactory.getLogger(this.getClass());
+  private Logger thisLogger = LoggerFactory.getLogger(this.getClass());
 
   private final List<SenderListener> listeners = new ArrayList<>();
 
@@ -61,14 +61,14 @@ public abstract class AbstractSender implements Sender {
   }
 
   private void notifyResult(Payload payload, Response response) {
-    LOGGER.debug("Payload sent uuid: {}", response.getResult().getContent());
+    thisLogger.debug("Payload sent uuid: {}", response.getResult().getContent());
     for (SenderListener listener : listeners) {
       listener.onResponse(payload, response);
     }
   }
 
   private void notifyError(Payload payload, Exception error) {
-    LOGGER.error("Error sending the payload.", error);
+    thisLogger.error("Error sending the payload.", error);
     for (SenderListener listener : listeners) {
       listener.onError(payload, error);
     }
