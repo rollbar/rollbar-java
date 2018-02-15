@@ -25,6 +25,8 @@ import java.util.Map;
 
 public class Factory {
 
+  private static final long CURRENT_TIME = System.currentTimeMillis();
+
   private Factory() {
 
   }
@@ -174,7 +176,7 @@ public class Factory {
         .level(Level.ERROR)
         .codeVersion("1.2.3")
         .platform("linux")
-        .timestamp(System.currentTimeMillis())
+        .timestamp(CURRENT_TIME)
         .language("java")
         .framework("spring")
         .request(request())
