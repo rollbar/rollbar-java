@@ -25,7 +25,7 @@ public class Server implements JsonSerializable {
     this.root = builder.root;
     this.branch = builder.branch;
     this.codeVersion = builder.codeVersion;
-    this.metadata = builder.metadata != null ? unmodifiableMap(builder.metadata) : null;
+    this.metadata = builder.metadata != null ? unmodifiableMap(new HashMap<>(builder.metadata)) : null;
   }
 
   /**

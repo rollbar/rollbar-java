@@ -22,7 +22,7 @@ public class Person implements JsonSerializable {
     this.id = builder.id;
     this.username = builder.username;
     this.email = builder.email;
-    this.metadata = builder.metadata != null ? unmodifiableMap(builder.metadata) : null;
+    this.metadata = builder.metadata != null ? unmodifiableMap(new HashMap<>(builder.metadata)) : null;
   }
 
   /**

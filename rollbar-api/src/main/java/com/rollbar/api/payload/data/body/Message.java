@@ -17,7 +17,7 @@ public class Message implements BodyContent, JsonSerializable {
 
   private Message(Builder builder) {
     this.body = builder.body;
-    this.metadata = builder.metadata != null ? unmodifiableMap(builder.metadata) : null;
+    this.metadata = builder.metadata != null ? unmodifiableMap(new HashMap<>(builder.metadata)) : null;
   }
 
   /**
