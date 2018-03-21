@@ -4,6 +4,7 @@ import static java.util.Collections.unmodifiableList;
 
 import com.rollbar.api.json.JsonSerializable;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -17,7 +18,7 @@ public class Trace implements BodyContent, JsonSerializable {
   private final ExceptionInfo exception;
 
   private Trace(Builder builder) {
-    this.frames = unmodifiableList(builder.frames);
+    this.frames = unmodifiableList(new ArrayList<>(builder.frames));
     this.exception = builder.exception;
   }
 

@@ -4,6 +4,7 @@ import static java.util.Collections.unmodifiableList;
 
 import com.rollbar.api.json.JsonSerializable;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -18,8 +19,8 @@ public class CodeContext implements JsonSerializable {
   private final List<String> post;
 
   private CodeContext(Builder builder) {
-    this.pre = builder.pre != null ? unmodifiableList(builder.pre) : null;
-    this.post = builder.post != null ? unmodifiableList(builder.post) : null;
+    this.pre = builder.pre != null ? unmodifiableList(new ArrayList<>(builder.pre)) : null;
+    this.post = builder.post != null ? unmodifiableList(new ArrayList<>(builder.post)) : null;
   }
 
   /**

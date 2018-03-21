@@ -35,4 +35,33 @@ public class PersonTest {
 
     assertThat(person.asJson(), is(expected));
   }
+
+  @Test
+  public void shouldAllowMetadata() {
+    Person basePerson = person();
+
+    Map<String, Object> metadataMap = new HashMap<>();
+    metadataMap.put("a", "b");
+    metadataMap.put("num", 42);
+    metadataMap.put("id", "should not show up");
+
+    Person person = new Person.Builder(basePerson)
+      .metadata(metadataMap)
+      .build();
+
+    Map<String, Object> expected = new HashMap<>();
+    expected.put("a", "b");
+    expected.put("num", 42);
+    if (person.getId() != null) {
+      expected.put("id", person.getId());
+    }
+    if (person.getEmail() != null) {
+      expected.put("email", person.getEmail());
+    }
+    if (person.getUsername() != null) {
+      expected.put("username", person.getUsername());
+    }
+
+    assertThat(person.asJson(), is(expected));
+  }
 }

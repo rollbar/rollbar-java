@@ -15,8 +15,8 @@ public class Client implements JsonSerializable {
   private final Map<String, Object> topLevelData;
 
   private Client(Builder builder) {
-    this.data = unmodifiableMap(builder.data);
-    this.topLevelData = unmodifiableMap(builder.topLevelData);
+    this.data = unmodifiableMap(new HashMap<>(builder.data));
+    this.topLevelData = unmodifiableMap(new HashMap<>(builder.topLevelData));
   }
 
   /**

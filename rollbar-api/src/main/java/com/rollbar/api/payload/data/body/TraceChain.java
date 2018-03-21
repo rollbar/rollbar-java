@@ -3,6 +3,7 @@ package com.rollbar.api.payload.data.body;
 import static java.util.Collections.unmodifiableList;
 
 import com.rollbar.api.json.JsonSerializable;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,7 +15,7 @@ public class TraceChain implements BodyContent, JsonSerializable {
   private final List<Trace> traces;
 
   public TraceChain(Builder builder) {
-    this.traces = builder.traces != null ? unmodifiableList(builder.traces) : null;
+    this.traces = builder.traces != null ? unmodifiableList(new ArrayList<>(builder.traces)) : null;
   }
 
   /**

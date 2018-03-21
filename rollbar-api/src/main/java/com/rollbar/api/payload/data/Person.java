@@ -1,5 +1,6 @@
 package com.rollbar.api.payload.data;
 
+import static java.util.Collections.unmodifiableMap;
 import com.rollbar.api.json.JsonSerializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,10 +16,13 @@ public class Person implements JsonSerializable {
 
   private final String email;
 
+  private final Map<String, Object> metadata;
+
   private Person(Builder builder) {
     this.id = builder.id;
     this.username = builder.username;
     this.email = builder.email;
+    this.metadata = builder.metadata != null ? unmodifiableMap(new HashMap<>(builder.metadata)) : null;
   }
 
   /**
@@ -45,10 +49,21 @@ public class Person implements JsonSerializable {
     return this.email;
   }
 
+  /**
+   * Getter.
+   * @return the metadata.
+   */
+  public Map<String, Object> getMetadata() {
+    return metadata;
+  }
+
   @Override
   public Map<String, Object> asJson() {
     Map<String, Object> values = new HashMap<>();
 
+    if (metadata != null) {
+      values.putAll(metadata);
+    }
     if (id != null) {
       values.put("id", id);
     }
@@ -79,6 +94,9 @@ public class Person implements JsonSerializable {
     if (username != null ? !username.equals(person.username) : person.username != null) {
       return false;
     }
+    if (metadata != null ? !metadata.equals(person.metadata) : person.metadata != null) {
+      return false;
+    }
     return email != null ? email.equals(person.email) : person.email == null;
   }
 
@@ -87,6 +105,7 @@ public class Person implements JsonSerializable {
     int result = id != null ? id.hashCode() : 0;
     result = 31 * result + (username != null ? username.hashCode() : 0);
     result = 31 * result + (email != null ? email.hashCode() : 0);
+    result = 31 * result + (metadata != null ? metadata.hashCode() : 0);
     return result;
   }
 
@@ -96,6 +115,7 @@ public class Person implements JsonSerializable {
         + "id='" + id + '\''
         + ", username='" + username + '\''
         + ", email='" + email + '\''
+        + ", metadata='" + metadata + '\''
         + '}';
   }
 
@@ -109,6 +129,8 @@ public class Person implements JsonSerializable {
     private String username;
 
     private String email;
+
+    private Map<String, Object> metadata;
 
     /**
      * Constructor.
@@ -126,6 +148,7 @@ public class Person implements JsonSerializable {
       this.id = person.id;
       this.username = person.username;
       this.email = person.email;
+      this.metadata = person.metadata;
     }
 
     /**
@@ -158,6 +181,17 @@ public class Person implements JsonSerializable {
      */
     public Builder email(String email) {
       this.email = email;
+      return this;
+    }
+
+    /**
+     * Extra metadata to include with the person.
+     *
+     * @param metadata the additional metadata.
+     * @return the builder instance.
+     */
+    public Builder metadata(Map<String, Object> metadata) {
+      this.metadata = metadata;
       return this;
     }
 

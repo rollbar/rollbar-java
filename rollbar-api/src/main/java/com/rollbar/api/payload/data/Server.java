@@ -1,5 +1,6 @@
 package com.rollbar.api.payload.data;
 
+import static java.util.Collections.unmodifiableMap;
 import com.rollbar.api.json.JsonSerializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,11 +18,14 @@ public class Server implements JsonSerializable {
 
   private final String codeVersion;
 
+  private final Map<String, Object> metadata;
+
   private Server(Builder builder) {
     this.host = builder.host;
     this.root = builder.root;
     this.branch = builder.branch;
     this.codeVersion = builder.codeVersion;
+    this.metadata = builder.metadata != null ? unmodifiableMap(new HashMap<>(builder.metadata)) : null;
   }
 
   /**
@@ -56,10 +60,21 @@ public class Server implements JsonSerializable {
     return codeVersion;
   }
 
+  /**
+   * Getter.
+   * @return the metadata.
+   */
+  public Map<String, Object> getMetadata() {
+    return metadata;
+  }
+
   @Override
   public Map<String, Object> asJson() {
     Map<String, Object> values = new HashMap<>();
 
+    if (metadata != null) {
+      values.putAll(metadata);
+    }
     if (host != null) {
       values.put("host", host);
     }
@@ -96,6 +111,9 @@ public class Server implements JsonSerializable {
     if (branch != null ? !branch.equals(server.branch) : server.branch != null) {
       return false;
     }
+    if (metadata != null ? !metadata.equals(server.metadata) : server.metadata != null) {
+      return false;
+    }
     return codeVersion != null ? codeVersion.equals(server.codeVersion)
         : server.codeVersion == null;
   }
@@ -106,6 +124,7 @@ public class Server implements JsonSerializable {
     result = 31 * result + (root != null ? root.hashCode() : 0);
     result = 31 * result + (branch != null ? branch.hashCode() : 0);
     result = 31 * result + (codeVersion != null ? codeVersion.hashCode() : 0);
+    result = 31 * result + (metadata != null ? metadata.hashCode() : 0);
     return result;
   }
 
@@ -116,6 +135,7 @@ public class Server implements JsonSerializable {
         + ", root='" + root + '\''
         + ", branch='" + branch + '\''
         + ", codeVersion='" + codeVersion + '\''
+        + ", metadata='" + metadata + '\''
         + '}';
   }
 
@@ -131,6 +151,8 @@ public class Server implements JsonSerializable {
     private String branch;
 
     private String codeVersion;
+
+    private Map<String, Object> metadata;
 
     /**
      * Constructor.
@@ -149,6 +171,7 @@ public class Server implements JsonSerializable {
       this.root = server.root;
       this.branch = server.branch;
       this.codeVersion = server.codeVersion;
+      this.metadata = server.metadata;
     }
 
     /**
@@ -195,6 +218,16 @@ public class Server implements JsonSerializable {
       return this;
     }
 
+    /**
+     * Extra metadata to include with the server.
+     *
+     * @param metadata the additional metadata.
+     * @return the builder instance.
+     */
+    public Builder metadata(Map<String, Object> metadata) {
+      this.metadata = metadata;
+      return this;
+    }
 
     /**
      * Builds the {@link Server server}.
