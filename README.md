@@ -38,11 +38,16 @@ To report problems or ask a question please [create an issue](https://github.com
 
 ## Installation
 
+For the most basic Java applications use:
+
 ```groovy
-compile('com.rollbar:rollbar-java:1.0.0')
+compile('com.rollbar:rollbar-java:1.0.1')
 ```
 
-## Upgrading from 0.5.4 or earlier to 1.0.0
+If you require direct access to the underlying API objects include `rollbar-api` as a dependency.
+For Android include `rollbar-android:1.0.1@aar`. For web projects include `rollbar-web`.
+
+## Upgrading from 0.5.4 or earlier to 1.0.0+
 
 This package used to be divided into five modules
 
@@ -158,7 +163,7 @@ dependency to your pom file:
 <dependency>
   <groupId>com.rollbar</groupId>
    <artifactId>rollbar-java</artifactId>
-   <version>1.0.0</version>
+   <version>1.0.1</version>
 </dependency>
 </dependencies>
 ```
@@ -166,7 +171,18 @@ dependency to your pom file:
 ### Gradle
 
 ```groovy
-compile('com.rollbar:rollbar-java:1.0.0')
+compile('com.rollbar:rollbar-java:1.0.1')
+```
+
+### Android
+
+As described above, this library is split into different components that build upon each other.
+There is an Android specific part of the library. Therefore for Android you should use that
+interface which requires you to add this dependency to your build process. For example,
+
+```groovy
+compile('com.rollbar:rollbar-java:1.0.1')
+compile('com.rollbar:rollbar-android:1.0.1@aar')
 ```
 
 ## Usage
