@@ -64,6 +64,8 @@ public class ConfigBuilder {
 
   private boolean handleUncaughtErrors;
 
+  private boolean enabled;
+
   /**
    * Constructor with an access token.
    */
@@ -72,6 +74,7 @@ public class ConfigBuilder {
     this.accessToken = accessToken;
     this.language = "java";
     this.handleUncaughtErrors = true;
+    this.enabled = true;
   }
 
   /**
@@ -98,6 +101,7 @@ public class ConfigBuilder {
     this.uuidGenerator = config.uuidGenerator();
     this.sender = config.sender();
     this.handleUncaughtErrors = config.handleUncaughtErrors();
+    this.enabled = config.isEnabled();
   }
 
   /**
@@ -338,6 +342,16 @@ public class ConfigBuilder {
   }
 
   /**
+   * Flag to indicate that the Rollbar notifier should enabled/disabled.
+   *
+   * @param enabled true to enable the notifier.
+   * @return the builder instance.
+   */
+  public ConfigBuilder enabled(boolean enabled) {
+    this.enabled = enabled;
+    return this;
+  }
+  /**
    * Builds the {@link Config config}.
    *
    * @return the config.
@@ -400,6 +414,8 @@ public class ConfigBuilder {
 
     private final boolean handleUncaughtErrors;
 
+    private final boolean enabled;
+
     ConfigImpl(ConfigBuilder builder) {
       this.accessToken = builder.accessToken;
       this.environment = builder.environment;
@@ -421,6 +437,7 @@ public class ConfigBuilder {
       this.uuidGenerator = builder.uuidGenerator;
       this.sender = builder.sender;
       this.handleUncaughtErrors = builder.handleUncaughtErrors;
+      this.enabled = builder.enabled;
     }
 
     @Override
@@ -521,6 +538,11 @@ public class ConfigBuilder {
     @Override
     public boolean handleUncaughtErrors() {
       return handleUncaughtErrors;
+    }
+
+    @Override
+    public boolean isEnabled() {
+      return enabled;
     }
   }
 }

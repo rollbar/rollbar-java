@@ -158,4 +158,11 @@ public interface Config {
    * @return true to handle otherwise false.
    */
   boolean handleUncaughtErrors();
+
+  /**
+   * Flag to indicate that the Rollbar notifier should be enabled/disabled.
+   *
+   * @return true if enabled otherwise false.
+   */
+  boolean isEnabled();
 }

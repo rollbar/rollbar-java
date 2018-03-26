@@ -606,6 +606,11 @@ public class Rollbar {
     Config config = this.config;
     this.configReadLock.unlock();
 
+    if (!config.isEnabled()) {
+      LOGGER.debug("Notifier disabled.");
+      return;
+    }
+    
     // Pre filter
     if (config.filter() != null && config.filter().preProcess(level, error, custom, description)) {
       LOGGER.debug("Pre-filtered error: {}", error);
