@@ -1,5 +1,6 @@
 package com.rollbar.notifier.config;
 
+import static com.rollbar.notifier.config.ConfigBuilder.withConfig;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
@@ -85,6 +86,7 @@ public class ConfigBuilderTest {
     assertThat(config.notifier(), is(instanceOf(NotifierProvider.class)));
     assertThat(config.sender(), is(instanceOf(SyncSender.class)));
     assertThat(config.handleUncaughtErrors(), is(true));
+    assertThat(config.isEnabled(), is(true));
   }
 
   @Test
@@ -107,6 +109,8 @@ public class ConfigBuilderTest {
         .fingerPrintGenerator(fingerPrintGenerator)
         .uuidGenerator(uuidGenerator)
         .sender(sender)
+        .handleUncaughtErrors(false)
+        .enabled(false)
         .build();
 
     assertThat(config.accessToken(), is(ACCESS_TOKEN));
@@ -127,6 +131,56 @@ public class ConfigBuilderTest {
     assertThat(config.fingerPrintGenerator(), is(fingerPrintGenerator));
     assertThat(config.uuidGenerator(), is(uuidGenerator));
     assertThat(config.sender(), is(sender));
+    assertThat(config.handleUncaughtErrors(), is(false));
+    assertThat(config.isEnabled(), is(false));
+  }
+
+  @Test
+  public void shouldBuildWithConfig() {
+    Config config = ConfigBuilder.withAccessToken(ACCESS_TOKEN)
+            .environment(ENVIRONMENT)
+            .codeVersion(CODE_VERSION)
+            .platform(PLATFORM)
+            .language(LANGUAGE)
+            .framework(FRAMEWORK)
+            .context(context)
+            .request(request)
+            .person(person)
+            .server(server)
+            .client(client)
+            .custom(custom)
+            .notifier(notifier)
+            .filter(filter)
+            .transformer(transformer)
+            .fingerPrintGenerator(fingerPrintGenerator)
+            .uuidGenerator(uuidGenerator)
+            .sender(sender)
+            .handleUncaughtErrors(false)
+            .enabled(false)
+            .build();
+
+    Config copy = withConfig(config).build();
+
+    assertThat(config.accessToken(), is(copy.accessToken()));
+    assertThat(config.environment(), is(copy.environment()));
+    assertThat(config.codeVersion(), is(copy.codeVersion()));
+    assertThat(config.platform(), is(copy.platform()));
+    assertThat(config.language(), is(copy.language()));
+    assertThat(config.framework(), is(copy.framework()));
+    assertThat(config.context(), is(copy.context()));
+    assertThat(config.request(), is(copy.request()));
+    assertThat(config.person(), is(copy.person()));
+    assertThat(config.server(), is(copy.server()));
+    assertThat(config.client(), is(copy.client()));
+    assertThat(config.custom(), is(copy.custom()));
+    assertThat(config.notifier(), is(copy.notifier()));
+    assertThat(config.filter(), is(copy.filter()));
+    assertThat(config.transformer(), is(copy.transformer()));
+    assertThat(config.fingerPrintGenerator(), is(copy.fingerPrintGenerator()));
+    assertThat(config.uuidGenerator(), is(copy.uuidGenerator()));
+    assertThat(config.sender(), is(copy.sender()));
+    assertThat(config.handleUncaughtErrors(), is(copy.handleUncaughtErrors()));
+    assertThat(config.isEnabled(), is(copy.isEnabled()));
   }
 
   @Test

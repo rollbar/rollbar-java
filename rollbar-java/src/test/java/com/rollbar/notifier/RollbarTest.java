@@ -1,6 +1,7 @@
 package com.rollbar.notifier;
 
 import static com.rollbar.notifier.config.ConfigBuilder.withAccessToken;
+import static com.rollbar.notifier.config.ConfigBuilder.withConfig;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.ArgumentMatchers.any;
@@ -203,6 +204,37 @@ public class RollbarTest {
     verify(fingerprintGenerator).from(data);
     verify(filter).postProcess(dataExpected);
     verify(sender).send(expected);
+  }
+
+  @Test
+  public void shouldDoNothingIfDisabled() {
+    Level level = Level.ERROR;
+    Throwable error = new RuntimeException("Something went wrong.");
+    String description = "description";
+    Map<String, Object> custom = new HashMap<>();
+
+    Config config = withConfig(this.config)
+            .enabled(false)
+            .build();
+
+    Rollbar sut = new Rollbar(config, bodyFactory);
+
+    sut.log(error, custom, description, level);
+
+    verify(contextProvider, never()).provide();
+    verify(requestProvider, never()).provide();
+    verify(personProvider, never()).provide();
+    verify(serverProvider, never()).provide();
+    verify(clientProvider, never()).provide();
+    verify(customProvider, never()).provide();
+    verify(notifierProvider, never()).provide();
+    verify(timestampProvider, never()).provide();
+    verify(filter, never()).preProcess(any(), any(), any(), any());
+    verify(transformer, never()).transform(any());
+    verify(uuidGenerator, never()).from(any());
+    verify(fingerprintGenerator, never()).from(any());
+    verify(filter, never()).postProcess(any());
+    verify(sender, never()).send(any());
   }
 
   @Test
