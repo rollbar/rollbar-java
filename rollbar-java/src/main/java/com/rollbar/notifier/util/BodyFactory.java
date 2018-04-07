@@ -1,9 +1,14 @@
 package com.rollbar.notifier.util;
 
-import com.rollbar.api.payload.data.body.*;
-
+import com.rollbar.api.payload.data.body.Body;
+import com.rollbar.api.payload.data.body.ExceptionInfo;
+import com.rollbar.api.payload.data.body.Frame;
+import com.rollbar.api.payload.data.body.Message;
+import com.rollbar.api.payload.data.body.Trace;
+import com.rollbar.api.payload.data.body.TraceChain;
+import com.rollbar.notifier.wrapper.RollbarThrowableWrapper;
+import com.rollbar.notifier.wrapper.ThrowableWrapper;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -17,16 +22,34 @@ public class BodyFactory {
    * @param throwable the throwable.
    * @param description the description.
    * @return the body.
+   *
+   * @deprecated  Replaced by {@link #from(ThrowableWrapper, String)}.
    */
+  @Deprecated
   public Body from(Throwable throwable, String description) {
-    Body.Builder builder = new Body.Builder();
     if (throwable == null) {
+      return new Body.Builder().bodyContent(message(description)).build();
+    }
+    return from(new RollbarThrowableWrapper(throwable), description);
+  }
+
+  /**
+   * Builds the body from the {@link ThrowableWrapper throwableWrapper} and the description
+   * supplied.
+   *
+   * @param throwableWrapper the throwable proxy.
+   * @param description the description.
+   * @return the body.
+   */
+  public Body from(ThrowableWrapper throwableWrapper, String description) {
+    Body.Builder builder = new Body.Builder();
+    if (throwableWrapper == null) {
       return builder.bodyContent(message(description)).build();
     }
-    if (throwable.getCause() == null) {
-      return builder.bodyContent(trace(throwable, description)).build();
+    if (throwableWrapper.getCause() == null) {
+      return builder.bodyContent(trace(throwableWrapper, description)).build();
     }
-    return builder.bodyContent(traceChain(throwable, description)).build();
+    return builder.bodyContent(traceChain(throwableWrapper, description)).build();
   }
 
   private static Message message(String description) {
@@ -35,27 +58,27 @@ public class BodyFactory {
       .build();
   }
 
-  private static Trace trace(Throwable throwable, String description) {
+  private static Trace trace(ThrowableWrapper throwableWrapper, String description) {
     return new Trace.Builder()
-      .frames(frames(throwable))
-      .exception(info(throwable, description))
+      .frames(frames(throwableWrapper))
+      .exception(info(throwableWrapper, description))
       .build();
   }
 
-  private static TraceChain traceChain(Throwable throwable, String description) {
+  private static TraceChain traceChain(ThrowableWrapper throwableWrapper, String description) {
     ArrayList<Trace> chain = new ArrayList<>();
     do {
-      chain.add(trace(throwable, description));
+      chain.add(trace(throwableWrapper, description));
       description = null;
-      throwable = throwable.getCause();
-    } while (throwable != null);
+      throwableWrapper = throwableWrapper.getCause();
+    } while (throwableWrapper != null);
     return new TraceChain.Builder()
         .traces(chain)
         .build();
   }
 
-  private static List<Frame> frames(Throwable throwable) {
-    StackTraceElement[] elements = throwable.getStackTrace();
+  private static List<Frame> frames(ThrowableWrapper throwableWrapper) {
+    StackTraceElement[] elements = throwableWrapper.getStackTrace();
 
     ArrayList<Frame> result = new ArrayList<>();
     for (int i = elements.length - 1; i >= 0; i--) {
@@ -65,9 +88,9 @@ public class BodyFactory {
     return result;
   }
 
-  private static ExceptionInfo info(Throwable throwable, String description) {
-    String className = throwable.getClass().getName();
-    String message = throwable.getMessage();
+  private static ExceptionInfo info(ThrowableWrapper throwableWrapper, String description) {
+    String className = throwableWrapper.getClassName();
+    String message = throwableWrapper.getMessage();
     return new ExceptionInfo.Builder()
         .className(className)
         .message(message)
