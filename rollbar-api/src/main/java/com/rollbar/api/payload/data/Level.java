@@ -49,7 +49,7 @@ public enum Level implements Comparable<Level>, JsonSerializable {
   }
 
   public static Level lookupByName(String name) {
-    return name != null ? nameIndex.get(name) : null;
+    return name != null ? nameIndex.get(name.toLowerCase()) : null;
   }
 
   /**
