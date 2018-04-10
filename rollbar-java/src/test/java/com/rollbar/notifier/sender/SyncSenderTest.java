@@ -1,6 +1,5 @@
 package com.rollbar.notifier.sender;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -32,6 +31,8 @@ import org.mockito.junit.MockitoRule;
 
 public class SyncSenderTest {
 
+  static final String UTF_8 = "UTF-8";
+  
   static final String PAYLOAD_JSON = "simulated_payload_json";
 
   @Rule
@@ -159,8 +160,8 @@ public class SyncSenderTest {
   }
 
   private void verifyHttp() throws Exception {
-    verify(connection).setRequestProperty("Accept-Charset", UTF_8.name());
-    verify(connection).setRequestProperty("Content-Type", "application/json; charset=" + UTF_8.name());
+    verify(connection).setRequestProperty("Accept-Charset", UTF_8);
+    verify(connection).setRequestProperty("Content-Type", "application/json; charset=" + UTF_8);
     verify(connection).setRequestProperty("Accept", "application/json");
     verify(connection).setDoOutput(true);
     verify(connection).setRequestMethod("POST");
