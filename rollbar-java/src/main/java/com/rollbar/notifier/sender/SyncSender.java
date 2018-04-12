@@ -22,7 +22,7 @@ public class SyncSender extends AbstractSender {
 
   public static final String DEFAULT_API_ENDPOINT = "https://api.rollbar.com/api/1/item/";
 
-  private static final String UTF_8 = StandardCharsets.UTF_8.name();
+  private static final String UTF_8 = "UTF-8";
 
   private final URL url;
 
@@ -43,7 +43,7 @@ public class SyncSender extends AbstractSender {
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() throws IOException {
     getConnection().disconnect();
   }
 
@@ -71,9 +71,14 @@ public class SyncSender extends AbstractSender {
   }
 
   private void sendJson(HttpURLConnection connection, byte[] bytes) throws IOException {
-    try (OutputStream out = connection.getOutputStream()) {
+    OutputStream out = null;
+    try {
+      out = connection.getOutputStream();
       out.write(bytes, 0, bytes.length);
     } catch (IOException e) {
+      if(out != null) {
+        out.close();
+      }
       throw e;
     }
   }

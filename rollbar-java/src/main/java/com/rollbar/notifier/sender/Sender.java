@@ -2,12 +2,14 @@ package com.rollbar.notifier.sender;
 
 import com.rollbar.api.payload.Payload;
 import com.rollbar.notifier.sender.listener.SenderListener;
+
+import java.io.Closeable;
 import java.util.List;
 
 /**
  * Sender interface to send the payload to Rollbar.
  */
-public interface Sender extends AutoCloseable {
+public interface Sender extends Closeable {
 
   /**
    * Sends the payload getting notifications on the {@link SenderListener send callback} passed.
