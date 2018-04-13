@@ -1,5 +1,7 @@
 package com.rollbar.notifier.sender.result;
 
+import com.rollbar.notifier.util.ObjectsUtils;
+
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -53,12 +55,12 @@ public class Result {
     }
     Result result = (Result) o;
     return err == result.err
-            && content != null && content.equals(result.content);
+            && ObjectsUtils.equals(content, result.content);
   }
 
   @Override
   public int hashCode() {
-    return Arrays.hashCode(new Object[] {err, content});
+    return ObjectsUtils.hash(err, content);
   }
 
   @Override

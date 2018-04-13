@@ -3,6 +3,8 @@ package com.rollbar.notifier.sender.queue;
 import static java.util.Collections.emptyList;
 
 import com.rollbar.api.payload.Payload;
+import com.rollbar.notifier.util.ObjectsUtils;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -85,13 +87,7 @@ public class DiskQueue extends AbstractQueue<Payload> {
       objectOut = new ObjectOutputStream(new FileOutputStream(file));
       objectOut.writeObject(payload);
     } catch (Exception e) {
-      if(objectOut != null) {
-        try {
-          objectOut.close();
-        } catch (IOException e1) {
-          e1.printStackTrace();
-        }
-      }
+      ObjectsUtils.close(objectOut);
       throw new RuntimeException(e);
     }
   }

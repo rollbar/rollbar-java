@@ -5,6 +5,7 @@ import com.rollbar.notifier.config.Config;
 import com.rollbar.notifier.sender.exception.SenderException;
 import com.rollbar.notifier.sender.listener.SenderListener;
 import com.rollbar.notifier.sender.queue.DiskQueue;
+import com.rollbar.notifier.util.ObjectsUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -39,8 +40,8 @@ public class BufferedSender implements Sender {
   }
 
   BufferedSender(Builder builder, ScheduledExecutorService executorService) {
-    requireNonNull(builder.sender, "The sender can not be null");
-    requireNonNull(builder.queue, "The queue can not be null");
+    ObjectsUtils.requireNonNull(builder.sender, "The sender can not be null");
+    ObjectsUtils.requireNonNull(builder.queue, "The queue can not be null");
 
     this.batchSize = builder.batchSize;
     this.sender = builder.sender;
@@ -51,12 +52,6 @@ public class BufferedSender implements Sender {
     this.executorService =  executorService;
     this.executorService.scheduleWithFixedDelay(new SendTask(batchSize, queue, sender),
         builder.initialFlushDelay, builder.flushFreq, TimeUnit.MILLISECONDS);
-  }
-  
-  private <T> T requireNonNull(T obj, String message) {
-    if (obj == null)
-      throw new NullPointerException(message);
-    return obj;
   }
 
   @Override
