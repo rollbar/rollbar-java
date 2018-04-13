@@ -43,8 +43,8 @@ public class RollbarThrowableWrapper implements ThrowableWrapper {
     this(className, message, stackTraceElements, cause, null);
   }
 
-  private RollbarThrowableWrapper(String className, String message, StackTraceElement[] stackTraceElements,
-      ThrowableWrapper cause, Throwable throwable) {
+  private RollbarThrowableWrapper(String className, String message,
+      StackTraceElement[] stackTraceElements, ThrowableWrapper cause, Throwable throwable) {
     this.className = className;
     this.message = message;
     this.stackTraceElements = stackTraceElements;

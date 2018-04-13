@@ -83,7 +83,7 @@ public class BufferedSender implements Sender {
 
   @Override
   public void close(boolean wait) throws Exception {
-    if(wait) {
+    if (wait) {
       this.flushQueue();
     }
 
@@ -97,7 +97,7 @@ public class BufferedSender implements Sender {
   }
 
   private void flushQueue() {
-    while(queue.size() > 0) {
+    while (queue.size() > 0) {
       this.sendTask.run();
     }
   }

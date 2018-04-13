@@ -1,11 +1,10 @@
 package com.rollbar.notifier.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Arrays;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Helper class that provides Java 7 features.
@@ -26,7 +25,8 @@ public class ObjectsUtils {
    * Checks that the specified object reference is not null.
    *
    * @param object the object reference to check for nullity
-   * @param errorMessage detail message to be used in the event that a NullPointerException is thrown
+   * @param errorMessage detail message to be used in the event that a NullPointerException is
+   *                     thrown
    * @param <T> the type of the reference
    * @return object if not null
    */
