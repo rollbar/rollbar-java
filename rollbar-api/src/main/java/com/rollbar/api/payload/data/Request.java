@@ -1,6 +1,7 @@
 package com.rollbar.api.payload.data;
 
 import static java.util.Collections.unmodifiableMap;
+
 import com.rollbar.api.json.JsonSerializable;
 import java.util.HashMap;
 import java.util.List;
@@ -41,7 +42,8 @@ public class Request implements JsonSerializable {
     this.post = builder.post;
     this.body = builder.body;
     this.userIp = builder.userIp;
-    this.metadata = builder.metadata != null ? unmodifiableMap(new HashMap<>(builder.metadata)) : null;
+    this.metadata = builder.metadata != null
+        ? unmodifiableMap(new HashMap<>(builder.metadata)) : null;
   }
 
   /**

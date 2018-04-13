@@ -3,8 +3,8 @@ package com.rollbar.api.payload.data.body;
 import static java.util.Collections.unmodifiableList;
 
 import com.rollbar.api.json.JsonSerializable;
-import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 

@@ -256,8 +256,8 @@ public class Data implements JsonSerializable {
       values.put("level", level.asJson());
     }
     if (timestamp != null) {
-      double timestamp_secs = timestamp / 1000.0;
-      values.put("timestamp", timestamp_secs);
+      double timestampSecs = timestamp / 1000.0;
+      values.put("timestamp", timestampSecs);
     }
     if (codeVersion != null) {
       values.put("code_version", codeVersion);
@@ -339,7 +339,8 @@ public class Data implements JsonSerializable {
   public int hashCode() {
     return Objects
         .hash(environment, body, level, timestamp, codeVersion, platform, language, framework,
-            context, request, person, server, client, custom, fingerprint, title, uuid, isUncaught, notifier);
+            context, request, person, server, client, custom, fingerprint, title, uuid, isUncaught,
+            notifier);
   }
 
   @Override
