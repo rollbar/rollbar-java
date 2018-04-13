@@ -199,6 +199,18 @@ For actual usage, the easiest way to get started is by looking at the examples:
 
 Check out [this blog post](https://rollbar.com/blog/spring-mvc-exception-handling/) for more information on how to use rollbar-java in your Spring app. 
 
+## How to build it
+To build the notifier there are some system environment variables that are needed.
+
+- ANDROID_HOME. Pointing to the android sdk.
+- JAVA_HOME. Pointing to the java8 sdk.
+- JDK7_HOME. Pointing to the java7 sdk.
+
+
+```
+./gradlew clean build
+```
+ 
 ## Contributing
 
 1. [Fork it](https://github.com/rollbar/rollbar-java)
