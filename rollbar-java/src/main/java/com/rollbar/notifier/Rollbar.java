@@ -599,6 +599,9 @@ public class Rollbar {
     return Level.ERROR;
   }
 
+  public void close(boolean wait) throws Exception {
+    this.config.sender().close(wait);
+  }
 
   private void process(Throwable error, Map<String, Object> custom, String description,
       Level level, boolean isUncaught) {
