@@ -30,4 +30,13 @@ public interface Sender extends AutoCloseable {
    * @return the list of listeners registered.
    */
   List<SenderListener> getListeners();
+
+  /**
+   * Closes the sender.
+   *
+   * @param wait flag to indicate if it should wait before closing.
+   *
+   * @throws Exception the exception.
+   */
+  void close(boolean wait) throws Exception;
 }
