@@ -47,6 +47,12 @@ public class Application {
     LOGGER.info("Executing application");
     app.execute();
 
+    try {
+      app.rollbar.close(true);
+    } catch (Exception e) {
+      LOGGER.error("Error while closing the notifier", e);
+    }
+
     LOGGER.info("Finished application");
   }
 
