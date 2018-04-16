@@ -77,8 +77,9 @@ public class SyncSender extends AbstractSender {
       out = connection.getOutputStream();
       out.write(bytes, 0, bytes.length);
     } catch (IOException e) {
-      ObjectsUtils.close(out);
       throw e;
+    } finally {
+      ObjectsUtils.close(out);
     }
   }
 

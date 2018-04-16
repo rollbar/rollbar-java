@@ -87,8 +87,9 @@ public class DiskQueue extends AbstractQueue<Payload> {
       objectOut = new ObjectOutputStream(new FileOutputStream(file));
       objectOut.writeObject(payload);
     } catch (Exception e) {
-      ObjectsUtils.close(objectOut);
       throw new RuntimeException(e);
+    } finally {
+      ObjectsUtils.close(objectOut);
     }
   }
 
@@ -145,14 +146,9 @@ public class DiskQueue extends AbstractQueue<Payload> {
       }
       return (Payload) o;
     } catch (Exception e) {
-      if(objectInput != null) {
-        try {
-          objectInput.close();
-        } catch (IOException e1) {
-          e1.printStackTrace();
-        }
-      }
       throw new RuntimeException(e);
+    } finally {
+      ObjectsUtils.close(objectInput);
     }
   }
 
