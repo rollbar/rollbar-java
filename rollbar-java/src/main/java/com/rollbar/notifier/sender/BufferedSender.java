@@ -1,15 +1,12 @@
 package com.rollbar.notifier.sender;
 
 import com.rollbar.api.payload.Payload;
-import com.rollbar.notifier.config.Config;
 import com.rollbar.notifier.sender.exception.SenderException;
 import com.rollbar.notifier.sender.listener.SenderListener;
-import com.rollbar.notifier.sender.queue.DiskQueue;
 import com.rollbar.notifier.util.ObjectsUtils;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;

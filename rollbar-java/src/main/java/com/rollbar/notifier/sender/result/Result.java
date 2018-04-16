@@ -2,9 +2,6 @@ package com.rollbar.notifier.sender.result;
 
 import com.rollbar.notifier.util.ObjectsUtils;
 
-import java.util.Arrays;
-import java.util.Objects;
-
 /**
  * Represents the result returned by Rollbar.
  */
