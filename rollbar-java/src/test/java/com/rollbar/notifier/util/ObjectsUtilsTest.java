@@ -1,6 +1,5 @@
 package com.rollbar.notifier.util;
 
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -17,12 +16,7 @@ public class ObjectsUtilsTest {
   private static String ERROR_DESCRIPTION = "Error description";
 	
   @Rule
-  public ExpectedException expectedException;
-	
-  @Before
-  public void setUp() {
-    expectedException = ExpectedException.none();
-  }
+  public ExpectedException expectedException = ExpectedException.none();
 	
   @Test
   public void testEquals() {
@@ -39,7 +33,7 @@ public class ObjectsUtilsTest {
   public void testHash() {
     int result = ObjectsUtils.hash((Object[])null);
 	int expected = 0;
-	assertThat(result, is(expected));
+    assertThat(result, is(expected));
 	result = ObjectsUtils.hash("one", "two", "three");
 	expected = Arrays.hashCode(HASH_VALUES);
 	assertThat(result, is(expected));
