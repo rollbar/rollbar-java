@@ -11,6 +11,7 @@ buildscript {
 repositories {
     google()
     mavenCentral()
+    jcenter()
 }
 
 apply plugin: 'com.android.library'
@@ -26,5 +27,5 @@ android {
 }
 
 dependencies {
-    implementation project(':rollbar-java')
+    api project(':rollbar-java')
 }

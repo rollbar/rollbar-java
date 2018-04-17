@@ -34,7 +34,7 @@ subprojects {
         compileJava {
             sourceCompatibility = JavaVersion.VERSION_1_7
             targetCompatibility = JavaVersion.VERSION_1_7
-            options.bootClasspath = "${System.env.JDK7_HOME}/jre/lib/rt.jar"
+            options.bootstrapClasspath = files("${System.env.JDK7_HOME}/jre/lib/rt.jar")
         }
 
         compileTestJava {
