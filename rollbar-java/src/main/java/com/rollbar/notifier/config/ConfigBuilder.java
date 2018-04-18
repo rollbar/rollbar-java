@@ -11,6 +11,7 @@ import com.rollbar.notifier.fingerprint.FingerprintGenerator;
 import com.rollbar.notifier.provider.Provider;
 import com.rollbar.notifier.provider.notifier.NotifierProvider;
 import com.rollbar.notifier.provider.timestamp.TimestampProvider;
+import com.rollbar.notifier.sender.BufferedSender;
 import com.rollbar.notifier.sender.Sender;
 import com.rollbar.notifier.sender.SyncSender;
 import com.rollbar.notifier.transformer.Transformer;
@@ -361,9 +362,12 @@ public class ConfigBuilder {
       this.notifier = new NotifierProvider();
     }
     if (this.sender == null) {
-      this.sender = new SyncSender.Builder()
-          .accessToken(accessToken)
-          .build();
+      this.sender = new BufferedSender.Builder()
+          .sender(
+            new SyncSender.Builder()
+            .accessToken(accessToken)
+            .build()
+      ).build();
     }
     if (this.timestamp == null) {
       this.timestamp = new TimestampProvider();

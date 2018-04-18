@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +48,7 @@ public class Application {
     LOGGER.info("Executing application");
     app.execute();
 
+    LOGGER.info("Waiting to flush the buffered queue");
     try {
       app.rollbar.close(true);
     } catch (Exception e) {
