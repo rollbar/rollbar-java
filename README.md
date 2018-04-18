@@ -186,6 +186,15 @@ compile('com.rollbar:rollbar-java:1.0.1')
 compile('com.rollbar:rollbar-android:1.0.1@aar')
 ```
 
+## How payloads are sent
+
+The actual notifier configuration builds a notifier that uses a BufferedSender to send the items
+to Rollbar. That sender is built using an unbound memory queue and a scheduled thread to send
+the events from the queue. 
+The queue as well as the frequency of the scheduled thread can be customized
+when building the buffered sender and it can be replaced by passing a custom configuration when 
+creating the notifier or initializing it.
+ 
 ## Usage
 
 For actual usage, the easiest way to get started is by looking at the examples:
@@ -201,6 +210,18 @@ For actual usage, the easiest way to get started is by looking at the examples:
 
 Check out [this blog post](https://rollbar.com/blog/spring-mvc-exception-handling/) for more information on how to use rollbar-java in your Spring app. 
 
+## How to build it
+To build the notifier there are some system environment variables that are needed.
+
+- ANDROID_HOME. Pointing to the android sdk.
+- JAVA_HOME. Pointing to the java8 sdk.
+- JDK7_HOME. Pointing to the java7 sdk.
+
+
+```
+./gradlew clean build
+```
+ 
 ## Contributing
 
 1. [Fork it](https://github.com/rollbar/rollbar-java)

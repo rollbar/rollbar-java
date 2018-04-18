@@ -32,6 +32,8 @@ public class BufferedSender implements Sender {
 
   private ScheduledExecutorService executorService;
 
+  private SendTask sendTask;
+
   BufferedSender(Builder builder) {
     this(builder, Executors.newSingleThreadScheduledExecutor(new SenderThreadFactory()));
   }
@@ -44,10 +46,12 @@ public class BufferedSender implements Sender {
     this.sender = builder.sender;
     this.queue = builder.queue;
 
+    this.sendTask = new SendTask(batchSize, queue, sender);
+
     // Schedule executor service to send events in background with a thread factory that sets the
     // thread as daemons to allow the jvm exit.
     this.executorService =  executorService;
-    this.executorService.scheduleWithFixedDelay(new SendTask(batchSize, queue, sender),
+    this.executorService.scheduleWithFixedDelay(this.sendTask,
         builder.initialFlushDelay, builder.flushFreq, TimeUnit.MILLISECONDS);
   }
 
@@ -77,9 +81,24 @@ public class BufferedSender implements Sender {
     this.sender.close();
   }
 
+  @Override
+  public void close(boolean wait) throws Exception {
+    if(wait) {
+      this.flushQueue();
+    }
+
+    this.close();
+  }
+
   private void notifyError(Payload payload, Exception e) {
     for (SenderListener listener : sender.getListeners()) {
       listener.onError(payload, e);
+    }
+  }
+
+  private void flushQueue() {
+    while(queue.size() > 0) {
+      this.sendTask.run();
     }
   }
 

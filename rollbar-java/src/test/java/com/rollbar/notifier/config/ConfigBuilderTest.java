@@ -14,6 +14,7 @@ import com.rollbar.notifier.filter.Filter;
 import com.rollbar.notifier.fingerprint.FingerprintGenerator;
 import com.rollbar.notifier.provider.Provider;
 import com.rollbar.notifier.provider.notifier.NotifierProvider;
+import com.rollbar.notifier.sender.BufferedSender;
 import com.rollbar.notifier.sender.Sender;
 import com.rollbar.notifier.sender.SyncSender;
 import com.rollbar.notifier.transformer.Transformer;
@@ -84,7 +85,7 @@ public class ConfigBuilderTest {
 
     assertThat(config.language(), is("java"));
     assertThat(config.notifier(), is(instanceOf(NotifierProvider.class)));
-    assertThat(config.sender(), is(instanceOf(SyncSender.class)));
+    assertThat(config.sender(), is(instanceOf(BufferedSender.class)));
     assertThat(config.handleUncaughtErrors(), is(true));
     assertThat(config.isEnabled(), is(true));
   }

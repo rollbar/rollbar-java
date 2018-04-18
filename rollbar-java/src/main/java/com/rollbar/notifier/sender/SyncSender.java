@@ -13,7 +13,6 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 
 /**
  * Synchronous implementation of the {@link Sender sender}.
@@ -22,7 +21,7 @@ public class SyncSender extends AbstractSender {
 
   public static final String DEFAULT_API_ENDPOINT = "https://api.rollbar.com/api/1/item/";
 
-  private static final String UTF_8 = StandardCharsets.UTF_8.name();
+  private static final String UTF_8 = "UTF-8";
 
   private final URL url;
 
