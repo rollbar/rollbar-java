@@ -185,6 +185,15 @@ compile('com.rollbar:rollbar-java:1.0.1')
 compile('com.rollbar:rollbar-android:1.0.1@aar')
 ```
 
+## How payloads are sent
+
+The actual notifier configuration builds a notifier that uses a BufferedSender to send the items
+to Rollbar. That sender is built using an unbound memory queue and a scheduled thread to send
+the events from the queue. 
+The queue as well as the frequency of the scheduled thread can be customized
+when building the buffered sender and it can be replaced by passing a custom configuration when 
+creating the notifier or initializing it.
+ 
 ## Usage
 
 For actual usage, the easiest way to get started is by looking at the examples:
