@@ -50,10 +50,11 @@ public class Application {
 
     LOGGER.info("Waiting to flush the buffered queue");
     try {
-      Thread.sleep(TimeUnit.SECONDS.toMillis(6));
-    } catch (InterruptedException e) {
-      LOGGER.error("Error while waiting to flush the queue", e);
+      app.rollbar.close(true);
+    } catch (Exception e) {
+      LOGGER.error("Error while closing the notifier", e);
     }
+
     LOGGER.info("Finished application");
   }
 

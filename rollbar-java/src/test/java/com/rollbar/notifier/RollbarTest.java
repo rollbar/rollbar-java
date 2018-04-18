@@ -516,6 +516,17 @@ public class RollbarTest {
     }
   }
 
+  @Test
+  public void shouldClose() throws Exception {
+    Rollbar sut = new Rollbar(config, bodyFactory);
+
+    sut.close(true);
+    verify(sender).close(true);
+
+    sut.close(false);
+    verify(sender).close(false);
+  }
+
   private void verifyCallsBasedOnLevels(Rollbar sut, Level level) {
     Payload.Builder payloadBuilder = new Payload.Builder().accessToken(ACCESS_TOKEN);
     Data.Builder dataBuilder = new Data.Builder()

@@ -60,6 +60,11 @@ public abstract class AbstractSender implements Sender {
 
   }
 
+  @Override
+  public void close(boolean wait) throws Exception {
+    this.close();
+  }
+
   private void notifyResult(Payload payload, Response response) {
     thisLogger.debug("Payload sent uuid: {}", response.getResult().getContent());
     for (SenderListener listener : listeners) {

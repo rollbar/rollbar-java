@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -17,6 +18,7 @@ import com.rollbar.notifier.sender.BufferedSender.SenderThreadFactory;
 import com.rollbar.notifier.sender.exception.SenderException;
 import com.rollbar.notifier.sender.listener.SenderListener;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import org.junit.Before;
 import org.junit.Rule;
@@ -99,6 +101,54 @@ public class BufferedSenderTest {
     sut.close();
 
     verify(executorService).shutdown();
+    verify(sender).close();
+  }
+
+  @Test
+  public void shouldCloseWaiting() throws Exception {
+    Payload payload1 = mock(Payload.class);
+    Payload payload2 = mock(Payload.class);
+
+    Queue<Payload> queue = new ConcurrentLinkedQueue<>();
+    queue.addAll(asList(payload1, payload2));
+
+    sut = new BufferedSender(new BufferedSender.Builder()
+        .queue(queue)
+        .sender(sender),
+        executorService);
+
+    sut.close(true);
+
+    assertThat(queue.size(), is(0));
+
+    verify(executorService).shutdown();
+
+    verify(sender).send(payload1);
+    verify(sender).send(payload2);
+    verify(sender).close();
+  }
+
+  @Test
+  public void shouldCloseWithoutWaiting() throws Exception {
+    Payload payload1 = mock(Payload.class);
+    Payload payload2 = mock(Payload.class);
+
+    Queue<Payload> queue = new ConcurrentLinkedQueue<>();
+    queue.addAll(asList(payload1, payload2));
+
+    sut = new BufferedSender(new BufferedSender.Builder()
+        .queue(queue)
+        .sender(sender),
+        executorService);
+
+    sut.close(false);
+
+    assertThat(queue.size(), is(2));
+
+    verify(executorService).shutdown();
+
+    verify(sender, never()).send(payload1);
+    verify(sender, never()).send(payload2);
     verify(sender).close();
   }
 
