@@ -3,12 +3,16 @@ package com.rollbar.notifier.util;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.mockito.Mockito.verify;
 
 import com.rollbar.api.payload.data.body.Body;
 import com.rollbar.api.payload.data.body.ExceptionInfo;
 import com.rollbar.api.payload.data.body.Frame;
+import com.rollbar.api.payload.data.body.Message;
 import com.rollbar.api.payload.data.body.Trace;
 import com.rollbar.api.payload.data.body.TraceChain;
+import com.rollbar.notifier.wrapper.RollbarThrowableWrapper;
+import com.rollbar.notifier.wrapper.ThrowableWrapper;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,6 +35,19 @@ public class BodyFactoryTest {
   }
 
   @Test
+  public void shouldBuildBodyWithDescription() {
+    Body body1 = sut.from((Throwable) null, DESCRIPTION);
+
+    assertThat(body1.getContents(), is(instanceOf(Message.class)));
+    assertThat(((Message) body1.getContents()).getBody(), is(DESCRIPTION));
+
+    Body body2 = sut.from((ThrowableWrapper) null, DESCRIPTION);
+
+    assertThat(body2.getContents(), is(instanceOf(Message.class)));
+    assertThat(((Message) body2.getContents()).getBody(), is(DESCRIPTION));
+  }
+
+  @Test
   public void shouldBuildBodyWithTraceAsContent() {
     Throwable throwable = buildSimpleThrowable();
     Body body = sut.from(throwable, DESCRIPTION);
@@ -40,10 +57,32 @@ public class BodyFactoryTest {
   }
 
   @Test
-  public void shouldBuildTBodyWithraceChainAsContent() {
+  public void shouldBuildBodyWithTraceChainAsContent() {
     Throwable throwable = buildNestedThrowable();
 
     Body body = sut.from(throwable, DESCRIPTION);
+
+    assertThat(body.getContents(), is(instanceOf(TraceChain.class)));
+    verifyTraceChain((TraceChain) body.getContents(), throwable);
+  }
+
+  @Test
+  public void shouldBuildBodyWithTraceAsContentFromThrowableWrapper() {
+    Throwable throwable = buildSimpleThrowable();
+    ThrowableWrapper throwableWrapper = new RollbarThrowableWrapper(throwable);
+
+    Body body = sut.from(throwableWrapper, DESCRIPTION);
+
+    assertThat(body.getContents(), is(instanceOf(Trace.class)));
+    verifyTrace((Trace) body.getContents(), throwable, DESCRIPTION);
+  }
+
+  @Test
+  public void shouldBuildBodyWithTraceChainAsContentFromThrowableWrapper() {
+    Throwable throwable = buildNestedThrowable();
+    ThrowableWrapper throwableWrapper = new RollbarThrowableWrapper(throwable);
+
+    Body body = sut.from(throwableWrapper, DESCRIPTION);
 
     assertThat(body.getContents(), is(instanceOf(TraceChain.class)));
     verifyTraceChain((TraceChain) body.getContents(), throwable);

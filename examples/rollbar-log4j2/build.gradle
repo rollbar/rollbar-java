@@ -1,0 +1,14 @@
+apply plugin: 'application'
+
+jar {
+    baseName = "rollbar-log4j2-example"
+    version =  '1.0.0'
+}
+
+mainClassName = "com.rollbar.log4j2.example.Application"
+
+dependencies {
+    compile project(":rollbar-log4j2")
+
+    compile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.11.0'
+}

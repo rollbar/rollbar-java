@@ -4,12 +4,18 @@ import static com.rollbar.notifier.config.ConfigBuilder.withAccessToken;
 import static com.rollbar.notifier.config.ConfigBuilder.withConfig;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.Is.isA;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyObject;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 
 import com.rollbar.api.payload.Payload;
 import com.rollbar.api.payload.data.Client;
@@ -28,14 +34,18 @@ import com.rollbar.notifier.sender.Sender;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.util.BodyFactory;
 import com.rollbar.notifier.uuid.UuidGenerator;
+import com.rollbar.notifier.wrapper.RollbarThrowableWrapper;
+import com.rollbar.notifier.wrapper.ThrowableWrapper;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import org.mockito.stubbing.Answer;
 
 public class RollbarTest {
 
@@ -126,6 +136,8 @@ public class RollbarTest {
   public void shouldProcessAllInformation() {
     Level level = Level.ERROR;
     Throwable error = new RuntimeException("Something went wrong.");
+    ThrowableWrapper errorWrapper = new RollbarThrowableWrapper(error);
+
     Body body = mock(Body.class);
 
     String context = "context";
@@ -163,7 +175,7 @@ public class RollbarTest {
         .level(level)
         .build();
 
-    when(bodyFactory.from(eq(error), any())).thenReturn(body);
+    when(bodyFactory.from(eq(errorWrapper), anyString())).thenReturn(body);
     when(contextProvider.provide()).thenReturn(context);
     when(personProvider.provide()).thenReturn(person);
     when(serverProvider.provide()).thenReturn(server);
@@ -326,7 +338,8 @@ public class RollbarTest {
     Long timestamp = 1L;
 
     when(timestampProvider.provide()).thenReturn(timestamp);
-    when(bodyFactory.from(any(), any())).thenReturn(body);
+    when(bodyFactory.from(any(ThrowableWrapper.class), eq(description))).thenReturn(body);
+    when(bodyFactory.from((ThrowableWrapper) null, description)).thenReturn(body);
 
     Rollbar sut = new Rollbar(config, bodyFactory);
 
@@ -413,17 +426,18 @@ public class RollbarTest {
         .language(LANGUAGE);
 
     Body bodyOnlyError = mock(Body.class);
-    Body bodyOnlyDescription = mock(Body.class);
-    Body body = mock(Body.class);
+    final Body bodyOnlyDescription = mock(Body.class);
+    final Body body = mock(Body.class);
 
     Throwable error = new RuntimeException("The error");
+    ThrowableWrapper errorWrapper = new RollbarThrowableWrapper(error);
     String description = "description";
     Map<String, Object> custom = new HashMap<>();
     custom.put("param1", "value1");
 
-    when(bodyFactory.from(error, null)).thenReturn(bodyOnlyError);
-    when(bodyFactory.from(null, description)).thenReturn(bodyOnlyDescription);
-    when(bodyFactory.from(error, description)).thenReturn(body);
+    when(bodyFactory.from(errorWrapper, null)).thenReturn(bodyOnlyError);
+    when(bodyFactory.from((ThrowableWrapper) null, description)).thenReturn(bodyOnlyDescription);
+    when(bodyFactory.from(errorWrapper, description)).thenReturn(body);
 
     sut.log(error);
     verify(sender).send(payloadBuilder.data(dataBuilder
@@ -537,13 +551,15 @@ public class RollbarTest {
     Body body = mock(Body.class);
 
     Throwable error = new RuntimeException("The error");
+    ThrowableWrapper errorWrapper = new RollbarThrowableWrapper(error);
+
     String description = "description";
     Map<String, Object> custom = new HashMap<>();
     custom.put("param1", "value1");
 
-    when(bodyFactory.from(error, null)).thenReturn(bodyOnlyError);
-    when(bodyFactory.from(null, description)).thenReturn(bodyOnlyDescription);
-    when(bodyFactory.from(error, description)).thenReturn(body);
+    when(bodyFactory.from(errorWrapper, null)).thenReturn(bodyOnlyError);
+    when(bodyFactory.from((ThrowableWrapper) null, description)).thenReturn(bodyOnlyDescription);
+    when(bodyFactory.from(errorWrapper, description)).thenReturn(body);
 
     switch (level) {
       case CRITICAL:

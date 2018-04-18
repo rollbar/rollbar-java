@@ -8,6 +8,8 @@ import com.rollbar.notifier.config.ConfigBuilder;
 import com.rollbar.notifier.config.ConfigProvider;
 import com.rollbar.notifier.uncaughtexception.RollbarUncaughtExceptionHandler;
 import com.rollbar.notifier.util.BodyFactory;
+import com.rollbar.notifier.wrapper.RollbarThrowableWrapper;
+import com.rollbar.notifier.wrapper.ThrowableWrapper;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.HashMap;
 import java.util.Map;
@@ -575,6 +577,30 @@ public class Rollbar {
    */
   public void log(Throwable error, Map<String, Object> custom, String description, Level level,
       boolean isUncaught) {
+    RollbarThrowableWrapper rollbarThrowableWrapper = null;
+
+    if (error != null) {
+      rollbarThrowableWrapper = new RollbarThrowableWrapper(error);
+
+    }
+    this.log(rollbarThrowableWrapper, custom, description, level, isUncaught);
+  }
+
+  /**
+   * Record an error or message with extra data at the level specified. At least ene of `error` or
+   * `description` must be non-null. If error is null, `description` will be sent as a message. If
+   * error is non-null, description will be sent as the description of the error. Custom data will
+   * be attached to message if the error is null. Custom data will extend whatever {@link
+   * Config#custom} returns.
+   *
+   * @param error the error (if any).
+   * @param custom the custom data (if any).
+   * @param description the description of the error, or the message to send.
+   * @param level the level to send it at.
+   * @param isUncaught whether or not this data comes from an uncaught exception.
+   */
+  public void log(ThrowableWrapper error, Map<String, Object> custom, String description,
+                  Level level, boolean isUncaught) {
     try {
       process(error, custom, description, level, isUncaught);
     } catch (Exception e) {
@@ -603,7 +629,7 @@ public class Rollbar {
     this.config.sender().close(wait);
   }
 
-  private void process(Throwable error, Map<String, Object> custom, String description,
+  private void process(ThrowableWrapper error, Map<String, Object> custom, String description,
       Level level, boolean isUncaught) {
     this.configReadLock.lock();
     Config config = this.config;
@@ -615,7 +641,8 @@ public class Rollbar {
     }
     
     // Pre filter
-    if (config.filter() != null && config.filter().preProcess(level, error, custom, description)) {
+    if (config.filter() != null && config.filter().preProcess(level, error.getThrowable(), custom,
+        description)) {
       LOGGER.debug("Pre-filtered error: {}", error);
       return;
     }
@@ -665,7 +692,7 @@ public class Rollbar {
     sendPayload(config, payload);
   }
 
-  private Data buildData(Config config, Throwable error, Map<String, Object> custom,
+  private Data buildData(Config config, ThrowableWrapper error, Map<String, Object> custom,
       String description, Level level, boolean isUncaught) {
 
     Data.Builder dataBuilder = new Data.Builder()
@@ -674,7 +701,8 @@ public class Rollbar {
         .platform(config.platform())
         .language(config.language())
         .framework(config.framework())
-        .level(level != null ? level : level(error))
+        .level(level != null ? level : error != null ? level(error.getThrowable())
+            : level(null))
         .body(bodyFactory.from(error, description))
         .isUncaught(isUncaught);
 
