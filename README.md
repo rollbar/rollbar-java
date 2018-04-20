@@ -17,6 +17,7 @@ There are currently four libraries in this repository:
 * `rollbar-web`
 * `rollbar-android`
 * `rollbar-log4j2`
+* `rollbar-logback`
 
 `rollbar-api` is a set of data objects representing structures that make up the payload
 the backend API understands.
@@ -204,6 +205,7 @@ For actual usage, the easiest way to get started is by looking at the examples:
 - [rollbar-android](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-android)
 - [rollbar-scala](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-scala)
 - [rollbar-log4j2](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-log4j2)
+- [rollbar-logback](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-logback)
 
 
 ### Spring 
