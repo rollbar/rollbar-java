@@ -1,7 +1,7 @@
 package com.rollbar.notifier.sender.exception;
 
 import com.rollbar.notifier.sender.result.Response;
-import java.util.Objects;
+import com.rollbar.notifier.util.ObjectsUtils;
 
 /**
  * Represents an error return by the Rollbar API.
@@ -28,11 +28,11 @@ public class ApiException extends RuntimeException {
       return false;
     }
     ApiException that = (ApiException) o;
-    return Objects.equals(response, that.response);
+    return ObjectsUtils.equals(response, that.response);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(response);
+    return ObjectsUtils.hash(response);
   }
 }

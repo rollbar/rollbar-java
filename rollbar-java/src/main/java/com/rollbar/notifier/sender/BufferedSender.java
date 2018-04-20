@@ -1,12 +1,12 @@
 package com.rollbar.notifier.sender;
 
 import com.rollbar.api.payload.Payload;
-import com.rollbar.notifier.config.Config;
 import com.rollbar.notifier.sender.exception.SenderException;
 import com.rollbar.notifier.sender.listener.SenderListener;
-import com.rollbar.notifier.sender.queue.DiskQueue;
+import com.rollbar.notifier.util.ObjectsUtils;
+
+import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
@@ -39,8 +39,8 @@ public class BufferedSender implements Sender {
   }
 
   BufferedSender(Builder builder, ScheduledExecutorService executorService) {
-    Objects.requireNonNull(builder.sender, "The sender can not be null");
-    Objects.requireNonNull(builder.queue, "The queue can not be null");
+    ObjectsUtils.requireNonNull(builder.sender, "The sender can not be null");
+    ObjectsUtils.requireNonNull(builder.queue, "The queue can not be null");
 
     this.batchSize = builder.batchSize;
     this.sender = builder.sender;
@@ -76,7 +76,7 @@ public class BufferedSender implements Sender {
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() throws IOException {
     this.executorService.shutdown();
     this.sender.close();
   }

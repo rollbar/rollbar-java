@@ -5,6 +5,8 @@ import com.rollbar.notifier.sender.json.JsonSerializer;
 import com.rollbar.notifier.sender.json.JsonSerializerImpl;
 import com.rollbar.notifier.sender.result.Response;
 import com.rollbar.notifier.sender.result.Result;
+import com.rollbar.notifier.util.ObjectsUtils;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,7 +44,7 @@ public class SyncSender extends AbstractSender {
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() throws IOException {
     getConnection().disconnect();
   }
 
@@ -70,10 +72,14 @@ public class SyncSender extends AbstractSender {
   }
 
   private void sendJson(HttpURLConnection connection, byte[] bytes) throws IOException {
-    try (OutputStream out = connection.getOutputStream()) {
+    OutputStream out = null;
+    try {
+      out = connection.getOutputStream();
       out.write(bytes, 0, bytes.length);
     } catch (IOException e) {
       throw e;
+    } finally {
+      ObjectsUtils.close(out);
     }
   }
 

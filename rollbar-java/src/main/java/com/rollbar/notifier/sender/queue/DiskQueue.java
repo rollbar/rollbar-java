@@ -3,9 +3,12 @@ package com.rollbar.notifier.sender.queue;
 import static java.util.Collections.emptyList;
 
 import com.rollbar.api.payload.Payload;
+import com.rollbar.notifier.util.ObjectsUtils;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.AbstractQueue;
@@ -78,12 +81,15 @@ public class DiskQueue extends AbstractQueue<Payload> {
   }
 
   private void writeToFile(Payload payload) {
+    ObjectOutputStream objectOut = null;
     File file = new File(queueFolder.getAbsolutePath(), createFilename(payload));
-    try (FileOutputStream fileOut = new FileOutputStream(file);
-        ObjectOutputStream objectOut = new ObjectOutputStream(fileOut)) {
+    try {
+      objectOut = new ObjectOutputStream(new FileOutputStream(file));
       objectOut.writeObject(payload);
     } catch (Exception e) {
       throw new RuntimeException(e);
+    } finally {
+      ObjectsUtils.close(objectOut);
     }
   }
 
@@ -129,8 +135,9 @@ public class DiskQueue extends AbstractQueue<Payload> {
   }
 
   private static Payload read(File file, boolean remove) {
-    try (FileInputStream fileInput = new FileInputStream(file);
-        ObjectInputStream objectInput = new ObjectInputStream(fileInput)) {
+    ObjectInputStream objectInput = null;
+    try {
+      objectInput = new ObjectInputStream(new FileInputStream(file));
       Object o = objectInput.readObject();
       if (remove) {
         if (!file.delete()) {
@@ -140,6 +147,8 @@ public class DiskQueue extends AbstractQueue<Payload> {
       return (Payload) o;
     } catch (Exception e) {
       throw new RuntimeException(e);
+    } finally {
+      ObjectsUtils.close(objectInput);
     }
   }
 

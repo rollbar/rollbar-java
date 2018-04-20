@@ -1,6 +1,6 @@
 package com.rollbar.notifier.sender.result;
 
-import java.util.Objects;
+import com.rollbar.notifier.util.ObjectsUtils;
 
 /**
  * Represents the Rollbar response.
@@ -42,12 +42,12 @@ public class Response {
     }
     Response response = (Response) o;
     return status == response.status
-        && Objects.equals(result, response.result);
+            && ObjectsUtils.equals(result, response.result);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(status, result);
+    return ObjectsUtils.hash(status, result);
   }
 
   @Override
