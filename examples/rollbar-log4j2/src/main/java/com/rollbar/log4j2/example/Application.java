@@ -16,6 +16,10 @@ public class Application {
 
   private static final Logger LOGGER = LoggerFactory.getLogger("com.example.rollbar.log4j2");
 
+  /**
+   * Main method.
+   * @param args the args.
+   */
   public static void main(String[] args) {
     LOGGER.info("Starting the application! Current time: {}", System.currentTimeMillis());
 
