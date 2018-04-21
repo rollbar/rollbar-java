@@ -150,7 +150,7 @@ subprojects {
 
                 task androidJavadocs(type: Javadoc) {
                     source = android.sourceSets.main.java.srcDirs
-                    classpath += configurations.compile
+                    classpath += configurations.releaseCompileClasspath
                     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
                 }
 
