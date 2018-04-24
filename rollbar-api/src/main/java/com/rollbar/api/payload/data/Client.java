@@ -57,7 +57,8 @@ public class Client implements JsonSerializable {
     if (data != null ? !data.equals(client.data) : client.data != null) {
       return false;
     }
-    return topLevelData != null ? topLevelData.equals(client.topLevelData) : client.topLevelData == null;
+    return topLevelData != null
+        ? topLevelData.equals(client.topLevelData) : client.topLevelData == null;
   }
 
   @Override
@@ -145,7 +146,7 @@ public class Client implements JsonSerializable {
     }
 
     /**
-     * Add top level client information
+     * Add top level client information.
      *
      * @param property the property.
      * @param value the value of the property.

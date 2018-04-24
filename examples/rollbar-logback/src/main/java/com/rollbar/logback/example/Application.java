@@ -9,10 +9,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+/**
+ * Application example using rollbar-logback notifier.
+ */
 public class Application {
 
   private static final Logger LOGGER = LoggerFactory.getLogger("com.example.rollbar.logback");
 
+  /**
+   * Main method.
+   * @param args the args.
+   */
   public static void main(String[] args) {
     LOGGER.info("Starting the application! Current time: {}", System.currentTimeMillis());
 

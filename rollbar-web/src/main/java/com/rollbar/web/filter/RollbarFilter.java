@@ -57,7 +57,7 @@ public class RollbarFilter implements Filter {
         .request(requestProvider)
         .person(new PersonProvider());
 
-    if(configProvider != null) {
+    if (configProvider != null) {
       config = configProvider.provide(configBuilder);
     } else {
       config = configBuilder.build();
@@ -93,18 +93,18 @@ public class RollbarFilter implements Filter {
   private ConfigProvider getConfigProvider(String configProviderClassName) {
     ConfigProvider configProvider = null;
 
-    if(configProviderClassName != null && !"".equals(configProviderClassName)) {
+    if (configProviderClassName != null && !"".equals(configProviderClassName)) {
       Class userConfigProviderClass = null;
       try {
         userConfigProviderClass = Class.forName(configProviderClassName);
-      } catch(Exception e){
+      } catch (Exception e) {
         LOGGER.error("Could not get the config provider class: {}.", configProviderClassName, e);
       }
-      if(userConfigProviderClass != null) {
+      if (userConfigProviderClass != null) {
         try {
           Constructor<ConfigProvider> constructor = userConfigProviderClass.getConstructor();
           configProvider = constructor.newInstance();
-        } catch(Exception e) {
+        } catch (Exception e) {
           LOGGER.error("Could not create the config provider.", e);
         }
       }

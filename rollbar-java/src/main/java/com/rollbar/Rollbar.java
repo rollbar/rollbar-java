@@ -1,3 +1,4 @@
+// CHECKSTYLE:OFF
 package com.rollbar;
 
 import com.rollbar.api.payload.data.*;

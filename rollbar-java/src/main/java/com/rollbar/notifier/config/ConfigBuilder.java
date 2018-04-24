@@ -352,6 +352,7 @@ public class ConfigBuilder {
     this.enabled = enabled;
     return this;
   }
+
   /**
    * Builds the {@link Config config}.
    *

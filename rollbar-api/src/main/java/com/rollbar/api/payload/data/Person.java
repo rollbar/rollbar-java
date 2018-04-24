@@ -1,6 +1,7 @@
 package com.rollbar.api.payload.data;
 
 import static java.util.Collections.unmodifiableMap;
+
 import com.rollbar.api.json.JsonSerializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,7 +23,8 @@ public class Person implements JsonSerializable {
     this.id = builder.id;
     this.username = builder.username;
     this.email = builder.email;
-    this.metadata = builder.metadata != null ? unmodifiableMap(new HashMap<>(builder.metadata)) : null;
+    this.metadata = builder.metadata != null
+        ? unmodifiableMap(new HashMap<>(builder.metadata)) : null;
   }
 
   /**

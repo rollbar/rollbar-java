@@ -10,5 +10,5 @@ include ":rollbar-api",
         ":examples:rollbar-web",
         ":examples:rollbar-android",
         ":examples:rollbar-scala",
-        ":examples:rollbar-log4j2"
+        ":examples:rollbar-log4j2",
         ":examples:rollbar-logback"

@@ -4,8 +4,8 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 
 import com.rollbar.api.json.JsonSerializable;
-import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -41,7 +41,8 @@ public class Frame implements JsonSerializable {
     this.className = builder.className;
     this.context = builder.context;
     this.args = builder.args != null ? unmodifiableList(new ArrayList<>(builder.args)) : null;
-    this.keywordArgs = builder.keywordArgs != null ? unmodifiableMap(new HashMap<>(builder.keywordArgs)) : null;
+    this.keywordArgs = builder.keywordArgs != null
+        ? unmodifiableMap(new HashMap<>(builder.keywordArgs)) : null;
   }
 
   /**
