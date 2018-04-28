@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class Rollbar {
-  private static final String NOTIFIER_VERSION = "1.1.0";
+  private static final String NOTIFIER_VERSION = "1.1.1";
   private static final String ITEM_DIR_NAME = "rollbar-items";
   private static final String ANDROID = "android";
   private static final String DEFAULT_ENVIRONMENT = "production";
