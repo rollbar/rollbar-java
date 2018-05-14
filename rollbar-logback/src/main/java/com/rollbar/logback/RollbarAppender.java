@@ -8,6 +8,7 @@ import ch.qos.logback.classic.spi.StackTraceElementProxy;
 import ch.qos.logback.core.AppenderBase;
 import com.rollbar.api.payload.data.Level;
 import com.rollbar.notifier.Rollbar;
+import com.rollbar.notifier.config.Config;
 import com.rollbar.notifier.wrapper.RollbarThrowableWrapper;
 import com.rollbar.notifier.wrapper.ThrowableWrapper;
 import java.util.HashMap;
@@ -32,19 +33,31 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
 
   private String accessToken;
 
-  /**
-   * Constructor for testing purposes.
-   *
-   * @param rollbar the rollbar notifier.
-   */
-  protected RollbarAppender(Rollbar rollbar) {
-    this.rollbar = rollbar;
-  }
+  private String url;
+
+  private String environment;
+
+  private String language;
+
+//  /**
+//   * Constructor for testing purposes.
+//   *
+//   * @param rollbar the rollbar notifier.
+//   */
+//  protected RollbarAppender(Rollbar rollbar) {
+//    this.rollbar = rollbar;
+//  }
 
   @Override
   public void start() {
-    this.rollbar = new Rollbar(withAccessToken(this.accessToken).build());
+    Config config = withAccessToken(this.accessToken)
+            .environment(this.environment)
+            .url(this.url)
+            .server(new ServerProvider())
+            .language(this.language)
+            .build();
 
+    this.rollbar = new Rollbar(config);
     super.start();
   }
 
@@ -71,6 +84,18 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
    */
   public void setAccessToken(String accessToken) {
     this.accessToken = accessToken;
+  }
+
+  public void setUrl(String url) {
+    this.url = url;
+  }
+
+  public void setEnvironment(String environment) {
+    this.environment = environment;
+  }
+
+  public void setLanguage(String language) {
+    this.language = language;
   }
 
   private ThrowableWrapper buildRollbarThrowableWrapper(IThrowableProxy throwableProxy) {

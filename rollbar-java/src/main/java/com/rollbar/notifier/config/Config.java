@@ -27,6 +27,13 @@ public interface Config {
   String accessToken();
 
   /**
+   * Get the url.
+   *
+   * @return the Rollbar url.
+   */
+  String url();
+
+  /**
    * Get the environment.
    *
    * @return the environment.
