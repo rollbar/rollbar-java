@@ -19,12 +19,30 @@ import javax.servlet.http.HttpServletRequest;
 public class RequestProvider implements Provider<Request> {
 
   private final String userIpHeaderName;
+  private final int captureIp;
+
+  static final String CAPTURE_IP_ANONYMIZE = "anonymize";
+  static final String CAPTURE_IP_NONE = "none";
+  static final int CAPTURE_IP_TYPE_FULL = 0;
+  static final int CAPTURE_IP_TYPE_ANONYMIZE = 1;
+  static final int CAPTURE_IP_TYPE_NONE = 2;
 
   /**
    * Constructor.
    */
   RequestProvider(Builder builder) {
     this.userIpHeaderName = builder.userIpHeaderName;
+    if (builder.captureIp != null) {
+      if (builder.captureIp.equals(CAPTURE_IP_ANONYMIZE)) {
+        this.captureIp = CAPTURE_IP_TYPE_ANONYMIZE;
+      } else if (builder.captureIp.equals(CAPTURE_IP_NONE)) {
+        this.captureIp = CAPTURE_IP_TYPE_NONE;
+      } else {
+        this.captureIp = CAPTURE_IP_TYPE_FULL;
+      }
+    } else {
+      this.captureIp = CAPTURE_IP_TYPE_FULL;
+    }
   }
 
   @Override
@@ -48,11 +66,46 @@ public class RequestProvider implements Provider<Request> {
   }
 
   private String userIp(HttpServletRequest request) {
+    String rawIp;
     if (userIpHeaderName == null || "".equals(userIpHeaderName)) {
-      return request.getRemoteAddr();
+      rawIp = request.getRemoteAddr();
+    } else {
+      rawIp = request.getHeader(userIpHeaderName);
+    }
+    if (rawIp == null) {
+      return rawIp;
     }
 
-    return request.getHeader(userIpHeaderName);
+    if (captureIp == CAPTURE_IP_TYPE_FULL) {
+      return rawIp;
+    } else if (captureIp == CAPTURE_IP_TYPE_ANONYMIZE) {
+      if (rawIp.contains(".")) {
+        // IPV4
+        String[] parts = rawIp.split("\\.");
+        if (parts.length > 3) {
+          // Java 7 does not have String.join
+          StringBuffer ip = new StringBuffer(parts[0]);
+          ip.append(".");
+          ip.append(parts[1]);
+          ip.append(".");
+          ip.append(parts[2]);
+          ip.append(".0/24");
+          return ip.toString();
+        }
+        return rawIp;
+      } else if (rawIp.contains(":")) {
+        // IPV6
+        if (rawIp.length() > 12) {
+          return rawIp.substring(0, 12).concat("...");
+        }
+        return rawIp;
+      } else {
+        return rawIp;
+      }
+    } else if (captureIp == CAPTURE_IP_TYPE_NONE) {
+      return null;
+    }
+    return null;
   }
 
   private static String url(HttpServletRequest request) {
@@ -102,6 +155,7 @@ public class RequestProvider implements Provider<Request> {
   public static final class Builder {
 
     private String userIpHeaderName;
+    private String captureIp;
 
     /**
      * The request header name to retrieve the user ip.
@@ -110,6 +164,18 @@ public class RequestProvider implements Provider<Request> {
      */
     public Builder userIpHeaderName(String userIpHeaderName) {
       this.userIpHeaderName = userIpHeaderName;
+      return this;
+    }
+
+    /**
+     * The policy to use for capturing the user ip.
+     * @param captureIp One of: full, anonymize, none
+     *    If this value is empty, null, or otherwise invalid
+     *    the default policy is full.
+     * @return the builder instance.
+     */
+    public Builder captureIp(String captureIp) {
+      this.captureIp = captureIp;
       return this;
     }
 

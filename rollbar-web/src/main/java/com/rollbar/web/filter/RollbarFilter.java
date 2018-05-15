@@ -29,6 +29,8 @@ public class RollbarFilter implements Filter {
 
   static final String CONFIG_PROVIDER_CLASS_PARAM_NAME = "config_provider";
 
+  static final String CONFIG_IP_CAPTURE_PARAM_NAME = "capture_ip";
+
   private Rollbar rollbar;
 
   public RollbarFilter() {
@@ -45,12 +47,14 @@ public class RollbarFilter implements Filter {
     String userIpHeaderName = filterConfig.getInitParameter(USER_IP_HEADER_PARAM_NAME);
     String configProviderClassName =
         filterConfig.getInitParameter(CONFIG_PROVIDER_CLASS_PARAM_NAME);
+    String captureIp = filterConfig.getInitParameter(CONFIG_IP_CAPTURE_PARAM_NAME);
 
     ConfigProvider configProvider = getConfigProvider(configProviderClassName);
     Config config;
 
     RequestProvider requestProvider = new RequestProvider.Builder()
         .userIpHeaderName(userIpHeaderName)
+        .captureIp(captureIp)
         .build();
 
     ConfigBuilder configBuilder = withAccessToken(accessToken)

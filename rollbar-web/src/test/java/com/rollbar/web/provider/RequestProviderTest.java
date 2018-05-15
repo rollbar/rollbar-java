@@ -3,6 +3,7 @@ package com.rollbar.web.provider;
 import static java.util.Arrays.asList;
 import static java.util.Collections.enumeration;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertNull;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.when;
 
@@ -124,5 +125,40 @@ public class RequestProviderTest {
     Request result = sut.provide();
 
     assertThat(result.getUserIp(), is(remoteAddr));
+  }
+
+  @Test
+  public void shouldRetrieveTheRemoteAddressUsingRequestRemoteAddressAndAnonymize() {
+    String userIpHeaderName = "";
+
+    RequestProvider sut = new RequestProvider.Builder()
+        .userIpHeaderName(userIpHeaderName)
+        .captureIp("anonymize")
+        .build();
+
+    String remoteAddr = "192.168.1.1";
+    String remoteAddrAnon = "192.168.1.0/24";
+    when(request.getRemoteAddr()).thenReturn(remoteAddr);
+
+    Request result = sut.provide();
+
+    assertThat(result.getUserIp(), is(remoteAddrAnon));
+  }
+
+  @Test
+  public void shouldRetrieveTheRemoteAddressUsingRequestRemoteAddressAndNotCaptureIfCaptureIpIsNone() {
+    String userIpHeaderName = "";
+
+    RequestProvider sut = new RequestProvider.Builder()
+        .userIpHeaderName(userIpHeaderName)
+        .captureIp("none")
+        .build();
+
+    String remoteAddr = "192.168.1.1";
+    when(request.getRemoteAddr()).thenReturn(remoteAddr);
+
+    Request result = sut.provide();
+
+    assertNull(result.getUserIp());
   }
 }
