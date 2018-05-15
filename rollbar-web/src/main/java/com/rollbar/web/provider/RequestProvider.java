@@ -170,8 +170,7 @@ public class RequestProvider implements Provider<Request> {
     /**
      * The policy to use for capturing the user ip.
      * @param captureIp One of: full, anonymize, none
-     *    If this value is empty, null, or otherwise invalid
-     *    the default policy is full.
+     *     If this value is empty, null, or otherwise invalid the default policy is full.
      * @return the builder instance.
      */
     public Builder captureIp(String captureIp) {
