@@ -198,6 +198,21 @@ public class Rollbar {
    * @param configProvider a configuration provider that can be used to customize the configuration further.
    */
   public Rollbar(Context context, String accessToken, String environment, boolean registerExceptionHandler, boolean includeLogcat, ConfigProvider configProvider) {
+    this(context, accessToken, environment, registerExceptionHandler, includeLogcat, configProvider, "full");
+  }
+
+  /**
+   * Construct a new Rollbar instance.
+   *
+   * @param context Android context to use.
+   * @param accessToken a Rollbar access token with at least post_client_item scope
+   * @param environment the environment to set for items
+   * @param registerExceptionHandler whether or not to handle uncaught exceptions.
+   * @param includeLogcat whether or not to include logcat output with items
+   * @param configProvider a configuration provider that can be used to customize the configuration further.
+   * @param captureIp one of: full, anonymize, none. This determines how the remote ip is captured.
+   */
+  public Rollbar(Context context, String accessToken, String environment, boolean registerExceptionHandler, boolean includeLogcat, ConfigProvider configProvider, String captureIp) {
     if (accessToken == null) {
       try {
         accessToken = loadAccessTokenFromManifest(context);
@@ -220,6 +235,7 @@ public class Rollbar {
         .versionCode(versionCode)
         .versionName(versionName)
         .includeLogcat(includeLogcat)
+        .captureIp(captureIp)
         .build();
 
     environment = environment == null ? DEFAULT_ENVIRONMENT : environment;

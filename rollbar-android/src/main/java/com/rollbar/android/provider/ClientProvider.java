@@ -18,6 +18,13 @@ public class ClientProvider implements Provider<Client> {
     private final int versionCode;
     private final String versionName;
     private boolean includeLogcat;
+    private final int captureIp;
+
+    private static final String CAPTURE_IP_ANONYMIZE = "anonymize";
+    private static final String CAPTURE_IP_NONE = "none";
+    private static final int CAPTURE_IP_TYPE_FULL = 0;
+    private static final int CAPTURE_IP_TYPE_ANONYMIZE = 1;
+    private static final int CAPTURE_IP_TYPE_NONE = 2;
 
     private static final int MAX_LOGCAT_SIZE = 100;
 
@@ -28,6 +35,17 @@ public class ClientProvider implements Provider<Client> {
         this.versionCode = builder.versionCode;
         this.versionName = builder.versionName;
         this.includeLogcat = builder.includeLogcat;
+        if (builder.captureIp != null) {
+          if (builder.captureIp.equals(CAPTURE_IP_ANONYMIZE)) {
+            this.captureIp = CAPTURE_IP_TYPE_ANONYMIZE;
+          } else if (builder.captureIp.equals(CAPTURE_IP_NONE)) {
+            this.captureIp = CAPTURE_IP_TYPE_NONE;
+          } else {
+            this.captureIp = CAPTURE_IP_TYPE_FULL;
+          }
+        } else {
+          this.captureIp = CAPTURE_IP_TYPE_FULL;
+        }
     }
 
     @Override
@@ -46,15 +64,20 @@ public class ClientProvider implements Provider<Client> {
             androidData.put("logs", getLogcatInfo());
         }
 
-        return new Client.Builder()
+        Client.Builder clientBuilder = new Client.Builder()
                 .addClient("android", androidData)
                 .addTopLevel("code_version", this.versionCode)
                 .addTopLevel("name_version", this.versionName)
                 .addTopLevel("version_code", this.versionCode)
                 .addTopLevel("version_name", this.versionName)
-                .addTopLevel("user_ip", "$remote_ip")
-                .addTopLevel("timestamp", System.currentTimeMillis() / 1000)
-                .build();
+                .addTopLevel("timestamp", System.currentTimeMillis() / 1000);
+
+        if (this.captureIp == CAPTURE_IP_TYPE_FULL) {
+            clientBuilder.addTopLevel("user_ip", "$remote_ip");
+        } else if (this.captureIp == CAPTURE_IP_TYPE_ANONYMIZE) {
+            clientBuilder.addTopLevel("user_ip", "$remote_ip_anonymize");
+        }
+        return clientBuilder.build();
     }
 
     private ArrayList<String> getLogcatInfo() {
@@ -88,6 +111,7 @@ public class ClientProvider implements Provider<Client> {
         private int versionCode;
         private String versionName;
         private boolean includeLogcat;
+        private String captureIp;
 
         /**
          * The Android version code from the context
@@ -116,6 +140,16 @@ public class ClientProvider implements Provider<Client> {
          */
         public Builder includeLogcat(boolean includeLogcat) {
             this.includeLogcat = includeLogcat;
+            return this;
+        }
+
+        /**
+         * How to capture the remote client ip, either completely, anonymized, or not at all.
+         * @param captureIp one of: full, anonymize, none.
+         * @return the builder instance.
+         */
+        public Builder captureIp(String captureIp) {
+            this.captureIp = captureIp;
             return this;
         }
 
