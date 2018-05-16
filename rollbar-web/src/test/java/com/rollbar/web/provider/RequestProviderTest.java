@@ -137,7 +137,7 @@ public class RequestProviderTest {
         .build();
 
     String remoteAddr = "192.168.1.1";
-    String remoteAddrAnon = "192.168.1.0/24";
+    String remoteAddrAnon = "192.168.1.0";
     when(request.getRemoteAddr()).thenReturn(remoteAddr);
 
     Request result = sut.provide();

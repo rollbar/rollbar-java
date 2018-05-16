@@ -91,7 +91,7 @@ public class RequestProvider implements Provider<Request> {
         ip.append(parts[1]);
         ip.append(".");
         ip.append(parts[2]);
-        ip.append(".0/24");
+        ip.append(".0");
         return ip.toString();
       } else if (rawIp.contains(":")) {
         // IPV6
