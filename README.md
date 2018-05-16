@@ -183,6 +183,7 @@ There is an Android specific part of the library. Therefore for Android you shou
 interface which requires you to add this dependency to your build process. For example,
 
 ```groovy
+compile('com.rollbar:rollbar-api:1.1.0')
 compile('com.rollbar:rollbar-java:1.1.0')
 compile('com.rollbar:rollbar-android:1.1.0@aar')
 ```
