@@ -21,11 +21,14 @@ public class RequestProvider implements Provider<Request> {
   private final String userIpHeaderName;
   private final int captureIp;
 
-  static final String CAPTURE_IP_ANONYMIZE = "anonymize";
-  static final String CAPTURE_IP_NONE = "none";
-  static final int CAPTURE_IP_TYPE_FULL = 0;
-  static final int CAPTURE_IP_TYPE_ANONYMIZE = 1;
-  static final int CAPTURE_IP_TYPE_NONE = 2;
+  // CAPTURE_IP_ANONYMIZE is the string value used to signify anonymizing captured IP addresses
+  public static final String CAPTURE_IP_ANONYMIZE = "anonymize";
+  // CAPTURE_IP_NONE is the string value used to signify not capturing IP addresses
+  public static final String CAPTURE_IP_NONE = "none";
+
+  private static final int CAPTURE_IP_TYPE_FULL = 0;
+  private static final int CAPTURE_IP_TYPE_ANONYMIZE = 1;
+  private static final int CAPTURE_IP_TYPE_NONE = 2;
 
   /**
    * Constructor.
