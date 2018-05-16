@@ -27,6 +27,8 @@ public class ConfigBuilder {
 
   private String accessToken;
 
+  private String endpoint;
+
   private String environment;
 
   private String codeVersion;
@@ -76,6 +78,8 @@ public class ConfigBuilder {
     this.language = "java";
     this.handleUncaughtErrors = true;
     this.enabled = true;
+    this.endpoint = "https://api.rollbar.com/api/1/item/";
+
   }
 
   /**
@@ -103,6 +107,7 @@ public class ConfigBuilder {
     this.sender = config.sender();
     this.handleUncaughtErrors = config.handleUncaughtErrors();
     this.enabled = config.isEnabled();
+    this.endpoint = config.endpoint();
   }
 
   /**
@@ -131,6 +136,17 @@ public class ConfigBuilder {
    */
   public ConfigBuilder accessToken(String accessToken) {
     this.accessToken = accessToken;
+    return this;
+  }
+
+  /**
+   * The Rollbar endpoint to use.
+   *
+   * @param endpoint the Rollbar endpoint url.
+   * @return the builder instance.
+   */
+  public ConfigBuilder endpoint(String endpoint) {
+    this.endpoint = endpoint;
     return this;
   }
 
@@ -363,9 +379,10 @@ public class ConfigBuilder {
       this.notifier = new NotifierProvider();
     }
     if (this.sender == null) {
-      this.sender = new BufferedSender.Builder()
+      this.sender =
+        new BufferedSender.Builder()
           .sender(
-            new SyncSender.Builder()
+            new SyncSender.Builder(this.endpoint)
             .accessToken(accessToken)
             .build()
       ).build();
@@ -380,6 +397,8 @@ public class ConfigBuilder {
   private static class ConfigImpl implements Config {
 
     private final String accessToken;
+
+    private final String endpoint;
 
     private final String environment;
 
@@ -423,6 +442,7 @@ public class ConfigBuilder {
 
     ConfigImpl(ConfigBuilder builder) {
       this.accessToken = builder.accessToken;
+      this.endpoint = builder.endpoint;
       this.environment = builder.environment;
       this.codeVersion = builder.codeVersion;
       this.platform = builder.platform;
@@ -448,6 +468,11 @@ public class ConfigBuilder {
     @Override
     public String accessToken() {
       return accessToken;
+    }
+
+    @Override
+    public String endpoint() {
+      return endpoint;
     }
 
     @Override

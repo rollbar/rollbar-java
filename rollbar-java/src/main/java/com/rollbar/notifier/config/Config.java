@@ -27,6 +27,13 @@ public interface Config {
   String accessToken();
 
   /**
+   * Get the Rollbar endpoint.
+   *
+   * @return the Rollbar endpoint.
+   */
+  String endpoint();
+
+  /**
    * Get the environment.
    *
    * @return the environment.

@@ -8,8 +8,14 @@ import ch.qos.logback.classic.spi.StackTraceElementProxy;
 import ch.qos.logback.core.AppenderBase;
 import com.rollbar.api.payload.data.Level;
 import com.rollbar.notifier.Rollbar;
+import com.rollbar.notifier.config.Config;
+import com.rollbar.notifier.config.ConfigBuilder;
+import com.rollbar.notifier.config.ConfigProvider;
+import com.rollbar.notifier.config.ConfigProviderHelper;
+import com.rollbar.notifier.provider.server.ServerProvider;
 import com.rollbar.notifier.wrapper.RollbarThrowableWrapper;
 import com.rollbar.notifier.wrapper.ThrowableWrapper;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -27,10 +33,18 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
   private static final String CUSTOM_MAKER_NAME_KEY = "marker";
 
   private static final String CUSTOM_THREAD_NAME_KEY = "threadName";
-  
+
   private Rollbar rollbar;
 
   private String accessToken;
+
+  private String endpoint;
+
+  private String environment;
+
+  private String language;
+
+  private String configProviderClassName;
 
   /**
    * Constructor for testing purposes.
@@ -41,10 +55,30 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
     this.rollbar = rollbar;
   }
 
+  public RollbarAppender() {
+    //empty constructor
+  }
+
   @Override
   public void start() {
-    this.rollbar = new Rollbar(withAccessToken(this.accessToken).build());
 
+    ConfigProvider configProvider = ConfigProviderHelper
+            .getConfigProvider(this.configProviderClassName);
+    Config config;
+
+    ConfigBuilder configBuilder = withAccessToken(this.accessToken)
+            .environment(this.environment)
+            .endpoint(this.endpoint)
+            .server(new ServerProvider())
+            .language(this.language);
+
+    if (configProvider != null) {
+      config = configProvider.provide(configBuilder);
+    } else {
+      config = configBuilder.build();
+    }
+
+    this.rollbar = new Rollbar(config);
     super.start();
   }
 
@@ -71,6 +105,22 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
    */
   public void setAccessToken(String accessToken) {
     this.accessToken = accessToken;
+  }
+
+  public void setEndpoint(String endpoint) {
+    this.endpoint = endpoint;
+  }
+
+  public void setEnvironment(String environment) {
+    this.environment = environment;
+  }
+
+  public void setLanguage(String language) {
+    this.language = language;
+  }
+
+  public void setConfigProviderClassName(String configProviderClassName) {
+    this.configProviderClassName = configProviderClassName;
   }
 
   private ThrowableWrapper buildRollbarThrowableWrapper(IThrowableProxy throwableProxy) {
