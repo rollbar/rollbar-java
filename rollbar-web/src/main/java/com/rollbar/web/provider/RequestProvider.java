@@ -82,23 +82,30 @@ public class RequestProvider implements Provider<Request> {
       if (rawIp.contains(".")) {
         // IPV4
         String[] parts = rawIp.split("\\.");
-        if (parts.length > 3) {
-          // Java 7 does not have String.join
-          StringBuffer ip = new StringBuffer(parts[0]);
-          ip.append(".");
-          ip.append(parts[1]);
-          ip.append(".");
-          ip.append(parts[2]);
-          ip.append(".0/24");
-          return ip.toString();
+        if (parts.length < 3) {
+          return rawIp;
         }
-        return rawIp;
+        // Java 7 does not have String.join
+        StringBuffer ip = new StringBuffer(parts[0]);
+        ip.append(".");
+        ip.append(parts[1]);
+        ip.append(".");
+        ip.append(parts[2]);
+        ip.append(".0/24");
+        return ip.toString();
       } else if (rawIp.contains(":")) {
         // IPV6
-        if (rawIp.length() > 12) {
-          return rawIp.substring(0, 12).concat("...");
+        String[] parts = rawIp.split(":");
+        if (parts.length < 3) {
+          return rawIp;
         }
-        return rawIp;
+        StringBuffer ip = new StringBuffer(parts[0]);
+        ip.append(":");
+        ip.append(parts[1]);
+        ip.append(":");
+        ip.append(parts[2]);
+        ip.append(":0000:0000:0000:0000:0000");
+        return ip.toString();
       } else {
         return rawIp;
       }
