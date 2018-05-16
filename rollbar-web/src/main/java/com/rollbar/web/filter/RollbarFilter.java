@@ -6,10 +6,10 @@ import com.rollbar.notifier.Rollbar;
 import com.rollbar.notifier.config.Config;
 import com.rollbar.notifier.config.ConfigBuilder;
 import com.rollbar.notifier.config.ConfigProvider;
+import com.rollbar.notifier.config.ConfigProviderHelper;
 import com.rollbar.web.provider.PersonProvider;
 import com.rollbar.web.provider.RequestProvider;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -46,7 +46,7 @@ public class RollbarFilter implements Filter {
     String configProviderClassName =
         filterConfig.getInitParameter(CONFIG_PROVIDER_CLASS_PARAM_NAME);
 
-    ConfigProvider configProvider = getConfigProvider(configProviderClassName);
+    ConfigProvider configProvider = ConfigProviderHelper.getConfigProvider(configProviderClassName);
     Config config;
 
     RequestProvider requestProvider = new RequestProvider.Builder()
@@ -88,27 +88,5 @@ public class RollbarFilter implements Filter {
   @Override
   public void destroy() {
     rollbar = null;
-  }
-
-  private ConfigProvider getConfigProvider(String configProviderClassName) {
-    ConfigProvider configProvider = null;
-
-    if (configProviderClassName != null && !"".equals(configProviderClassName)) {
-      Class userConfigProviderClass = null;
-      try {
-        userConfigProviderClass = Class.forName(configProviderClassName);
-      } catch (Exception e) {
-        LOGGER.error("Could not get the config provider class: {}.", configProviderClassName, e);
-      }
-      if (userConfigProviderClass != null) {
-        try {
-          Constructor<ConfigProvider> constructor = userConfigProviderClass.getConstructor();
-          configProvider = constructor.newInstance();
-        } catch (Exception e) {
-          LOGGER.error("Could not create the config provider.", e);
-        }
-      }
-    }
-    return configProvider;
   }
 }

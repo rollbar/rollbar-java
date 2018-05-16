@@ -27,7 +27,7 @@ public class ConfigBuilder {
 
   private String accessToken;
 
-  private String url;
+  private String endpoint;
 
   private String environment;
 
@@ -78,6 +78,8 @@ public class ConfigBuilder {
     this.language = "java";
     this.handleUncaughtErrors = true;
     this.enabled = true;
+    this.endpoint = "https://api.rollbar.com/api/1/item/";
+
   }
 
   /**
@@ -105,7 +107,7 @@ public class ConfigBuilder {
     this.sender = config.sender();
     this.handleUncaughtErrors = config.handleUncaughtErrors();
     this.enabled = config.isEnabled();
-    this.url = config.url();
+    this.endpoint = config.endpoint();
   }
 
   /**
@@ -138,13 +140,13 @@ public class ConfigBuilder {
   }
 
   /**
-   * The Rollbar url to use.
+   * The Rollbar endpoint to use.
    *
-   * @param url the Rollbar url endpoint.
+   * @param endpoint the Rollbar endpoint url.
    * @return the builder instance.
    */
-  public ConfigBuilder url(String url) {
-    this.url = url;
+  public ConfigBuilder endpoint(String endpoint) {
+    this.endpoint = endpoint;
     return this;
   }
 
@@ -380,7 +382,7 @@ public class ConfigBuilder {
       this.sender =
         new BufferedSender.Builder()
           .sender(
-            new SyncSender.Builder(this.url)
+            new SyncSender.Builder(this.endpoint)
             .accessToken(accessToken)
             .build()
       ).build();
@@ -396,7 +398,7 @@ public class ConfigBuilder {
 
     private final String accessToken;
 
-    private final String url;
+    private final String endpoint;
 
     private final String environment;
 
@@ -440,7 +442,7 @@ public class ConfigBuilder {
 
     ConfigImpl(ConfigBuilder builder) {
       this.accessToken = builder.accessToken;
-      this.url = builder.url;
+      this.endpoint = builder.endpoint;
       this.environment = builder.environment;
       this.codeVersion = builder.codeVersion;
       this.platform = builder.platform;
@@ -469,8 +471,8 @@ public class ConfigBuilder {
     }
 
     @Override
-    public String url() {
-      return url;
+    public String endpoint() {
+      return endpoint;
     }
 
     @Override

@@ -27,11 +27,11 @@ public interface Config {
   String accessToken();
 
   /**
-   * Get the url.
+   * Get the Rollbar endpoint.
    *
-   * @return the Rollbar url.
+   * @return the Rollbar endpoint.
    */
-  String url();
+  String endpoint();
 
   /**
    * Get the environment.
