@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ConfigProviderHelper {
 
-  private static Logger thisLogger = LoggerFactory.getLogger("ConfigProviderHelper");
+  private static final Logger thisLogger = LoggerFactory.getLogger("ConfigProviderHelper");
 
   /**
    * Instantiate a ConfigProvider object based on the class name given as parameter.
