@@ -75,11 +75,8 @@ public class ConfigBuilder {
   private ConfigBuilder(String accessToken) {
     // Defaults
     this.accessToken = accessToken;
-    this.language = "java";
     this.handleUncaughtErrors = true;
     this.enabled = true;
-    this.endpoint = "https://api.rollbar.com/api/1/item/";
-
   }
 
   /**
@@ -375,6 +372,12 @@ public class ConfigBuilder {
    * @return the config.
    */
   public Config build() {
+    if (this.language == null) {
+      this.language = "java";
+    }
+    if (this.endpoint == null) {
+      this.endpoint = SyncSender.DEFAULT_API_ENDPOINT;
+    }
     if (this.notifier == null) {
       this.notifier = new NotifierProvider();
     }
