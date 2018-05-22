@@ -98,6 +98,16 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
 
   }
 
+  @Override
+  public void stop() {
+    super.stop();
+    try {
+      rollbar.close(true);
+    } catch (Exception e) {
+      addError("Closing rollbar", e);
+    }
+  }
+
   /**
    * The configuration Rollbar access token.
    *
