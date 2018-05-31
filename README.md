@@ -12,7 +12,7 @@ use cases for consuming these libraries.
 
 ## Setup Instructions
 1. [Sign up for a Rollbar account](https://rollbar.com/signup)
-2. Follow the [Installation](https://docs.rollbar.com/v1.0.0/docs/java#section-installation) instructions in our [Java SDK docs](https://docs.rollbar.com/v1.0.0/docs/java) to install rollbar-java and configure it for your platform.
+2. Follow the [Installation](https://docs.rollbar.com/docs/java#section-installation) instructions in our [Java SDK docs](https://docs.rollbar.com/docs/java) to install rollbar-java and configure it for your platform.
  
 ## Usage
 
