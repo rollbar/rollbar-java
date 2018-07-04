@@ -2,6 +2,9 @@
 
 The change log has moved to this repo's [GitHub Releases Page](https://github.com/rollbar/rollbar-java/releases).
 
+## 1.2.1
+- Fix NPE when not passing default values in rollbar-logback and override stop method to stop the appender [#147](https://github.com/rollbar/rollbar-java/pull/147)
+
 ## 1.2.0
 - Added configuration options for `rollbar-web` and `rollbar-android` to specify how IP addresses
   are captured. For `rollbar-web` this is configured via the `capture_ip` filter init parameter.
