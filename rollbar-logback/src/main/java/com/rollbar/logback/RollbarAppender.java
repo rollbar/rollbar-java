@@ -62,24 +62,29 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
   @Override
   public void start() {
 
-    ConfigProvider configProvider = ConfigProviderHelper
-            .getConfigProvider(this.configProviderClassName);
-    Config config;
-
-    ConfigBuilder configBuilder = withAccessToken(this.accessToken)
-            .environment(this.environment)
-            .endpoint(this.endpoint)
-            .server(new ServerProvider())
-            .language(this.language);
-
-    if (configProvider != null) {
-      config = configProvider.provide(configBuilder);
-    } else {
-      config = configBuilder.build();
+    if (this.accessToken != null && !this.accessToken.endsWith("IS_UNDEFINED")){
+      
+      ConfigProvider configProvider = ConfigProviderHelper
+              .getConfigProvider(this.configProviderClassName);
+      Config config;
+  
+      ConfigBuilder configBuilder = withAccessToken(this.accessToken)
+              .environment(this.environment)
+              .endpoint(this.endpoint)
+              .server(new ServerProvider())
+              .language(this.language);
+  
+      if (configProvider != null) {
+        config = configProvider.provide(configBuilder);
+      } else {
+        config = configBuilder.build();
+      }
+  
+      this.rollbar = new Rollbar(config);
+      super.start();
+    
     }
-
-    this.rollbar = new Rollbar(config);
-    super.start();
+    
   }
 
   @Override
