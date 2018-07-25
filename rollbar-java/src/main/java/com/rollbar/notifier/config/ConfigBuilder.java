@@ -17,6 +17,7 @@ import com.rollbar.notifier.sender.SyncSender;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.net.Proxy;
 import java.util.Map;
 
 /**
@@ -65,6 +66,8 @@ public class ConfigBuilder {
 
   private Sender sender;
 
+  private Proxy proxy;
+
   private boolean handleUncaughtErrors;
 
   private boolean enabled;
@@ -105,6 +108,7 @@ public class ConfigBuilder {
     this.handleUncaughtErrors = config.handleUncaughtErrors();
     this.enabled = config.isEnabled();
     this.endpoint = config.endpoint();
+    this.proxy = config.proxy();
   }
 
   /**
@@ -334,13 +338,24 @@ public class ConfigBuilder {
   }
 
   /**
-   * Retrieve the {@link Sender sender}.
+   * The {@link Sender sender}.
    *
    * @param sender the sender.
    * @return the builder instance.
    */
   public ConfigBuilder sender(Sender sender) {
     this.sender = sender;
+    return this;
+  }
+
+  /**
+   * The {@link Proxy proxy} to be used to send the data.
+   *
+   * @param proxy the proxy.
+   * @return the builder instance.
+   */
+  public ConfigBuilder proxy(Proxy proxy) {
+    this.proxy = proxy;
     return this;
   }
 
@@ -387,6 +402,7 @@ public class ConfigBuilder {
           .sender(
             new SyncSender.Builder(this.endpoint)
             .accessToken(accessToken)
+            .proxy(proxy)
             .build()
       ).build();
     }
@@ -439,6 +455,8 @@ public class ConfigBuilder {
 
     private final Sender sender;
 
+    private final Proxy proxy;
+
     private final boolean handleUncaughtErrors;
 
     private final boolean enabled;
@@ -464,6 +482,7 @@ public class ConfigBuilder {
       this.fingerPrintGenerator = builder.fingerPrintGenerator;
       this.uuidGenerator = builder.uuidGenerator;
       this.sender = builder.sender;
+      this.proxy = builder.proxy;
       this.handleUncaughtErrors = builder.handleUncaughtErrors;
       this.enabled = builder.enabled;
     }
@@ -566,6 +585,11 @@ public class ConfigBuilder {
     @Override
     public Sender sender() {
       return sender;
+    }
+
+    @Override
+    public Proxy proxy() {
+      return proxy;
     }
 
     @Override

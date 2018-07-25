@@ -12,6 +12,7 @@ import com.rollbar.notifier.provider.Provider;
 import com.rollbar.notifier.sender.Sender;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
+import java.net.Proxy;
 import java.util.Map;
 
 /**
@@ -158,6 +159,13 @@ public interface Config {
    * @return the sender.
    */
   Sender sender();
+
+  /**
+   * Get the {@link Proxy proxy}.
+   *
+   * @return the proxy.
+   */
+  Proxy proxy();
 
   /**
    * Flag to indicate that the Rollbar notifier should handle the uncaught errors.
