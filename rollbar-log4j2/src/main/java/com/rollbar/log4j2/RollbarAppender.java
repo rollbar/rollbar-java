@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.Layout;
@@ -92,6 +93,22 @@ public class RollbarAppender extends AbstractAppender {
     Level level = this.getLevel(event);
 
     rollbar.log(rollbarThrowableWrapper, custom, message, level, false);
+  }
+
+  @Override
+  public boolean stop(final long timeout, final TimeUnit timeUnit) {
+    super.stop(timeout, timeUnit);
+    try {
+      rollbar.close(true);
+    } catch (Exception e) {
+      LOGGER.error("Closing rollbar", e);
+    }
+    return true;
+  }
+
+  @Override
+  public void stop() {
+    this.stop(0, TimeUnit.MILLISECONDS);
   }
 
   private ThrowableWrapper buildRollbarThrowableWrapper(ThrowableProxy throwableProxy) {
