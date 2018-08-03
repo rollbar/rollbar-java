@@ -61,6 +61,11 @@ public class RollbarAppender extends AbstractAppender {
    * Create appender plugin factory method.
    *
    * @param accessToken the Rollbar access token.
+   * @param endpoint the Rollbar endpoint to be used.
+   * @param environment the environment.
+   * @param language the language.
+   * @param configProviderClassName The class name of the config provider implementation to get
+   *     the configuration.
    * @param name the name.
    * @param layout the layout.
    * @param filter the filter.
