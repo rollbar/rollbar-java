@@ -190,6 +190,9 @@ subprojects {
                                 name POM_NAME
                                 description POM_DESCRIPTION
 
+                                // ugly hack to set the packaging property in the POM as 'aar'
+                                ((NodeList) node.get('packaging')).get(0).value = 'aar'
+
                                 url POM_URL
                                 scm {
                                     url POM_SCM_URL
