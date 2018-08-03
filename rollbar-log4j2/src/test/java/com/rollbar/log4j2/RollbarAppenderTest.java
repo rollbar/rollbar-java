@@ -1,5 +1,7 @@
 package com.rollbar.log4j2;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -17,6 +19,7 @@ import java.util.HashMap;
 import java.util.IllegalFormatException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.ThreadContext.ContextStack;
 import org.apache.logging.log4j.core.LogEvent;
@@ -28,6 +31,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
@@ -219,8 +223,26 @@ public class RollbarAppenderTest {
     verify(rollbar).log(throwableWrapper, expectedCustom, FORMATTED_MESSAGE, Level.ERROR, false);
   }
 
+  @Test
+  public void shouldStop() throws Exception {
+    sut.stop();
+    
+    verify(rollbar).close(true);
+  }
+
+  @Test
+  public void shouldStopWithTimeout() throws Exception {
+    long timeout = 100;
+
+    boolean result = sut.stop(timeout, TimeUnit.MILLISECONDS);
+
+    assertThat(result, is(true));
+
+    verify(rollbar).close(true);
+  }
+
   private static Map<String, Object> buildExpectedCustom(String loggerName, Map<String, Object> mdc,
-      List<String> ndc, String markerName, String threadName) {
+    List<String> ndc, String markerName, String threadName) {
     Map<String, Object> rootCustom = new HashMap<>();
     Map<String, Object> custom = new HashMap<>();
 
