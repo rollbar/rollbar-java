@@ -4,6 +4,11 @@ import static com.rollbar.notifier.config.ConfigBuilder.withAccessToken;
 
 import com.rollbar.api.payload.data.Level;
 import com.rollbar.notifier.Rollbar;
+import com.rollbar.notifier.config.Config;
+import com.rollbar.notifier.config.ConfigBuilder;
+import com.rollbar.notifier.config.ConfigProvider;
+import com.rollbar.notifier.config.ConfigProviderHelper;
+import com.rollbar.notifier.provider.server.ServerProvider;
 import com.rollbar.notifier.wrapper.RollbarThrowableWrapper;
 import com.rollbar.notifier.wrapper.ThrowableWrapper;
 import java.io.Serializable;
@@ -65,13 +70,33 @@ public class RollbarAppender extends AbstractAppender {
   @PluginFactory
   public static RollbarAppender createAppender(
       @PluginAttribute("accessToken") @Required final String accessToken,
+      @PluginAttribute("endpoint") final String endpoint,
+      @PluginAttribute("environment") final String environment,
+      @PluginAttribute("language") final String language,
+      @PluginAttribute("configProviderClassName") final String configProviderClassName,
       @PluginAttribute("name") @Required final String name,
       @PluginElement("Layout") Layout<? extends Serializable> layout,
       @PluginElement("Filter") Filter filter,
       @PluginAttribute("ignoreExceptions") final String ignore
   ) {
 
-    Rollbar rollbar = new Rollbar(withAccessToken(accessToken).build());
+    ConfigProvider configProvider = ConfigProviderHelper
+        .getConfigProvider(configProviderClassName);
+    Config config;
+
+    ConfigBuilder configBuilder = withAccessToken(accessToken)
+        .environment(environment)
+        .endpoint(endpoint)
+        .server(new ServerProvider())
+        .language(language);
+
+    if (configProvider != null) {
+      config = configProvider.provide(configBuilder);
+    } else {
+      config = configBuilder.build();
+    }
+
+    Rollbar rollbar = new Rollbar(config);
 
     boolean ignoreExceptions = Booleans.parseBoolean(ignore, true);
 
