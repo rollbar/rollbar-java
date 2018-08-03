@@ -2,6 +2,13 @@
 
 The change log has moved to this repo's [GitHub Releases Page](https://github.com/rollbar/rollbar-java/releases).
 
+# 1.3.0
+- Fix rollbar-log4j2 appender by overriding stop methods and close the Rollbar client. [#156](https://github.com/rollbar/rollbar-java/pull/156)
+- Add configuration options to the rollbar-log4j2 to match the ones of the rollbar-logback. [#157](https://github.com/rollbar/rollbar-java/pull/157)
+- Fix rollbar-android publication by setting in the pom.xml the packaging value as `arr`. [#158](https://github.com/rollbar/rollbar-java/pull/158)
+- Fix rollbar-android dependencies to include the one declared as api. [#159](https://github.com/rollbar/rollbar-java/pull/159)
+- Add feature to set up a proxy to be used by to send the payloads. [#154](https://github.com/rollbar/rollbar-java/pull/154)
+
 ## 1.2.1
 - Fix NPE when not passing default values in rollbar-logback and override stop method to stop the appender [#147](https://github.com/rollbar/rollbar-java/pull/147)
 
