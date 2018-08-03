@@ -5,6 +5,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.Proxy;
 import java.net.URL;
 import org.junit.Before;
 import org.junit.Rule;
@@ -66,7 +68,7 @@ public class SyncSenderTest {
 
   @Before
   public void setUp()throws Exception {
-    when(url.openConnection()).thenReturn(connection);
+    when(url.openConnection(eq(Proxy.NO_PROXY))).thenReturn(connection);
     when(connection.getOutputStream()).thenReturn(out);
 
     when(serializer.toJson(payload)).thenReturn(PAYLOAD_JSON);
@@ -157,6 +159,43 @@ public class SyncSenderTest {
     sut.close();
 
     verify(connection).disconnect();
+  }
+
+  @Test
+  public void shouldSendThePayloadUsingAProxyIfProvided() throws Exception {
+    Proxy proxy = mock(Proxy.class);
+
+    when(url.openConnection(eq(proxy))).thenReturn(connection);
+    when(connection.getOutputStream()).thenReturn(out);
+
+    when(serializer.toJson(payload)).thenReturn(PAYLOAD_JSON);
+
+    sut = new SyncSender.Builder()
+        .url(url)
+        .jsonSerializer(serializer)
+        .proxy(proxy)
+        .build();
+    sut.addListener(listener);
+
+    int responseCode = 200;
+    String responseJson = "simulated_response_json";
+
+    when(connection.getResponseCode()).thenReturn(responseCode);
+    when(connection.getInputStream())
+        .thenReturn(new ByteArrayInputStream(responseJson.getBytes(UTF_8)));
+
+    when(serializer.resultFrom(responseJson)).thenReturn(result);
+
+    sut.send(payload);
+
+    Response expectedResponse = new Response.Builder()
+        .status(responseCode)
+        .result(result)
+        .build();
+
+    verifyHttp();
+    verify(connection).getInputStream();
+    verify(listener).onResponse(payload, expectedResponse);
   }
 
   private void verifyHttp() throws Exception {

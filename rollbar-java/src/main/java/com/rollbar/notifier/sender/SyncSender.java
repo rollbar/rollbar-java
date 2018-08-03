@@ -6,7 +6,6 @@ import com.rollbar.notifier.sender.json.JsonSerializerImpl;
 import com.rollbar.notifier.sender.result.Response;
 import com.rollbar.notifier.sender.result.Result;
 import com.rollbar.notifier.util.ObjectsUtils;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,6 +13,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.Proxy;
 import java.net.URL;
 
 /**
@@ -31,10 +31,13 @@ public class SyncSender extends AbstractSender {
 
   private final String accessToken;
 
+  private final Proxy proxy;
+
   SyncSender(Builder builder) {
     this.url = builder.url;
     this.jsonSerializer = builder.jsonSerializer;
     this.accessToken = builder.accessToken;
+    this.proxy = builder.proxy != null ? builder.proxy : Proxy.NO_PROXY;
   }
 
   @Override
@@ -56,7 +59,7 @@ public class SyncSender extends AbstractSender {
   }
 
   private HttpURLConnection getConnection() throws IOException {
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection(this.proxy);
 
     if (accessToken != null && !"".equals(accessToken)) {
       connection.setRequestProperty("x-rollbar-access-token", accessToken);
@@ -114,6 +117,9 @@ public class SyncSender extends AbstractSender {
     return buffer.toString();
   }
 
+  /**
+   * Builder class for {@link SyncSender}.
+   */
   public static final class Builder {
 
     private URL url;
@@ -122,35 +128,77 @@ public class SyncSender extends AbstractSender {
 
     private String accessToken;
 
+    private Proxy proxy;
+
     public Builder() {
       this(DEFAULT_API_ENDPOINT);
     }
 
+    /**
+     * Constructor.
+     * @param url the url.
+     */
     public Builder(String url) {
       this.url = parseUrl(url);
       this.jsonSerializer = new JsonSerializerImpl();
+      this.proxy = null;
     }
 
+    /**
+     * The url as string.
+     * @param url the url
+     * @return the builder instance.
+     */
     public Builder url(String url) {
       this.url = parseUrl(url);
       return this;
     }
 
+    /**
+     * The url as {@link URL}.
+     * @param url the url
+     * @return the builder instance.
+     */
     public Builder url(URL url) {
       this.url = url;
       return this;
     }
 
+    /**
+     * The {@link JsonSerializer json serializer}.
+     * @param jsonSerializer the json serializer.
+     * @return the builder instance.
+     */
     public Builder jsonSerializer(JsonSerializer jsonSerializer) {
       this.jsonSerializer = jsonSerializer;
       return this;
     }
 
+    /**
+     * The rollbar access token.
+     * @param accessToken the access token.
+     * @return the builder instance.
+     */
     public Builder accessToken(String accessToken) {
       this.accessToken = accessToken;
       return this;
     }
 
+    /**
+     * The {@link Proxy proxy}.
+     * @param proxy the proxy.
+     * @return the builder instance.
+     */
+    public Builder proxy(Proxy proxy) {
+      this.proxy = proxy;
+      return this;
+    }
+
+    /**
+     * Builds the {@link SyncSender sync sender}.
+     *
+     * @return the sync sender.
+     */
     public SyncSender build() {
       return new SyncSender(this);
     }

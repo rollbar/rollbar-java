@@ -2,6 +2,7 @@ package com.rollbar.notifier.config;
 
 import static com.rollbar.notifier.config.ConfigBuilder.withConfig;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 
@@ -19,6 +20,7 @@ import com.rollbar.notifier.sender.Sender;
 import com.rollbar.notifier.sender.SyncSender;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
+import java.net.Proxy;
 import java.util.Map;
 import org.junit.Rule;
 import org.junit.Test;
@@ -79,6 +81,9 @@ public class ConfigBuilderTest {
   @Mock
   Sender sender;
 
+  @Mock
+  Proxy proxy;
+
   @Test
   public void shouldBuildConfigurationWithDefaults() {
     Config config = ConfigBuilder.withAccessToken(ACCESS_TOKEN).build();
@@ -88,6 +93,7 @@ public class ConfigBuilderTest {
     assertThat(config.sender(), is(instanceOf(BufferedSender.class)));
     assertThat(config.handleUncaughtErrors(), is(true));
     assertThat(config.isEnabled(), is(true));
+    assertThat(config.proxy(), is(nullValue()));
   }
 
   @Test
@@ -110,6 +116,7 @@ public class ConfigBuilderTest {
         .fingerPrintGenerator(fingerPrintGenerator)
         .uuidGenerator(uuidGenerator)
         .sender(sender)
+        .proxy(proxy)
         .handleUncaughtErrors(false)
         .enabled(false)
         .build();
@@ -132,6 +139,7 @@ public class ConfigBuilderTest {
     assertThat(config.fingerPrintGenerator(), is(fingerPrintGenerator));
     assertThat(config.uuidGenerator(), is(uuidGenerator));
     assertThat(config.sender(), is(sender));
+    assertThat(config.proxy(), is(proxy));
     assertThat(config.handleUncaughtErrors(), is(false));
     assertThat(config.isEnabled(), is(false));
   }
@@ -156,6 +164,7 @@ public class ConfigBuilderTest {
             .fingerPrintGenerator(fingerPrintGenerator)
             .uuidGenerator(uuidGenerator)
             .sender(sender)
+            .proxy(proxy)
             .handleUncaughtErrors(false)
             .enabled(false)
             .build();
@@ -180,17 +189,8 @@ public class ConfigBuilderTest {
     assertThat(config.fingerPrintGenerator(), is(copy.fingerPrintGenerator()));
     assertThat(config.uuidGenerator(), is(copy.uuidGenerator()));
     assertThat(config.sender(), is(copy.sender()));
+    assertThat(config.proxy(), is(copy.proxy()));
     assertThat(config.handleUncaughtErrors(), is(copy.handleUncaughtErrors()));
     assertThat(config.isEnabled(), is(copy.isEnabled()));
-  }
-
-  @Test
-  public void test() {
-    Config config = ConfigBuilder.withAccessToken("mi token")
-        .build();
-
-    Sender sender = config.sender();
-
-    System.out.println(sender);
   }
 }
