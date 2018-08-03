@@ -179,7 +179,7 @@ subprojects {
 
                         pom.withXml {
                             def dependencies = asNode().appendNode('dependencies')
-                            configurations.compile.allDependencies.each {
+                            configurations.api.allDependencies.each {
                                 def dependency = dependencies.appendNode('dependency')
                                 dependency.appendNode('groupId', GROUP)
                                 dependency.appendNode('artifactId', it.name)
