@@ -5,7 +5,6 @@ import static java.util.Collections.unmodifiableMap;
 import com.rollbar.api.json.JsonSerializable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Represents a message (text) sent to Rollbar, possible with additional information.
@@ -60,8 +59,10 @@ public class Message implements BodyContent, JsonSerializable {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
+
     Message message = (Message) o;
-    if (body != null ? !Objects.equals(body, message.body) : message.body != null) {
+
+    if (body != null ? !body.equals(message.body) : message.body != null) {
       return false;
     }
     return metadata != null ? metadata.equals(message.metadata) : message.metadata == null;
@@ -69,7 +70,7 @@ public class Message implements BodyContent, JsonSerializable {
 
   @Override
   public int hashCode() {
-    int result = body != null ? Objects.hash(body) : 0;
+    int result = body != null ? body.hashCode() : 0;
     result = 31 * result + (metadata != null ? metadata.hashCode() : 0);
     return result;
   }

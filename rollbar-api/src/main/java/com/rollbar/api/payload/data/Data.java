@@ -4,7 +4,6 @@ import com.rollbar.api.json.JsonSerializable;
 import com.rollbar.api.payload.data.body.Body;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Represents the actual data being posted to Rollbar.
@@ -313,34 +312,88 @@ public class Data implements JsonSerializable {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
+
     Data data = (Data) o;
-    return Objects.equals(environment, data.environment)
-        && Objects.equals(body, data.body)
-        && level == data.level
-        && Objects.equals(timestamp, data.timestamp)
-        && Objects.equals(codeVersion, data.codeVersion)
-        && Objects.equals(platform, data.platform)
-        && Objects.equals(language, data.language)
-        && Objects.equals(framework, data.framework)
-        && Objects.equals(context, data.context)
-        && Objects.equals(request, data.request)
-        && Objects.equals(person, data.person)
-        && Objects.equals(server, data.server)
-        && Objects.equals(client, data.client)
-        && Objects.equals(custom, data.custom)
-        && Objects.equals(fingerprint, data.fingerprint)
-        && Objects.equals(title, data.title)
-        && Objects.equals(uuid, data.uuid)
-        && isUncaught == data.isUncaught
-        && Objects.equals(notifier, data.notifier);
+
+    if (isUncaught != data.isUncaught) {
+      return false;
+    }
+    if (environment != null ? !environment.equals(data.environment) : data.environment != null) {
+      return false;
+    }
+    if (body != null ? !body.equals(data.body) : data.body != null) {
+      return false;
+    }
+    if (level != data.level) {
+      return false;
+    }
+    if (timestamp != null ? !timestamp.equals(data.timestamp) : data.timestamp != null) {
+      return false;
+    }
+    if (codeVersion != null ? !codeVersion.equals(data.codeVersion) : data.codeVersion != null) {
+      return false;
+    }
+    if (platform != null ? !platform.equals(data.platform) : data.platform != null) {
+      return false;
+    }
+    if (language != null ? !language.equals(data.language) : data.language != null) {
+      return false;
+    }
+    if (framework != null ? !framework.equals(data.framework) : data.framework != null) {
+      return false;
+    }
+    if (context != null ? !context.equals(data.context) : data.context != null) {
+      return false;
+    }
+    if (request != null ? !request.equals(data.request) : data.request != null) {
+      return false;
+    }
+    if (person != null ? !person.equals(data.person) : data.person != null) {
+      return false;
+    }
+    if (server != null ? !server.equals(data.server) : data.server != null) {
+      return false;
+    }
+    if (client != null ? !client.equals(data.client) : data.client != null) {
+      return false;
+    }
+    if (custom != null ? !custom.equals(data.custom) : data.custom != null) {
+      return false;
+    }
+    if (fingerprint != null ? !fingerprint.equals(data.fingerprint) : data.fingerprint != null) {
+      return false;
+    }
+    if (title != null ? !title.equals(data.title) : data.title != null) {
+      return false;
+    }
+    if (uuid != null ? !uuid.equals(data.uuid) : data.uuid != null) {
+      return false;
+    }
+    return notifier != null ? notifier.equals(data.notifier) : data.notifier == null;
   }
 
   @Override
   public int hashCode() {
-    return Objects
-        .hash(environment, body, level, timestamp, codeVersion, platform, language, framework,
-            context, request, person, server, client, custom, fingerprint, title, uuid, isUncaught,
-            notifier);
+    int result = environment != null ? environment.hashCode() : 0;
+    result = 31 * result + (body != null ? body.hashCode() : 0);
+    result = 31 * result + (level != null ? level.hashCode() : 0);
+    result = 31 * result + (timestamp != null ? timestamp.hashCode() : 0);
+    result = 31 * result + (codeVersion != null ? codeVersion.hashCode() : 0);
+    result = 31 * result + (platform != null ? platform.hashCode() : 0);
+    result = 31 * result + (language != null ? language.hashCode() : 0);
+    result = 31 * result + (framework != null ? framework.hashCode() : 0);
+    result = 31 * result + (context != null ? context.hashCode() : 0);
+    result = 31 * result + (request != null ? request.hashCode() : 0);
+    result = 31 * result + (person != null ? person.hashCode() : 0);
+    result = 31 * result + (server != null ? server.hashCode() : 0);
+    result = 31 * result + (client != null ? client.hashCode() : 0);
+    result = 31 * result + (custom != null ? custom.hashCode() : 0);
+    result = 31 * result + (fingerprint != null ? fingerprint.hashCode() : 0);
+    result = 31 * result + (title != null ? title.hashCode() : 0);
+    result = 31 * result + (uuid != null ? uuid.hashCode() : 0);
+    result = 31 * result + (isUncaught ? 1 : 0);
+    result = 31 * result + (notifier != null ? notifier.hashCode() : 0);
+    return result;
   }
 
   @Override

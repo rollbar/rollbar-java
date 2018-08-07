@@ -8,12 +8,12 @@ import com.rollbar.notifier.config.ConfigBuilder;
 import com.rollbar.notifier.config.ConfigProvider;
 import com.rollbar.notifier.uncaughtexception.RollbarUncaughtExceptionHandler;
 import com.rollbar.notifier.util.BodyFactory;
+import com.rollbar.notifier.util.ObjectsUtils;
 import com.rollbar.notifier.wrapper.RollbarThrowableWrapper;
 import com.rollbar.notifier.wrapper.ThrowableWrapper;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -88,7 +88,7 @@ public class Rollbar {
    * @param thread the thread to handle errors on.
    */
   public void handleUncaughtErrors(Thread thread) {
-    Objects.requireNonNull(thread, "thread");
+    ObjectsUtils.requireNonNull(thread, "thread");
     LOGGER.debug("Handling uncaught errors for thread: {}.", thread);
     UncaughtExceptionHandler uncaughtExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
     thread.setUncaughtExceptionHandler(new RollbarUncaughtExceptionHandler(this,

@@ -1,7 +1,6 @@
 package com.rollbar.notifier.wrapper;
 
 import java.util.Arrays;
-import java.util.Objects;
 
 /**
  * Implementation of the {@link ThrowableWrapper throwable wrapper}.
@@ -96,19 +95,32 @@ public class RollbarThrowableWrapper implements ThrowableWrapper {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
+
     RollbarThrowableWrapper that = (RollbarThrowableWrapper) o;
-    return Objects.equals(className, that.className)
-        && Objects.equals(message, that.message)
-        && Arrays.equals(stackTraceElements, that.stackTraceElements)
-        && Objects.equals(cause, that.cause)
-        && Objects.equals(throwable, that.throwable);
+
+    if (className != null ? !className.equals(that.className) : that.className != null) {
+      return false;
+    }
+    if (message != null ? !message.equals(that.message) : that.message != null) {
+      return false;
+    }
+    // Probably incorrect - comparing Object[] arrays with Arrays.equals
+    if (!Arrays.equals(stackTraceElements, that.stackTraceElements)) {
+      return false;
+    }
+    if (cause != null ? !cause.equals(that.cause) : that.cause != null) {
+      return false;
+    }
+    return throwable != null ? throwable.equals(that.throwable) : that.throwable == null;
   }
 
   @Override
   public int hashCode() {
-
-    int result = Objects.hash(className, message, cause, throwable);
+    int result = className != null ? className.hashCode() : 0;
+    result = 31 * result + (message != null ? message.hashCode() : 0);
     result = 31 * result + Arrays.hashCode(stackTraceElements);
+    result = 31 * result + (cause != null ? cause.hashCode() : 0);
+    result = 31 * result + (throwable != null ? throwable.hashCode() : 0);
     return result;
   }
 }
