@@ -3,7 +3,6 @@ package com.rollbar.api.payload.data.body;
 import com.rollbar.api.json.JsonSerializable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Represents a crash report (currently only for iOS, eventually Android, and maybe (if possible)
@@ -49,8 +48,10 @@ public class CrashReport implements BodyContent, JsonSerializable {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
+
     CrashReport that = (CrashReport) o;
-    return Objects.equals(raw, that.raw);
+
+    return raw != null ? raw.equals(that.raw) : that.raw == null;
   }
 
   @Override
