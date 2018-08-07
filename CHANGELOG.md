@@ -2,6 +2,9 @@
 
 The change log has moved to this repo's [GitHub Releases Page](https://github.com/rollbar/rollbar-java/releases).
 
+# 1.3.1
+- Remove use of java.util.Objects as is not available in android sdk version lower than 19. [#162](https://github.com/rollbar/rollbar-java/pull/162)
+
 # 1.3.0
 - Fix rollbar-log4j2 appender by overriding stop methods and close the Rollbar client. [#156](https://github.com/rollbar/rollbar-java/pull/156)
 - Add configuration options to the rollbar-log4j2 to match the ones of the rollbar-logback. [#157](https://github.com/rollbar/rollbar-java/pull/157)
