@@ -242,19 +242,8 @@ public class Rollbar {
 
     File folder = new File(context.getCacheDir(), ITEM_DIR_NAME);
 
-    DiskQueue queue = new DiskQueue.Builder()
-        .queueFolder(folder)
-        .build();
-
-    BufferedSender sender = new BufferedSender.Builder()
-        .queue(queue)
-        .initialFlushDelay(TimeUnit.SECONDS.toMillis(DEFAULT_ITEM_SCHEDULE_STARTUP_DELAY))
-        .flushFreq(TimeUnit.SECONDS.toMillis(DEFAULT_ITEM_SCHEDULE_DELAY))
-        .build();
-
     ConfigBuilder defaultConfig = ConfigBuilder.withAccessToken(accessToken)
         .client(clientProvider)
-        .sender(sender)
         .platform(ANDROID)
         .framework(ANDROID)
         .notifier(new NotifierProvider(NOTIFIER_VERSION))
@@ -266,6 +255,22 @@ public class Rollbar {
       config = configProvider.provide(defaultConfig);
     } else {
       config = defaultConfig.build();
+    }
+
+    if (config.sender() == null) {
+      DiskQueue queue = new DiskQueue.Builder()
+              .queueFolder(folder)
+              .build();
+
+      BufferedSender sender = new BufferedSender.Builder()
+              .queue(queue)
+              .initialFlushDelay(TimeUnit.SECONDS.toMillis(DEFAULT_ITEM_SCHEDULE_STARTUP_DELAY))
+              .flushFreq(TimeUnit.SECONDS.toMillis(DEFAULT_ITEM_SCHEDULE_DELAY))
+              .build();
+
+      config = ConfigBuilder.withConfig(config)
+              .sender(sender)
+              .build();
     }
 
     this.rollbar = new com.rollbar.notifier.Rollbar(config);
