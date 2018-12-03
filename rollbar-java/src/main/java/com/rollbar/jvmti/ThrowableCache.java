@@ -12,7 +12,7 @@ public final class ThrowableCache {
             return new WeakHashMap<>();
         }
     };
-  private ThrowableClass() {}
+  private ThrowableCache() {}
 
   public static void add(Throwable throwable, CacheFrame[] frames) {
     Map<Throwable, CacheFrame[]> weakMap = cache.get();

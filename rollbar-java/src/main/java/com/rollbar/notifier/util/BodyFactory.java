@@ -92,7 +92,7 @@ public class BodyFactory {
       StackTraceElement element = elements[i];
       Map<String, Object> locals = null;
       if (cachedFrames != null) {
-        while (j >= 0 !cachedFrames[j].getMethod().getName().equals(element.getMethodName())) {
+        while (j >= 0 && !cachedFrames[j].getMethod().getName().equals(element.getMethodName())) {
           j--;
         }
         if (j >= 0) {
