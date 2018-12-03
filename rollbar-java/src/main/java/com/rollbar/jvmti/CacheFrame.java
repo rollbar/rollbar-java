@@ -19,7 +19,7 @@ public final class CacheFrame {
    */
   public CacheFrame(Method method, LocalVariable[] locals) {
     this.method = method;
-    this.locals = locals;
+    this.locals = Arrays.copyOf(locals, locals.length);
   }
 
   /**
