@@ -14,6 +14,7 @@ import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
 import java.net.Proxy;
 import java.util.Map;
+import java.util.List;
 
 /**
  * The configuration for the {@link Rollbar notifier}.
@@ -166,6 +167,13 @@ public interface Config {
    * @return the proxy.
    */
   Proxy proxy();
+
+  /**
+   * Get the list of packages considered to be in your app.
+   *
+   * @return the list of packages.
+   */
+  List<String> appPackages();
 
   /**
    * Flag to indicate that the Rollbar notifier should handle the uncaught errors.

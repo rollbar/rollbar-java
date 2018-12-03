@@ -1,0 +1,16 @@
+[package]
+name = "rollbar-java-agent"
+version = "0.1.0"
+authors = ["Andrew Weiss <wvvwwvw@gmail.com>"]
+build = "build.rs"
+
+[lib]
+crate_type = [ "cdylib" ]
+
+[dependencies]
+error-chain = "0.12.0"
+log = "0.4"
+pretty_env_logger = "0.2.5"
+
+[build-dependencies]
+bindgen = "0.43.0"
