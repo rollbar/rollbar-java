@@ -12,6 +12,7 @@ import com.rollbar.notifier.wrapper.RollbarThrowableWrapper;
 import com.rollbar.notifier.wrapper.ThrowableWrapper;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Body factory helper to build the proper body depending on the throwable or the description.
@@ -81,7 +82,7 @@ public class BodyFactory {
 
   private static List<Frame> frames(ThrowableWrapper throwableWrapper) {
     StackTraceElement[] elements = throwableWrapper.getStackTrace();
-    CacheFrame[] cachedFrames = ThrowableCache.get(throwableWrapper.throwable());
+    CacheFrame[] cachedFrames = ThrowableCache.get(throwableWrapper.getThrowable());
     int j = 0;
     if (cachedFrames != null) {
       j = cachedFrames.length - 1;

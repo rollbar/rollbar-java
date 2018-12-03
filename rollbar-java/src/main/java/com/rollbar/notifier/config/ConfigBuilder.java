@@ -501,7 +501,11 @@ public class ConfigBuilder {
       this.uuidGenerator = builder.uuidGenerator;
       this.sender = builder.sender;
       this.proxy = builder.proxy;
-      this.appPackages = builder.appPackages != null ? builder.appPackages : Collections.emptyList();
+      if (builder.appPackages == null) {
+        this.appPackages = Collections.<String>emptyList();
+      } else {
+        this.appPackages = builder.appPackages;
+      }
       this.handleUncaughtErrors = builder.handleUncaughtErrors;
       this.enabled = builder.enabled;
     }
