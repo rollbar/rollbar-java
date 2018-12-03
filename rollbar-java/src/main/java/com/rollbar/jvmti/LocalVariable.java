@@ -5,8 +5,8 @@ package com.rollbar.jvmti;
  * exception gathered by the native interface.
  */
 public final class LocalVariable {
-  final String name;
-  final Object value;
+  private final String name;
+  private final Object value;
 
   /**
    * Constructor with the variable name and value.
