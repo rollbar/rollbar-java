@@ -1,27 +1,44 @@
 package com.rollbar.jvmti;
 
+/**
+ * LocalVariable is a data object reprsenting a live variable in a stack frame at the time of an
+ * exception gathered by the native interface.
+ */
 public final class LocalVariable {
-    final String name;
-    final Object value;
+  final String name;
+  final Object value;
 
-    public LocalVariable(String name, Object value) {
-        this.name = name;
-        this.value = value;
-    }
+  /**
+   * Constructor with the variable name and value.
+   */
+  public LocalVariable(String name, Object value) {
+    this.name = name;
+    this.value = value;
+  }
 
-    public String getName() {
-        return name;
-    }
+  /**
+   * Getter.
+   *
+   * @return the name of the variable.
+   */
+  public String getName() {
+    return name;
+  }
 
-    public Object getValue() {
-        return value;
-    }
+  /**
+   * Getter.
+   *
+   * @return the value of the variable.
+   */
+  public Object getValue() {
+    return value;
+  }
 
-    @Override
-    public String toString() {
-        return "LocalVariable{"
-            + "name='" + name + '\''
-            + ", value=" + value
-            + '}';
-    }
+  @Override
+  public String toString() {
+    return "LocalVariable{"
+      + "name='" + name + '\''
+      + ", value=" + value
+      + '}';
+  }
 }

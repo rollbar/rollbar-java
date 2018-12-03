@@ -13,8 +13,8 @@ import com.rollbar.notifier.sender.Sender;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
 import java.net.Proxy;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The configuration for the {@link Rollbar notifier}.

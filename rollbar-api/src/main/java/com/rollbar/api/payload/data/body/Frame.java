@@ -206,7 +206,7 @@ public class Frame implements JsonSerializable {
     if (keywordArgs != null ? !keywordArgs.equals(frame.keywordArgs) : frame.keywordArgs != null) {
       return false;
     }
-    return locals != null ? locals.equals(frame.locals) : frame.locals== null;
+    return locals != null ? locals.equals(frame.locals) : frame.locals == null;
   }
 
   @Override

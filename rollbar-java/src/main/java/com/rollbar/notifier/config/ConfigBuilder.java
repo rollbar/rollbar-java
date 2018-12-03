@@ -18,9 +18,9 @@ import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.Proxy;
-import java.util.Map;
-import java.util.List;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Configuration builder to build the {@link Config configuration} of the {@link Rollbar rollbar}
