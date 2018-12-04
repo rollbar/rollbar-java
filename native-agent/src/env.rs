@@ -219,11 +219,11 @@ impl JniEnv {
         unsafe {
             result = (**self.jni)
                 .CallObjectMethod
-                .expect("CallObbjectMethod function not found")(
+                .expect("CallObjectMethod function not found")(
                 self.jni, object, method_id
             );
         }
-        if result == ptr::null_mut() {
+        if result.is_null() {
             None
         } else {
             Some(result)
@@ -244,7 +244,7 @@ impl JniEnv {
                 self.jni, class, method_id, arg
             );
         }
-        if self.exception_occurred() || result == ptr::null_mut() {
+        if self.exception_occurred() || result.is_null() {
             let message = format!(
                 "call to static method_id {:?} on class {:?} failed",
                 method_id, class
@@ -325,7 +325,7 @@ impl JniEnv {
                 self.jni, c_class_name.as_ptr()
             )
         }
-        if self.exception_occurred() || class == ptr::null_mut() {
+        if self.exception_occurred() || class.is_null() {
             let message = format!("{} class not found", class_name);
             self.diagnose_exception(&message)?;
             bail!(ErrorKind::Jni(message))
@@ -342,7 +342,7 @@ impl JniEnv {
     ) -> Result<::jvmti::jmethodID> {
         let c_method = CString::new(method)?;
         let c_signature = CString::new(signature)?;
-        let method_id = self.get_static_method_id_internal(class, c_method, c_signature);
+        let method_id = self.get_static_method_id_internal(class, &c_method, &c_signature);
         if self.exception_occurred() || method_id == None {
             let message = format!(
                 "{} static method with signature {} not found",
@@ -357,8 +357,8 @@ impl JniEnv {
     fn get_static_method_id_internal(
         &mut self,
         class: ::jvmti::jclass,
-        method: CString,
-        signature: CString,
+        method: &CString,
+        signature: &CString,
     ) -> Option<::jvmti::jmethodID> {
         let method_id;
         unsafe {
@@ -371,7 +371,7 @@ impl JniEnv {
                 signature.as_ptr(),
             );
         }
-        if method_id == ptr::null_mut() {
+        if method_id.is_null() {
             None
         } else {
             Some(method_id)
@@ -393,8 +393,8 @@ impl JniEnv {
                 self.jni, class, ctor, arg1, arg2
             );
         }
-        if self.exception_occurred() || result == ptr::null_mut() {
-            let message = "object creation failed".into();
+        if self.exception_occurred() || result.is_null() {
+            let message = "object creation failed [StringL]".to_owned();
             self.diagnose_exception(&message)?;
             bail!(ErrorKind::Jni(message))
         } else {
@@ -417,8 +417,8 @@ impl JniEnv {
                 self.jni, class, ctor, arg1, arg2
             );
         }
-        if self.exception_occurred() || result == ptr::null_mut() {
-            let message = "object creation failed".into();
+        if self.exception_occurred() || result.is_null() {
+            let message = "object creation failed [LAL]".to_owned();
             self.diagnose_exception(&message)?;
             bail!(ErrorKind::Jni(message))
         } else {
@@ -440,8 +440,8 @@ impl JniEnv {
                 self.jni, length, class, init
             );
         }
-        if self.exception_occurred() || result == ptr::null_mut() {
-            let message = "object array creation failed".into();
+        if self.exception_occurred() || result.is_null() {
+            let message = "object array creation failed".to_owned();
             self.diagnose_exception(&message)?;
             bail!(ErrorKind::Jni(message))
         } else {
@@ -451,7 +451,7 @@ impl JniEnv {
 
     pub fn set_object_array_element(
         &mut self,
-        array: &::jvmti::jobjectArray,
+        array: ::jvmti::jobjectArray,
         index: ::jvmti::jsize,
         val: ::jvmti::jobject,
     ) -> Result<()> {
@@ -459,11 +459,11 @@ impl JniEnv {
             (**self.jni)
                 .SetObjectArrayElement
                 .expect("SetObjectArrayElement function nout found")(
-                self.jni, *array, index, val
+                self.jni, array, index, val
             );
         }
         if self.exception_occurred() {
-            let message = "object array element set failed".into();
+            let message = "object array element set failed".to_owned();
             self.diagnose_exception(&message)?;
             bail!(ErrorKind::Jni(message))
         } else {
@@ -479,7 +479,7 @@ impl JniEnv {
     ) -> Result<::jvmti::jmethodID> {
         let c_method = CString::new(method)?;
         let c_signature = CString::new(signature)?;
-        let method_id = self.get_method_id_internal(class, c_method, c_signature);
+        let method_id = self.get_method_id_internal(class, &c_method, &c_signature);
         if self.exception_occurred() || method_id == None {
             let message = format!("{} method with signature {} not found", method, signature);
             self.diagnose_exception(&message)?;
@@ -492,8 +492,8 @@ impl JniEnv {
     fn get_method_id_internal(
         &mut self,
         class: ::jvmti::jclass,
-        method: CString,
-        signature: CString,
+        method: &CString,
+        signature: &CString,
     ) -> Option<::jvmti::jmethodID> {
         let method_id;
         unsafe {
@@ -506,7 +506,7 @@ impl JniEnv {
                 signature.as_ptr(),
             );
         }
-        if method_id == ptr::null_mut() {
+        if method_id.is_null() {
             None
         } else {
             Some(method_id)
@@ -520,7 +520,7 @@ impl JniEnv {
                 .GetObjectClass
                 .expect("GetObjectClass function not found")(self.jni, object)
         }
-        if class == ptr::null_mut() {
+        if class.is_null() {
             None
         } else {
             Some(class)
@@ -530,8 +530,15 @@ impl JniEnv {
     pub fn get_exception_message(&mut self, exc: ::jvmti::jobject) -> Option<String> {
         self.get_object_class_internal(exc)
             .and_then(|exc_class| {
-                self.get_method_id(exc_class, "getMessage", "()Ljava/lang/String;")
-                    .ok()
+                let c_method = match CString::new("getMessage") {
+                    Ok(s) => s,
+                    Err(_) => return None,
+                };
+                let c_signature = match CString::new("()Ljava/lang/String;") {
+                    Ok(s) => s,
+                    Err(_) => return None,
+                };
+                self.get_method_id_internal(exc_class, &c_method, &c_signature)
             }).and_then(|method_id| self.call_object_method_returning_string(exc, method_id))
     }
 
@@ -550,7 +557,7 @@ impl JniEnv {
         Some(rust_result)
     }
 
-    pub fn diagnose_exception(&mut self, message: &String) -> Result<()> {
+    pub fn diagnose_exception(&mut self, message: &str) -> Result<()> {
         if !self.exception_occurred() {
             return Ok(());
         }
@@ -563,8 +570,8 @@ impl JniEnv {
 
         let exc_message = self
             .get_exception_message(exc)
-            .unwrap_or("BAD EXCEPTION MESSAGE".to_owned());
-        let err = Err(ErrorKind::Jni(format!("{}: {}", message.clone(), exc_message)).into());
+            .unwrap_or_else(|| "BAD EXCEPTION MESSAGE".to_owned());
+        let err = Err(ErrorKind::Jni(format!("{}: {}", message.to_owned(), exc_message)).into());
         unsafe {
             (**self.jni)
                 .ExceptionClear
@@ -615,8 +622,8 @@ impl JniEnv {
                 .NewStringUTF
                 .expect("NewStringUTF function not found")(self.jni, utf_chars);
         }
-        if self.exception_occurred() || result == ptr::null_mut() {
-            let message = "new string utf failed".into();
+        if self.exception_occurred() || result.is_null() {
+            let message = "new string utf failed".to_owned();
             self.diagnose_exception(&message)?;
             bail!(ErrorKind::Jni(message))
         } else {
@@ -624,7 +631,7 @@ impl JniEnv {
         }
     }
 
-    pub fn to_reflected_method(
+    pub fn get_reflected_method(
         &mut self,
         method_class: ::jvmti::jclass,
         method: ::jvmti::jmethodID,
@@ -641,8 +648,8 @@ impl JniEnv {
                 is_static as ::std::os::raw::c_uchar,
             );
         }
-        if self.exception_occurred() || result == ptr::null_mut() {
-            let message = "new string utf failed".into();
+        if self.exception_occurred() || result.is_null() {
+            let message = "new string utf failed".to_owned();
             self.diagnose_exception(&message)?;
             bail!(ErrorKind::Jni(message))
         } else {
@@ -658,7 +665,6 @@ pub fn inner_callback(
     exception: ::jvmti::jobject,
 ) -> Result<()> {
     trace!("on_exception called");
-
     let class = jni_env.find_class("com/rollbar/jvmti/ThrowableCache")?;
     let should_cache_method =
         jni_env.get_static_method_id(class, "shouldCacheThrowable", "(Ljava/lang/Throwable;I)Z")?;
@@ -693,7 +699,6 @@ fn build_stack_trace_frames(
     start_depth: ::jvmti::jint,
     num_frames: ::jvmti::jint,
 ) -> Result<::jvmti::jobjectArray> {
-    trace!("buildStackTraceFrames called");
     let mut frames: Vec<::jvmti::jvmtiFrameInfo> = Vec::with_capacity(num_frames as usize);
     let mut num_frames_returned: ::jvmti::jint = 0;
     jvmti_env.get_stack_trace(
@@ -703,6 +708,12 @@ fn build_stack_trace_frames(
         frames.as_mut_ptr(),
         &mut num_frames_returned,
     )?;
+    if num_frames_returned >= 0 && num_frames_returned as usize > frames.len() {
+        debug_assert!(num_frames_returned as usize <= frames.capacity());
+        unsafe {
+            frames.set_len(num_frames_returned as usize);
+        }
+    }
     let class = jni_env.find_class("com/rollbar/jvmti/CacheFrame")?;
     let result = jni_env.new_object_array(num_frames_returned, class, ptr::null_mut())?;
     for i in 0..num_frames_returned {
@@ -714,9 +725,8 @@ fn build_stack_trace_frames(
             frames[i as usize].method,
             frames[i as usize].location,
         )?;
-        jni_env.set_object_array_element(&result, i, frame)?;
+        jni_env.set_object_array_element(result, i, frame)?;
     }
-    trace!("buildStackTraceFrames exit");
     Ok(result)
 }
 
@@ -733,7 +743,20 @@ fn build_frame(
     let mut num_entries: ::jvmti::jint = 0;
     let mut local_var_table: *mut ::jvmti::jvmtiLocalVariableEntry = ptr::null_mut();
 
-    jvmti_env.get_local_variable_table(method, &mut num_entries, &mut local_var_table)?;
+    if let Err(e) =
+        jvmti_env.get_local_variable_table(method, &mut num_entries, &mut local_var_table)
+    {
+        match e {
+            Error(ErrorKind::JvmTi(_, rc), _)
+                if rc == ::jvmti::jvmtiError_JVMTI_ERROR_ABSENT_INFORMATION as ::jvmti::jint
+                    || rc == ::jvmti::jvmtiError_JVMTI_ERROR_NATIVE_METHOD as ::jvmti::jint =>
+            {
+                return make_frame_object(jvmti_env, jni_env, method, ptr::null_mut());
+            }
+            _ => {}
+        }
+        return Err(e);
+    }
 
     let local_class = jni_env.find_class("com/rollbar/jvmti/LocalVariable")?;
     let ctor = jni_env.get_method_id(
@@ -752,21 +775,12 @@ fn build_frame(
             local_class,
             ctor,
             location,
-            &locals,
-            &mut local_var_table,
+            locals,
+            local_var_table,
             i,
         )?;
     }
     jvmti_env.deallocate(local_var_table as *mut ::std::os::raw::c_uchar)?;
-
-    /*
-     * Why?
-     *
-    jvmti_error = jvmti->GetLocalObject(thread, depth, 0, &value_ptr);
-    if (jvmti_error != JVMTI_ERROR_NONE) {
-        value_ptr = nullptr;
-    }
-    */
 
     make_frame_object(jvmti_env, jni_env, method, locals)
 }
@@ -779,29 +793,20 @@ fn make_local_variable(
     local_class: ::jvmti::jclass,
     ctor: ::jvmti::jmethodID,
     location: ::jvmti::jlocation,
-    locals: &::jvmti::jobjectArray,
-    local_var_table: *mut *mut ::jvmti::jvmtiLocalVariableEntry,
+    locals: ::jvmti::jobjectArray,
+    local_var_table: *mut ::jvmti::jvmtiLocalVariableEntry,
     index: ::jvmti::jint,
 ) -> Result<()> {
     let entry;
     unsafe {
-        entry = **local_var_table.offset(index as isize);
+        entry = *local_var_table.offset(index as isize);
     }
     let name = jni_env.new_string_utf(entry.name)?;
 
     let local = if location >= entry.start_location
-        && location <= entry.start_location + entry.length as ::jvmti::jlocation
+        && location <= entry.start_location + i64::from(entry.length)
     {
-        let mut value: ::jvmti::jobject = ptr::null_mut();
-        get_local_value(
-            jvmti_env,
-            jni_env,
-            thread,
-            depth,
-            local_var_table,
-            index,
-            &mut value,
-        )?;
+        let value = get_local_value(jvmti_env, jni_env, thread, depth, local_var_table, index)?;
         jni_env.new_object_StringL(local_class, ctor, name, value)?
     } else {
         ptr::null_mut()
@@ -818,7 +823,7 @@ fn make_frame_object(
 ) -> Result<::jvmti::jobject> {
     let mut method_class: ::jvmti::jclass = ptr::null_mut();
     jvmti_env.get_method_declaring_class(method, &mut method_class)?;
-    let frame_method = jni_env.to_reflected_method(method_class, method, true)?;
+    let frame_method = jni_env.get_reflected_method(method_class, method, true)?;
     let frame_class = jni_env.find_class("com/rollbar/jvmti/CacheFrame")?;
     let ctor = jni_env.get_method_id(
         frame_class,
@@ -833,68 +838,65 @@ fn get_local_value(
     jni_env: &mut JniEnv,
     thread: ::jvmti::jthread,
     depth: ::jvmti::jint,
-    local_var_table: *mut *mut ::jvmti::jvmtiLocalVariableEntry,
+    local_var_table: *mut ::jvmti::jvmtiLocalVariableEntry,
     index: ::jvmti::jint,
-    result: *mut ::jvmti::jobject,
-) -> Result<()> {
+) -> Result<::jvmti::jobject> {
     let entry;
     let signature;
     unsafe {
-        entry = **local_var_table.offset(index as isize);
+        entry = *local_var_table.offset(index as isize);
         signature = CStr::from_ptr(entry.signature).to_bytes();
     }
 
+    if signature.is_empty() {
+        let message = "bad local variable signature".to_owned();
+        bail!(ErrorKind::Jni(message));
+    }
     match signature[0] {
-        b'[' | b'L' => return jvmti_env.get_local_object(thread, depth, entry.slot, result),
+        b'[' | b'L' => {
+            let mut result: ::jvmti::jobject = ptr::null_mut();
+            jvmti_env.get_local_object(thread, depth, entry.slot, &mut result)?;
+            return Ok(result);
+        }
         b'J' => {
             let mut val: ::jvmti::jlong = 0;
             jvmti_env.get_local_long(thread, depth, entry.slot, &mut val)?;
             let reflect_class = jni_env.find_class("java/lang/Long")?;
             let value_of =
                 jni_env.get_static_method_id(reflect_class, "valueOf", "(J)Ljava/lang/Long;")?;
-            unsafe {
-                *result = jni_env.call_static_object_method(reflect_class, value_of, val)?;
-            }
+            return jni_env.call_static_object_method(reflect_class, value_of, val);
         }
         b'F' => {
             let mut val: ::jvmti::jfloat = 0.0;
             jvmti_env.get_local_float(thread, depth, entry.slot, &mut val)?;
             let reflect_class = jni_env.find_class("java/lang/Float")?;
             let value_of =
-                jni_env.get_static_method_id(reflect_class, "valueOf", "(J)Ljava/lang/Float;")?;
-            unsafe {
-                *result = jni_env.call_static_object_method(reflect_class, value_of, val)?;
-            }
+                jni_env.get_static_method_id(reflect_class, "valueOf", "(F)Ljava/lang/Float;")?;
+            return jni_env.call_static_object_method(reflect_class, value_of, val);
         }
         b'D' => {
             let mut val: ::jvmti::jdouble = 0.0;
             jvmti_env.get_local_double(thread, depth, entry.slot, &mut val)?;
             let reflect_class = jni_env.find_class("java/lang/Double")?;
             let value_of =
-                jni_env.get_static_method_id(reflect_class, "valueOf", "(J)Ljava/lang/Double;")?;
-            unsafe {
-                *result = jni_env.call_static_object_method(reflect_class, value_of, val)?;
-            }
+                jni_env.get_static_method_id(reflect_class, "valueOf", "(D)Ljava/lang/Double;")?;
+            return jni_env.call_static_object_method(reflect_class, value_of, val);
         }
         b'I' => {
             let mut val: ::jvmti::jint = 0;
             jvmti_env.get_local_int(thread, depth, entry.slot, &mut val)?;
             let reflect_class = jni_env.find_class("java/lang/Integer")?;
             let value_of =
-                jni_env.get_static_method_id(reflect_class, "valueOf", "(J)Ljava/lang/Integer;")?;
-            unsafe {
-                *result = jni_env.call_static_object_method(reflect_class, value_of, val)?;
-            }
+                jni_env.get_static_method_id(reflect_class, "valueOf", "(I)Ljava/lang/Integer;")?;
+            return jni_env.call_static_object_method(reflect_class, value_of, val);
         }
         b'S' => {
             let mut val: ::jvmti::jint = 0;
             jvmti_env.get_local_int(thread, depth, entry.slot, &mut val)?;
             let reflect_class = jni_env.find_class("java/lang/Short")?;
             let value_of =
-                jni_env.get_static_method_id(reflect_class, "valueOf", "(J)Ljava/lang/Short;")?;
-            unsafe {
-                *result = jni_env.call_static_object_method(reflect_class, value_of, val)?;
-            }
+                jni_env.get_static_method_id(reflect_class, "valueOf", "(S)Ljava/lang/Short;")?;
+            return jni_env.call_static_object_method(reflect_class, value_of, val);
         }
         b'C' => {
             let mut val: ::jvmti::jint = 0;
@@ -903,33 +905,28 @@ fn get_local_value(
             let value_of = jni_env.get_static_method_id(
                 reflect_class,
                 "valueOf",
-                "(J)Ljava/lang/Character;",
+                "(C)Ljava/lang/Character;",
             )?;
-            unsafe {
-                *result = jni_env.call_static_object_method(reflect_class, value_of, val)?;
-            }
+            return jni_env.call_static_object_method(reflect_class, value_of, val);
         }
         b'B' => {
             let mut val: ::jvmti::jint = 0;
             jvmti_env.get_local_int(thread, depth, entry.slot, &mut val)?;
             let reflect_class = jni_env.find_class("java/lang/Byte")?;
             let value_of =
-                jni_env.get_static_method_id(reflect_class, "valueOf", "(J)Ljava/lang/Byte;")?;
-            unsafe {
-                *result = jni_env.call_static_object_method(reflect_class, value_of, val)?;
-            }
+                jni_env.get_static_method_id(reflect_class, "valueOf", "(B)Ljava/lang/Byte;")?;
+            return jni_env.call_static_object_method(reflect_class, value_of, val);
         }
         b'Z' => {
             let mut val: ::jvmti::jint = 0;
             jvmti_env.get_local_int(thread, depth, entry.slot, &mut val)?;
             let reflect_class = jni_env.find_class("java/lang/Boolean")?;
             let value_of =
-                jni_env.get_static_method_id(reflect_class, "valueOf", "(J)Ljava/lang/Boolean;")?;
-            unsafe {
-                *result = jni_env.call_static_object_method(reflect_class, value_of, val)?;
-            }
+                jni_env.get_static_method_id(reflect_class, "valueOf", "(Z)Ljava/lang/Boolean;")?;
+            return jni_env.call_static_object_method(reflect_class, value_of, val);
         }
         _ => {}
     }
-    Ok(())
+    let message = "bad local variable signature".to_owned();
+    bail!(ErrorKind::Jni(message));
 }

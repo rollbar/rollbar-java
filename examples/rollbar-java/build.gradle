@@ -7,6 +7,11 @@ jar {
 
 mainClassName = "com.rollbar.example.Application"
 
+applicationDefaultJvmArgs = [
+  "-agentpath:"+System.getProperty("user.dir")+"/native-agent/target/release/librollbar_java_agent.dylib",
+  "-XX:OnError=jstack -F -l %p"
+]
+
 dependencies {
     compile project(":rollbar-java")
 

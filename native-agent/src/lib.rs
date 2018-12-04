@@ -8,10 +8,10 @@ extern crate log;
 #[macro_use]
 extern crate error_chain;
 
-mod errors;
-
-mod env;
+#[cfg_attr(feature = "cargo-clippy", allow(clippy))]
 mod jvmti;
+mod env;
+mod errors;
 
 use env::{JniEnv, JvmTiEnv};
 use std::sync::atomic::{AtomicBool, Ordering, ATOMIC_BOOL_INIT};
@@ -27,9 +27,8 @@ pub extern "C" fn Agent_OnLoad(
 ) -> jvmti::jint {
     pretty_env_logger::init_custom_env("ROLLBAR_LOG");
     info!("Agent load begin");
-    match onload(vm) {
-        Err(e) => return e,
-        _ => {}
+    if let Err(e) = onload(vm) {
+        return e;
     }
     info!("Agent load complete success");
     INIT_SUCCESS.store(true, Ordering::Relaxed);
@@ -47,13 +46,11 @@ fn on_exception(
     jvmti_env: JvmTiEnv,
     jni_env: JniEnv,
     thread: ::jvmti::jthread,
-    _method: ::jvmti::jmethodID,
-    _location: ::jvmti::jlocation,
     exception: ::jvmti::jobject,
-    _catch_method: ::jvmti::jmethodID,
-    _catch_location: ::jvmti::jlocation,
 ) {
-    env::inner_callback(jvmti_env, jni_env, thread, exception).unwrap();
+    if let Err(e) = env::inner_callback(jvmti_env, jni_env, thread, exception) {
+        debug!("{}", e);
+    }
 }
 
 #[allow(unused_variables)]
@@ -69,15 +66,6 @@ unsafe extern "C" fn c_on_exception(
 ) -> () {
     if INIT_SUCCESS.load(Ordering::Relaxed) {
         let jvmti_env = JvmTiEnv::wrap(jvmti_env);
-        on_exception(
-            jvmti_env,
-            JniEnv::new(jni_env),
-            thread,
-            method,
-            location,
-            exception,
-            catch_method,
-            catch_location,
-        );
+        on_exception(jvmti_env, JniEnv::new(jni_env), thread, exception);
     }
 }

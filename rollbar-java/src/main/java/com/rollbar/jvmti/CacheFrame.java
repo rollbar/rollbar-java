@@ -19,7 +19,11 @@ public final class CacheFrame {
    */
   public CacheFrame(Method method, LocalVariable[] locals) {
     this.method = method;
-    this.locals = Arrays.copyOf(locals, locals.length);
+    if (locals != null) {
+      this.locals = Arrays.copyOf(locals, locals.length);
+    } else {
+      this.locals = null;
+    }
   }
 
   /**
@@ -38,7 +42,7 @@ public final class CacheFrame {
    */
   public Map<String, Object> getLocals() {
     if (locals == null || locals.length == 0) {
-      return Collections.emptyMap();
+      return null;
     }
 
     Map<String, Object> localsMap = new HashMap<>();
