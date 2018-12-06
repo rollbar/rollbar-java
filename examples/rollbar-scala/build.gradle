@@ -5,6 +5,10 @@ repositories {
     mavenCentral()
 }
 
+applicationDefaultJvmArgs = [
+  "-agentpath:../../native-agent/target/release/"+System.mapLibraryName("rollbar_java_agent")
+]
+
 dependencies {
     compile project(":rollbar-java")
 
