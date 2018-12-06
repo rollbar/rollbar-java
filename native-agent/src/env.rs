@@ -137,8 +137,8 @@ impl JvmTiEnv {
         )
     }
 
-    pub fn deallocate(&mut self, ptr: *mut ::std::os::raw::c_uchar) -> Result<()> {
-        jvmtifn!(self.jvmti, Deallocate, ptr)
+    pub fn dealloc<T>(&mut self, ptr: *mut T) -> Result<()> {
+        jvmtifn!(self.jvmti, Deallocate, ptr as *mut ::std::os::raw::c_uchar)
     }
 
     pub fn get_local_object(
@@ -730,8 +730,6 @@ fn build_stack_trace_frames(
     Ok(result)
 }
 
-// TODO: Make sure local_var_table gets deallocated in case of early return
-// due to error. Probably via an inner wrapper function.
 fn build_frame(
     jvmti_env: &mut JvmTiEnv,
     jni_env: &mut JniEnv,
@@ -758,6 +756,34 @@ fn build_frame(
         return Err(e);
     }
 
+    //let local_entries = slice::from_raw_parts(local_var_table, num_entries as usize);
+
+    let result = gather_local_information(jvmti_env, jni_env, thread, depth, method, location, local_var_table, num_entries);
+    for i in 0..num_entries {
+        let entry;
+        unsafe {
+            entry = *local_var_table.offset(i as isize);
+        }
+        let _ = jvmti_env.dealloc(entry.name);
+        let _ = jvmti_env.dealloc(entry.signature);
+        if !entry.generic_signature.is_null() {
+            let _ = jvmti_env.dealloc(entry.generic_signature);
+        }
+    }
+    let _ = jvmti_env.dealloc(local_var_table);
+    result
+}
+
+fn gather_local_information(
+    jvmti_env: &mut JvmTiEnv,
+    jni_env: &mut JniEnv,
+    thread: ::jvmti::jthread,
+    depth: ::jvmti::jint,
+    method: ::jvmti::jmethodID,
+    location: ::jvmti::jlocation,
+    local_var_table: *mut ::jvmti::jvmtiLocalVariableEntry,
+    num_entries: ::jvmti::jint,
+) -> Result<::jvmti::jobject> {
     let local_class = jni_env.find_class("com/rollbar/jvmti/LocalVariable")?;
     let ctor = jni_env.get_method_id(
         local_class,
@@ -780,8 +806,6 @@ fn build_frame(
             i,
         )?;
     }
-    jvmti_env.deallocate(local_var_table as *mut ::std::os::raw::c_uchar)?;
-
     make_frame_object(jvmti_env, jni_env, method, locals)
 }
 
