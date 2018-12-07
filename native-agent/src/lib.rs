@@ -8,12 +8,16 @@ extern crate log;
 #[macro_use]
 extern crate error_chain;
 
-#[cfg_attr(feature = "cargo-clippy", allow(clippy))]
-mod jvmti;
 mod env;
 mod errors;
+mod exceptions;
+mod jni;
 
-use env::{JniEnv, JvmTiEnv};
+#[cfg_attr(feature = "cargo-clippy", allow(clippy))]
+mod jvmti;
+
+use env::JvmTiEnv;
+use jni::JniEnv;
 use std::sync::atomic::{AtomicBool, Ordering, ATOMIC_BOOL_INIT};
 
 static INIT_SUCCESS: AtomicBool = ATOMIC_BOOL_INIT;
@@ -48,7 +52,7 @@ fn on_exception(
     thread: ::jvmti::jthread,
     exception: ::jvmti::jobject,
 ) {
-    if let Err(e) = env::inner_callback(jvmti_env, jni_env, thread, exception) {
+    if let Err(e) = exceptions::inner_callback(jvmti_env, jni_env, thread, exception) {
         debug!("{}", e);
     }
 }
