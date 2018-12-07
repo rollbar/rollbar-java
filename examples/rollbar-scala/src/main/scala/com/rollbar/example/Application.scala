@@ -29,7 +29,7 @@ object Application {
     try {
       rollbar.close(true);
     } catch {
-      case e: Exception => e.printStackTrace
+      case NonFatal(e) => e.printStackTrace
     }
   }
 
