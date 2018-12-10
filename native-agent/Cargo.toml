@@ -14,3 +14,6 @@ pretty_env_logger = "0.2.5"
 
 [build-dependencies]
 bindgen = "0.43.0"
+
+[profile.release]
+panic = "abort"

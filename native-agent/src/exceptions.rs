@@ -5,11 +5,17 @@ use std::ffi::CStr;
 use std::ptr;
 use std::slice;
 
+use jvmti::{
+    jclass, jdouble, jfloat, jint, jlocation, jlong, jmethodID, jobject, jobjectArray, jsize,
+    jthread, jvmtiError_JVMTI_ERROR_ABSENT_INFORMATION, jvmtiError_JVMTI_ERROR_NATIVE_METHOD,
+    jvmtiFrameInfo, jvmtiLocalVariableEntry,
+};
+
 pub fn inner_callback(
     mut jvmti_env: JvmTiEnv,
     mut jni_env: JniEnv,
-    thread: ::jvmti::jthread,
-    exception: ::jvmti::jobject,
+    thread: jthread,
+    exception: jobject,
 ) -> Result<()> {
     trace!("on_exception called");
     let class = jni_env.find_class("com/rollbar/jvmti/ThrowableCache")?;
@@ -42,12 +48,12 @@ pub fn inner_callback(
 fn build_stack_trace_frames(
     mut jvmti_env: JvmTiEnv,
     mut jni_env: JniEnv,
-    thread: ::jvmti::jthread,
-    start_depth: ::jvmti::jint,
-    num_frames: ::jvmti::jint,
-) -> Result<::jvmti::jobjectArray> {
-    let mut frames: Vec<::jvmti::jvmtiFrameInfo> = Vec::with_capacity(num_frames as usize);
-    let mut num_frames_returned: ::jvmti::jint = 0;
+    thread: jthread,
+    start_depth: jint,
+    num_frames: jint,
+) -> Result<jobjectArray> {
+    let mut frames: Vec<jvmtiFrameInfo> = Vec::with_capacity(num_frames as usize);
+    let mut num_frames_returned: jint = 0;
     jvmti_env.get_stack_trace(
         thread,
         start_depth,
@@ -80,21 +86,21 @@ fn build_stack_trace_frames(
 fn build_frame(
     jvmti_env: &mut JvmTiEnv,
     jni_env: &mut JniEnv,
-    thread: ::jvmti::jthread,
-    depth: ::jvmti::jint,
-    method: ::jvmti::jmethodID,
-    location: ::jvmti::jlocation,
-) -> Result<::jvmti::jobject> {
-    let mut num_entries: ::jvmti::jint = 0;
-    let mut local_var_table: *mut ::jvmti::jvmtiLocalVariableEntry = ptr::null_mut();
+    thread: jthread,
+    depth: jint,
+    method: jmethodID,
+    location: jlocation,
+) -> Result<jobject> {
+    let mut num_entries: jint = 0;
+    let mut local_var_table: *mut jvmtiLocalVariableEntry = ptr::null_mut();
 
     if let Err(e) =
         jvmti_env.get_local_variable_table(method, &mut num_entries, &mut local_var_table)
     {
         match e {
             Error(ErrorKind::JvmTi(_, rc), _)
-                if rc == ::jvmti::jvmtiError_JVMTI_ERROR_ABSENT_INFORMATION as ::jvmti::jint
-                    || rc == ::jvmti::jvmtiError_JVMTI_ERROR_NATIVE_METHOD as ::jvmti::jint =>
+                if rc == jvmtiError_JVMTI_ERROR_ABSENT_INFORMATION as jint
+                    || rc == jvmtiError_JVMTI_ERROR_NATIVE_METHOD as jint =>
             {
                 return make_frame_object(jvmti_env, jni_env, method, ptr::null_mut());
             }
@@ -131,23 +137,20 @@ fn build_frame(
 fn gather_local_information(
     jvmti_env: &mut JvmTiEnv,
     jni_env: &mut JniEnv,
-    thread: ::jvmti::jthread,
-    depth: ::jvmti::jint,
-    method: ::jvmti::jmethodID,
-    location: ::jvmti::jlocation,
-    local_entries: &[::jvmti::jvmtiLocalVariableEntry],
-) -> Result<::jvmti::jobject> {
+    thread: jthread,
+    depth: jint,
+    method: jmethodID,
+    location: jlocation,
+    local_entries: &[jvmtiLocalVariableEntry],
+) -> Result<jobject> {
     let local_class = jni_env.find_class("com/rollbar/jvmti/LocalVariable")?;
     let ctor = jni_env.get_method_id(
         local_class,
         "<init>",
         "(Ljava/lang/String;Ljava/lang/Object;)V",
     )?;
-    let locals = jni_env.new_object_array(
-        local_entries.len() as ::jvmti::jsize,
-        local_class,
-        ptr::null_mut(),
-    )?;
+    let locals =
+        jni_env.new_object_array(local_entries.len() as jsize, local_class, ptr::null_mut())?;
 
     for (i, entry) in local_entries.iter().enumerate() {
         make_local_variable(
@@ -160,7 +163,7 @@ fn gather_local_information(
             location,
             locals,
             entry,
-            i as ::jvmti::jint,
+            i as jint,
         )?;
     }
     make_frame_object(jvmti_env, jni_env, method, locals)
@@ -169,14 +172,14 @@ fn gather_local_information(
 fn make_local_variable(
     jvmti_env: &mut JvmTiEnv,
     jni_env: &mut JniEnv,
-    thread: ::jvmti::jthread,
-    depth: ::jvmti::jint,
-    local_class: ::jvmti::jclass,
-    ctor: ::jvmti::jmethodID,
-    location: ::jvmti::jlocation,
-    locals: ::jvmti::jobjectArray,
-    entry: &::jvmti::jvmtiLocalVariableEntry,
-    index: ::jvmti::jint,
+    thread: jthread,
+    depth: jint,
+    local_class: jclass,
+    ctor: jmethodID,
+    location: jlocation,
+    locals: jobjectArray,
+    entry: &jvmtiLocalVariableEntry,
+    index: jint,
 ) -> Result<()> {
     let name = jni_env.new_string_utf(entry.name)?;
 
@@ -195,10 +198,10 @@ fn make_local_variable(
 fn make_frame_object(
     jvmti_env: &mut JvmTiEnv,
     jni_env: &mut JniEnv,
-    method: ::jvmti::jmethodID,
-    locals: ::jvmti::jobjectArray,
-) -> Result<::jvmti::jobject> {
-    let mut method_class: ::jvmti::jclass = ptr::null_mut();
+    method: jmethodID,
+    locals: jobjectArray,
+) -> Result<jobject> {
+    let mut method_class: jclass = ptr::null_mut();
     jvmti_env.get_method_declaring_class(method, &mut method_class)?;
     let frame_method = jni_env.get_reflected_method(method_class, method, true)?;
     let frame_class = jni_env.find_class("com/rollbar/jvmti/CacheFrame")?;
@@ -213,10 +216,10 @@ fn make_frame_object(
 fn get_local_value(
     jvmti_env: &mut JvmTiEnv,
     jni_env: &mut JniEnv,
-    thread: ::jvmti::jthread,
-    depth: ::jvmti::jint,
-    entry: &::jvmti::jvmtiLocalVariableEntry,
-) -> Result<::jvmti::jobject> {
+    thread: jthread,
+    depth: jint,
+    entry: &jvmtiLocalVariableEntry,
+) -> Result<jobject> {
     let signature;
     unsafe {
         signature = CStr::from_ptr(entry.signature).to_bytes();
@@ -228,47 +231,47 @@ fn get_local_value(
     }
     match signature[0] {
         b'[' | b'L' => {
-            let mut result: ::jvmti::jobject = ptr::null_mut();
+            let mut result: jobject = ptr::null_mut();
             jvmti_env.get_local_object(thread, depth, entry.slot, &mut result)?;
             Ok(result)
         }
         b'J' => {
-            let mut val: ::jvmti::jlong = 0;
+            let mut val: jlong = 0;
             jvmti_env.get_local_long(thread, depth, entry.slot, &mut val)?;
             jni_env.value_of("java/lang/Long", "(J)Ljava/lang/Long;", val)
         }
         b'F' => {
-            let mut val: ::jvmti::jfloat = 0.0;
+            let mut val: jfloat = 0.0;
             jvmti_env.get_local_float(thread, depth, entry.slot, &mut val)?;
             jni_env.value_of("java/lang/Float", "(F)Ljava/lang/Float;", val)
         }
         b'D' => {
-            let mut val: ::jvmti::jdouble = 0.0;
+            let mut val: jdouble = 0.0;
             jvmti_env.get_local_double(thread, depth, entry.slot, &mut val)?;
             jni_env.value_of("java/lang/Double", "(D)Ljava/lang/Double;", val)
         }
         b'I' => {
-            let mut val: ::jvmti::jint = 0;
+            let mut val: jint = 0;
             jvmti_env.get_local_int(thread, depth, entry.slot, &mut val)?;
             jni_env.value_of("java/lang/Integer", "(I)Ljava/lang/Integer;", val)
         }
         b'S' => {
-            let mut val: ::jvmti::jint = 0;
+            let mut val: jint = 0;
             jvmti_env.get_local_int(thread, depth, entry.slot, &mut val)?;
             jni_env.value_of("java/lang/Short", "(S)Ljava/lang/Short;", val)
         }
         b'C' => {
-            let mut val: ::jvmti::jint = 0;
+            let mut val: jint = 0;
             jvmti_env.get_local_int(thread, depth, entry.slot, &mut val)?;
             jni_env.value_of("java/lang/Character", "(C)Ljava/lang/Character;", val)
         }
         b'B' => {
-            let mut val: ::jvmti::jint = 0;
+            let mut val: jint = 0;
             jvmti_env.get_local_int(thread, depth, entry.slot, &mut val)?;
             jni_env.value_of("java/lang/Byte", "(B)Ljava/lang/Byte;", val)
         }
         b'Z' => {
-            let mut val: ::jvmti::jint = 0;
+            let mut val: jint = 0;
             jvmti_env.get_local_int(thread, depth, entry.slot, &mut val)?;
             jni_env.value_of("java/lang/Boolean", "(Z)Ljava/lang/Boolean;", val)
         }
