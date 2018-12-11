@@ -5,7 +5,7 @@ This Rust library implements a native agent for interacting with the JVM via the
 enriching stack traces with local variables for each frame. This works by interacting with some
 corresponding Java code included in the `rollbar-java` SDK.
 
-# Using the agent
+## Using the agent
 
 How to use the agent depends on how you invoke the JVM to start your application. In order
 to use a native agent you need to pass a command line argument to this invocation. The most
@@ -26,19 +26,19 @@ applicationDefaultJvmArgs = ["-agentpath:path/to/"+System.mapLibraryName("rollba
 Regardless of your JVM language of choice, at some level their is an invocation of the JVM and
 therefore there is a configuration option to pass arguments directly to the JVM.
 
-# Getting the agent library
+## Getting the agent library
 
 We will attempt to distribute via the releases page pre-built versions of the agent library for
 various architectures. However, if you are running in an environment where one of these libraries
 does not work, then you can build your own as long as you can install the Rust toolchain.
 
-## Building Generically
+### Building Generically
 
 * Install Rust: [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install)
 * `cargo build --release`
 * Get library from `target/release/librollbar_java_agent.{so,dll,dylib}`
 
-## Building on a Mac for Linux
+### Building on a Mac for Linux
 
 In the particular case where you are using a Mac but want to build a shared library that works on
 Linux, you have to do a little bit of extra work. Luckily, Rust has a decent cross compilation
@@ -59,9 +59,11 @@ Once that is setup, you can build for the specified target:
 
 You will find the resulting `.so` located at:
 
-> `target/x86_64-unknown-linux-gnu/release/librollbar_java_agent.so`
+```
+target/x86_64-unknown-linux-gnu/release/librollbar_java_agent.so
+```
 
-# Debugging
+## Debugging
 
 If you want to see additional output from our agent, you can set the environment variable
 `ROLLBAR_LOG` to one of `trace`, `debug`, `info`, or `warn`. These will output different levels of
