@@ -8,9 +8,12 @@ build = "build.rs"
 crate_type = [ "cdylib" ]
 
 [dependencies]
-error-chain = "0.12.0"
 log = "0.4"
 pretty_env_logger = "0.2.5"
+
+[dependencies.error-chain]
+version = "0.12.0"
+default-features = false
 
 [build-dependencies]
 bindgen = "0.43.0"

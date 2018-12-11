@@ -1,6 +1,6 @@
 use std::mem::size_of;
+use std::os::raw::{c_uchar, c_void};
 use std::ptr;
-use std::os::raw::{c_void, c_uchar};
 
 use c_on_exception;
 use errors::*;
