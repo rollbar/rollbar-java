@@ -18,6 +18,8 @@ import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.Proxy;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -68,6 +70,8 @@ public class ConfigBuilder {
 
   private Proxy proxy;
 
+  private List<String> appPackages;
+
   private boolean handleUncaughtErrors;
 
   private boolean enabled;
@@ -109,6 +113,7 @@ public class ConfigBuilder {
     this.enabled = config.isEnabled();
     this.endpoint = config.endpoint();
     this.proxy = config.proxy();
+    this.appPackages = config.appPackages();
   }
 
   /**
@@ -360,6 +365,17 @@ public class ConfigBuilder {
   }
 
   /**
+   * The list of packages to be considered in your app.
+   *
+   * @param appPackages the list of packages.
+   * @return the builder instance.
+   */
+  public ConfigBuilder appPackages(List<String> appPackages) {
+    this.appPackages = appPackages;
+    return this;
+  }
+
+  /**
    * Flag to set the default handler for uncaught errors,
    * see {@link UncaughtExceptionHandler}.
    * @param handleUncaughtErrors true to handle uncaught errors otherwise false.
@@ -457,6 +473,8 @@ public class ConfigBuilder {
 
     private final Proxy proxy;
 
+    private final List<String> appPackages;
+
     private final boolean handleUncaughtErrors;
 
     private final boolean enabled;
@@ -483,6 +501,11 @@ public class ConfigBuilder {
       this.uuidGenerator = builder.uuidGenerator;
       this.sender = builder.sender;
       this.proxy = builder.proxy;
+      if (builder.appPackages == null) {
+        this.appPackages = Collections.<String>emptyList();
+      } else {
+        this.appPackages = builder.appPackages;
+      }
       this.handleUncaughtErrors = builder.handleUncaughtErrors;
       this.enabled = builder.enabled;
     }
@@ -590,6 +613,11 @@ public class ConfigBuilder {
     @Override
     public Proxy proxy() {
       return proxy;
+    }
+
+    @Override
+    public List<String> appPackages() {
+      return appPackages;
     }
 
     @Override

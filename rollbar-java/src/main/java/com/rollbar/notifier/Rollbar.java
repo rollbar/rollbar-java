@@ -3,6 +3,7 @@ package com.rollbar.notifier;
 import com.rollbar.api.payload.Payload;
 import com.rollbar.api.payload.data.Data;
 import com.rollbar.api.payload.data.Level;
+import com.rollbar.jvmti.ThrowableCache;
 import com.rollbar.notifier.config.Config;
 import com.rollbar.notifier.config.ConfigBuilder;
 import com.rollbar.notifier.config.ConfigProvider;
@@ -53,6 +54,7 @@ public class Rollbar {
     if (config.handleUncaughtErrors()) {
       this.handleUncaughtErrors();
     }
+    processAppPackages(config);
   }
 
   /**
@@ -129,8 +131,15 @@ public class Rollbar {
     this.configWriteLock.lock();
     try {
       this.config = config;
+      processAppPackages(config);
     } finally {
       this.configWriteLock.unlock();
+    }
+  }
+
+  private void processAppPackages(Config config) {
+    for (String appPackage : config.appPackages()) {
+      ThrowableCache.addAppPackage(appPackage);
     }
   }
 

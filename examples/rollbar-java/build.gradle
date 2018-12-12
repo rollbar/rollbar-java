@@ -7,6 +7,14 @@ jar {
 
 mainClassName = "com.rollbar.example.Application"
 
+// Uncomment the block below to use the native agent to add local variables to stack traces
+// This assumes you have run `cargo build --release` inside the native-agent directory
+/*
+applicationDefaultJvmArgs = [
+  "-agentpath:../../native-agent/target/release/"+System.mapLibraryName("rollbar_java_agent"),
+]
+*/
+
 dependencies {
     compile project(":rollbar-java")
 
