@@ -2,6 +2,10 @@
 
 The change log has moved to this repo's [GitHub Releases Page](https://github.com/rollbar/rollbar-java/releases).
 
+# 1.4.0
+- Capture local variables in stack frames with a native agent. [#169](https://github.com/rollbar/rollbar-java/pull/169)
+- Only create the default sender if a custom one is not present. [#168](https://github.com/rollbar/rollbar-java/pull/168)
+
 # 1.3.1
 - Remove use of java.util.Objects as is not available in android sdk version lower than 19. [#162](https://github.com/rollbar/rollbar-java/pull/162)
 
