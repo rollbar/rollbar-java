@@ -19,14 +19,13 @@ public class ClientProvider implements Provider<Client> {
     private final String versionName;
     private boolean includeLogcat;
     private final int captureIp;
+    private final int maxLogcatSize;
 
     private static final String CAPTURE_IP_ANONYMIZE = "anonymize";
     private static final String CAPTURE_IP_NONE = "none";
     private static final int CAPTURE_IP_TYPE_FULL = 0;
     private static final int CAPTURE_IP_TYPE_ANONYMIZE = 1;
     private static final int CAPTURE_IP_TYPE_NONE = 2;
-
-    private static final int MAX_LOGCAT_SIZE = 100;
 
     /**
      * Constructor.
@@ -46,6 +45,7 @@ public class ClientProvider implements Provider<Client> {
         } else {
           this.captureIp = CAPTURE_IP_TYPE_FULL;
         }
+        this.maxLogcatSize = builder.maxLogcatSize;
     }
 
     @Override
@@ -92,7 +92,7 @@ public class ClientProvider implements Provider<Client> {
             while ((line = br.readLine()) != null) {
                 if (line.contains(String.valueOf(pid))) {
                     lines.add(line);
-                    if (lines.size() > MAX_LOGCAT_SIZE) {
+                    if (lines.size() > this.maxLogcatSize) {
                         lines.remove(0);
                     }
                 }
@@ -112,6 +112,14 @@ public class ClientProvider implements Provider<Client> {
         private String versionName;
         private boolean includeLogcat;
         private String captureIp;
+        private int maxLogcatSize;
+
+        /**
+         * Constructor.
+         */
+        public Builder() {
+            this.maxLogcatSize = 100;
+        }
 
         /**
          * The Android version code from the context
@@ -150,6 +158,18 @@ public class ClientProvider implements Provider<Client> {
          */
         public Builder captureIp(String captureIp) {
             this.captureIp = captureIp;
+            return this;
+        }
+
+        /**
+         * The maximum number of logcat lines to capture if logcat capturing is on.
+         * @param maxLogcatSize the max number of lines to capture
+         * @return the builder instance
+         */
+        public Builder maxLogcatSize(int maxLogcatSize) {
+            if (maxLogcatSize >= 0) {
+                this.maxLogcatSize = maxLogcatSize;
+            }
             return this;
         }
 
