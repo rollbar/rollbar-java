@@ -14,6 +14,7 @@ import com.rollbar.notifier.provider.timestamp.TimestampProvider;
 import com.rollbar.notifier.sender.BufferedSender;
 import com.rollbar.notifier.sender.Sender;
 import com.rollbar.notifier.sender.SyncSender;
+import com.rollbar.notifier.sender.json.JsonSerializer;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
 import java.lang.Thread.UncaughtExceptionHandler;
@@ -67,6 +68,8 @@ public class ConfigBuilder {
   private UuidGenerator uuidGenerator;
 
   private Sender sender;
+
+  private JsonSerializer jsonSerializer;
 
   private Proxy proxy;
 
@@ -354,6 +357,19 @@ public class ConfigBuilder {
   }
 
   /**
+   * The JsonSerializer to use with the default Sender if no other
+   * sender is specified. If a sender is specified then this
+   * parameter is ignored.
+   *
+   * @param jsonSerializer the json serializer.
+   * @return the builder instance.
+   */
+  public ConfigBuilder jsonSerializer(JsonSerializer jsonSerializer) {
+    this.jsonSerializer = jsonSerializer;
+    return this;
+  }
+
+  /**
    * The {@link Proxy proxy} to be used to send the data.
    *
    * @param proxy the proxy.
@@ -413,14 +429,15 @@ public class ConfigBuilder {
       this.notifier = new NotifierProvider();
     }
     if (this.sender == null) {
+      SyncSender.Builder innerSender =
+          new SyncSender.Builder(this.endpoint)
+          .accessToken(accessToken)
+          .proxy(proxy);
+      if (this.jsonSerializer != null) {
+        innerSender.jsonSerializer(this.jsonSerializer);
+      }
       this.sender =
-        new BufferedSender.Builder()
-          .sender(
-            new SyncSender.Builder(this.endpoint)
-            .accessToken(accessToken)
-            .proxy(proxy)
-            .build()
-      ).build();
+        new BufferedSender.Builder().sender(innerSender.build()).build();
     }
     if (this.timestamp == null) {
       this.timestamp = new TimestampProvider();
