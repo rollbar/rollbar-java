@@ -442,7 +442,7 @@ public class RollbarTest {
     sut.log(error);
     verify(sender).send(payloadBuilder.data(dataBuilder
         .body(bodyOnlyError)
-        .level(sut.level(error))
+        .level(sut.level(config, error))
         .build()
     ).build());
 
@@ -456,7 +456,7 @@ public class RollbarTest {
     sut.log(description);
     verify(sender).send(payloadBuilder.data(dataBuilder
         .body(bodyOnlyDescription)
-        .level(sut.level(null))
+        .level(sut.level(config, null))
         .build()
     ).build());
 
@@ -470,7 +470,7 @@ public class RollbarTest {
     sut.log(error, description);
     verify(sender).send(payloadBuilder.data(dataBuilder
         .body(body)
-        .level(sut.level(error))
+        .level(sut.level(config, error))
         .build()
     ).build());
 
@@ -484,7 +484,7 @@ public class RollbarTest {
     sut.log(error, custom);
     verify(sender).send(payloadBuilder.data(dataBuilder
         .body(bodyOnlyError)
-        .level(sut.level(error))
+        .level(sut.level(config, error))
         .custom(custom)
         .build()
     ).build());
@@ -501,7 +501,7 @@ public class RollbarTest {
     verify(sender).send(payloadBuilder.data(dataBuilder
         .body(bodyOnlyDescription)
         .custom(custom)
-        .level(sut.level(null))
+        .level(sut.level(config, null))
         .build()
     ).build());
 
