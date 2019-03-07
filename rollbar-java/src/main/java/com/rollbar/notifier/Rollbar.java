@@ -624,14 +624,14 @@ public class Rollbar {
    * @param error the error.
    * @return the level.
    */
-  public Level level(Throwable error) {
+  public Level level(Config config, Throwable error) {
     if (error == null) {
-      return Level.WARNING;
+      return config.defaultMessageLevel();
     }
     if (error instanceof Error) {
-      return Level.CRITICAL;
+      return config.defaultErrorLevel();
     }
-    return Level.ERROR;
+    return config.defaultThrowableLevel();
   }
 
   public void close(boolean wait) throws Exception {
@@ -710,7 +710,7 @@ public class Rollbar {
         .platform(config.platform())
         .language(config.language())
         .framework(config.framework())
-        .level(level != null ? level : error != null ? level(error.getThrowable())
+        .level(level != null ? level : error != null ? level(config, error.getThrowable())
             : level(null))
         .body(bodyFactory.from(error, description))
         .isUncaught(isUncaught);

@@ -1,6 +1,7 @@
 package com.rollbar.notifier.config;
 
 import com.rollbar.api.payload.data.Client;
+import com.rollbar.api.payload.data.Level;
 import com.rollbar.api.payload.data.Notifier;
 import com.rollbar.api.payload.data.Person;
 import com.rollbar.api.payload.data.Request;
@@ -188,4 +189,25 @@ public interface Config {
    * @return true if enabled otherwise false.
    */
   boolean isEnabled();
+
+  /**
+   * Level to use as the default for messages if one is not otherwise specified.
+   *
+   * @return the level.
+   */
+  Level defaultMessageLevel();
+
+  /**
+   * Level to use as the default for Errors if one is not otherwise specified.
+   *
+   * @return the level.
+   */
+  Level defaultErrorLevel();
+
+  /**
+   * Level to use as the default for non-Error Throwables if one is not otherwise specified.
+   *
+   * @return the level.
+   */
+  Level defaultThrowableLevel();
 }
