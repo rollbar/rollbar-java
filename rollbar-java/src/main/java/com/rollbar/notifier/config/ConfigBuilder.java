@@ -430,7 +430,7 @@ public class ConfigBuilder {
     }
     if (this.sender == null) {
       SyncSender.Builder innerSender =
-        new SyncSender.Builder(this.endpoint)
+          new SyncSender.Builder(this.endpoint)
           .accessToken(accessToken)
           .proxy(proxy);
       if (this.jsonSerializer != null) {
