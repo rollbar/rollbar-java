@@ -255,8 +255,6 @@ public class Rollbar {
         .maxLogcatSize(maxLogcatSize)
         .build();
 
-    environment = environment == null ? DEFAULT_ENVIRONMENT : environment;
-
     File folder = new File(context.getCacheDir(), ITEM_DIR_NAME);
 
     ConfigBuilder defaultConfig = ConfigBuilder.withAccessToken(accessToken)
@@ -264,7 +262,7 @@ public class Rollbar {
         .platform(ANDROID)
         .framework(ANDROID)
         .notifier(new NotifierProvider(NOTIFIER_VERSION))
-        .environment(environment)
+        .environment(environment == null ? DEFAULT_ENVIRONMENT : environment)
         .handleUncaughtErrors(registerExceptionHandler);
 
     Config config;
