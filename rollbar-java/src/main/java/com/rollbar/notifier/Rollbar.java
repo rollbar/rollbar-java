@@ -711,7 +711,7 @@ public class Rollbar {
         .language(config.language())
         .framework(config.framework())
         .level(level != null ? level : error != null ? level(config, error.getThrowable())
-            : level(null))
+            : level(config, null))
         .body(bodyFactory.from(error, description))
         .isUncaught(isUncaught);
 
