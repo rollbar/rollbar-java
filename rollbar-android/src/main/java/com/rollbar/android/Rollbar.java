@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class Rollbar {
-  private static final String NOTIFIER_VERSION = "1.4.0";
+  private static final String NOTIFIER_VERSION = "1.4.1";
   private static final String ITEM_DIR_NAME = "rollbar-items";
   private static final String ANDROID = "android";
   private static final String DEFAULT_ENVIRONMENT = "production";
@@ -226,7 +226,7 @@ public class Rollbar {
    * @param includeLogcat whether or not to include logcat output with items
    * @param configProvider a configuration provider that can be used to customize the configuration further.
    * @param captureIp one of: full, anonymize, none. This determines how the remote ip is captured.
-   * @param maxLogcatSize the maximum number of logcat lines to capture with items (ignored unless >= 0)
+   * @param maxLogcatSize the maximum number of logcat lines to capture with items (ignored unless positive)
    */
   public Rollbar(Context context, String accessToken, String environment, boolean registerExceptionHandler, boolean includeLogcat, ConfigProvider configProvider, String captureIp, int maxLogcatSize) {
     if (accessToken == null) {

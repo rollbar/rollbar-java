@@ -14,7 +14,7 @@ import org.mockito.junit.MockitoRule;
 
 public class NotifierProviderTest {
 
-  static final String VERSION = "1.4.0";
+  static final String VERSION = "1.4.1";
 
   @Rule
   public MockitoRule rule = MockitoJUnit.rule();
