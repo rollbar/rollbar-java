@@ -1,6 +1,7 @@
 package com.rollbar.notifier.config;
 
 import com.rollbar.api.payload.data.Client;
+import com.rollbar.api.payload.data.Level;
 import com.rollbar.api.payload.data.Notifier;
 import com.rollbar.api.payload.data.Person;
 import com.rollbar.api.payload.data.Request;
@@ -79,6 +80,12 @@ public class ConfigBuilder {
 
   private boolean enabled;
 
+  private Level defaultMessageLevel;
+
+  private Level defaultErrorLevel;
+
+  private Level defaultThrowableLevel;
+
   /**
    * Constructor with an access token.
    */
@@ -87,6 +94,9 @@ public class ConfigBuilder {
     this.accessToken = accessToken;
     this.handleUncaughtErrors = true;
     this.enabled = true;
+    this.defaultMessageLevel = Level.WARNING;
+    this.defaultErrorLevel = Level.CRITICAL;
+    this.defaultThrowableLevel = Level.ERROR;
   }
 
   /**
@@ -117,6 +127,9 @@ public class ConfigBuilder {
     this.endpoint = config.endpoint();
     this.proxy = config.proxy();
     this.appPackages = config.appPackages();
+    this.defaultMessageLevel = config.defaultMessageLevel();
+    this.defaultErrorLevel = config.defaultErrorLevel();
+    this.defaultThrowableLevel = config.defaultThrowableLevel();
   }
 
   /**
@@ -414,6 +427,39 @@ public class ConfigBuilder {
   }
 
   /**
+   * Level to use as the default for messages if one is not otherwise specified.
+   *
+   * @param level the level.
+   * @return the builder instance.
+   */
+  public ConfigBuilder defaultMessageLevel(Level level) {
+    this.defaultMessageLevel = level;
+    return this;
+  }
+
+  /**
+   * Level to use as the default for Errors if one is not otherwise specified.
+   *
+   * @param level the level.
+   * @return the builder instance.
+   */
+  public ConfigBuilder defaultErrorLevel(Level level) {
+    this.defaultErrorLevel = level;
+    return this;
+  }
+
+  /**
+   * Level to use as the default for non-Error Throwables if one is not otherwise specified.
+   *
+   * @param level the level.
+   * @return the builder instance.
+   */
+  public ConfigBuilder defaultThrowableLevel(Level level) {
+    this.defaultThrowableLevel = level;
+    return this;
+  }
+
+  /**
    * Builds the {@link Config config}.
    *
    * @return the config.
@@ -496,6 +542,12 @@ public class ConfigBuilder {
 
     private final boolean enabled;
 
+    private Level defaultMessageLevel;
+
+    private Level defaultErrorLevel;
+
+    private Level defaultThrowableLevel;
+
     ConfigImpl(ConfigBuilder builder) {
       this.accessToken = builder.accessToken;
       this.endpoint = builder.endpoint;
@@ -525,6 +577,9 @@ public class ConfigBuilder {
       }
       this.handleUncaughtErrors = builder.handleUncaughtErrors;
       this.enabled = builder.enabled;
+      this.defaultMessageLevel = builder.defaultMessageLevel;
+      this.defaultErrorLevel = builder.defaultErrorLevel;
+      this.defaultThrowableLevel = builder.defaultThrowableLevel;
     }
 
     @Override
@@ -645,6 +700,21 @@ public class ConfigBuilder {
     @Override
     public boolean isEnabled() {
       return enabled;
+    }
+
+    @Override
+    public Level defaultMessageLevel() {
+      return defaultMessageLevel;
+    }
+
+    @Override
+    public Level defaultErrorLevel() {
+      return defaultErrorLevel;
+    }
+
+    @Override
+    public Level defaultThrowableLevel() {
+      return defaultThrowableLevel;
     }
   }
 }
