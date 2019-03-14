@@ -618,9 +618,13 @@ public class Rollbar {
   }
 
   /**
-   * Get the level of the error or message. By default: CRITICAL for {@link Error}, ERROR for other
-   * {@link Throwable}, WARNING for messages. Override to change this default.
+   * Get the level of the error or message. The Config passed in contains the defaults
+   * to use for the cases of an Error, Throwable, or a Message. The default in the Config
+   * if otherwise left unspecified is: CRITICAL for {@link Error}, ERROR for other
+   * {@link Throwable}, WARNING for messages. Use the methods on ConfigBuilder to
+   * change these defaults
    *
+   * @param config the current Config.
    * @param error the error.
    * @return the level.
    */
