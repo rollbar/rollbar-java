@@ -52,4 +52,13 @@ public class PayloadTest {
 
     assertEquals(expected, payload.asJson());
   }
+
+  @Test
+  public void shouldReturnJsonAsJson() {
+    String json = "{\"foo\":\"bar\"}";
+
+    Payload payload = new Payload(json);
+
+    assertEquals(json, payload.json);
+  }
 }

@@ -794,6 +794,15 @@ public class Rollbar {
   }
 
   /**
+  * Send payload to Rollbar.
+  *
+  * @param payload JSON payload string.
+  */
+  public void sendJsonPayload(String json) {
+    rollbar.sendJsonPayload(json);
+  }
+
+  /**
    * report an exception to Rollbar
    * @param throwable the exception that occurred.
    */

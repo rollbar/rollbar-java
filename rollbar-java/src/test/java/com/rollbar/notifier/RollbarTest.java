@@ -411,6 +411,20 @@ public class RollbarTest {
   }
 
   @Test
+  public void shouldSendPayloadAsJson() {
+    Config config = withAccessToken("access_token")
+        .sender(sender)
+        .build();
+    Rollbar sut = new Rollbar(config);
+    String json = "{\"foo\":\"bar\"}";
+    Payload payload = new Payload(json);
+
+    sut.sendJsonPayload(json);
+
+    verify(sender).send(payload);
+  }
+
+  @Test
   public void shouldLogWithLogMethod() {
     Config config = withAccessToken(ACCESS_TOKEN)
         .timestamp(timestampProvider)
