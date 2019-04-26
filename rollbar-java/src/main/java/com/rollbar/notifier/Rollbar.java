@@ -642,6 +642,23 @@ public class Rollbar {
     this.config.sender().close(wait);
   }
 
+  /**
+   * Send JSON payload.
+   *
+   * @param json the json payload.
+   */
+  public void sendJsonPayload(String json) {
+    try {
+      this.configReadLock.lock();
+      Config config = this.config;
+      this.configReadLock.unlock();
+
+      sendPayload(config, new Payload(json));
+    } catch (Exception e) {
+      LOGGER.error("Error while sending payload to Rollbar: {}", e);
+    }
+  }
+
   private void process(ThrowableWrapper error, Map<String, Object> custom, String description,
       Level level, boolean isUncaught) {
     this.configReadLock.lock();
@@ -652,7 +669,7 @@ public class Rollbar {
       LOGGER.debug("Notifier disabled.");
       return;
     }
-    
+
     // Pre filter
     if (config.filter() != null && config.filter().preProcess(level, error.getThrowable(), custom,
         description)) {

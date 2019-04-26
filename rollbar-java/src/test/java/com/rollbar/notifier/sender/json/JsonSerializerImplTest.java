@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
+import com.rollbar.api.payload.Payload;
 import com.rollbar.notifier.sender.result.Result;
 import org.junit.Test;
 
@@ -41,5 +42,16 @@ public class JsonSerializerImplTest {
     JsonSerializerImpl sut = new JsonSerializerImpl();
 
     assertThat(sut.resultFrom(SUCCESS_RESPONSE), is(result));
+  }
+
+  @Test
+  public void shouldSerializeJsonPayload() {
+    String json = "{\"foo\":\"bar\"}";
+
+    Payload payload = new Payload(json);
+
+    JsonSerializerImpl sut = new JsonSerializerImpl();
+
+    assertThat(sut.toJson(payload), is(json));
   }
 }

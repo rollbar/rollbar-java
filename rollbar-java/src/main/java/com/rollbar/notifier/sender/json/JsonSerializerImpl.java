@@ -59,6 +59,10 @@ public class JsonSerializerImpl implements JsonSerializer {
 
   @Override
   public String toJson(Payload payload) {
+    if (payload.json != null) {
+      return payload.json;
+    }
+
     StringBuilder builder = new StringBuilder();
     serializeValue(builder, payload, 0);
     return builder.toString();

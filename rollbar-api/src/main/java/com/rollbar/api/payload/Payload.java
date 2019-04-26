@@ -15,9 +15,23 @@ public class Payload implements JsonSerializable {
 
   private final Data data;
 
+  public final String json;
+
   private Payload(Builder builder) {
     this.accessToken = builder.accessToken;
     this.data = builder.data;
+    this.json = null;
+  }
+
+  /**
+    * Constructor.
+    *
+    * @param json the JSON payload.
+    */
+  public Payload(String json) {
+    this.accessToken = null;
+    this.data = null;
+    this.json = json;
   }
 
   /**
