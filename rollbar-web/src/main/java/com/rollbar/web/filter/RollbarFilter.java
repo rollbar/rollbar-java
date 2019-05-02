@@ -37,7 +37,7 @@ public class RollbarFilter implements Filter {
     // Empty constructor.
   }
 
-  RollbarFilter(Rollbar rollbar) {
+  public RollbarFilter(Rollbar rollbar) {
     this.rollbar = rollbar;
   }
 
