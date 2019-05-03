@@ -47,11 +47,11 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
   private String configProviderClassName;
 
   /**
-   * Constructor for testing purposes.
+   * Constructor for programmatic instantiation using an existing Rollbar instance.
    *
    * @param rollbar the rollbar notifier.
    */
-  protected RollbarAppender(Rollbar rollbar) {
+  public RollbarAppender(Rollbar rollbar) {
     this.rollbar = rollbar;
   }
 
@@ -61,24 +61,25 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
 
   @Override
   public void start() {
+    if (this.rollbar == null) {
+      ConfigProvider configProvider = ConfigProviderHelper
+              .getConfigProvider(this.configProviderClassName);
+      Config config;
 
-    ConfigProvider configProvider = ConfigProviderHelper
-            .getConfigProvider(this.configProviderClassName);
-    Config config;
+      ConfigBuilder configBuilder = withAccessToken(this.accessToken)
+              .environment(this.environment)
+              .endpoint(this.endpoint)
+              .server(new ServerProvider())
+              .language(this.language);
 
-    ConfigBuilder configBuilder = withAccessToken(this.accessToken)
-            .environment(this.environment)
-            .endpoint(this.endpoint)
-            .server(new ServerProvider())
-            .language(this.language);
+      if (configProvider != null) {
+        config = configProvider.provide(configBuilder);
+      } else {
+        config = configBuilder.build();
+      }
 
-    if (configProvider != null) {
-      config = configProvider.provide(configBuilder);
-    } else {
-      config = configBuilder.build();
+      this.rollbar = new Rollbar(config);
     }
-
-    this.rollbar = new Rollbar(config);
     super.start();
   }
 
