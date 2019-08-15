@@ -590,7 +590,6 @@ public class Rollbar {
 
     if (error != null) {
       rollbarThrowableWrapper = new RollbarThrowableWrapper(error);
-
     }
     this.log(rollbarThrowableWrapper, custom, description, level, isUncaught);
   }
@@ -671,8 +670,8 @@ public class Rollbar {
     }
 
     // Pre filter
-    if (config.filter() != null && config.filter().preProcess(level, error.getThrowable(), custom,
-        description)) {
+    if (config.filter() != null && config.filter().preProcess(level,
+            error != null ? error.getThrowable() : null, custom, description)) {
       LOGGER.debug("Pre-filtered error: {}", error);
       return;
     }
@@ -754,7 +753,6 @@ public class Rollbar {
     if (config.person() != null) {
       LOGGER.debug("Gathering person info.");
       dataBuilder.person(config.person().provide());
-
     }
 
     // Server
