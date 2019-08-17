@@ -325,6 +325,19 @@ public class RollbarTest {
   }
 
   @Test
+  public void shouldFilterPrefilterWithNullException(){
+    Level level = Level.INFO;
+    String description = "description";
+    Rollbar sut = new Rollbar(config, bodyFactory);
+
+    when(filter.preProcess(level, null, null, description)).thenReturn(false);
+
+    sut.log(null, null, description, level);
+
+    verify(filter).preProcess(level, null, null, description);
+  }
+
+  @Test
   public void shouldUseTheCorrectLevel() {
     Config config = withAccessToken(ACCESS_TOKEN)
         .timestamp(timestampProvider)
