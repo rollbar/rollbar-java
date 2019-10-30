@@ -12,6 +12,7 @@ import com.rollbar.notifier.config.Config;
 import com.rollbar.notifier.config.ConfigBuilder;
 import com.rollbar.notifier.config.ConfigProvider;
 import com.rollbar.notifier.config.ConfigProviderHelper;
+import com.rollbar.notifier.provider.Provider;
 import com.rollbar.notifier.provider.server.ServerProvider;
 import com.rollbar.notifier.wrapper.RollbarThrowableWrapper;
 import com.rollbar.notifier.wrapper.ThrowableWrapper;
@@ -38,11 +39,21 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
 
   private String accessToken;
 
+  private String codeVersion;
+
   private String endpoint;
+
+  private boolean enabled = true;
 
   private String environment;
 
+  private String framework;
+
   private String language;
+
+  private String platform;
+
+  private String staticContext;
 
   private String configProviderClassName;
 
@@ -70,7 +81,18 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
               .environment(this.environment)
               .endpoint(this.endpoint)
               .server(new ServerProvider())
-              .language(this.language);
+              .language(this.language)
+              .codeVersion(this.codeVersion)
+              .context(new Provider<String>() {
+                @Override
+                public String provide() {
+                  return RollbarAppender.this.staticContext;
+                }
+              })
+              .enabled(this.enabled)
+              .framework(this.framework)
+              .platform(this.platform)
+          ;
 
       if (configProvider != null) {
         config = configProvider.provide(configBuilder);
@@ -118,6 +140,14 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
     this.accessToken = accessToken;
   }
 
+  public void setCodeVersion(String codeVersion) {
+    this.codeVersion = codeVersion;
+  }
+
+  public void setEnabled(boolean enabled) {
+    this.enabled = enabled;
+  }
+
   public void setEndpoint(String endpoint) {
     this.endpoint = endpoint;
   }
@@ -126,8 +156,20 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
     this.environment = environment;
   }
 
+  public void setFramework(String framework) {
+    this.framework = framework;
+  }
+
   public void setLanguage(String language) {
     this.language = language;
+  }
+
+  public void setPlatform(String platform) {
+    this.platform = platform;
+  }
+
+  public void setStaticContext(String staticContext) {
+    this.staticContext = staticContext;
   }
 
   public void setConfigProviderClassName(String configProviderClassName) {
