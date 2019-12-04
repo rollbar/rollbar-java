@@ -76,6 +76,7 @@ public class RollbarAppender extends AbstractAppender {
   public static RollbarAppender createAppender(
       @PluginAttribute("accessToken") @Required final String accessToken,
       @PluginAttribute("endpoint") final String endpoint,
+      @PluginAttribute("enabled") final String enabled,
       @PluginAttribute("environment") final String environment,
       @PluginAttribute("language") final String language,
       @PluginAttribute("configProviderClassName") final String configProviderClassName,
@@ -90,6 +91,7 @@ public class RollbarAppender extends AbstractAppender {
     Config config;
 
     ConfigBuilder configBuilder = withAccessToken(accessToken)
+        .enabled(Boolean.parseBoolean(enabled))
         .environment(environment)
         .endpoint(endpoint)
         .server(new ServerProvider())
