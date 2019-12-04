@@ -61,6 +61,7 @@ public class RollbarAppender extends AbstractAppender {
    * Create appender plugin factory method.
    *
    * @param accessToken the Rollbar access token.
+   * @param codeVersion the codeVersion.
    * @param endpoint the Rollbar endpoint to be used.
    * @param environment the environment.
    * @param language the language.
@@ -75,6 +76,7 @@ public class RollbarAppender extends AbstractAppender {
   @PluginFactory
   public static RollbarAppender createAppender(
       @PluginAttribute("accessToken") @Required final String accessToken,
+      @PluginAttribute("codeVersion") final String codeVersion,
       @PluginAttribute("endpoint") final String endpoint,
       @PluginAttribute("environment") final String environment,
       @PluginAttribute("language") final String language,
@@ -90,6 +92,7 @@ public class RollbarAppender extends AbstractAppender {
     Config config;
 
     ConfigBuilder configBuilder = withAccessToken(accessToken)
+    	.codeVersion(codeVersion)
         .environment(environment)
         .endpoint(endpoint)
         .server(new ServerProvider())
