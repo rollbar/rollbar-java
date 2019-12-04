@@ -92,7 +92,7 @@ public class RollbarAppender extends AbstractAppender {
     Config config;
 
     ConfigBuilder configBuilder = withAccessToken(accessToken)
-    	.codeVersion(codeVersion)
+        .codeVersion(codeVersion)
         .environment(environment)
         .endpoint(endpoint)
         .server(new ServerProvider())
