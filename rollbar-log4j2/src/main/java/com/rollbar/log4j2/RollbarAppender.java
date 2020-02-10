@@ -65,6 +65,7 @@ public class RollbarAppender extends AbstractAppender {
    * @param endpoint the Rollbar endpoint to be used.
    * @param environment the environment.
    * @param language the language.
+   * @param enabled to enable or disable Rollbar.
    * @param configProviderClassName The class name of the config provider implementation to get
    *     the configuration.
    * @param name the name.
@@ -80,6 +81,7 @@ public class RollbarAppender extends AbstractAppender {
       @PluginAttribute("endpoint") final String endpoint,
       @PluginAttribute("environment") final String environment,
       @PluginAttribute("language") final String language,
+      @PluginAttribute("enabled") final boolean enabled,
       @PluginAttribute("configProviderClassName") final String configProviderClassName,
       @PluginAttribute("name") @Required final String name,
       @PluginElement("Layout") Layout<? extends Serializable> layout,
@@ -96,7 +98,8 @@ public class RollbarAppender extends AbstractAppender {
         .environment(environment)
         .endpoint(endpoint)
         .server(new ServerProvider())
-        .language(language);
+        .language(language)
+        .enabled(enabled);
 
     if (configProvider != null) {
       config = configProvider.provide(configBuilder);
