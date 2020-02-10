@@ -9,6 +9,13 @@
 
     <appender name="ROLLBAR" class="com.rollbar.logback.RollbarAppender">
         <accessToken>[ACCESS_TOKEN]</accessToken>
+<!--    <environment>prod</environment>                  -->
+<!--    <language>kotlin</language>                      -->
+<!--    <staticContext>some context info</staticContext> -->
+<!--    <codeVersion>42</codeVersion>                    -->
+<!--    <enabled>true</enabled>                          -->
+<!--    <framework>spring-boot</framework>               -->
+<!--    <platform>OpenJDK 13</platform>                  -->
     </appender>
 
     <logger name="com.example.rollbar.logback" level="debug" additivity="false">
