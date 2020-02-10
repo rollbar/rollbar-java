@@ -50,6 +50,8 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
   private String framework;
 
   private String language;
+  
+  private boolean enabled;
 
   private String platform;
 
@@ -170,6 +172,10 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
 
   public void setStaticContext(String staticContext) {
     this.staticContext = staticContext;
+  }
+
+  public void isEnabled(boolean enabled) {
+    this.enabled = enabled;
   }
 
   public void setConfigProviderClassName(String configProviderClassName) {

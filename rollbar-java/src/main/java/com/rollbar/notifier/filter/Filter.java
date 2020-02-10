@@ -3,6 +3,7 @@ package com.rollbar.notifier.filter;
 import com.rollbar.api.payload.data.Data;
 import com.rollbar.api.payload.data.Level;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * Filter interface.
@@ -19,7 +20,8 @@ public interface Filter {
    * @param description the description.
    * @return true if filtered otherwise false.
    */
-  boolean preProcess(Level level, Throwable error, Map<String, Object> custom, String description);
+  boolean preProcess(Level level, @Nullable Throwable error, @Nullable Map<String,
+          Object> custom, @Nullable String description);
 
   /**
    * Post-filter hook to decide once the final payload is ready if it should be send to Rollbar.
