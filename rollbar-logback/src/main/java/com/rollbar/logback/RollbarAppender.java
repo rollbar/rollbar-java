@@ -43,6 +43,8 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
   private String environment;
 
   private String language;
+  
+  private boolean enabled;
 
   private String configProviderClassName;
 
@@ -70,7 +72,8 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
               .environment(this.environment)
               .endpoint(this.endpoint)
               .server(new ServerProvider())
-              .language(this.language);
+              .language(this.language)
+              .enabled(this.enabled);
 
       if (configProvider != null) {
         config = configProvider.provide(configBuilder);
@@ -128,6 +131,10 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
 
   public void setLanguage(String language) {
     this.language = language;
+  }
+
+  public void isEnabled(boolean enabled) {
+    this.enabled = enabled;
   }
 
   public void setConfigProviderClassName(String configProviderClassName) {
