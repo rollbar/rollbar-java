@@ -50,8 +50,6 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
   private String framework;
 
   private String language;
-  
-  private boolean enabled;
 
   private String platform;
 
