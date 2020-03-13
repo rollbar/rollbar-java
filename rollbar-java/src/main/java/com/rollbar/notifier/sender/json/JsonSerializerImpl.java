@@ -71,7 +71,12 @@ public class JsonSerializerImpl implements JsonSerializer {
   @Override
   public Result resultFrom(String response) {
     Matcher codeMatcher = CODE_PATTERN.matcher(response);
-    codeMatcher.find();
+    if (!codeMatcher.find()) {
+      return new Result.Builder()
+          .code(1)
+          .body(response)
+          .build();
+    }
     String codeStr = codeMatcher.group(1);
     int code;
     try {

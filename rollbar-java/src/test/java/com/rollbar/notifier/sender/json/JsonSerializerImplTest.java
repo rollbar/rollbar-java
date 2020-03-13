@@ -12,10 +12,15 @@ public class JsonSerializerImplTest {
 
   static final String ERROR_MESSAGE = "This is the error message";
 
+  static final String UNEXPECTED_ERROR_MESSAGE = "Nobody expects the Spanish inquisition";
+
   static final String UUID = java.util.UUID.randomUUID().toString();
 
   static final String ERROR_RESPONSE = format("{\"err\": 1, {\"message\": \"%s\"}}",
       ERROR_MESSAGE);
+
+  static final String UNEXPECTED_ERROR_RESPONSE = format("<html><body>%s</body></html>",
+      UNEXPECTED_ERROR_MESSAGE);
 
   static final String SUCCESS_RESPONSE = format("{\"err\": 0, {\"uuid\": \"%s\"}}",
       UUID);
@@ -30,6 +35,18 @@ public class JsonSerializerImplTest {
     JsonSerializerImpl sut = new JsonSerializerImpl();
 
     assertThat(sut.resultFrom(ERROR_RESPONSE), is(result));
+  }
+
+  @Test
+  public void shouldDeserializeUnexpectedErrorResponse() {
+    Result result = new Result.Builder()
+        .code(1)
+        .body(UNEXPECTED_ERROR_RESPONSE)
+        .build();
+
+    JsonSerializerImpl sut = new JsonSerializerImpl();
+
+    assertThat(sut.resultFrom(UNEXPECTED_ERROR_RESPONSE), is(result));
   }
 
   @Test
