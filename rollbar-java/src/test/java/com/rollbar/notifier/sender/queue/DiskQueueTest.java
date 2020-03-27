@@ -1,6 +1,7 @@
 package com.rollbar.notifier.sender.queue;
 
 import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
@@ -102,5 +103,15 @@ public class DiskQueueTest {
 
     assertThat(result, is(payload));
     assertThat(sut.size(), is(1));
+  }
+
+  @Test
+  public void shouldPollEmptyQueue() {
+    Payload payload = new Payload.Builder().build();
+
+    Payload result = sut.peek();
+
+    assertThat(result, is(nullValue()));
+    assertThat(sut.size(), is(0));
   }
 }

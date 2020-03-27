@@ -102,9 +102,15 @@ public class DiskQueue extends AbstractQueue<Payload> {
   }
 
   private Payload readFromFile(boolean removeFile) {
-    File eventFile = getFiles().get(0);
+    List<File> files = getFiles();
 
-    return read(eventFile, removeFile);
+    if (files.size() > 0) {
+      File eventFile = getFiles().get(0);
+
+      return read(eventFile, removeFile);
+    } else {
+      return null;
+    }
   }
 
   private List<File> getFiles() {
