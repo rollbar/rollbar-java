@@ -19,6 +19,7 @@ import com.rollbar.notifier.config.ConfigBuilder;
 import com.rollbar.notifier.sender.BufferedSender;
 import com.rollbar.notifier.sender.SyncSender;
 import com.rollbar.notifier.sender.queue.DiskQueue;
+import com.rollbar.notifier.util.ObjectsUtils;
 
 import java.io.File;
 import java.lang.Thread.UncaughtExceptionHandler;
@@ -290,6 +291,10 @@ public class Rollbar {
       config = configProvider.provide(defaultConfig);
     } else {
       config = defaultConfig.build();
+    }
+
+    if (config.sender() != sender) {
+      ObjectsUtils.close(sender);
     }
 
     this.rollbar = new com.rollbar.notifier.Rollbar(config);
