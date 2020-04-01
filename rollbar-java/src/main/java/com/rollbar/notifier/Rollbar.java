@@ -137,6 +137,15 @@ public class Rollbar {
     }
   }
 
+  /**
+   * Get the current config.
+   *
+   * @return the config.
+   */
+  public Config config() {
+    return config;
+  }
+
   private void processAppPackages(Config config) {
     for (String appPackage : config.appPackages()) {
       ThrowableCache.addAppPackage(appPackage);

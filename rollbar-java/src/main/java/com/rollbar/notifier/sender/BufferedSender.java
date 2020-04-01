@@ -55,6 +55,24 @@ public class BufferedSender implements Sender {
         builder.initialFlushDelay, builder.flushFreq, TimeUnit.MILLISECONDS);
   }
 
+  /**
+   * Get the queue.
+   *
+   * @return the queue object.
+   */
+  public Queue<Payload> queue() {
+    return queue;
+  }
+
+  /**
+   * Get the queue sender.
+   *
+   * @return the sender object.
+   */
+  public Sender sender() {
+    return sender;
+  }
+
   @Override
   public void send(Payload payload) {
     try {

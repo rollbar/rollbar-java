@@ -20,7 +20,6 @@ import com.rollbar.notifier.sender.BufferedSender;
 import com.rollbar.notifier.sender.SyncSender;
 import com.rollbar.notifier.sender.queue.DiskQueue;
 
-
 import java.io.File;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Collections;
@@ -297,6 +296,19 @@ public class Rollbar {
 
     if (registerExceptionHandler == true) {
       handleUncaughtErrors();
+    }
+  }
+
+  /**
+   * Get the current config.
+   *
+   * @return the config object.
+   */
+  public Config config() {
+    if (rollbar != null) {
+      return rollbar.config();
+    } else {
+      return null;
     }
   }
 
