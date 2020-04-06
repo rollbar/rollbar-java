@@ -10,16 +10,19 @@ import android.os.Bundle;
 import android.util.Log;
 import com.rollbar.android.provider.ClientProvider;
 import com.rollbar.notifier.config.ConfigProvider;
+import com.rollbar.notifier.uncaughtexception.RollbarUncaughtExceptionHandler;
 import com.rollbar.android.provider.NotifierProvider;
 import com.rollbar.android.provider.PersonProvider;
 import com.rollbar.api.payload.data.Level;
 import com.rollbar.notifier.config.Config;
 import com.rollbar.notifier.config.ConfigBuilder;
 import com.rollbar.notifier.sender.BufferedSender;
+import com.rollbar.notifier.sender.SyncSender;
 import com.rollbar.notifier.sender.queue.DiskQueue;
-
+import com.rollbar.notifier.util.ObjectsUtils;
 
 import java.io.File;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -257,13 +260,31 @@ public class Rollbar {
 
     File folder = new File(context.getCacheDir(), ITEM_DIR_NAME);
 
+    // DiskQueue allows uncaught exceptions to be handled for Android.
+    // The payload is saved before app exit and transmitted on next app start.
+    DiskQueue queue = new DiskQueue.Builder()
+        .queueFolder(folder)
+        .build();
+
+    SyncSender innerSender = new SyncSender.Builder()
+        .accessToken(accessToken)
+        .build();
+
+    BufferedSender sender = new BufferedSender.Builder()
+        .queue(queue)
+        .sender(innerSender)
+        .initialFlushDelay(TimeUnit.SECONDS.toMillis(DEFAULT_ITEM_SCHEDULE_STARTUP_DELAY))
+        .flushFreq(TimeUnit.SECONDS.toMillis(DEFAULT_ITEM_SCHEDULE_DELAY))
+        .build();
+
     ConfigBuilder defaultConfig = ConfigBuilder.withAccessToken(accessToken)
         .client(clientProvider)
         .platform(ANDROID)
         .framework(ANDROID)
         .notifier(new NotifierProvider(NOTIFIER_VERSION))
         .environment(environment == null ? DEFAULT_ENVIRONMENT : environment)
-        .handleUncaughtErrors(registerExceptionHandler);
+        .sender(sender)
+        .handleUncaughtErrors(false); // Use the global handler, not the default per thread one.
 
     Config config;
     if (configProvider != null) {
@@ -272,23 +293,28 @@ public class Rollbar {
       config = defaultConfig.build();
     }
 
-    if (config.sender() == null) {
-      DiskQueue queue = new DiskQueue.Builder()
-              .queueFolder(folder)
-              .build();
-
-      BufferedSender sender = new BufferedSender.Builder()
-              .queue(queue)
-              .initialFlushDelay(TimeUnit.SECONDS.toMillis(DEFAULT_ITEM_SCHEDULE_STARTUP_DELAY))
-              .flushFreq(TimeUnit.SECONDS.toMillis(DEFAULT_ITEM_SCHEDULE_DELAY))
-              .build();
-
-      config = ConfigBuilder.withConfig(config)
-              .sender(sender)
-              .build();
+    if (config.sender() != sender) {
+      ObjectsUtils.close(sender);
     }
 
     this.rollbar = new com.rollbar.notifier.Rollbar(config);
+
+    if (registerExceptionHandler == true) {
+      handleUncaughtErrors();
+    }
+  }
+
+  /**
+   * Get the current config.
+   *
+   * @return the config object.
+   */
+  public Config config() {
+    if (rollbar != null) {
+      return rollbar.config();
+    } else {
+      return null;
+    }
   }
 
   /**
@@ -344,6 +370,15 @@ public class Rollbar {
             .build();
       }
     });
+  }
+
+  /**
+   * Handle all uncaught errors on all threads with the current notifier.
+   */
+  public void handleUncaughtErrors() {
+    UncaughtExceptionHandler uncaughtExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
+    Thread.currentThread().setDefaultUncaughtExceptionHandler(new RollbarUncaughtExceptionHandler(this.rollbar,
+        uncaughtExceptionHandler));
   }
 
   /**

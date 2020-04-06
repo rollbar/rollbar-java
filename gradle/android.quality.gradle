@@ -1,0 +1,47 @@
+apply plugin: "checkstyle"
+apply plugin: "findbugs"
+apply plugin: "jacoco"
+
+checkstyle {
+    toolVersion = "8.2"
+    sourceSets = [android.sourceSets.main]
+    configFile = file("$rootDir/tools/checkstyle/google_checks.xml")
+}
+
+findbugs {
+    sourceSets = [android.sourceSets.main]
+    includeFilter = file("$rootDir/tools/findbugs/findbugs.xml")
+}
+
+tasks.withType(Checkstyle) {
+    reports {
+        xml.enabled false
+        html.enabled true
+    }
+}
+
+tasks.withType(FindBugs) {
+    reports {
+        xml.enabled false
+        html.enabled true
+    }
+}
+
+android.testOptions {
+    unitTests.all {
+        jacoco {
+            append = false
+            destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
+            classDumpDir = file("$buildDir/jacoco/classpathdumps")
+        }
+    }
+}
+
+task jacocoTestReport(type: JacocoReport, dependsOn: 'test') {
+    reports {
+        xml.enabled false
+        csv.enabled false
+        html.enabled true
+        html.destination file("${buildDir}/jacocoHtml")
+    }
+}
