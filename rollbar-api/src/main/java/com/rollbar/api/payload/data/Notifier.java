@@ -9,6 +9,8 @@ import java.util.Map;
  */
 public class Notifier implements JsonSerializable {
 
+  private static final long serialVersionUID = -2605608164795462842L;
+
   private final String name;
 
   private final String version;

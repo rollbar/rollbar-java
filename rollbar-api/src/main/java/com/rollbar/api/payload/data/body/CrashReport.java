@@ -10,6 +10,8 @@ import java.util.Map;
  */
 public class CrashReport implements BodyContent, JsonSerializable {
 
+  private static final long serialVersionUID = -958856299336011192L;
+
   private final String raw;
 
   private CrashReport(Builder builder) {

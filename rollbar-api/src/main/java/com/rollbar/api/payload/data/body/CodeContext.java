@@ -14,6 +14,8 @@ import java.util.Map;
  */
 public class CodeContext implements JsonSerializable {
 
+  private static final long serialVersionUID = 1271972843983198079L;
+
   private final List<String> pre;
 
   private final List<String> post;

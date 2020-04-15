@@ -11,6 +11,8 @@ import java.util.Map;
  */
 public class Client implements JsonSerializable {
 
+  private static final long serialVersionUID = 1975664872679919021L;
+
   private final Map<String, Map<String, Object>> data;
   private final Map<String, Object> topLevelData;
 

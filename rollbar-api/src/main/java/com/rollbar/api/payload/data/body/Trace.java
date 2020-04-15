@@ -13,6 +13,8 @@ import java.util.Map;
  */
 public class Trace implements BodyContent, JsonSerializable {
 
+  private static final long serialVersionUID = 7477061203488507566L;
+
   private final List<Frame> frames;
 
   private final ExceptionInfo exception;
