@@ -10,6 +10,8 @@ import java.util.Map;
  */
 public class ExceptionInfo implements JsonSerializable {
 
+  private static final long serialVersionUID = -2271411217988417830L;
+
   private final String className;
 
   private final String message;

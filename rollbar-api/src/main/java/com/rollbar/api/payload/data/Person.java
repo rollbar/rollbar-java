@@ -11,6 +11,8 @@ import java.util.Map;
  */
 public class Person implements JsonSerializable {
 
+  private static final long serialVersionUID = -1589474813294741393L;
+
   private final String id;
 
   private final String username;

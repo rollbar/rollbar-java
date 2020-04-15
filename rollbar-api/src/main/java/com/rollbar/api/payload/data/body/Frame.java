@@ -14,6 +14,8 @@ import java.util.Map;
  */
 public class Frame implements JsonSerializable {
 
+  private static final long serialVersionUID = 8146147181798580520L;
+
   private final String filename;
 
   private final Integer lineNumber;

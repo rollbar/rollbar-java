@@ -12,6 +12,8 @@ import java.util.Map;
  */
 public class Request implements JsonSerializable {
 
+  private static final long serialVersionUID = 3552594955980476301L;
+
   private final String url;
 
   private final String method;

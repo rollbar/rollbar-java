@@ -11,6 +11,8 @@ import java.util.Map;
  */
 public class Payload implements JsonSerializable {
 
+  private static final long serialVersionUID = 3054041443735286159L;
+
   private final String accessToken;
 
   private final Data data;

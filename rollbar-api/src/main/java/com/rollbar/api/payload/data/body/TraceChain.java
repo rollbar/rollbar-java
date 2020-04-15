@@ -12,6 +12,8 @@ import java.util.List;
  */
 public class TraceChain implements BodyContent, JsonSerializable {
 
+  private static final long serialVersionUID = 3682426713701825483L;
+
   private final List<Trace> traces;
 
   public TraceChain(Builder builder) {

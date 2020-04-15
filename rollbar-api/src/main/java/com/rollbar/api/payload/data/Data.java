@@ -10,6 +10,8 @@ import java.util.Map;
  */
 public class Data implements JsonSerializable {
 
+  private static final long serialVersionUID = 4996853277611613397L;
+
   private final String environment;
 
   private final Body body;

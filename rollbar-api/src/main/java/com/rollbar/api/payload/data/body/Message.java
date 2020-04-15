@@ -11,6 +11,8 @@ import java.util.Map;
  */
 public class Message implements BodyContent, JsonSerializable {
 
+  private static final long serialVersionUID = 1729529829545820666L;
+
   private final String body;
   private final Map<String, Object> metadata;
 

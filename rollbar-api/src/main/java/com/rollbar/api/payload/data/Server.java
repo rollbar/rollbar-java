@@ -11,6 +11,8 @@ import java.util.Map;
  */
 public class Server implements JsonSerializable {
 
+  private static final long serialVersionUID = -9135498029274932688L;
+
   private final String host;
 
   private final String root;

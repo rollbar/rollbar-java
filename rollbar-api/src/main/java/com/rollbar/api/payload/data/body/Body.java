@@ -8,6 +8,8 @@ import java.util.HashMap;
  */
 public class Body implements JsonSerializable {
 
+  private static final long serialVersionUID = -2783273957046705016L;
+
   private final BodyContent bodyContent;
 
   private Body(Builder builder) {
