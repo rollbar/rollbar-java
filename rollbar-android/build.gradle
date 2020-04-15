@@ -34,7 +34,7 @@ android {
 
     buildTypes {
         release {
-            testCoverageEnabled true
+            testCoverageEnabled false
         }
         debug {
             testCoverageEnabled true
