@@ -4,11 +4,10 @@ import static java.util.Collections.emptyList;
 
 import com.rollbar.api.payload.Payload;
 import com.rollbar.notifier.util.ObjectsUtils;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.AbstractQueue;
@@ -17,11 +16,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A {@link Queue queue} of {@link Payload payloads} persisted on disk.
  */
 public class DiskQueue extends AbstractQueue<Payload> {
+
+  private static Logger LOGGER = LoggerFactory.getLogger(DiskQueue.class);
 
   private static final int UNBOUNDED_QUEUE = 0;
 
@@ -147,10 +150,17 @@ public class DiskQueue extends AbstractQueue<Payload> {
       Object o = objectInput.readObject();
       if (remove) {
         if (!file.delete()) {
-          // TODO log that the file was not removed
+          LOGGER.error("Can not delete the file: {}", file.getPath());
         }
       }
       return (Payload) o;
+    } catch (InvalidClassException | ClassNotFoundException e) {
+      // The InvalidClassException can happen when the serialized payloads are old and the
+      // serialVersionUID is different. Meanwhile the ClassNotFoundException can happen if proguard
+      // has minified the classes. Discard in both cases the payloads so the files are removed
+      // as they are not processable.
+      LOGGER.error("Invalid serialized payload. Discarding it...", e);
+      return null;
     } catch (Exception e) {
       throw new RuntimeException(e);
     } finally {

@@ -8,7 +8,15 @@ import static org.junit.Assert.assertThat;
 
 import com.rollbar.api.payload.Payload;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.UUID;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -107,11 +115,24 @@ public class DiskQueueTest {
 
   @Test
   public void shouldPollEmptyQueue() {
-    Payload payload = new Payload.Builder().build();
-
     Payload result = sut.peek();
 
     assertThat(result, is(nullValue()));
     assertThat(sut.size(), is(0));
   }
+
+  @Test
+  public void shouldDiscardInvalidPayloads() throws Exception {
+    // Create an old serialized payload file in the disk queue.
+    File queueFile = new File(queueFolder.getAbsolutePath(),
+            String.format("%s.%s", UUID.randomUUID().toString(), "payload"));
+
+    InputStream input = this.getClass().getClassLoader().getResource("invalid.payload").openStream();
+    Files.copy(input, queueFile.toPath());
+
+    Payload result = sut.peek();
+
+    assertThat(result, is(nullValue()));
+  }
+
 }
