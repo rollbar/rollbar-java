@@ -1,49 +1,71 @@
+env:
+  global:
+  - # NEXUS_USERNAME
+  - secure: GMm94zdLNJFVddPH2LUOnePwRBGI2TZjiJwgRyBNtkZyGDlxA8H5gw1R0dr156mb6N/i3djIshSO8fKgGlEJul7ln5RPGvwouZj/NKIMaD25Fd9aFSDBUY2im0aqd9DJLC+EdkGC1lSTM4qz7bE79wvoqxEBBtZzyelofm0OqJE5TAKTDPjnRBPJhECWB3kd4XL1+J1MKL1LCg9Q5OiVLH0tY/NxQXPgXMzEQABaum/v/6zsoNF5W7e3ZmBiwLNewbjflWymkVZBGFt1jjLKTVbXehklI7IG5zM5/QkGW+Bn5g5ru0miOsDuCVsy7v0bH2v/zT6kRZbMvsKFh1mSQNg6U5iryI2IO2W2hU3phegxMf5ZFDJi4IsJqvUimQGr/jfkibAtZiLDWrJAMQmmkyAJ9R8yTZAYZMCpOsUxBiuxwy8rT6Il50hS8DJD1hWLMInKdbv+KoZj2VuxMBvWjRILfC1O5j/bJvyZMNEDiF3SgUhdfVUOXhPozXhWwddFRLypWlLuG3UHsmKtk5aib+EPQVb+MCvjTgShhp/Qk+43X0l9enUXmQj3uJxCvEf6ued3T15/E1q98dOjf14dauK/sBKGu2j8qpSVYwlJgGcAaMh+RrReqJWsAgU3E2WpnEJ48a4OYZ1Ff9di5F3BQqgzVs1eei1fQsMyGxZduew=
+  - # NEXUS_PASSWORD
+  - secure: XXiWgTr5HwZtcU2Hi7Ki+p/CDGdMsYdSg7URqoh0DXFVDfRwieS2RDrGXk+BaU+YmIPQF/OAXbErYl0TekJaYQZJqD2csMq+sCWON/xPKZ8IpTSgMz5QKaV8Ji9j5zq4ZPZgMADl6IH8qQ+0+26eeUTvXXi3bA8GVbme3CsWjQh6v1b5N6ApKFKtsEIcnNWNlu03xvTNFQU5iQiEV1yn5N5/xRL0hjSt67QTbxCdGrIHsxsg40doQCIuOdsABKb79Z/QLkYe1PG5emflzjyZBOr0vP4nnq/kGD2oJqqP1+8TBny0fZMNP7s81J2NKOosOSvHCotgmsLTwdB/mmqjbmfaoFqmObwMaMz/LYllksUOgVM2IGcDVhKB255O95sVWrZWgJ2DFNDVVMN1/OP6cArHO26ZxxjQq+Qe8wBxkvilX4FZUEZA0OlN8ScvH2UndWb67reYdjPRb0xdohwMpV7dgDTmnbZTLANSrdFvWuJlmLyiz/DMQufRe3oKeMBM6IGXpjJCloU6kfmr4g0MCx+ytg9pe34pEB9EPmj6zOYs+GGC4XC+uxGK0TPjMyFruZ6+6PBXnwnG1C9FF4fOBSRKXGDZR+6d6SF8RiLHBiivcoM0sCHXAv5/esO2iLpjRYtEqWKfOa3cmch1Oby7hOw9Ma4DvEnQqa6PWqmCkt0=
+  - # GPG_KEY_ID
+  - secure: aaAm6aEvs6HnTJAsfZh8tw5afTPWOPsAQeskJO2aKPp6cX1pI/e9Fvx3XEiBay2tRa6kI7QdMR2kYe6W5t5aq9B0wWdt621wvqeGZV3ty/4BKB5S6iHMSfPjOypTnLI1Ijyn+6ji/iXY5L6/BNnc1inPc8EmNGaUiX8v5ksZSpo6cZa7sJGYOfOfkYEuBsdtCDTjoFblZfKyWNBJJHNybuasRr12P/DcwvReDt6v9r6vYFtcu+nwTO1JXS3rHQr6j79FO/IZ+EcPfBrOfvgQwXcl0/QZregXiB06DQnScdJF+YcqGWfh1jXBs192Jph7WLtYTezaY85jcuGtnRhymxB27wYzaizsWCxQwTxk2Dby8lwKY/Lr/r3lvv3GGFN4/T56ahh7yMpHwnZbNaO0mc95Q9DQY4DJMnQ3lfXlaZ8mGy1Q86VwgUP8gQrYBUeJMA5gv4SaJ2TwAHhltz3PXx8Jt0sVW0HEBMHnFKTMwBfZgCj4ZQI3jwZaRhOLIYgvPtgopE5G1pK+oeNo/jJEUw3If6wQ+2YPJMBSpW97xF3r6DNA0WkZdvaSkgK8pF6khadj2RToNNrPMXe5MznKOwmVGJ+zj31MfTGQvBPnTnL3gR8ct/ZDHwC0Grlgk7sp+3sFPO1/ppdMzi/e1DsXPZgF4n+WTjlhst0RLyyAfWA=
+  - # GPG_PASSPHRASE
+  - secure: b80uKliXyiWXjSa6PLMOMYS3lkvc4XEa10lpF+JTbW5V4cAZHNwoUP2+9ts3ZUAIhYXuOGW0QYOSA+zTOrrjPqjDmwDohEbVWl68CWQkSKFaxeukxrhyFZaJj8zelclEQCdifcCIhu5mwjaIIQvpOX03buJZjHToqbvsIVFJcKUJmjIf9aDAptRCyNNn3dm4AxfIT96shLROvroPeyJnQ5YSUZcRfyBPZtWquo5JonDsjGZ5e86S+pixQkmkEYtCS317h2TgZU2eKEGHmdiI889xM+YuVPoQ5bY4FjkkhW+P+Kb29BaKI/i0bObn8Rm5dsbn2aobN8rr7WHJS9fgPBpeeXLIXUxYKRaJsf3oeVk/KHRSk08/QhQLw1WqfYu5lBXyjg3vFF1JTUVnwwuf+CWQsVy3dFuFYRkd+FNGnSAZIcX0QnLjlueWjhUWAt/iYBTNFYqpkA5inMwDmBO6bBKXd8Ra/NClcFa5OFGNJKuupYbyKd1y39tPwAwOiD2nQjUgGCcvQnN/580lIsVZn4hqLCjjqqQWceUWE+jrXYgL52Ia0lzdwhIUZumJEockm2vv8IozWEBKqtNK7JJSQPFlCwh1xfxR7uWLl1CCjMF/3CtNaH9ZjOTr1+LNVDvtRg86X+a/uObH1/bg/UOg8diPtLY43/1vWpAvFkF+tKc=
+  - ENCRYPTED_GPG_KEY_LOCATION=$TRAVIS_BUILD_DIR/.travis/secring.gpg.enc
+  - GPG_KEY_LOCATION=$TRAVIS_BUILD_DIR/.travis/secring.gpg
+
 language: android
 sudo: false
+
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+
 android:
   components:
-    - tools
-    - platform-tools
-    - build-tools-25.0.3
-    - build-tools-26.0.2
-    - tools # this is in here twice on purpose
-    - android-26
-    - extra-google-m2repository
-    - extra-android-m2repository
+  - tools
+  - platform-tools
+  - build-tools-25.0.3
+  - build-tools-26.0.2
+  - tools
+  - android-26
+  - extra-google-m2repository
+  - extra-android-m2repository
   licenses:
-    - android-sdk-license-.+
-    - '.+'
-
+  - android-sdk-license-.+
+  - ".+"
+before_install:
+- openssl aes-256-cbc -K $encrypted_d4596825e164_key -iv $encrypted_d4596825e164_iv
+  -in $ENCRYPTED_GPG_KEY_LOCATION -out $GPG_KEY_LOCATION -d
 install:
-  - sdkmanager --list || true
-  - sdkmanager --uninstall "system-images;android-15;default;armeabi-v7a"
-  - sdkmanager --uninstall "system-images;android-16;default;armeabi-v7a"
-  - sdkmanager --uninstall "system-images;android-17;default;armeabi-v7a"
-  - sdkmanager --uninstall "system-images;android-18;default;armeabi-v7a"
-  - sdkmanager --uninstall "system-images;android-19;default;armeabi-v7a"
-  - sdkmanager --uninstall "system-images;android-21;default;armeabi-v7a"
-  - sdkmanager --uninstall "extras;google;google_play_services"
-  - sdkmanager --uninstall "extras;android;support"
-  - sdkmanager --uninstall "platforms;android-10"
-  - sdkmanager --uninstall "platforms;android-15"
-  - sdkmanager --uninstall "platforms;android-16"
-  - sdkmanager --uninstall "platforms;android-17"
-  - sdkmanager --uninstall "platforms;android-18"
-  - sdkmanager --uninstall "platforms;android-19"
-  - sdkmanager --uninstall "platforms;android-20"
-  - sdkmanager --uninstall "platforms;android-21"
-  - sdkmanager --uninstall "build-tools;21.1.2"
-  - echo yes | sdkmanager "tools"
-  - echo yes | sdkmanager "platforms;android-25"
-  - echo yes | sdkmanager "platforms;android-26"
-  - echo yes | sdkmanager "extras;android;m2repository"
-  - echo yes | sdkmanager "extras;google;m2repository"
-  - echo yes | sdkmanager "extras;m2repository;com;android;support;constraint;constraint-layout;1.0.2"
-  - echo yes | sdkmanager "extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.2"
-  - export JDK7_HOME=$(jdk_switcher home openjdk7)
-  - ./gradlew --version
-  - ./gradlew clean build
-  - sdkmanager --list || true
-
+- sdkmanager --list || true
+- sdkmanager --uninstall "system-images;android-15;default;armeabi-v7a"
+- sdkmanager --uninstall "system-images;android-16;default;armeabi-v7a"
+- sdkmanager --uninstall "system-images;android-17;default;armeabi-v7a"
+- sdkmanager --uninstall "system-images;android-18;default;armeabi-v7a"
+- sdkmanager --uninstall "system-images;android-19;default;armeabi-v7a"
+- sdkmanager --uninstall "system-images;android-21;default;armeabi-v7a"
+- sdkmanager --uninstall "extras;google;google_play_services"
+- sdkmanager --uninstall "extras;android;support"
+- sdkmanager --uninstall "platforms;android-10"
+- sdkmanager --uninstall "platforms;android-15"
+- sdkmanager --uninstall "platforms;android-16"
+- sdkmanager --uninstall "platforms;android-17"
+- sdkmanager --uninstall "platforms;android-18"
+- sdkmanager --uninstall "platforms;android-19"
+- sdkmanager --uninstall "platforms;android-20"
+- sdkmanager --uninstall "platforms;android-21"
+- sdkmanager --uninstall "build-tools;21.1.2"
+- echo yes | sdkmanager "tools"
+- echo yes | sdkmanager "platforms;android-25"
+- echo yes | sdkmanager "platforms;android-26"
+- echo yes | sdkmanager "extras;android;m2repository"
+- echo yes | sdkmanager "extras;google;m2repository"
+- echo yes | sdkmanager "extras;m2repository;com;android;support;constraint;constraint-layout;1.0.2"
+- echo yes | sdkmanager "extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.2"
+- export JDK7_HOME=$(jdk_switcher home openjdk7)
+- "./gradlew --version"
+- "./gradlew clean build"
+- sdkmanager --list || true
 script:
-  - ./gradlew clean check
+- "./gradlew clean check"
+after_success:
+- "./.travis/release.sh"

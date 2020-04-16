@@ -1,3 +1,13 @@
+gradle.taskGraph.whenReady { taskGraph ->
+    if (taskGraph.allTasks.any { it instanceof Sign }) {
+        allprojects {
+            ext."signing.keyId" = System.getenv("GPG_KEY_ID")
+            ext."signing.secretKeyRingFile" = System.getenv("GPG_KEY_LOCATION")
+            ext."signing.password" = System.getenv("GPG_PASSPHRASE")
+        }
+    }
+}
+
 subprojects {
     if (!it.project.parent.name.equals("examples") &&
             !it.name.contains('android') &&
@@ -60,8 +70,12 @@ subprojects {
                             }
                             developers {
                                 developer {
-                                    id POM_DEVELOPER_ID
-                                    name POM_DEVELOPER_NAME
+                                    id 'rokob'
+                                    name 'Andrew Weiss'
+                                }
+                                developer {
+                                    id 'basoko'
+                                    name 'David Basoco'
                                 }
                             }
                         }
@@ -208,8 +222,12 @@ subprojects {
                                 }
                                 developers {
                                     developer {
-                                        id POM_DEVELOPER_ID
-                                        name POM_DEVELOPER_NAME
+                                        id 'rokob'
+                                        name 'Andrew Weiss'
+                                    }
+                                    developer {
+                                        id 'basoko'
+                                        name 'David Basoco'
                                     }
                                 }
                             }
@@ -292,9 +310,9 @@ def getSnapshotRepositoryUrl() {
 }
 
 def getRepositoryUsername() {
-    return hasProperty('NEXUS_USERNAME') ? NEXUS_USERNAME : ""
+    return System.getenv('NEXUS_USERNAME')
 }
 
 def getRepositoryPassword() {
-    return hasProperty('NEXUS_PASSWORD') ? NEXUS_PASSWORD : ""
+    return System.getenv('NEXUS_PASSWORD')
 }

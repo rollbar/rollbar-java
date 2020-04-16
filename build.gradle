@@ -1,6 +1,6 @@
 String CI = "${System.env.CI}"
 
-if (CI != "true") {
+if (CI == "true") {
   apply from: "$rootDir/gradle/release.gradle"
 }
 
