@@ -1,5 +1,9 @@
 -dontwarn org.slf4j.**
 
+# We need to keep content from these packages.
+-keep class com.rollbar.api.** { *; }
+-keep class com.rollbar.notifier.sender.** { *; }
+
 # https://www.guardsquare.com/en/products/proguard/manual/examples#serializable
 -keepnames class * implements java.io.Serializable
 
@@ -17,3 +21,11 @@
     public static **[] values();
     public static ** valueOf(java.lang.String);
 }
+
+# Uncomment this to preserve the line number information for
+# debugging stack traces.
+-keepattributes SourceFile,LineNumberTable
+
+# If you keep the line number information, uncomment this to
+# hide the original source file name.
+-renamesourcefileattribute SourceFile
