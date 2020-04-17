@@ -4,6 +4,7 @@ import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
 import com.rollbar.api.payload.Payload;
@@ -121,8 +122,8 @@ public class DiskQueueTest {
     assertThat(sut.size(), is(0));
   }
 
-  @Test
-  public void shouldDiscardInvalidPayloads() throws Exception {
+  @Test(expected = RuntimeException.class)
+  public void shouldDiscardInvalidPayloadsWithPeek() throws Exception {
     // Create an old serialized payload file in the disk queue.
     File queueFile = new File(queueFolder.getAbsolutePath(),
             String.format("%s.%s", UUID.randomUUID().toString(), "payload"));
@@ -133,6 +134,21 @@ public class DiskQueueTest {
     Payload result = sut.peek();
 
     assertThat(result, is(nullValue()));
+    assertFalse(new File(queueFile.getPath()).exists());
   }
 
+  @Test(expected = RuntimeException.class)
+  public void shouldDiscardInvalidPayloadsWithPoll() throws Exception {
+    // Create an old serialized payload file in the disk queue.
+    File queueFile = new File(queueFolder.getAbsolutePath(),
+        String.format("%s.%s", UUID.randomUUID().toString(), "payload"));
+
+    InputStream input = this.getClass().getClassLoader().getResource("invalid.payload").openStream();
+    Files.copy(input, queueFile.toPath());
+
+    Payload result = sut.poll();
+
+    assertThat(result, is(nullValue()));
+    assertFalse(new File(queueFile.getPath()).exists());
+  }
 }

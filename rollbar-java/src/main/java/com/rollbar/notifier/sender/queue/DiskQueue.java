@@ -7,7 +7,6 @@ import com.rollbar.notifier.util.ObjectsUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.AbstractQueue;
@@ -145,25 +144,23 @@ public class DiskQueue extends AbstractQueue<Payload> {
 
   private static Payload read(File file, boolean remove) {
     ObjectInputStream objectInput = null;
+    boolean error = false;
+
     try {
       objectInput = new ObjectInputStream(new FileInputStream(file));
       Object o = objectInput.readObject();
-      if (remove) {
+
+      return (Payload) o;
+    } catch (Exception e) {
+      error = true;
+      throw new RuntimeException(e);
+    } finally {
+      // If some error happened discard the payload independently of remove flag.
+      if (remove || error) {
         if (!file.delete()) {
           LOGGER.error("Can not delete the file: {}", file.getPath());
         }
       }
-      return (Payload) o;
-    } catch (InvalidClassException | ClassNotFoundException e) {
-      // The InvalidClassException can happen when the serialized payloads are old and the
-      // serialVersionUID is different. Meanwhile the ClassNotFoundException can happen if proguard
-      // has minified the classes. Discard in both cases the payloads so the files are removed
-      // as they are not processable.
-      LOGGER.error("Invalid serialized payload. Discarding it...", e);
-      return null;
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    } finally {
       ObjectsUtils.close(objectInput);
     }
   }
