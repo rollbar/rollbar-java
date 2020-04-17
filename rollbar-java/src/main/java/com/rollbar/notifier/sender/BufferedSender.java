@@ -13,6 +13,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A buffered sender implementation.
@@ -212,6 +214,8 @@ public class BufferedSender implements Sender {
 
   static final class SendTask implements Runnable {
 
+    private static Logger LOGGER = LoggerFactory.getLogger(BufferedSender.class);
+
     private final int batchSize;
 
     private final Queue<Payload> queue;
@@ -241,6 +245,7 @@ public class BufferedSender implements Sender {
           }
         }
       } catch (Exception e) {
+        LOGGER.error("Error sending the payload.", e);
         // Notify senders
         for (SenderListener senderListener : sender.getListeners()) {
           senderListener.onError(payload, new SenderException(e));
