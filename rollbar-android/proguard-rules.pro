@@ -5,9 +5,9 @@
 -keep class com.rollbar.notifier.sender.** { *; }
 
 # https://www.guardsquare.com/en/products/proguard/manual/examples#serializable
--keepnames class * implements java.io.Serializable
+-keepnames class com.rollbar.* implements java.io.Serializable
 
--keepclassmembers class * implements java.io.Serializable {
+-keepclassmembers class com.rollbar.* implements java.io.Serializable {
     static final long serialVersionUID;
     private static final java.io.ObjectStreamField[] serialPersistentFields;
     !static !transient <fields>;
@@ -17,7 +17,7 @@
     java.lang.Object readResolve();
 }
 
--keepclassmembers,allowoptimization enum * {
+-keepclassmembers,allowoptimization enum com.rollbar.* {
     public static **[] values();
     public static ** valueOf(java.lang.String);
 }
