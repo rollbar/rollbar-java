@@ -1,4 +1,4 @@
-package com.rollbar.springboot;
+package com.rollbar.springboot.web;
 
 import com.rollbar.notifier.Rollbar;
 import javax.servlet.http.HttpServletRequest;
@@ -21,7 +21,6 @@ public class RollbarExceptionResolver implements HandlerExceptionResolver, Order
                                      HttpServletResponse response,
                                      Object handler,
                                      Exception ex) {
-    System.out.println("******************* inside RollbarExceptionResolver *******************");
     rollbar.error(ex);
 
     // null = run other HandlerExceptionResolvers to actually handle the exception
