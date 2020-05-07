@@ -1,5 +1,6 @@
 package com.rollbar.spring.webmvc;
 
+import org.springframework.core.annotation.Order;
 import com.rollbar.notifier.Rollbar;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -8,7 +9,8 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.ModelAndView;
 
 
-public class RollbarExceptionResolver implements HandlerExceptionResolver, Ordered {
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class RollbarExceptionResolver implements HandlerExceptionResolver {
 
   private Rollbar rollbar;
 
@@ -27,9 +29,4 @@ public class RollbarExceptionResolver implements HandlerExceptionResolver, Order
     return null;
   }
 
-  @Override
-  public int getOrder() {
-    // ensure this resolver runs first so that all exceptions are reported
-    return Integer.MIN_VALUE;
-  }
 }
