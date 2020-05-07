@@ -25,8 +25,7 @@ public class RollbarExceptionResolver implements HandlerExceptionResolver {
                                      Exception ex) {
     rollbar.error(ex);
 
-    // null = run other HandlerExceptionResolvers to actually handle the exception
-    return null;
+    return null; // returning null forces other resolvers to handle the exception
   }
 
 }
