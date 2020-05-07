@@ -1,4 +1,4 @@
-package com.rollbar.springboot.web;
+package com.rollbar.spring.webmvc;
 
 import org.junit.Test;
 import com.rollbar.notifier.Rollbar;

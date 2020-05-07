@@ -1,4 +1,4 @@
-package com.rollbar.springboot.web;
+package com.rollbar.spring.webmvc;
 
 import com.rollbar.notifier.Rollbar;
 import javax.servlet.http.HttpServletRequest;
