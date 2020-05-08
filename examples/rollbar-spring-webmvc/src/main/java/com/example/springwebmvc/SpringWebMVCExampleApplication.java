@@ -6,12 +6,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.web.servlet.HandlerExceptionResolver;
+import org.springframework.web.servlet.HandlerExceptionResolver;
+import com.rollbar.spring.webmvc.RollbarExceptionResolver;
 import com.rollbar.notifier.Rollbar;
 import com.rollbar.notifier.config.Config;
 import static com.rollbar.notifier.config.ConfigBuilder.withAccessToken;
-import org.springframework.web.servlet.HandlerExceptionResolver;
-import com.rollbar.springboot.RollbarExceptionResolver;
-import org.springframework.web.servlet.HandlerExceptionResolver;
+
 
 @SpringBootApplication
 @Configuration()
