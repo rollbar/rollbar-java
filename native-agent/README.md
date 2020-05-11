@@ -29,9 +29,9 @@ make sure the handleUncaughtErrors is set to true.
 
 ```
 Rollbar.init(withAccessToken("ACCESS-TOKEN")
-				.appPackages(Arrays.asList("<configure your app packages>"))
-				.handleUncaughtErrors(true) // set this for unhandled exceptions
-				.build());
+    .appPackages(Arrays.asList("<configure your app packages>"))
+    .handleUncaughtErrors(true) // set this for unhandled exceptions
+    .build());
 ```
 
 Once you have the agent setup and `rollbar-java` configured, `rollbar-java` will attribute the exceptions
