@@ -21,10 +21,13 @@ public class ExampleApplication {
     SpringApplication.run(ExampleApplication.class, args);
   }
 
+  /**
+   * Handles all exceptions with Rollbar's Exception Resolver.
+   */
   @Bean
   public HandlerExceptionResolver rollbarExceptionResolver() {
     return new RollbarExceptionResolver(
-      Rollbar.init(withAccessToken("<ENTER YOUR POST_SERVER_ITEM ACCESS TOKEN HERE FOR YOUR PROJECT>")
+      Rollbar.init(withAccessToken("<ENTER POST_SERVER_ITEM ACCESS TOKEN>")
               .environment("development")
               .build()));
   }
