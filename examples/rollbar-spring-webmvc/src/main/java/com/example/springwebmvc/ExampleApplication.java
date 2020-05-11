@@ -27,14 +27,14 @@ public class ExampleApplication {
   public HandlerExceptionResolver rollbarExceptionResolver() {
 
     // If you use a configBuilder the framework is set to spring-web-mvc
-    return new RollbarExceptionResolver(withAccessToken("b2ca53e2976340d2bad66e8ca5581b03")
+    return new RollbarExceptionResolver(withAccessToken("POST-SERVER-ACCESS-TOKEN")
             .environment("development"));
 
     // If you want to override the configBuilder constructor you can pass a configured
     // Rollbar object
     //
     // return new RollbarExceptionResolver(
-    //        Rollbar.init(withAccessToken("b2ca53e2976340d2bad66e8ca5581b03")
+    //        Rollbar.init(withAccessToken("POST-SERVER-ACCESS-TOKEN")
     //                .environment("development")
     //                .framework("some-framework")
     //                .build()));
