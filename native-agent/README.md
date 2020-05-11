@@ -23,7 +23,21 @@ Gradle the easiest way is to add the following to your `build.gradle` file:
 applicationDefaultJvmArgs = ["-agentpath:path/to/"+System.mapLibraryName("rollbar_java_agent")]
 ```
 
-Regardless of your JVM language of choice, at some level their is an invocation of the JVM and
+Once you have your Java code using the Native Agent, you need make sure your `rollbar-java` is
+configured with appPackages at a minimum. If you also want to handle uncaught exceptions,
+make sure the handleUncaughtErrors is set to true.
+
+```
+Rollbar.init(withAccessToken("ACCESS-TOKEN")
+				.appPackages(Arrays.asList("<configure your app packages>"))
+				.handleUncaughtErrors(true) // set this for unhandled exceptions
+				.build());
+```
+
+Once you have the agent setup and `rollbar-java` configured, `rollbar-java` will attribute the exceptions
+using the agent as well as send back unhandled exceptions if configured.
+
+Regardless of your JVM language of choice, at some level there will be an invocation of the JVM and
 therefore there is a configuration option to pass arguments directly to the JVM.
 
 ## Getting the agent library
