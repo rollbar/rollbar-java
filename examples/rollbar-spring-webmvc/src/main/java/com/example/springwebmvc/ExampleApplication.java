@@ -3,8 +3,8 @@ package com.example.springwebmvc;
 import static com.rollbar.notifier.config.ConfigBuilder.withAccessToken;
 
 import com.rollbar.notifier.Rollbar;
-import com.rollbar.spring.webmvc.RollbarExceptionResolver;
 import com.rollbar.notifier.config.Config;
+import com.rollbar.spring.webmvc.RollbarExceptionResolver;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
