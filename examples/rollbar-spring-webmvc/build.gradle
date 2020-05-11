@@ -8,17 +8,13 @@ repositories {
     mavenCentral()
 }
 
-jar {
-    manifest {
-        attributes 'Main-Class': 'com.example.springwebmvc.ExampleApplication'
-    }
-}
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web:2.2.7.RELEASE'
 
-    compile files('../../rollbar-spring-webmvc/build/libs/rollbar-spring-webmvc.jar')
+    compile files('../../rollbar-api/build/libs/rollbar-api.jar')
     compile files('../../rollbar-java/build/libs/rollbar-java.jar')
+    compile files('../../rollbar-spring-webmvc/build/libs/rollbar-spring-webmvc.jar')
 
 
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
