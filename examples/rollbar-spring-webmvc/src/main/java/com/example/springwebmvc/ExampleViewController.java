@@ -7,8 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ExampleViewController {
 
   @RequestMapping("/")
-  public String index() {
-    throw new NullPointerException("New Exception Sent to Rollbar");
+  public void index() {
+    int x = 1 / 0;
   }
-
 }

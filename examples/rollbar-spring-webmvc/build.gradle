@@ -1,4 +1,8 @@
-apply plugin: 'java'
+plugins {
+    id 'org.springframework.boot' version '2.2.6.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+    id 'java'
+}
 
 repositories {
     mavenCentral()
@@ -11,12 +15,10 @@ jar {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:org.springframework.boot.gradle.plugin:2.2.6.RELEASE'
     implementation 'org.springframework.boot:spring-boot-starter-web:2.2.7.RELEASE'
 
     compile files('../../rollbar-spring-webmvc/build/libs/rollbar-spring-webmvc.jar')
     compile files('../../rollbar-java/build/libs/rollbar-java.jar')
-    compile files('../../rollbar-api/build/libs/rollbar-api.jar')
 
 
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
