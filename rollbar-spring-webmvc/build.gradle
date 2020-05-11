@@ -8,8 +8,6 @@ ext {
 
 dependencies {
     compile project(':rollbar-java')
-    compile project(':rollbar-api')
-    compile project(':rollbar-web')
 
     implementation 'org.springframework:spring-webmvc:' + springWebmvcVersion
     implementation group: 'javax.servlet', name: 'javax.servlet-api', version: javaxServletVersion
