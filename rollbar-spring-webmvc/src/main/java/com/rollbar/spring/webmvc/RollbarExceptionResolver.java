@@ -25,10 +25,6 @@ public class RollbarExceptionResolver implements HandlerExceptionResolver {
     this.rollbar = rollbar;
   }
 
-  public RollbarExceptionResolver(ConfigBuilder configBuilder) {
-    this.rollbar = Rollbar.init(configBuilder.build());
-  }
-
   @Override
   public ModelAndView resolveException(HttpServletRequest request,
                                      HttpServletResponse response,
