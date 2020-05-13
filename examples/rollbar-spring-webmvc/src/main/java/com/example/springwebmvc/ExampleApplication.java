@@ -13,11 +13,22 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.ServletListenerRegistrationBean;
+import org.springframework.beans.factory.annotation.Value;
 
 @SpringBootApplication
 @Configuration()
 @ComponentScan({"com.example.springwebmvc","com.rollbar.spring.webmvc"})
 public class ExampleApplication {
+
+  @Value("${rollbar.access_token}")
+  private String accessToken;
+
+  @Value("${rollbar.environment}")
+  private String environment;
+
+  @Value("${rollbar.framework}")
+  private String framework;
+
 
   public static void main(String[] args) {
     SpringApplication.run(ExampleApplication.class, args);
@@ -25,9 +36,9 @@ public class ExampleApplication {
 
   @Bean(name="rollbar")
   public Rollbar rollbar() {
-    return Rollbar.init(withAccessToken("<ACCESS TOKEN>")
-            .environment("development")
-            .framework("some-framework")
+    return Rollbar.init(withAccessToken(accessToken)
+            .environment(environment)
+            .framework(framework)
             .request(new RequestProvider.Builder().build())
             .build());
   }
