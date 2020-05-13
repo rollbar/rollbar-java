@@ -14,6 +14,7 @@ dependencies {
 
     compile files('../../rollbar-api/build/libs/rollbar-api.jar')
     compile files('../../rollbar-java/build/libs/rollbar-java.jar')
+    compile files('../../rollbar-web/build/libs/rollbar-web.jar')
     compile files('../../rollbar-spring-webmvc/build/libs/rollbar-spring-webmvc.jar')
 
 

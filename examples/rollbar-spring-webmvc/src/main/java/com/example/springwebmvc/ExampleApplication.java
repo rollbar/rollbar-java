@@ -1,43 +1,35 @@
 package com.example.springwebmvc;
 
 import static com.rollbar.notifier.config.ConfigBuilder.withAccessToken;
-
 import com.rollbar.notifier.Rollbar;
 import com.rollbar.notifier.config.Config;
 import com.rollbar.spring.webmvc.RollbarExceptionResolver;
+import com.rollbar.web.provider.RequestProvider;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.HandlerExceptionResolver;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.boot.web.servlet.ServletListenerRegistrationBean;
 
 @SpringBootApplication
 @Configuration()
-@ComponentScan()
+@ComponentScan({"com.example.springwebmvc","com.rollbar.spring.webmvc"})
 public class ExampleApplication {
+
   public static void main(String[] args) {
     SpringApplication.run(ExampleApplication.class, args);
   }
 
-  /**
-   * Handles all exceptions with Rollbar's Exception Resolver.
-   */
   @Bean
-  public HandlerExceptionResolver rollbarExceptionResolver() {
-
-    // If you use a configBuilder the framework is set to spring-web-mvc
-    return new RollbarExceptionResolver(withAccessToken("POST-SERVER-ACCESS-TOKEN")
-            .environment("development"));
-
-    // If you want to override the configBuilder constructor you can pass a configured
-    // Rollbar object
-    //
-    // return new RollbarExceptionResolver(
-    //        Rollbar.init(withAccessToken("POST-SERVER-ACCESS-TOKEN")
-    //                .environment("development")
-    //                .framework("some-framework")
-    //                .build()));
+  public Rollbar rollbar() {
+    return Rollbar.init(withAccessToken("1b7dec62e84341ff8361b91d2c94e5b4")
+            .environment("development")
+            .framework("some-framework")
+            .request(new RequestProvider.Builder().build())
+            .build());
   }
 
 }
