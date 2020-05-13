@@ -5,14 +5,14 @@ import com.rollbar.notifier.config.ConfigBuilder;
 import com.rollbar.web.listener.RollbarRequestListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.servlet.ServletListenerRegistrationBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.context.annotation.Bean;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.boot.web.servlet.ServletListenerRegistrationBean;
 
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ControllerAdvice
@@ -35,6 +35,9 @@ public class RollbarExceptionResolver implements HandlerExceptionResolver {
     return null; // returning null forces other resolvers to handle the exception
   }
 
+  /**
+   * Registering a RollbarRequestListener to attribute HTTP requests to be available in Rollbar.com
+   */
   @Bean
   public ServletListenerRegistrationBean<RollbarRequestListener> listenerRegistrationBean() {
     ServletListenerRegistrationBean<RollbarRequestListener> bean =
