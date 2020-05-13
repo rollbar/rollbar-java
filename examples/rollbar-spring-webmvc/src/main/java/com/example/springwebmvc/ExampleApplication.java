@@ -23,7 +23,7 @@ public class ExampleApplication {
     SpringApplication.run(ExampleApplication.class, args);
   }
 
-  @Bean
+  @Bean(name="rollbar")
   public Rollbar rollbar() {
     return Rollbar.init(withAccessToken("<ACCESS TOKEN>")
             .environment("development")
