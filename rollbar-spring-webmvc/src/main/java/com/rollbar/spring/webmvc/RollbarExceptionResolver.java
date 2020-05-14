@@ -1,7 +1,6 @@
 package com.rollbar.spring.webmvc;
 
 import com.rollbar.notifier.Rollbar;
-import com.rollbar.notifier.config.ConfigBuilder;
 import com.rollbar.web.listener.RollbarRequestListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
