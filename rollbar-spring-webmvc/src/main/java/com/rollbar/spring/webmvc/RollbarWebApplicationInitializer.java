@@ -1,5 +1,6 @@
 package com.rollbar.spring.webmvc;
 
+import com.rollbar.web.filter.RollbarFilter;
 import com.rollbar.web.listener.RollbarRequestListener;
 import javax.servlet.ServletContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,9 @@ public class RollbarWebApplicationInitializer implements WebApplicationInitializ
   @Override
   @Autowired
   public void onStartup(ServletContext container) {
-    container.addListener(new RollbarRequestListener());
+    container.addListener(RollbarRequestListener.class);
+    container.addFilter("RollbarFilter", new RollbarFilter())
+            .addMappingForUrlPatterns(null, true, "/*");
   }
 
 }

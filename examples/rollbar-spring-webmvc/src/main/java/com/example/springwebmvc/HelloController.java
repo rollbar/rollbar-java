@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.context.annotation.ComponentScan;
+import com.rollbar.web.provider.RequestProvider;
 
 @Controller
 @Configuration()
@@ -29,8 +30,19 @@ public class HelloController {
         int x = 1 / 0;
     }
 
+    /**
+     * Register a Rollbar bean to configure App with Rollbar.
+     */
+    @Bean(name = "rollbar")
+    public Rollbar rollbar() {
+        return Rollbar.init(withAccessToken("<TOKEN>")
+                .request(new RequestProvider.Builder().build())
+                .build());
+    }
+
     @Bean
     public HandlerExceptionResolver rollbarExceptionResolver() {
-        return new RollbarExceptionResolver(Rollbar.init(withAccessToken("<TOKEN>").build()));
+        return new RollbarExceptionResolver(rollbar());
     }
+
 }
