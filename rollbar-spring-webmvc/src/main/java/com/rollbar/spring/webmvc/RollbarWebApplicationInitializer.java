@@ -9,8 +9,9 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 public class RollbarWebApplicationInitializer implements WebApplicationInitializer {
 
   @Override
+  @Autowired
   public void onStartup(ServletContext container) {
-    container.addListener(RollbarRequestListener.class);
+    container.addListener(new RollbarRequestListener());
   }
 
 }

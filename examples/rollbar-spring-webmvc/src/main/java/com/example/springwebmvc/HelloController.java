@@ -12,9 +12,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.HandlerExceptionResolver;
+import org.springframework.context.annotation.ComponentScan;
 
 @Controller
 @Configuration()
+@ComponentScan({"com.example.springbootwebmvc","com.rollbar.spring.webmvc"})
 public class HelloController {
     @RequestMapping(value = "/hello", method = RequestMethod.GET)
     public String hello(@RequestParam(value="name", required=false, defaultValue="World") String name, Model model) {
@@ -29,6 +31,6 @@ public class HelloController {
 
     @Bean
     public HandlerExceptionResolver rollbarExceptionResolver() {
-        return new RollbarExceptionResolver(Rollbar.init(withAccessToken("<ACCESS TOKEN>").build()));
+        return new RollbarExceptionResolver(Rollbar.init(withAccessToken("<TOKEN>").build()));
     }
 }
