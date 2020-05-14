@@ -1,8 +1,8 @@
 package com.rollbar.spring.boot.webmvc;
 
 import com.rollbar.notifier.Rollbar;
-import com.rollbar.web.listener.RollbarRequestListener;
 import com.rollbar.spring.webmvc.RollbarExceptionResolver;
+import com.rollbar.web.listener.RollbarRequestListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,23 +18,22 @@ import org.springframework.web.servlet.ModelAndView;
 @ControllerAdvice
 public class RollbarSpringBootExceptionResolver extends RollbarExceptionResolver {
 
-    private Rollbar rollbar;
+  private Rollbar rollbar;
 
-    @Autowired
-    public RollbarSpringBootExceptionResolver(Rollbar rollbar) {
-        super(rollbar);
-    }
+  @Autowired
+  public RollbarSpringBootExceptionResolver(Rollbar rollbar) {
+    super(rollbar);
+  }
 
-
-    /**
-     * Registering a RollbarRequestListener to attribute HTTP requests to be available in Rollbar.com
-     */
-    @Bean
-    public ServletListenerRegistrationBean<RollbarRequestListener> listenerRegistrationBean() {
-        ServletListenerRegistrationBean<RollbarRequestListener> bean =
-                new ServletListenerRegistrationBean<>();
-        bean.setListener(new RollbarRequestListener());
-        return bean;
-    }
+  /**
+   * Registering a RollbarRequestListener to attribute HTTP requests to be available in Rollbar.com
+   */
+  @Bean
+  public ServletListenerRegistrationBean<RollbarRequestListener> listenerRegistrationBean() {
+    ServletListenerRegistrationBean<RollbarRequestListener> bean =
+            new ServletListenerRegistrationBean<>();
+    bean.setListener(new RollbarRequestListener());
+    return bean;
+  }
 
 }

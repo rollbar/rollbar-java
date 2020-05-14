@@ -1,4 +1,4 @@
-package com.example.springwebmvc;
+package com.example.springbootwebmvc;
 
 import static com.rollbar.notifier.config.ConfigBuilder.withAccessToken;
 
@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
 
 @SpringBootApplication
 @Configuration()
-@ComponentScan({"com.example.springwebmvc","com.rollbar.spring.boot.webmvc"})
+@ComponentScan({"com.example.springbootwebmvc","com.rollbar.spring.boot.webmvc"})
 public class ExampleApplication {
 
   @Value("${rollbar.access_token}")

@@ -1,4 +1,4 @@
-package com.example.springwebmvc;
+package com.example.springbootwebmvc;
 
 import com.rollbar.notifier.Rollbar;
 import org.springframework.beans.factory.annotation.Autowired;
