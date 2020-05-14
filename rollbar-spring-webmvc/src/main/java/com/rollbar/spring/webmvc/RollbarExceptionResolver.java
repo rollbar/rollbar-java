@@ -34,15 +34,4 @@ public class RollbarExceptionResolver implements HandlerExceptionResolver {
     return null; // returning null forces other resolvers to handle the exception
   }
 
-  /**
-   * Registering a RollbarRequestListener to attribute HTTP requests to be available in Rollbar.com
-   */
-  @Bean
-  public ServletListenerRegistrationBean<RollbarRequestListener> listenerRegistrationBean() {
-    ServletListenerRegistrationBean<RollbarRequestListener> bean =
-            new ServletListenerRegistrationBean<>();
-    bean.setListener(new RollbarRequestListener());
-    return bean;
-  }
-
 }

@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
 
 @SpringBootApplication
 @Configuration()
-@ComponentScan({"com.example.springwebmvc","com.rollbar.spring.webmvc"})
+@ComponentScan({"com.example.springwebmvc","com.rollbar.spring.boot.webmvc"})
 public class ExampleApplication {
 
   @Value("${rollbar.access_token}")
