@@ -12,4 +12,5 @@ include ":rollbar-api",
         ":examples:rollbar-scala",
         ":examples:rollbar-log4j2",
         ":examples:rollbar-logback",
-        ":examples:rollbar-spring-boot-webmvc"
+        ":examples:rollbar-spring-boot-webmvc",
+        ":examples:rollbar-spring-webmvc"
