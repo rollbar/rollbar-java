@@ -11,14 +11,14 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Hello Spring MVC</title>
+    <title>Rollbar Spring Web MVC Example</title>
 
     <link href="${contextPath}/resources/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
 <div class="container">
 
-    <h2>Hello ${name}!</h2>
+    <h2>Index View</h2>
 
 </div>
 <!-- /container -->
