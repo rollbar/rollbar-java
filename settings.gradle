@@ -6,9 +6,11 @@ include ":rollbar-api",
         ":rollbar-web",
         ":rollbar-log4j2",
         ":rollbar-logback",
+        ":rollbar-spring-webmvc",
         ":examples:rollbar-java",
         ":examples:rollbar-web",
         ":examples:rollbar-android",
         ":examples:rollbar-scala",
         ":examples:rollbar-log4j2",
-        ":examples:rollbar-logback"
+        ":examples:rollbar-logback",
+        ":examples:rollbar-spring-webmvc"
