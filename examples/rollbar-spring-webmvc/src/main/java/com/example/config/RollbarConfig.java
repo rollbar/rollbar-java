@@ -36,9 +36,4 @@ public class RollbarConfig {
                 .build());
   }
 
-  @Bean
-  public HandlerExceptionResolver rollbarExceptionResolver() {
-    return new RollbarExceptionResolver(rollbar());
-  }
-
 }
