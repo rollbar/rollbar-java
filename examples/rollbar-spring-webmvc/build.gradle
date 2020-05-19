@@ -32,7 +32,7 @@ dependencies {
     testCompile group: 'org.mockito', name: 'mockito-core', version: '2.1.0'
     testCompile group: 'org.hamcrest', name: 'java-hamcrest', version: '2.0.0.0'
 
-    def tomcatVersion = '7.0.57'
+    def tomcatVersion = '8.0.42'
 
     tomcat "org.apache.tomcat.embed:tomcat-embed-core:${tomcatVersion}",
             "org.apache.tomcat.embed:tomcat-embed-logging-juli:${tomcatVersion}"
