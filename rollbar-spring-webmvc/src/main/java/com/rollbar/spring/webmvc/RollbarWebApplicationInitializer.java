@@ -1,9 +1,7 @@
 package com.rollbar.spring.webmvc;
 
-import com.rollbar.web.filter.RollbarFilter;
 import com.rollbar.web.listener.RollbarRequestListener;
 import javax.servlet.ServletContext;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.WebApplicationInitializer;
 
 public class RollbarWebApplicationInitializer implements WebApplicationInitializer {
