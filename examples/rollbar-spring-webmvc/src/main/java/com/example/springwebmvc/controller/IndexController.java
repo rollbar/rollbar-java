@@ -2,7 +2,6 @@ package com.example.springwebmvc.controller;
 
 import com.rollbar.notifier.Rollbar;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -12,7 +11,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 class IndexController {
 
   @Autowired
-  private ApplicationContext context;
+  private Rollbar rollbar;
 
   /**
    * Example for calling rollbar.log.
@@ -20,7 +19,6 @@ class IndexController {
   @RequestMapping(value = "/", method = RequestMethod.GET)
   @ResponseBody
   public String index() {
-    Rollbar rollbar = (Rollbar)context.getBean(Rollbar.class);
     System.out.println(rollbar);
     rollbar.log("log some error to Rollbar");
     return "index";
@@ -35,7 +33,6 @@ class IndexController {
     try {
       int x = 1 / 0;
     } catch (Exception e) {
-      Rollbar rollbar = (Rollbar)context.getBean(Rollbar.class);
       rollbar.log("caught an error");
       throw e; // you can re-raise to for the Rollbar error handler to process it;
     }
