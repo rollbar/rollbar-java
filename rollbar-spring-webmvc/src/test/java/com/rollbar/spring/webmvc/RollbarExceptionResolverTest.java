@@ -22,7 +22,7 @@ public class RollbarExceptionResolverTest {
         Rollbar rollbar = mock(Rollbar.class);
         doNothing().when(rollbar).error(testException);
 
-        // construct exception resolver from the Rollbar resolver for Spring boot
+        // construct exception resolver from the Rollbar resolver for Spring webmvc
         HandlerExceptionResolver handlerExceptionResolver = new RollbarExceptionResolver(rollbar);
 
         // builed a full mocked out request for the exception resolver
