@@ -20,7 +20,7 @@ public class RollbarConfig {
    */
   @Bean(name = "rollbar")
   public Rollbar rollbar() {
-    return Rollbar.init(withAccessToken("1b7dec62e84341ff8361b91d2c94e5b4")
+    return Rollbar.init(withAccessToken("<ACCESS TOKEN>")
             .environment("development")
             .framework("spring-webmvc")
             .request(new RequestProvider.Builder().build())

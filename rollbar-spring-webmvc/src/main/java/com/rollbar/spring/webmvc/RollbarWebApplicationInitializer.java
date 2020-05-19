@@ -9,15 +9,11 @@ import org.springframework.web.WebApplicationInitializer;
 public class RollbarWebApplicationInitializer implements WebApplicationInitializer {
 
   @Override
-  @Autowired
   public void onStartup(ServletContext container) {
 
     // Attach the RollbarRequestListner to attribute HTTP Request data into the Exception object
     // This will be visible in Rollbar
     container.addListener(RollbarRequestListener.class);
-    container.addFilter("RollbarFilter", new RollbarFilter())
-            .addMappingForUrlPatterns(null, true, "/*");
-
   }
 
 }

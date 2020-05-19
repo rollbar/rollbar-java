@@ -20,6 +20,7 @@ apply plugin: 'war'
 apply plugin: 'com.bmuschko.tomcat'
 
 dependencies {
+    compile project(":rollbar-web")
     compile project(":rollbar-spring-webmvc")
 
     providedCompile 'javax.servlet:javax.servlet-api:3.1.0'
@@ -31,7 +32,7 @@ dependencies {
     testCompile group: 'org.mockito', name: 'mockito-core', version: '2.1.0'
     testCompile group: 'org.hamcrest', name: 'java-hamcrest', version: '2.0.0.0'
 
-    def tomcatVersion = '8.0.42'
+    def tomcatVersion = '7.0.57'
 
     tomcat "org.apache.tomcat.embed:tomcat-embed-core:${tomcatVersion}",
             "org.apache.tomcat.embed:tomcat-embed-logging-juli:${tomcatVersion}"

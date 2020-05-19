@@ -7,7 +7,6 @@ ext {
 }
 
 dependencies {
-    compile project(':rollbar-java')
     compile project(':rollbar-web')
 
     implementation 'org.springframework:spring-webmvc:' + springWebmvcVersion
