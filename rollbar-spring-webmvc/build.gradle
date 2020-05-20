@@ -8,11 +8,8 @@ ext {
 
 dependencies {
     compile project(":rollbar-web")
-
     implementation 'org.springframework:spring-webmvc:' + springWebmvcVersion
     implementation group: 'javax.servlet', name: 'javax.servlet-api', version: javaxServletVersion
 
-    testImplementation group: 'junit', name: 'junit', version: junitVersion
-    testImplementation group: 'org.mockito', name: 'mockito-core', version: mockitoVersion
-    testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springFrameworkBootTestVersion
+    testCompile group: 'org.springframework', name: 'spring-test', version: '5.2.6.RELEASE'
 }
