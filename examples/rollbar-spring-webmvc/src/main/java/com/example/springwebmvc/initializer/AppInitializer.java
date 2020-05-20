@@ -20,7 +20,6 @@ public class AppInitializer implements WebApplicationInitializer {
     AnnotationConfigWebApplicationContext ctx = new AnnotationConfigWebApplicationContext();
     ctx.register(RollbarConfig.class);
     ctx.setServletContext(servletContext);
-    ctx.refresh();
 
     ServletRegistration.Dynamic servlet =
             servletContext.addServlet("dispatcher",
