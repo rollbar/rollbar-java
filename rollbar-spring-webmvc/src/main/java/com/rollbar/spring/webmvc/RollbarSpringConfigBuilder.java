@@ -1,18 +1,16 @@
 package com.rollbar.spring.webmvc;
 
 import com.rollbar.notifier.config.ConfigBuilder;
+import com.rollbar.notifier.provider.server.ServerProvider;
 import com.rollbar.web.provider.RequestProvider;
 
-public class RollbarSpringConfigBuilder {
+public class RollbarSpringConfigBuilder extends ConfigBuilder {
 
-  /**
-   * Returns a ConfigBuilder object and sets RequestProvider which
-   * attributes HTTP request data in exceptions. This can be seen
-   * in Rollbar.
-   */
-  public static ConfigBuilder initConfigBuilderWithAccessToken(String accessToken) {
-    return ConfigBuilder
-            .withAccessToken(accessToken)
-            .request(new RequestProvider.Builder().build());
+  public RollbarSpringConfigBuilder(String accessToken) {
+    super(accessToken);
+    this.request = new RequestProvider.Builder().build();
+    this.server = new ServerProvider();
+    this.framework = "spring";
   }
+
 }

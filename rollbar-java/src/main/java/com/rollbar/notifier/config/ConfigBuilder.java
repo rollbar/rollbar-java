@@ -30,66 +30,66 @@ import java.util.Map;
  */
 public class ConfigBuilder {
 
-  private String accessToken;
+  protected String accessToken;
 
-  private String endpoint;
+  protected String endpoint;
 
-  private String environment;
+  protected String environment;
 
-  private String codeVersion;
+  protected String codeVersion;
 
-  private String platform;
+  protected String platform;
 
-  private String language;
+  protected String language;
 
-  private String framework;
+  protected String framework;
 
-  private Provider<String> context;
+  protected Provider<String> context;
 
-  private Provider<Request> request;
+  protected Provider<Request> request;
 
-  private Provider<Person> person;
+  protected Provider<Person> person;
 
-  private Provider<Server> server;
+  protected Provider<Server> server;
 
-  private Provider<Client> client;
+  protected Provider<Client> client;
 
-  private Provider<Map<String, Object>> custom;
+  protected Provider<Map<String, Object>> custom;
 
-  private Provider<Notifier> notifier;
+  protected Provider<Notifier> notifier;
 
-  private Provider<Long> timestamp;
+  protected Provider<Long> timestamp;
 
-  private Filter filter;
+  protected Filter filter;
 
-  private Transformer transformer;
+  protected Transformer transformer;
 
-  private FingerprintGenerator fingerPrintGenerator;
+  protected FingerprintGenerator fingerPrintGenerator;
 
-  private UuidGenerator uuidGenerator;
+  protected UuidGenerator uuidGenerator;
 
-  private Sender sender;
+  protected Sender sender;
 
-  private JsonSerializer jsonSerializer;
+  protected JsonSerializer jsonSerializer;
 
-  private Proxy proxy;
+  protected Proxy proxy;
 
-  private List<String> appPackages;
+  protected List<String> appPackages;
 
-  private boolean handleUncaughtErrors;
+  protected boolean handleUncaughtErrors;
 
-  private boolean enabled;
+  protected boolean enabled;
 
-  private Level defaultMessageLevel;
+  protected Level defaultMessageLevel;
 
-  private Level defaultErrorLevel;
+  protected Level defaultErrorLevel;
 
-  private Level defaultThrowableLevel;
+  protected Level defaultThrowableLevel;
 
   /**
    * Constructor with an access token.
    */
-  private ConfigBuilder(String accessToken) {
+  protected ConfigBuilder(String accessToken) {
     // Defaults
     this.accessToken = accessToken;
     this.handleUncaughtErrors = true;

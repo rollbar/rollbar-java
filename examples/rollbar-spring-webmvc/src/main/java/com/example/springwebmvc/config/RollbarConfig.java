@@ -17,17 +17,15 @@ public class RollbarConfig {
   private Config getRollbarConfigs(String accessToken) {
 
     // Reference ConfigBuilder.java for all the properties you can set for Rollbar
-    return RollbarSpringConfigBuilder
-            .initConfigBuilderWithAccessToken(accessToken)
+    return new RollbarSpringConfigBuilder(accessToken)
             .environment("development")
-            .framework("spring-webmvc")
             .build();
   }
 
   /**
    * Register a Rollbar bean to configure App with Rollbar.
    */
-  @Bean(name = "rollbar")
+  @Bean
   public Rollbar rollbar() {
     return Rollbar.init(getRollbarConfigs("<ACCESS TOKEN>"));
   }
