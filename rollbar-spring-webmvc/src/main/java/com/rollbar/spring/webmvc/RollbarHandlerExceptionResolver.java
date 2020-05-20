@@ -12,12 +12,12 @@ import org.springframework.web.servlet.ModelAndView;
 
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ControllerAdvice
-public class RollbarExceptionResolver implements HandlerExceptionResolver {
+public class RollbarHandlerExceptionResolver implements HandlerExceptionResolver {
 
   private Rollbar rollbar;
 
   @Autowired
-  public RollbarExceptionResolver(Rollbar rollbar) {
+  public RollbarHandlerExceptionResolver(Rollbar rollbar) {
     this.rollbar = rollbar;
   }
 

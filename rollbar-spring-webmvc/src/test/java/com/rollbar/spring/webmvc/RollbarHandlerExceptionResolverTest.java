@@ -8,11 +8,10 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 
-public class RollbarExceptionResolverTest {
+public class RollbarHandlerExceptionResolverTest {
 
     @Test
     public void testRollbarExceptionResolver() {
@@ -23,7 +22,7 @@ public class RollbarExceptionResolverTest {
         doNothing().when(rollbar).error(testException);
 
         // construct exception resolver from the Rollbar resolver for Spring webmvc
-        HandlerExceptionResolver handlerExceptionResolver = new RollbarExceptionResolver(rollbar);
+        HandlerExceptionResolver handlerExceptionResolver = new RollbarHandlerExceptionResolver(rollbar);
 
         // builed a full mocked out request for the exception resolver
         MockHttpServletRequest request = new MockHttpServletRequest();
