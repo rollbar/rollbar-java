@@ -22,8 +22,6 @@ dependencies {
     implementation 'org.springframework:spring-webmvc:' + springWebmvcVersion
     implementation group: 'javax.servlet', name: 'javax.servlet-api', version: javaxServletVersion
 
-    testImplementation group: 'org.hamcrest', name: 'java-hamcrest', version: '2.0.0.0'
-
     def tomcatVersion = '8.0.42'
 
     tomcat "org.apache.tomcat.embed:tomcat-embed-core:${tomcatVersion}",
