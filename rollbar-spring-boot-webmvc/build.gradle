@@ -3,15 +3,15 @@ ext {
     javaxServletVersion = '3.0.1'
     junitVersion = '4.12'
     mockitoVersion = '2.10.0'
-    springFrameworkBootTestVersion = '2.2.6.RELEASE'
+    springBootVersion = '1.4.2.RELEASE'
 }
 
 dependencies {
     compile project(':rollbar-spring-webmvc')
 
     implementation 'org.springframework:spring-webmvc:' + springWebmvcVersion
-    implementation 'org.springframework.boot:spring-boot:1.4.2.RELEASE'
+    implementation 'org.springframework.boot:spring-boot:' + springBootVersion
     implementation group: 'javax.servlet', name: 'javax.servlet-api', version: javaxServletVersion
 
-    testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springFrameworkBootTestVersion
+    testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springBootVersion
 }
