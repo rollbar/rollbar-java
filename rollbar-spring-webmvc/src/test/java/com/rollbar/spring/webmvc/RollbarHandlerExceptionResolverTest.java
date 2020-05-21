@@ -24,7 +24,7 @@ public class RollbarHandlerExceptionResolverTest {
         // construct exception resolver from the Rollbar resolver for Spring webmvc
         HandlerExceptionResolver handlerExceptionResolver = new RollbarHandlerExceptionResolver(rollbar);
 
-        // builed a full mocked out request for the exception resolver
+        // build a full mocked out request for the exception resolver
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
         handlerExceptionResolver.resolveException(request, response, null, testException);
