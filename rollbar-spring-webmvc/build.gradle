@@ -1,15 +1,10 @@
 ext {
     springWebmvcVersion = '5.2.6.RELEASE'
     javaxServletVersion = '3.0.1'
-    junitVersion = '4.12'
-    mockitoVersion = '2.10.0'
-    springFrameworkTestVersion = '5.2.6.RELEASE'
 }
 
 dependencies {
     compile project(":rollbar-web")
     implementation 'org.springframework:spring-webmvc:' + springWebmvcVersion
     implementation group: 'javax.servlet', name: 'javax.servlet-api', version: javaxServletVersion
-
-    testCompile group: 'org.springframework', name: 'spring-test', version: springFrameworkTestVersion
 }
