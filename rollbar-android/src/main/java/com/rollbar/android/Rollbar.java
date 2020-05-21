@@ -1,5 +1,7 @@
 package com.rollbar.android;
 
+import static com.rollbar.android.util.Constants.ROLLBAR_NAMESPACE;
+
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -28,7 +30,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class Rollbar {
-  private static final String NOTIFIER_VERSION = "1.7.2-SNAPSHOT";
+
   private static final String ITEM_DIR_NAME = "rollbar-items";
   private static final String ANDROID = "android";
   private static final String DEFAULT_ENVIRONMENT = "production";
@@ -37,7 +39,6 @@ public class Rollbar {
   private static final int DEFAULT_ITEM_SCHEDULE_DELAY = 15;
 
   public static final String TAG = "Rollbar";
-  private static final String ROLLBAR_NAMESPACE = "com.rollbar.android";
   private static final String MANIFEST_ACCESS_TOKEN = ROLLBAR_NAMESPACE + ".ACCESS_TOKEN";
 
   private com.rollbar.notifier.Rollbar rollbar;
@@ -281,7 +282,7 @@ public class Rollbar {
         .client(clientProvider)
         .platform(ANDROID)
         .framework(ANDROID)
-        .notifier(new NotifierProvider(NOTIFIER_VERSION))
+        .notifier(new NotifierProvider(context))
         .environment(environment == null ? DEFAULT_ENVIRONMENT : environment)
         .sender(sender)
         .handleUncaughtErrors(false); // Use the global handler, not the default per thread one.
