@@ -11,9 +11,6 @@ buildscript {
 ext {
     springWebmvcVersion = '5.2.6.RELEASE'
     javaxServletVersion = '3.0.1'
-    junitVersion = '4.12'
-    mockitoVersion = '2.10.0'
-    springFrameworkBootTestVersion = '2.2.6.RELEASE'
 }
 
 apply plugin: 'war'
