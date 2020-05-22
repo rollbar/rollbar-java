@@ -6,14 +6,18 @@ import com.rollbar.web.provider.RequestProvider;
 
 public class RollbarSpringConfigBuilder extends ConfigBuilder {
 
-  /**
-   * Helper class to provide a Config Builder for Java Spring.
-   */
-  public RollbarSpringConfigBuilder(String accessToken) {
+  protected RollbarSpringConfigBuilder(String accessToken) {
     super(accessToken);
     this.request = new RequestProvider.Builder().build();
     this.server = new ServerProvider();
     this.framework = "spring";
+  }
+
+  /**
+   * Helper to provide a Config Builder for Java Spring with access token.
+   */
+  public static ConfigBuilder withAccessToken(String accessToken) {
+    return new RollbarSpringConfigBuilder(accessToken);
   }
 
 }

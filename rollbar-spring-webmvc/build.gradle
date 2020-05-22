@@ -1,6 +1,6 @@
 ext {
     springWebmvcVersion = '5.2.6.RELEASE'
-    javaxServletVersion = '3.0.1'
+    javaxServletVersion = '3.1.0'
 }
 
 dependencies {
