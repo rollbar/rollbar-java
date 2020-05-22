@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class ExampleViewController {
 
   @Autowired
+  private Rollbar rollbar;
+
+  @Autowired
   private ApplicationContext context;
 
   /**
@@ -29,18 +32,18 @@ public class ExampleViewController {
    */
   @RequestMapping("/handledExceptionTest")
   public void handledExceptionTest() {
+
     try {
 
       int x = 1 / 0;
 
     } catch (Exception e) {
 
-      Rollbar rollbar = (Rollbar)context.getBean(Rollbar.class);
       rollbar.log("log some error to Rollbar");
+      throw e; // continue to raise it and Rollbar will send the full payload
 
-      // continue to raise it and Rollbar will send the full payload
-      throw e;
     }
+
   }
 
   /**
@@ -49,7 +52,6 @@ public class ExampleViewController {
   @RequestMapping("/rollbarTest")
   public void rollbarTest() {
 
-    Rollbar rollbar = (Rollbar)context.getBean(Rollbar.class);
     rollbar.error("Error");
 
   }
