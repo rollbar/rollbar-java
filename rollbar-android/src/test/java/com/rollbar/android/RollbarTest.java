@@ -67,16 +67,14 @@ public class RollbarTest {
 
   static final String FRAMEWORK = "framework";
 
+  static final String PACKAGE_NAME = "package_name";
+
   // Android mocks
   @Mock
   Context mockApplicationContext;
 
-  PackageManager mockPackageManager = new MockPackageManager() {
-    @Override
-    public PackageInfo getPackageInfo(String _name, int _flags) {
-        return mockPackageInfo;
-    }
-  };
+  @Mock
+  PackageManager mockPackageManager;
 
   @Mock
   PackageInfo mockPackageInfo;
@@ -91,15 +89,28 @@ public class RollbarTest {
   @Mock
   Transformer transformer;
 
+  @Mock
+  ApplicationInfo applicationInfo;
+
+  @Mock
+  Bundle bundle;
+
   @Before
-  public void setUp() {
+  public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
 
-    when(mockApplicationContext.getPackageName()).thenReturn("package name");
+    when(mockApplicationContext.getPackageName()).thenReturn(PACKAGE_NAME);
     when(mockApplicationContext.getPackageManager()).thenReturn(mockPackageManager);
+
+    when(mockPackageManager.getPackageInfo(anyString(), anyInt()))
+            .thenReturn(mockPackageInfo);
+    when(mockPackageManager.getApplicationInfo(eq(PACKAGE_NAME), eq(PackageManager.GET_META_DATA)))
+            .thenReturn(applicationInfo);
+    when(bundle.getString(eq("com.rollbar.android._notifier.version"))).thenReturn("1.7.0");
 
     mockPackageInfo.versionCode = 23;
     mockPackageInfo.versionName = "version name";
+    applicationInfo.metaData = this.bundle;
   }
 
   @Test
