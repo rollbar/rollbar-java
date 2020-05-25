@@ -12,7 +12,12 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 @Configuration()
 @EnableWebMvc
-@ComponentScan({"com.example.springbootwebmvc","com.rollbar.spring.boot.webmvc"})
+@ComponentScan({
+        "com.example.springbootwebmvc",
+        "com.rollbar.spring.boot.webmvc",
+        "com.rollbar.spring.webmvc"
+})
+
 public class RollbarConfig {
 
   /**
@@ -20,7 +25,7 @@ public class RollbarConfig {
   */
   @Bean
   public Rollbar rollbar() {
-    return new Rollbar(getRollbarConfigs(this.accessToken));
+    return new Rollbar(getRollbarConfigs());
   }
 
   @Value("${rollbar.access_token}")
@@ -29,14 +34,11 @@ public class RollbarConfig {
   @Value("${rollbar.environment}")
   private String environment;
 
-  @Value("${rollbar.framework}")
-  private String framework;
-
-  private Config getRollbarConfigs(String accessToken) {
+  private Config getRollbarConfigs() {
 
     // Reference ConfigBuilder.java for all the properties you can set for Rollbar
-    return RollbarSpringConfigBuilder.withAccessToken(accessToken)
-        .environment("development")
+    return RollbarSpringConfigBuilder.withAccessToken(this.accessToken)
+        .environment(this.environment)
         .build();
   }
 
