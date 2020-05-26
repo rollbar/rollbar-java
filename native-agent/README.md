@@ -28,9 +28,14 @@ configured with appPackages at a minimum. If you also want to handle uncaught ex
 make sure the handleUncaughtErrors is set to true.
 
 ```
+// [appPackages]: Add a list of packages considered to be in your app.  This is used
+//   to filter out exceptions that don't match the package name in the stacktrace.
+
+// [handleUncaughtErrors]: Set to true for unhandled exceptions
+
 Rollbar.init(withAccessToken("ACCESS-TOKEN")
     .appPackages(Arrays.asList("<configure your app packages>"))
-    .handleUncaughtErrors(true) // set this for unhandled exceptions
+    .handleUncaughtErrors(true)
     .build());
 ```
 
