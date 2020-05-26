@@ -18,14 +18,6 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 })
 public class RollbarConfig {
 
-  /**
-  * Register a Rollbar bean to configure App with Rollbar.
-  */
-  @Bean
-  public Rollbar rollbar() {
-    return new Rollbar(getRollbarConfigs());
-  }
-
   @Value("${rollbar.access_token}")
   private String accessToken;
 
@@ -36,8 +28,16 @@ public class RollbarConfig {
 
     // Reference ConfigBuilder.java for all the properties you can set for Rollbar
     return RollbarSpringConfigBuilder.withAccessToken(this.accessToken)
-        .environment(this.environment)
-        .build();
+            .environment(this.environment)
+            .build();
+  }
+
+  /**
+  * Register a Rollbar bean to configure App with Rollbar.
+  */
+  @Bean
+  public Rollbar rollbar() {
+    return new Rollbar(getRollbarConfigs());
   }
 
 }

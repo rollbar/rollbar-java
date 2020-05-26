@@ -12,7 +12,6 @@ public class ExampleViewController {
   @Autowired
   private Rollbar rollbar;
 
-  @Autowired
   private ApplicationContext context;
 
   /**
