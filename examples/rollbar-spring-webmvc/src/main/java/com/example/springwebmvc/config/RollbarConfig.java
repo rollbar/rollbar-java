@@ -11,7 +11,10 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 @Configuration()
 @EnableWebMvc
-@ComponentScan({"com.example.springwebmvc","com.rollbar.spring.webmvc"})
+@ComponentScan({
+    "com.example.springwebmvc",
+    "com.rollbar.spring"
+})
 public class RollbarConfig {
 
   /**
