@@ -24,20 +24,20 @@ public class RollbarConfig {
   @Value("${rollbar.environment}")
   private String environment;
 
-  private Config getRollbarConfigs() {
-
-    // Reference ConfigBuilder.java for all the properties you can set for Rollbar
-    return RollbarSpringConfigBuilder.withAccessToken(this.accessToken)
-            .environment(this.environment)
-            .build();
-  }
-
   /**
   * Register a Rollbar bean to configure App with Rollbar.
   */
   @Bean
   public Rollbar rollbar() {
     return new Rollbar(getRollbarConfigs());
+  }
+
+  private Config getRollbarConfigs() {
+
+    // Reference ConfigBuilder.java for all the properties you can set for Rollbar
+    return RollbarSpringConfigBuilder.withAccessToken(this.accessToken)
+            .environment(this.environment)
+            .build();
   }
 
 }
