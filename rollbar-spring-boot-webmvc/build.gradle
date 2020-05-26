@@ -1,0 +1,11 @@
+ext {
+    javaxServletVersion = '3.0.1'
+    springBootVersion = '1.4.2.RELEASE'
+}
+
+dependencies {
+    compile project(':rollbar-spring-webmvc')
+
+    implementation 'org.springframework.boot:spring-boot:' + springBootVersion
+    implementation group: 'javax.servlet', name: 'javax.servlet-api', version: javaxServletVersion
+}
