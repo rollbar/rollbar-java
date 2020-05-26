@@ -2,7 +2,6 @@ package com.example.springbootwebmvc;
 
 import com.rollbar.notifier.Rollbar;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -11,8 +10,6 @@ public class ExampleViewController {
 
   @Autowired
   private Rollbar rollbar;
-
-  private ApplicationContext context;
 
   /**
    * Testing an uncaught exception - The register Rollbar bean will pick this up.
