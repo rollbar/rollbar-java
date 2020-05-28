@@ -5,6 +5,10 @@ repositories {
     mavenCentral()
 }
 
+application {
+    mainClassName = "com.rollbar.example.Application"
+}
+
 // Uncomment the block below to use the native agent to add local variables to stack traces
 // This assumes you have run `cargo build --release` inside the native-agent directory
 /*
@@ -14,10 +18,7 @@ applicationDefaultJvmArgs = [
 */
 
 dependencies {
-    compile project(":rollbar-java")
+    implementation project(":rollbar-java")
 
-    compile "org.scala-lang:scala-library:2.12.4"
+    implementation "org.scala-lang:scala-library:2.12.4"
 }
-
-mainClassName = "com.rollbar.example.Application"
-

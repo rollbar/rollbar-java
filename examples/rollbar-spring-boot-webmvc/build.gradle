@@ -13,6 +13,6 @@ repositories {
 }
 
 dependencies {
-    compile project(':rollbar-spring-boot-webmvc')
+    implementation project(':rollbar-spring-boot-webmvc')
     implementation 'org.springframework.boot:spring-boot-starter-web:' + springBootStarterVersion
 }

@@ -1,11 +1,13 @@
 apply plugin: 'application'
 
 jar {
-    baseName = "rollbar-java-example"
-    version =  '1.0.0'
+    archivesBaseName = "rollbar-java-example"
+    archiveVersion =  '1.0.0'
 }
 
-mainClassName = "com.rollbar.example.Application"
+application {
+    mainClassName = "com.rollbar.example.Application"
+}
 
 // Uncomment the block below to use the native agent to add local variables to stack traces
 // This assumes you have run `cargo build --release` inside the native-agent directory
@@ -16,7 +18,7 @@ applicationDefaultJvmArgs = [
 */
 
 dependencies {
-    compile project(":rollbar-java")
+    implementation project(":rollbar-java")
 
-    runtime group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.25'
+    implementation group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.25'
 }

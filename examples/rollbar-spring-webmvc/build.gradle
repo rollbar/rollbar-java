@@ -17,7 +17,7 @@ apply plugin: 'war'
 apply plugin: 'com.bmuschko.tomcat'
 
 dependencies {
-    compile project(":rollbar-spring-webmvc")
+    implementation project(":rollbar-spring-webmvc")
 
     implementation 'org.springframework:spring-webmvc:' + springWebmvcVersion
     implementation group: 'javax.servlet', name: 'javax.servlet-api', version: javaxServletVersion
