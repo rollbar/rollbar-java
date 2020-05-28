@@ -38,7 +38,7 @@ subprojects { project ->
     if (!project.name.contains('android') &&
             !project.parent.name.equals("examples") &&
             !project.name.contains('examples')) {
-        apply plugin: 'java'
+        apply plugin: 'java-library'
         apply from: "$rootDir/gradle/release.gradle"
 
         apply from: "$rootDir/gradle/quality.gradle"
