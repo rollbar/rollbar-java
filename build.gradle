@@ -15,13 +15,6 @@ apply plugin: 'io.codearte.nexus-staging'
 nexusStaging {
     username = System.getenv('NEXUS_USERNAME')
     password = System.getenv('NEXUS_PASSWORD')
-    stagingRepositoryId = "Release " + VERSION_NAME
-}
-apply plugin: "de.marcphilipp.nexus-publish"
-nexusPublishing {
-    repositories {
-        sonatype()
-    }
 }
 
 allprojects {
