@@ -18,7 +18,7 @@
 1. [Sign up for a Rollbar account](https://rollbar.com/signup)
 2. Follow the [Installation](https://docs.rollbar.com/docs/java#section-installation) instructions in our [Java SDK docs](https://docs.rollbar.com/docs/java) to install rollbar-java and configure it for your platform.
  
-## Usage
+## Examples on how to use rollbar-java with your project
 
 For actual usage, the easiest way to get started is by looking at the [Examples](https://github.com/rollbar/rollbar-java/tree/master/examples) section.
 
