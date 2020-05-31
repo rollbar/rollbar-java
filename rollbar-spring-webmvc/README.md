@@ -1,0 +1,1 @@
+[![javadoc](https://javadoc.io/badge2/com.rollbar/rollbar-spring-webmvc/javadoc.svg)](https://javadoc.io/doc/com.rollbar/rollbar-spring-webmvc)
