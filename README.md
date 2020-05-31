@@ -1,4 +1,11 @@
-# Rollbar for Java and Android
+<p align="center">
+    <a href="https://rollbar.com" target="_blank" align="center">
+        <img src="https://rollbar.com/assets/media/rollbar-logo-color-horiz.png" width="280">
+    </a>
+<br/>
+    <h1>Rollbar for Java, Android and Spring Boot</h1>
+</p>
+
 
 [![Build Status](https://travis-ci.org/rollbar/rollbar-java.svg?branch=master)](https://travis-ci.org/rollbar/rollbar-java)
 
