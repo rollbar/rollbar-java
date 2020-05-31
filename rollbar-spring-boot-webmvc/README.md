@@ -56,6 +56,6 @@ try {
 }
 ```
 
-For a full project example reference the project example under /examples/rollbar-spring-boot-webmvc.
+For a full project example reference the project example under https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-spring-boot-webmvc.
  
 

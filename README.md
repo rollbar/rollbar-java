@@ -22,6 +22,8 @@ For actual usage, the easiest way to get started is by looking at the examples:
 - [rollbar-web](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-web)
 - [rollbar-android](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-android)
 - [rollbar-scala](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-scala)
+- [rollbar-spring-webmvc](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-spring-webmvc)
+- [rollbar-spring-boot-webmvc](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-spring-boot-webmvc)
 - [rollbar-log4j2](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-log4j2)
 - [rollbar-logback](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-logback)
 
