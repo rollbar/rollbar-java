@@ -1,6 +1,6 @@
 # Rollbar for Spring Web MVC 
 
-![javadoc](https://javadoc.io/badge2/com.rollbar/rollbar-spring-webmvc/javadoc.svg?style=for-the-badge)
+![javadoc](https://javadoc.io/badge2/com.rollbar/rollbar-spring-webmvc/javadoc.svg?style=for-the-badge)(https://javadoc.io/doc/com.rollbar/rollbar-spring-webmvc)
 
 Simple Rollbar integration for Spring Web MVC.
 
