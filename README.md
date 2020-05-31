@@ -1,21 +1,12 @@
 <p align="center">
-    <a href="https://rollbar.com" target="_blank" align="center">
+    <a href="https://rollbar.com" target="_blank" align="left">
         <img src="https://rollbar.com/assets/media/rollbar-logo-color-horiz.png" width="280">
     </a>
 <br/>
-    <h1>Rollbar for Java, Android and Spring Boot</h1>
+    <h1>Rollbar for Java</h1>
 </p>
-
-
 [![Build Status](https://travis-ci.org/rollbar/rollbar-java.svg?branch=master)](https://travis-ci.org/rollbar/rollbar-java)
 
-The current library has undergone a major overhaul between versions 0.5.4 and 1.0.0.
-We recommend upgrading from prior versions of `rollbar-java`, but that process may require some
-work on your end for the more complex use cases of the old library.
-
-The code is documented with javadoc and therefore should be usable from viewing
-the documentation in the source. There are examples in the `examples` directory showing different
-use cases for consuming these libraries.
 
 ## Setup Instructions
 1. [Sign up for a Rollbar account](https://rollbar.com/signup)
