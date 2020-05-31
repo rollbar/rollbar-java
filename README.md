@@ -42,17 +42,18 @@ For bug reports, please [open an issue on GitHub](https://github.com/rollbar/rol
 Instructions for developers on how to build, develop, test and contribute to rollbar-java.
 
 ### Build
-Dependencies:
+**Dependencies**
 * Android SDK
 * Java 8 SDK
 * Java 7 SDK
 
-Set the following environment variables:
+**Eenvironment variables**
+Set the following variables:
 * ANDROID_HOME - Point to the android sdk
 * JAVA_HOME - Point to the java8 sdk
 * JDK7_HOME - Point to java7 sdk
 
-Build with:
+**Build rollbar-java**
 ```shell script
 ./gradlew clean build
 ```
