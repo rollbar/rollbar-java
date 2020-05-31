@@ -9,6 +9,10 @@
 [![Build Status](https://travis-ci.org/rollbar/rollbar-java.svg?branch=master)](https://travis-ci.org/rollbar/rollbar-java)
 
 
+
+[![Spring WebMVC](https://img.shields.io/badge/javadoc-1.7.2-brightgreen.svg?label=javadoc:rollbar-android)](https://javadoc.io/doc/com.rollbar/rollbar-android) [![Spring WebMVC](https://img.shields.io/badge/javadoc-1.7.2-brightgreen.svg?label=javadoc:rollbar-api)](https://javadoc.io/doc/com.rollbar/rollbar-api) [![Spring WebMVC](https://img.shields.io/badge/javadoc-1.7.2-brightgreen.svg?label=javadoc:rollbar-java)](https://javadoc.io/doc/com.rollbar/rollbar-java) [![Spring WebMVC](https://img.shields.io/badge/javadoc-1.7.2-brightgreen.svg?label=javadoc:rollbar-log4j2)](https://javadoc.io/doc/com.rollbar/rollbar-log4j2) [![Spring WebMVC](https://img.shields.io/badge/javadoc-1.7.2-brightgreen.svg?label=javadoc:rollbar-logback)](https://javadoc.io/doc/com.rollbar/rollbar-logback) [![Spring WebMVC](https://img.shields.io/badge/javadoc-1.7.2-brightgreen.svg?label=javadoc:rollbar-spring-boot-webmvc)](https://javadoc.io/doc/com.rollbar/rollbar-spring-boot-webmvc) [![Spring WebMVC](https://img.shields.io/badge/javadoc-1.7.2-brightgreen.svg?label=javadoc:rollbar-spring-webmvc)](https://javadoc.io/doc/com.rollbar/rollbar-spring-webmvc) [![Spring WebMVC](https://img.shields.io/badge/javadoc-1.7.2-brightgreen.svg?label=javadoc:rollbar-web)](https://javadoc.io/doc/com.rollbar/rollbar-web)
+
+
 ## Setup Instructions
 
 1. [Sign up for a Rollbar account](https://rollbar.com/signup)
@@ -16,26 +20,7 @@
  
 ## Usage
 
-For actual usage, the easiest way to get started is by looking at the examples:
-
-- [rollbar-java](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-java)
-- [rollbar-web](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-web)
-- [rollbar-android](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-android)
-- [rollbar-scala](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-scala)
-- [rollbar-spring-webmvc](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-spring-webmvc)
-- [rollbar-spring-boot-webmvc](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-spring-boot-webmvc)
-- [rollbar-log4j2](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-log4j2)
-- [rollbar-logback](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-logback)
-
-## Release History & Changelog
-
-See our [Releases](https://github.com/rollbar/rollbar-java/releases) page for a list of all releases, including changes.
- 
-## Help / Support
-
-If you run into any issues, please email us at [support@rollbar.com](mailto:support@rollbar.com)
-
-For bug reports, please [open an issue on GitHub](https://github.com/rollbar/rollbar-java/issues/new).
+For actual usage, the easiest way to get started is by looking at the [Examples](https://github.com/rollbar/rollbar-java/tree/master/examples) section.
 
 ## For Developers
 
@@ -88,7 +73,6 @@ RollbarConfigBuilder.withAccessToken(accessToken)
             .build();
 ```
 
-
 ### Test
 
 When you are ready to test this against Rollbar, you can create a test project and use the access token from that project to send events.
@@ -101,10 +85,6 @@ When you are ready to test this against Rollbar, you can create a test project a
 4. Push to the branch (```git push origin my-new-feature```)
 5. Create new Pull Request
 
-## Resources
-
-* [Examples](https://github.com/rollbar/rollbar-java/tree/master/examples)
-* [Documentation](https://docs.rollbar.com/docs/java)
 
 ## Developer Community
 
@@ -115,6 +95,18 @@ Join our Slack Channel here -> [[Join slack channel]](https://join.slack.com/t/r
 <p align="center">
         <a href="https://docs.rollbar.com/docs/java"><img src="https://user-images.githubusercontent.com/398292/83357965-b6d84b80-a324-11ea-8533-fcb01e6ee8f4.png" align="center" /></a>
 </p>
+
+
+## Release History & Changelog
+
+See our [Releases](https://github.com/rollbar/rollbar-java/releases) page for a list of all releases, including changes.
+ 
+## Help / Support
+
+If you run into any issues, please email us at [support@rollbar.com](mailto:support@rollbar.com)
+
+For bug reports, please [open an issue on GitHub](https://github.com/rollbar/rollbar-java/issues/new).
+
 
 ## License
 
