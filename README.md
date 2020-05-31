@@ -43,6 +43,8 @@ Instructions for developers on how to build, develop, test and contribute to rol
 
 ### Build
 **Dependencies**
+
+Ensure you have the following dependencies installed on your machine:
 * Android SDK
 * Java 8 SDK
 * Java 7 SDK
@@ -63,7 +65,7 @@ Set the following variables:
 
 **JavaDocs**
 
-JavaDocs can be found here: https://javadoc.io/doc/com.rollbar
+For quick reference into the code, you can reference the JavaDocs here: https://javadoc.io/doc/com.rollbar
 
 **Project gradle tasks**
 
@@ -72,6 +74,8 @@ To run individual gradle tasks by project similar to this example with spring-bo
 ```shell script
 ./gradlew rollbar-spring-boot-webmvc:build
 ````
+
+This is helpful when you develop for a specific component.
 
 **Proxy**
 
