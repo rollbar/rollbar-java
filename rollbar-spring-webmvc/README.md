@@ -1,1 +1,1 @@
-[![javadoc](https://javadoc.io/badge2/com.rollbar/rollbar-spring-webmvc/javadoc.svg)](https://javadoc.io/doc/com.rollbar/rollbar-spring-webmvc)
+# Rollbar for Spring Web MVC [![javadoc](https://javadoc.io/badge2/com.rollbar/rollbar-spring-webmvc/javadoc.svg)](https://javadoc.io/doc/com.rollbar/rollbar-spring-webmvc)
