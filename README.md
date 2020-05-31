@@ -37,7 +37,57 @@ If you run into any issues, please email us at [support@rollbar.com](mailto:supp
 
 For bug reports, please [open an issue on GitHub](https://github.com/rollbar/rollbar-java/issues/new).
 
-## Contributing
+## For Developers
+
+Instructions for developers on how to build, develop, test and contribute to rollbar-java.
+
+### Build
+Dependencies:
+* Android SDK
+* Java 8 SDK
+* Java 7 SDK
+
+Set the following environment variables:
+* ANDROID_HOME - Point to the android sdk
+* JAVA_HOME - Point to the java8 sdk
+* JDK7_HOME - Point to java7 sdk
+
+Build with:
+```shell script
+./gradlew clean build
+```
+
+### Develop
+
+**JavaDocs**
+
+JavaDocs can be found here: https://javadoc.io/doc/com.rollbar
+
+**Project gradle tasks**
+
+To run individual gradle tasks by project similar to this example with spring-boot.
+
+```shell script
+./gradlew rollbar-spring-boot-webmvc:build
+````
+
+**Proxy**
+
+If you need to test and develop within a proxy, you can create a java.net.Proxy object and pass it with the Rollbar configuration builder.
+
+```java
+RollbarConfigBuilder.withAccessToken(accessToken)             
+            .environment("development")
+            .proxy(proxy) // Pass your java.net.Proxy object here
+            .build();
+```
+
+
+### Test
+
+When you are ready to test this against Rollbar, you can create a test project and use the access token from that project to send events.
+
+### Contribute
 
 1. [Fork it](https://github.com/rollbar/rollbar-java)
 2. Create your feature branch (```git checkout -b my-new-feature```).
