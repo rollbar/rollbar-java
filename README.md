@@ -106,6 +106,16 @@ When you are ready to test this against Rollbar, you can create a test project a
 * [Examples](https://github.com/rollbar/rollbar-java/tree/master/examples)
 * [Documentation](https://docs.rollbar.com/docs/java)
 
+## Developer Community
+
+Join our Slack Channel here -> [[Join slack channel]](https://join.slack.com/t/rollbar-developers/shared_invite/zt-f1tvgecw-m9~mtXLsP2wETpQg3vanTQ) 
+
+## P.S. -- Documentation is available at https://docs.rollbar.com/docs/java
+
+<p align="center">
+        <a href="https://docs.rollbar.com/docs/java"><img src="https://user-images.githubusercontent.com/398292/83357965-b6d84b80-a324-11ea-8533-fcb01e6ee8f4.png" align="center" /></a>
+</p>
+
 ## License
 
 Rollbar-java is free software released under the MIT License. See [LICENSE.txt](LICENSE.txt) for details.
