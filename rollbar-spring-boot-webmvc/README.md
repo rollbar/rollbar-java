@@ -4,13 +4,17 @@
 
 Simple Rollbar integration for Spring Boot.
 
-Add the following into your gradle dependency
+## Installation
+
+Add the following into your gradle dependency:
 
 ```java
 compile('com.rollbar:rollbar-spring-boot-webmvc:1.7.2')
 ```
 
-Configure a Rollbar Bean with your package and ACCESS_TOKEN like the following code snipit.
+## Configuration
+
+Configure a Rollbar Bean with your package and ACCESS_TOKEN like the following:
 
 ```java
 @Configuration()
@@ -38,6 +42,8 @@ public class RollbarConfig {
   }
 }
 ```
+
+## Usage
 
 Once you have the configuration implemented, Rollbar will now catch all exceptions raised by Java Spring. If you need to manually send exceptions, you can do so like the following. 
 
