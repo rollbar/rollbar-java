@@ -5,8 +5,8 @@
 <br/>
     <h1>Rollbar for Java</h1>
 </p>
-[![Build Status](https://travis-ci.org/rollbar/rollbar-java.svg?branch=master)](https://travis-ci.org/rollbar/rollbar-java)
 
+[![Build Status](https://travis-ci.org/rollbar/rollbar-java.svg?branch=master)](https://travis-ci.org/rollbar/rollbar-java)
 
 ## Setup Instructions
 1. [Sign up for a Rollbar account](https://rollbar.com/signup)
