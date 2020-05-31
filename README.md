@@ -48,6 +48,7 @@ Instructions for developers on how to build, develop, test and contribute to rol
 * Java 7 SDK
 
 **Eenvironment variables**
+
 Set the following variables:
 * ANDROID_HOME - Point to the android sdk
 * JAVA_HOME - Point to the java8 sdk
