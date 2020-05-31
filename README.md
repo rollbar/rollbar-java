@@ -1,5 +1,5 @@
 <p align="center">
-    <a href="https://rollbar.com" target="_blank" align="left">
+    <a href="https://rollbar.com" target="_blank" align="center">
         <img src="https://rollbar.com/assets/media/rollbar-logo-color-horiz.png" width="280">
     </a>
 <br/>
@@ -8,7 +8,9 @@
 
 [![Build Status](https://travis-ci.org/rollbar/rollbar-java.svg?branch=master)](https://travis-ci.org/rollbar/rollbar-java)
 
+
 ## Setup Instructions
+
 1. [Sign up for a Rollbar account](https://rollbar.com/signup)
 2. Follow the [Installation](https://docs.rollbar.com/docs/java#section-installation) instructions in our [Java SDK docs](https://docs.rollbar.com/docs/java) to install rollbar-java and configure it for your platform.
  
@@ -43,5 +45,11 @@ For bug reports, please [open an issue on GitHub](https://github.com/rollbar/rol
 4. Push to the branch (```git push origin my-new-feature```)
 5. Create new Pull Request
 
+## Resources
+
+* [Examples](https://github.com/rollbar/rollbar-java/tree/master/examples)
+* [Documentation](https://docs.rollbar.com/docs/java)
+
 ## License
+
 Rollbar-java is free software released under the MIT License. See [LICENSE.txt](LICENSE.txt) for details.
