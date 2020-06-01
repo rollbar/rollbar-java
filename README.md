@@ -13,7 +13,7 @@ use cases for consuming these libraries.
 ## Setup Instructions
 1. [Sign up for a Rollbar account](https://rollbar.com/signup)
 2. Follow the [Installation](https://docs.rollbar.com/docs/java#section-installation) instructions in our [Java SDK docs](https://docs.rollbar.com/docs/java) to install rollbar-java and configure it for your platform.
- 
+
 ## Usage
 
 For actual usage, the easiest way to get started is by looking at the examples:
@@ -24,11 +24,13 @@ For actual usage, the easiest way to get started is by looking at the examples:
 - [rollbar-scala](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-scala)
 - [rollbar-log4j2](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-log4j2)
 - [rollbar-logback](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-logback)
+- [rollbar-spring-webmvc](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-spring-webmvc)
+- [rollbar-spring-boot-webmvc](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-spring-boot-webmvc)
 
 ## Release History & Changelog
 
 See our [Releases](https://github.com/rollbar/rollbar-java/releases) page for a list of all releases, including changes.
- 
+
 ## Help / Support
 
 If you run into any issues, please email us at [support@rollbar.com](mailto:support@rollbar.com)

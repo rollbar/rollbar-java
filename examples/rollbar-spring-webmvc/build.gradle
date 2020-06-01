@@ -1,0 +1,35 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.bmuschko:gradle-tomcat-plugin:2.3'
+    }
+}
+
+ext {
+    springWebmvcVersion = '5.2.6.RELEASE'
+    javaxServletVersion = '3.1.0'
+}
+
+apply plugin: 'war'
+apply plugin: 'com.bmuschko.tomcat'
+
+dependencies {
+    compile project(":rollbar-spring-webmvc")
+
+    implementation 'org.springframework:spring-webmvc:' + springWebmvcVersion
+    implementation group: 'javax.servlet', name: 'javax.servlet-api', version: javaxServletVersion
+
+    def tomcatVersion = '8.0.42'
+
+    tomcat "org.apache.tomcat.embed:tomcat-embed-core:${tomcatVersion}",
+            "org.apache.tomcat.embed:tomcat-embed-logging-juli:${tomcatVersion}"
+    tomcat("org.apache.tomcat.embed:tomcat-embed-jasper:${tomcatVersion}") {
+    }
+
+}
+
+tomcatRun.contextPath = '/'
+tomcatRunWar.contextPath = '/'

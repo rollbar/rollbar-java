@@ -13,6 +13,6 @@ elif [[ "$TRAVIS_BRANCH" != "$BRANCH" ]]; then
   echo "Skipping release. Expected '$BRANCH' but was '$TRAVIS_BRANCH'."
 else
  echo "Doing release..."
-  ./gradlew publish
+  ./gradlew -Dorg.gradle.internal.http.socketTimeout=300000 -Dorg.gradle.internal.http.connectionTimeout=300000 publish
   echo "Release done!"
 fi
