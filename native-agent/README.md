@@ -33,8 +33,8 @@ make sure the handleUncaughtErrors is set to true.
 
 // [handleUncaughtErrors]: Set to true for unhandled exceptions
 
-Rollbar.init(withAccessToken("ACCESS-TOKEN")
-    .appPackages(Arrays.asList("<configure your app packages>"))
+new Rollbar(withAccessToken("ACCESS-TOKEN")
+    .appPackages(Arrays.asList("com.example.app"))
     .handleUncaughtErrors(true)
     .build());
 ```
