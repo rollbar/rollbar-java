@@ -5,7 +5,10 @@ apply plugin: 'maven-publish'
 apply plugin: "de.marcphilipp.nexus-publish"
 nexusPublishing {
     repositories {
-        sonatype()
+        sonatype {
+            clientTimeout = Duration.ofMinutes(5)
+            connectTimeout = Duration.ofMinutes(5)
+        }
     }
 }
 

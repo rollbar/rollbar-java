@@ -13,14 +13,14 @@ elif [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then
 elif [[ "$TRAVIS_BRANCH" != "$BRANCH" ]]; then
   echo "Skipping release. Expected '$BRANCH' but was '$TRAVIS_BRANCH'."
 elif [[ -z $VERSION ]]; then
-    echo "Skipping release. Version value not found."
+  echo "Skipping release. Version value not found."
 else
   if [[ $VERSION == *"SNAPSHOT"* ]]; then
-     echo "Doing SNAPSHOT release..."
-     ./gradlew -Dorg.gradle.internal.http.socketTimeout=300000 -Dorg.gradle.internal.http.connectionTimeout=300000 publishToSonatype
+    echo "Doing SNAPSHOT release..."
+    ./gradlew -Dorg.gradle.internal.http.socketTimeout=300000 -Dorg.gradle.internal.http.connectionTimeout=300000 publishToSonatype
   else
-     echo "Doing release..."
-     ./gradlew -Dorg.gradle.internal.http.socketTimeout=300000 -Dorg.gradle.internal.http.connectionTimeout=300000 publishToSonatype closeAndReleaseRepository
+    echo "Doing release..."
+    ./gradlew -Dorg.gradle.internal.http.socketTimeout=300000 -Dorg.gradle.internal.http.connectionTimeout=300000 publishToSonatype closeAndReleaseRepository
   fi
   echo "Release done!"
 fi
