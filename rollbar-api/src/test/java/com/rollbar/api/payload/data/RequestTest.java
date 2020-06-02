@@ -37,6 +37,9 @@ public class RequestTest {
     if (request.getUrl() != null) {
       expected.put("url", request.getUrl());
     }
+    if (request.getMethod() != null) {
+      expected.put("method", request.getMethod());
+    }
     if (request.getHeaders() != null) {
       expected.put("headers", request.getHeaders());
     }
@@ -88,6 +91,9 @@ public class RequestTest {
 
     if (request.getUrl() != null) {
       expected.put("url", request.getUrl());
+    }
+    if (request.getMethod() != null) {
+      expected.put("method", request.getMethod());
     }
     if (request.getHeaders() != null) {
       expected.put("headers", request.getHeaders());

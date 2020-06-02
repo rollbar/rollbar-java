@@ -138,6 +138,9 @@ public class Request implements JsonSerializable {
     if (url != null) {
       values.put("url", url);
     }
+    if (method != null) {
+      values.put("method", method);
+    }
     if (headers != null) {
       values.put("headers", headers);
     }
