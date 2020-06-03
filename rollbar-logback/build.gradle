@@ -1,6 +1,6 @@
 dependencies {
-    compile project(':rollbar-java')
+    api project(':rollbar-java')
 
-    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
-    compile group: 'ch.qos.logback', name: 'logback-core', version: '1.2.3'
+    api group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+    api group: 'ch.qos.logback', name: 'logback-core', version: '1.2.3'
 }

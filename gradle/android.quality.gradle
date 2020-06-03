@@ -1,36 +1,73 @@
-apply plugin: "checkstyle"
-apply plugin: "findbugs"
-apply plugin: "jacoco"
-
-checkstyle {
-    toolVersion = "8.2"
-    sourceSets = [android.sourceSets.main]
-    configFile = file("$rootDir/tools/checkstyle/google_checks.xml")
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "gradle.plugin.com.github.spotbugs.snom:spotbugs-gradle-plugin:4.2.4"
+    }
 }
 
-findbugs {
-    sourceSets = [android.sourceSets.main]
+apply plugin: "checkstyle"
+apply plugin: "com.github.spotbugs-base"
+apply plugin: 'jacoco'
+
+checkstyle {
+    toolVersion "8.2"
+    configFile file("$rootDir/tools/checkstyle/google_checks.xml")
+}
+
+task checkstyleMain(type: Checkstyle) {
+    source 'src'
+    include '**/*.java'
+    exclude '**/gen/**'
+    exclude '**/*Test.java'
+    exclude '**/annotation/*.java'
+    classpath = files()
+    reports {
+        xml.enabled false
+        html.enabled true
+    }
+    // Set this to true until we fix our current errors.
+    ignoreFailures true
+}
+
+spotbugs {
+    toolVersion = '3.1.10'
     includeFilter = file("$rootDir/tools/findbugs/findbugs.xml")
 }
 
-tasks.withType(Checkstyle) {
+task spotbugsMain(type: com.github.spotbugs.snom.SpotBugsTask) {
+    dependsOn 'assemble'
+
+    // Set this to true until we fix our current errors.
+    ignoreFailures = true
+    effort = "max"
+    reportLevel = "medium"
+
+    classes = fileTree("$project.buildDir/intermediates/javac/debug/classes/")
+    sourceDirs = fileTree('src/main/java')
+    auxClassPaths = files()
+
+    projectName = project.name
+    release = VERSION_NAME
     reports {
-        xml.enabled false
-        html.enabled true
+        html {
+            enabled = true
+            destination = file("$buildDir/reports/spotbugs/main/spotbugs.html")
+            stylesheet = 'fancy-hist.xsl'
+        }
     }
 }
 
-tasks.withType(FindBugs) {
-    reports {
-        xml.enabled false
-        html.enabled true
-    }
+jacoco {
+    toolVersion = '0.8.1'
 }
 
 android.testOptions {
     unitTests.all {
         jacoco {
-            append = false
             destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
             classDumpDir = file("$buildDir/jacoco/classpathdumps")
         }
@@ -43,5 +80,12 @@ task jacocoTestReport(type: JacocoReport, dependsOn: 'test') {
         csv.enabled false
         html.enabled true
         html.destination file("${buildDir}/jacocoHtml")
+    }
+}
+// adds checkstyle task to existing check task
+afterEvaluate {
+    if (project.tasks.getByName("check")) {
+        check.dependsOn('checkstyleMain')
+        check.dependsOn('spotbugsMain')
     }
 }

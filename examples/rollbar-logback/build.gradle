@@ -1,12 +1,14 @@
 apply plugin: 'application'
 
 jar {
-    baseName = "rollbar-java-example"
-    version =  '1.0.0'
+    archivesBaseName = "rollbar-java-example"
+    archiveVersion =  '1.0.0'
 }
 
-mainClassName = "com.rollbar.logback.example.Application"
+application {
+    mainClassName = "com.rollbar.logback.example.Application"
+}
 
 dependencies {
-    compile project(":rollbar-logback")
+    implementation project(":rollbar-logback")
 }

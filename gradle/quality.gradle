@@ -1,6 +1,7 @@
+apply plugin: "com.github.spotbugs"
 apply plugin: "checkstyle"
-apply plugin: "findbugs"
 apply plugin: "jacoco"
+
 
 checkstyle {
     toolVersion = "8.2"
@@ -8,8 +9,8 @@ checkstyle {
     configFile = file("$rootDir/tools/checkstyle/google_checks.xml")
 }
 
-findbugs {
-    sourceSets = [sourceSets.main]
+spotbugs {
+    toolVersion = '3.1.10'
     includeFilter = file("$rootDir/tools/findbugs/findbugs.xml")
 }
 
@@ -20,27 +21,32 @@ tasks.withType(Checkstyle) {
     }
 }
 
-tasks.withType(FindBugs) {
+spotbugsMain {
     reports {
-        xml.enabled false
-        html.enabled true
+        html {
+            enabled = true
+            destination = file("$buildDir/reports/spotbugs/main/spotbugs.html")
+            stylesheet = 'fancy-hist.xsl'
+        }
+    }
+}
+spotbugsTest {
+    ignoreFailures = true
+}
+
+afterEvaluate {
+    if (project.tasks.findByPath("spotbugsIntegTest") != null) {
+        spotbugsIntegTest {
+            ignoreFailures = true
+        }
     }
 }
 
 test {
     jacoco {
-        append = false
         destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
         classDumpDir = file("$buildDir/jacoco/classpathdumps")
     }
-}
 
-jacocoTestReport {
-    reports {
-        xml.enabled false
-        csv.enabled false
-        html.destination file("${buildDir}/jacocoHtml")
-    }
+    finalizedBy jacocoTestReport // report is always generated after tests run
 }
-
-test.finalizedBy(project.tasks.jacocoTestReport)
