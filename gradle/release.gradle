@@ -56,6 +56,9 @@ afterEvaluate {
                                     fromResolutionResult()
                                 }
                             }
+                            name = POM_NAME
+                            description = POM_DESCRIPTION
+                            url = POM_URL
 
                             scm {
                                 url = POM_SCM_URL
@@ -137,6 +140,10 @@ afterEvaluate {
                                 }
                             }
 
+                            name = POM_NAME
+                            description = POM_DESCRIPTION
+                            url = POM_URL
+                            
                             scm {
                                 url = POM_SCM_URL
                                 connection = POM_SCM_CONNECTION
