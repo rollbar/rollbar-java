@@ -86,6 +86,8 @@ public class ConfigBuilder {
 
   protected Level defaultThrowableLevel;
 
+  protected List<String> scrubFields;
+
   /**
    * Constructor with an access token.
    */
@@ -130,6 +132,7 @@ public class ConfigBuilder {
     this.defaultMessageLevel = config.defaultMessageLevel();
     this.defaultErrorLevel = config.defaultErrorLevel();
     this.defaultThrowableLevel = config.defaultThrowableLevel();
+    this.scrubFields = config.scrubFields();
   }
 
   /**
@@ -460,6 +463,17 @@ public class ConfigBuilder {
   }
 
   /**
+   * The list of fields to be scrubbed.
+   *
+   * @param scrubFields the list of fields to be scrubbed.
+   * @return the builder instance.
+   */
+  public ConfigBuilder scrubFields(List<String> scrubFields) {
+    this.scrubFields = scrubFields;
+    return this;
+  }
+
+  /**
    * Builds the {@link Config config}.
    *
    * @return the config.
@@ -548,6 +562,8 @@ public class ConfigBuilder {
 
     private Level defaultThrowableLevel;
 
+    private final List<String> scrubFields;
+
     ConfigImpl(ConfigBuilder builder) {
       this.accessToken = builder.accessToken;
       this.endpoint = builder.endpoint;
@@ -580,6 +596,11 @@ public class ConfigBuilder {
       this.defaultMessageLevel = builder.defaultMessageLevel;
       this.defaultErrorLevel = builder.defaultErrorLevel;
       this.defaultThrowableLevel = builder.defaultThrowableLevel;
+      if (builder.scrubFields == null) {
+        this.scrubFields = Collections.<String>emptyList();
+      } else {
+        this.scrubFields = builder.scrubFields;
+      }
     }
 
     @Override
@@ -715,6 +736,11 @@ public class ConfigBuilder {
     @Override
     public Level defaultThrowableLevel() {
       return defaultThrowableLevel;
+    }
+
+    @Override
+    public List<String> scrubFields() {
+      return scrubFields;
     }
   }
 }

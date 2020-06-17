@@ -210,4 +210,11 @@ public interface Config {
    * @return the level.
    */
   Level defaultThrowableLevel();
+
+  /**
+   * Get the list of fields to be scrubbed.
+   *
+   * @return the list of fields to be scrubbed.
+   */
+  List<String> scrubFields();
 }
