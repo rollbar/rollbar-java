@@ -35,6 +35,9 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
 
   private static final String CUSTOM_THREAD_NAME_KEY = "threadName";
 
+  private static final String CUSTOM_ARGUMENT_ARRAY_KEY = "argumentArray";
+
+
   private Rollbar rollbar;
 
   private String accessToken;
@@ -214,6 +217,8 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
 
     custom.put(CUSTOM_MDC_NAME_KEY, this.buildMdc(event));
     custom.put(CUSTOM_MAKER_NAME_KEY, this.getMarker(event));
+
+    custom.put(CUSTOM_ARGUMENT_ARRAY_KEY, event.getArgumentArray());
 
     Map<String, Object> rootCustom = new HashMap<>();
     rootCustom.put(CUSTOM_NAMESPACE_KEY, custom);
