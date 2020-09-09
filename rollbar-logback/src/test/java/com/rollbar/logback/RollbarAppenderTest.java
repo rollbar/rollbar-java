@@ -44,7 +44,6 @@ public class RollbarAppenderTest {
   static {
     MDC.put("mdc_key_1", "mdc_value_1");
   }
-
   private static String NESTED_EXCEPTION_MESSAGE = "This is the nested exception message";
 
   private static final Exception NESTED_EXCEPTION =
@@ -53,6 +52,7 @@ public class RollbarAppenderTest {
   private static final Exception EXCEPTION =
       new IllegalArgumentException(EXCEPTION_MESSAGE, NESTED_EXCEPTION);
 
+  private static final Object[] ARGUMENT_ARRAY = {"arg_1", 17};
   @Rule
   public MockitoRule rule = MockitoJUnit.rule();
 
@@ -104,11 +104,12 @@ public class RollbarAppenderTest {
     when(event.getThrowableProxy()).thenReturn(rootThrowableProxy);
     when(event.getMDCPropertyMap()).thenReturn(MDC);
     when(event.getFormattedMessage()).thenReturn(FORMATTED_MESSAGE);
+    when(event.getArgumentArray()).thenReturn(ARGUMENT_ARRAY);
 
     sut.append(event);
 
     Map<String, Object> expectedCustom = buildExpectedCustom(LOGGER_NAME,
-        new HashMap<String, Object>(MDC), MARKER_NAME, THREAD_NAME);
+        new HashMap<String, Object>(MDC), MARKER_NAME, THREAD_NAME, ARGUMENT_ARRAY);
 
     verify(rollbar).log(rootThrowableWrapper, expectedCustom, FORMATTED_MESSAGE, Level.ERROR, false);
   }
@@ -121,11 +122,12 @@ public class RollbarAppenderTest {
     when(event.getThrowableProxy()).thenReturn(rootThrowableProxy);
     when(event.getMDCPropertyMap()).thenReturn(MDC);
     when(event.getFormattedMessage()).thenReturn(FORMATTED_MESSAGE);
+    when(event.getArgumentArray()).thenReturn(ARGUMENT_ARRAY);
 
     sut.append(event);
 
     Map<String, Object> expectedCustom = buildExpectedCustom(LOGGER_NAME,
-        new HashMap<String, Object>(MDC), null, THREAD_NAME);
+        new HashMap<String, Object>(MDC), null, THREAD_NAME, ARGUMENT_ARRAY);
 
     verify(rollbar).log(rootThrowableWrapper, expectedCustom, FORMATTED_MESSAGE, Level.ERROR, false);
   }
@@ -138,17 +140,37 @@ public class RollbarAppenderTest {
     when(event.getLevel()).thenReturn(ch.qos.logback.classic.Level.ERROR);
     when(event.getThrowableProxy()).thenReturn(rootThrowableProxy);
     when(event.getFormattedMessage()).thenReturn(FORMATTED_MESSAGE);
+    when(event.getArgumentArray()).thenReturn(ARGUMENT_ARRAY);
 
     sut.append(event);
 
     Map<String, Object> expectedCustom = buildExpectedCustom(LOGGER_NAME,
-        null, MARKER_NAME, THREAD_NAME);
+        null, MARKER_NAME, THREAD_NAME, ARGUMENT_ARRAY);
+
+    verify(rollbar).log(rootThrowableWrapper, expectedCustom, FORMATTED_MESSAGE, Level.ERROR, false);
+  }
+
+  @Test
+  public void shouldLogEventWhenNoArgumentArray() {
+    when(event.getLoggerName()).thenReturn(LOGGER_NAME);
+    when(event.getMarker()).thenReturn(marker);
+    when(event.getThreadName()).thenReturn(THREAD_NAME);
+    when(event.getLevel()).thenReturn(ch.qos.logback.classic.Level.ERROR);
+    when(event.getThrowableProxy()).thenReturn(rootThrowableProxy);
+    when(event.getMDCPropertyMap()).thenReturn(MDC);
+    when(event.getFormattedMessage()).thenReturn(FORMATTED_MESSAGE);
+    when(event.getArgumentArray()).thenReturn(null);
+
+    sut.append(event);
+
+    Map<String, Object> expectedCustom = buildExpectedCustom(LOGGER_NAME,
+            new HashMap<String, Object>(MDC), MARKER_NAME, THREAD_NAME, null);
 
     verify(rollbar).log(rootThrowableWrapper, expectedCustom, FORMATTED_MESSAGE, Level.ERROR, false);
   }
 
   private static Map<String, Object> buildExpectedCustom(String loggerName, Map<String, Object> mdc,
-      String markerName, String threadName) {
+      String markerName, String threadName, Object[] argumentArray) {
     Map<String, Object> rootCustom = new HashMap<>();
     Map<String, Object> custom = new HashMap<>();
 
@@ -156,6 +178,7 @@ public class RollbarAppenderTest {
     custom.put("threadName", threadName);
     custom.put("marker", markerName);
     custom.put("mdc", mdc);
+    custom.put("argumentArray", argumentArray);
 
     rootCustom.put("rollbar-logback", custom);
 
