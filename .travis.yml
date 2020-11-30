@@ -33,8 +33,12 @@ android:
   - android-sdk-license-.+
   - ".+"
 before_install:
-- openssl aes-256-cbc -K $encrypted_d4596825e164_key -iv $encrypted_d4596825e164_iv
-  -in $ENCRYPTED_GPG_KEY_LOCATION -out $GPG_KEY_LOCATION -d
+- if [[ "$TRAVIS_REPO_SLUG" != "rollbar/rollbar-java" || "$TRAVIS_PULL_REQUEST" != "false" ]]; then
+    echo "Skipping descrypt.";
+  else
+    openssl aes-256-cbc -K $encrypted_d4596825e164_key -iv $encrypted_d4596825e164_iv -in $ENCRYPTED_GPG_KEY_LOCATION -out $GPG_KEY_LOCATION -d;
+  fi;
+
 install:
 - sdkmanager --list || true
 - sdkmanager --uninstall "system-images;android-15;default;armeabi-v7a"
