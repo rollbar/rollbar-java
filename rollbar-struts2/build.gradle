@@ -1,0 +1,8 @@
+ext {
+    struts2Version = '2.5.25'
+}
+
+dependencies {
+    api project(":rollbar-web")
+    implementation 'org.apache.struts:struts2-core:' + struts2Version
+}

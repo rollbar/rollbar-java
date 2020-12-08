@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+  "-//Apache Software Foundation//DTD Struts Configuration 2.5//EN"
+  "http://struts.apache.org/dtds/struts-2.5.dtd">
+<struts>
+  <constant name="struts.devMode" value="true" />
+
+  <package name="basicstruts2" extends="struts-default" namespace="/">
+    <interceptors>
+      <interceptor name="rollbarExceptionInterceptor"
+          class="com.rollbar.struts.interceptor.RollbarExceptionInterceptor" />
+
+      <interceptor-stack name="appStack">
+        <interceptor-ref name="rollbarExceptionInterceptor" />
+        <interceptor-ref name="defaultStack" />
+      </interceptor-stack>
+    </interceptors>
+    <default-interceptor-ref name="appStack"/>
+
+    <default-action-ref name="index" />
+
+    <action name="index" class="com.example.rollbar.struts2.action.HelloRollbarAction" method="index">
+      <result type="chain">hello</result>
+    </action>
+
+    <action name="hello" class="com.example.rollbar.struts2.action.HelloRollbarAction" method="hello">
+      <result>/WEB-INF/jsp/index.jsp</result>
+    </action>
+
+  </package>
+</struts>
