@@ -58,6 +58,7 @@ public class RequestProvider implements Provider<Request> {
           .method(method(req))
           .headers(headers(req))
           .get(getParams(req))
+          .post(postParams(req))
           .queryString(queryString(req))
           .userIp(userIp(req))
           .build();
@@ -140,19 +141,40 @@ public class RequestProvider implements Provider<Request> {
 
   private static Map<String, List<String>> getParams(HttpServletRequest request) {
     if ("GET".equalsIgnoreCase(request.getMethod())) {
-      Map<String, List<String>> params = new HashMap<>();
-
-      Map<String, String[]> paramNames = request.getParameterMap();
-      for (Entry<String, String[]> param : paramNames.entrySet()) {
-        if (param.getValue() != null && param.getValue().length > 0) {
-          params.put(param.getKey(), asList(param.getValue()));
-        }
-      }
-
-      return params;
+      return params(request);
     }
 
     return null;
+  }
+
+  private static Map<String, Object> postParams(HttpServletRequest request) {
+    if ("POST".equalsIgnoreCase(request.getMethod())) {
+      Map<String, List<String>> params = params(request);
+      Map<String, Object> postParams = new HashMap<>();
+      for (Entry<String, List<String>> entry : params.entrySet()) {
+        if (entry.getValue() != null && entry.getValue().size() == 1) {
+          postParams.put(entry.getKey(), entry.getValue().get(0));
+        } else {
+          postParams.put(entry.getKey(), entry.getValue());
+        }
+      }
+      return postParams;
+    }
+
+    return null;
+  }
+
+  private static Map<String, List<String>> params(HttpServletRequest request) {
+    Map<String, List<String>> params = new HashMap<>();
+
+    Map<String, String[]> paramNames = request.getParameterMap();
+    for (Entry<String, String[]> param : paramNames.entrySet()) {
+      if (param.getValue() != null && param.getValue().length > 0) {
+        params.put(param.getKey(), asList(param.getValue()));
+      }
+    }
+
+    return params;
   }
 
   private static String queryString(HttpServletRequest request) {
