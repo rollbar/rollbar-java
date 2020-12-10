@@ -35,17 +35,10 @@ public class RequestProviderTest {
         + "application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
   }
 
-  static final Map<String, String[]> REQUEST_GET_PARAMS = new HashMap<>();
+  static final Map<String, String[]> REQUEST_PARAMS = new HashMap<>();
   static {
-    REQUEST_GET_PARAMS.put("param1", new String[]{"value1", "value2"});
-    REQUEST_GET_PARAMS.put("param2", new String[]{"value3"});
-  }
-
-  static final Map<String, List<String>> EXPECTED_GET_PARAMS = new HashMap<>();
-  static {
-    for(String paramName : REQUEST_GET_PARAMS.keySet()) {
-      EXPECTED_GET_PARAMS.put(paramName, asList(REQUEST_GET_PARAMS.get(paramName)));
-    }
+    REQUEST_PARAMS.put("param1", new String[]{"value1", "value2"});
+    REQUEST_PARAMS.put("param2", new String[]{"value3"});
   }
 
   static final String REMOTE_ADDRESS = "127.0.0.1";
@@ -66,12 +59,10 @@ public class RequestProviderTest {
   @Before
   public void setUp() {
     when(request.getRequestURL()).thenReturn(REQUEST_URL);
-    when(request.getMethod()).thenReturn(METHOD);
     when(request.getHeaderNames()).thenReturn(enumeration(HEADERS.keySet()));
     for(String headerName : HEADERS.keySet()) {
       when(request.getHeader(headerName)).thenReturn(HEADERS.get(headerName));
     }
-    when(request.getParameterMap()).thenReturn(REQUEST_GET_PARAMS);
     when(request.getQueryString()).thenReturn(QUERYSTRING);
     when(request.getRemoteAddr()).thenReturn(REMOTE_ADDRESS);
 
@@ -85,14 +76,41 @@ public class RequestProviderTest {
 
   @Test
   public void shouldRetrieveTheRequest() {
+    when(request.getMethod()).thenReturn(METHOD);
+    when(request.getParameterMap()).thenReturn(REQUEST_PARAMS);
+
+    Map<String, List<String>> expectedGetParams = new HashMap<>();
+    for(String paramName : REQUEST_PARAMS.keySet()) {
+      expectedGetParams.put(paramName, asList(REQUEST_PARAMS.get(paramName)));
+    }
+
     Request result = sut.provide();
 
     assertThat(result.getUrl(), is(REQUEST_URL.toString()));
     assertThat(result.getMethod(), is(METHOD));
     assertThat(result.getHeaders(), is(HEADERS));
-    assertThat(result.getGet(), is(EXPECTED_GET_PARAMS));
+    assertThat(result.getGet(), is(expectedGetParams));
     assertThat(result.getQueryString(), is(QUERYSTRING));
     assertThat(result.getUserIp(), is(REMOTE_ADDRESS));
+  }
+
+  @Test
+  public void shouldTrackPostParams() {
+    when(request.getMethod()).thenReturn("POST");
+    when(request.getParameterMap()).thenReturn(REQUEST_PARAMS);
+
+    Map<String, Object> expectedPostParams = new HashMap<>();
+    for(String paramName : REQUEST_PARAMS.keySet()) {
+      String[] values = REQUEST_PARAMS.get(paramName);
+      if (values.length == 1) {
+        expectedPostParams.put(paramName, values[0]);
+      } else {
+        expectedPostParams.put(paramName, asList(values));
+      }
+    }
+
+    Request result = sut.provide();
+    assertThat(result.getPost(), is(expectedPostParams));
   }
 
   @Test
