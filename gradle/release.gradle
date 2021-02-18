@@ -81,6 +81,10 @@ afterEvaluate {
                                     id = 'basoko'
                                     name = 'David Basoco'
                                 }
+                                developer {
+                                    id = 'diegov'
+                                    name = 'Diego Veralli'
+                                }
                             }
                         }
                     }

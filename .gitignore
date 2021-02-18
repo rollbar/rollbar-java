@@ -67,3 +67,6 @@ atlassian-ide-plugin.xml
 
 # Others
 **/.flattened-pom.xml
+
+# Secrets
+.github/secring.gpg
