@@ -1,0 +1,117 @@
+name: rollbar-java CI
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    name: Java ${{ matrix.java }}
+    strategy:
+      matrix:
+        # TODO: Add 11 once we fix Mockito's issues
+        java: [8]
+    steps:
+      - uses: actions/checkout@v2
+      # Our build uses JDK7's rt.jar to make sure the artifact is fully
+      # compatible with Java 7, so we let this action set Java 7 up for us
+      # and we store its JAVA_HOME
+      - name: Set up Java 7
+        uses: actions/setup-java@v1
+        with:
+          java-version: 7
+
+      - name: Capture JDK7_HOME
+        run: echo "export JDK7_HOME=\"$JAVA_HOME\"" > ~/.jdk7_home
+
+      # This is the JDK that'll run the build
+      - name: Set up Java ${{ matrix.java }}
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java }}
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ matrix.java }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-${{ matrix.java }}-
+
+      - name: Environment info
+        run: |
+          ./gradlew --version
+          echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
+          ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager --version
+          echo JAVA_HOME: ${JAVA_HOME}
+          java -version
+          javac -version
+
+      - name: Build
+        run: 'source ~/.jdk7_home && ./gradlew clean build'
+
+      - name: Check
+        run: 'source ~/.jdk7_home && ./gradlew clean check'
+
+      - name: Cleanup Gradle cache
+        # Recommended by https://docs.github.com/en/actions/guides/building-and-testing-java-with-gradle
+        run: |
+          rm -f ~/.gradle/caches/modules-2/modules-2.lock
+          rm -f ~/.gradle/caches/modules-2/gc.properties
+
+  release:
+    runs-on: ubuntu-20.04
+    # It would be nice to run this as part of the build job, since it would be
+    # faster and have less duplicated Yaml, but we will add at least JDK 11 to
+    # the matrix soon, and it would not be possible to check for all matrix
+    # results before publishing if this were just another step in that job.
+    needs: build
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Java 7
+        uses: actions/setup-java@v1
+        with:
+          java-version: 7
+
+      - name: Capture JDK7_HOME
+        run: echo "export JDK7_HOME=\"$JAVA_HOME\"" > ~/.jdk7_home
+
+      - name: Set up Java 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 8
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-8-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-8-
+
+      - name: Release
+        env:
+          SECRING_GPG_IV: ${{ secrets.SECRING_GPG_IV }}
+          SECRING_GPG_KEY: ${{ secrets.SECRING_GPG_KEY }}
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          ENCRYPTED_GPG_KEY_LOCATION: ./.github/secring.gpg.enc
+          GPG_KEY_LOCATION: ./.github/secring.gpg
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+        run: |
+          openssl enc -aes-256-cbc -K "$SECRING_GPG_KEY" -iv "$SECRING_GPG_IV" -in "$ENCRYPTED_GPG_KEY_LOCATION" -out "$GPG_KEY_LOCATION" -d &&
+          source ~/.jdk7_home &&
+          ./.github/release.sh
+
+      - name: Cleanup Gradle cache
+        run: |
+          rm -f ~/.gradle/caches/modules-2/modules-2.lock
+          rm -f ~/.gradle/caches/modules-2/gc.properties
