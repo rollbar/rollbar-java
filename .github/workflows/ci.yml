@@ -11,8 +11,7 @@ jobs:
     name: Java ${{ matrix.java }}
     strategy:
       matrix:
-        # TODO: Add 11 once we fix Mockito's issues
-        java: [8]
+        java: [8, 11]
     steps:
       - uses: actions/checkout@v2
       # Our build uses JDK7's rt.jar to make sure the artifact is fully
@@ -66,9 +65,9 @@ jobs:
   release:
     runs-on: ubuntu-20.04
     # It would be nice to run this as part of the build job, since it would be
-    # faster and have less duplicated Yaml, but we will add at least JDK 11 to
-    # the matrix soon, and it would not be possible to check for all matrix
-    # results before publishing if this were just another step in that job.
+    # faster and have less duplicated Yaml, it would not be possible to check
+    # for all matrix results before publishing if this were just another step
+    # in that job.
     needs: build
     steps:
       - uses: actions/checkout@v2

@@ -7,8 +7,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static com.rollbar.notifier.config.ConfigBuilder.withAccessToken;
 import static java.lang.String.format;
 
@@ -43,7 +41,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class RollbarITest {
-
   private static final int PORT = 8089;
 
   private static final String URL = format("http://localhost:%d/api/1/item/", PORT);
@@ -57,7 +54,7 @@ public class RollbarITest {
   private static final String ERROR_MESSAGE = "This is an error message.";
 
   @Rule
-  public WireMockRule wireMockRule = new WireMockRule(8089);
+  public WireMockRule wireMockRule = new WireMockRule(PORT);
 
   private Gson gson;
 
@@ -182,11 +179,9 @@ public class RollbarITest {
 
     wireMockProxy.register(
         post(urlMatching(".*"))
-        .willReturn(aResponse().proxiedFrom("http://localhost:8089/")));
+        .willReturn(aResponse().proxiedFrom("http://localhost:" + PORT + "/")));
 
-    // Note that this url doesn't end up with the slash char, it seems is getting removed after
-    // passing through the proxy.
-    stubFor(post(urlEqualTo("/api/1/item"))
+    stubFor(post(urlEqualTo("/api/1/item/"))
         .withHeader("Accept", equalTo("application/json"))
         .withHeader("Accept-Charset", equalTo("UTF-8"))
         .withHeader("Content-Type", equalTo("application/json; charset=UTF-8"))
