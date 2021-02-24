@@ -62,7 +62,7 @@ task spotbugsMain(type: com.github.spotbugs.snom.SpotBugsTask) {
 }
 
 jacoco {
-    toolVersion = '0.8.1'
+    toolVersion = '0.8.6'
 }
 
 android.testOptions {

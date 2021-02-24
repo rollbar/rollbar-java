@@ -58,21 +58,33 @@ subprojects { project ->
         }
 
         compileJava {
-            sourceCompatibility = JavaVersion.VERSION_1_7
-            targetCompatibility = JavaVersion.VERSION_1_7
+            if (JavaVersion.current().compareTo(JavaVersion.VERSION_1_9) >= 0) {
+                // Use the --release javac flag, available since JDK9, which is equivalent to setting
+                // the source, target, and bootstrap classpath, and catches all usages of stdlib
+                // features not available in the target version.
+                options.release = 7
+            } else {
+                sourceCompatibility = JavaVersion.VERSION_1_7
+                targetCompatibility = JavaVersion.VERSION_1_7
+            }
+
             if (System.env.JDK7_HOME) {
                 options.bootstrapClasspath = files("${System.env.JDK7_HOME}/jre/lib/rt.jar")
             }
         }
 
         compileTestJava {
-            sourceCompatibility = JavaVersion.VERSION_1_8
-            targetCompatibility = JavaVersion.VERSION_1_8
+            if (JavaVersion.current().compareTo(JavaVersion.VERSION_1_9) >= 0) {
+                options.release = 8
+            } else {
+                sourceCompatibility = JavaVersion.VERSION_1_8
+                targetCompatibility = JavaVersion.VERSION_1_8
+            }
         }
     }
     
 }
 
 wrapper {
-    gradleVersion = '6.3'
+    gradleVersion = '6.6'
 }

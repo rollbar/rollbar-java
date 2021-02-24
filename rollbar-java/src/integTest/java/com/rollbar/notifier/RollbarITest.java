@@ -43,7 +43,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class RollbarITest {
-
   private static final int PORT = 8089;
 
   private static final String URL = format("http://localhost:%d/api/1/item/", PORT);
@@ -57,7 +56,7 @@ public class RollbarITest {
   private static final String ERROR_MESSAGE = "This is an error message.";
 
   @Rule
-  public WireMockRule wireMockRule = new WireMockRule(8089);
+  public WireMockRule wireMockRule = new WireMockRule(PORT);
 
   private Gson gson;
 
@@ -182,7 +181,7 @@ public class RollbarITest {
 
     wireMockProxy.register(
         post(urlMatching(".*"))
-        .willReturn(aResponse().proxiedFrom("http://localhost:8089/")));
+        .willReturn(aResponse().proxiedFrom("http://localhost:" + PORT + "/")));
 
     // Note that this url doesn't end up with the slash char, it seems is getting removed after
     // passing through the proxy.
