@@ -107,7 +107,9 @@ jobs:
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
         run: |
-          openssl enc -aes-256-cbc -K "$SECRING_GPG_KEY" -iv "$SECRING_GPG_IV" -in "$ENCRYPTED_GPG_KEY_LOCATION" -out "$GPG_KEY_LOCATION" -d &&
+          if test "$GITHUB_REPOSITORY" = "rollbar/rollbar-java" -a "$GITHUB_BASE_REF" = ""; then
+            openssl enc -aes-256-cbc -K "$SECRING_GPG_KEY" -iv "$SECRING_GPG_IV" -in "$ENCRYPTED_GPG_KEY_LOCATION" -out "$GPG_KEY_LOCATION" -d
+          fi &&
           source ~/.jdk7_home &&
           ./.github/release.sh
 
