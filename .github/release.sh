@@ -43,10 +43,10 @@ else
 
   if [[ ${BASH_REMATCH[5]} == 'SNAPSHOT' ]]; then
     echo "Doing SNAPSHOT release..."
-    echo ./gradlew -Dorg.gradle.internal.http.socketTimeout=300000 -Dorg.gradle.internal.http.connectionTimeout=300000 publishToSonatype
+    ./gradlew -Dorg.gradle.internal.http.socketTimeout=300000 -Dorg.gradle.internal.http.connectionTimeout=300000 publishToSonatype
   else
     echo "Doing release..."
-    echo ./gradlew -Dorg.gradle.internal.http.socketTimeout=300000 -Dorg.gradle.internal.http.connectionTimeout=300000 publishToSonatype closeAndReleaseRepository
+    ./gradlew -Dorg.gradle.internal.http.socketTimeout=300000 -Dorg.gradle.internal.http.connectionTimeout=300000 publishToSonatype closeAndReleaseRepository
   fi
   echo "Release done!"
 fi
