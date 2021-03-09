@@ -250,19 +250,6 @@ public class BufferedSender implements Sender {
         for (SenderListener senderListener : sender.getListeners()) {
           senderListener.onError(payload, new SenderException(e));
         }
-      } catch (Throwable e) {
-        // Catching all throwables is not great, but if we don't catch it here, FutureTask catches
-        // it a couple of stack frames above us, sets itself as failed, and the executor service
-        // won't schedule our task again. FutureTask does not re-throw either, so there is no
-        // difference in that regard with us catching the error.
-        // See https://github.com/openjdk/jdk/blob/da75f3c4ad5bdf25167a3ed80e51f567ab3dbd01/src/java.base/share/classes/java/util/concurrent/FutureTask.java#L307
-        // We put the catch clause here, and not in the loop, to avoid swallowing several
-        // consecutive errors, which in case of a JVM frequently throwing OOM or other fatal
-        // scenarios, gives async exceptions a chance to be thrown on a different thread that can
-        // properly react to them, since our task won't run again for a few seconds.
-        LOGGER.error("Fatal error sending the payload.", e);
-        // This could be OOM, stack overflow, etc... So we can't call the listeners. Hopefully
-        // logging still works, that's all we can do.
       }
     }
   }
