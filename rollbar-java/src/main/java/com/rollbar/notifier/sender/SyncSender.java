@@ -59,6 +59,7 @@ public class SyncSender extends AbstractSender {
   }
 
   private HttpURLConnection getConnection() throws IOException {
+    // By default, this will use the HTTPS Rollbar API URL defined in DEFAULT_API_ENDPOINT.
     HttpURLConnection connection = (HttpURLConnection) url.openConnection(this.proxy);
 
     if (accessToken != null && !"".equals(accessToken)) {
