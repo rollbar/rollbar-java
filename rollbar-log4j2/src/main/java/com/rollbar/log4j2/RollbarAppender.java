@@ -1,6 +1,7 @@
 package com.rollbar.log4j2;
 
 import static com.rollbar.notifier.config.ConfigBuilder.withAccessToken;
+import static org.apache.logging.log4j.core.util.Assert.isEmpty;
 
 import com.rollbar.api.payload.data.Level;
 import com.rollbar.notifier.Rollbar;
@@ -22,6 +23,7 @@ import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.Layout;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.ConfigurationException;
 import org.apache.logging.log4j.core.config.Node;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
@@ -76,7 +78,7 @@ public class RollbarAppender extends AbstractAppender {
    */
   @PluginFactory
   public static RollbarAppender createAppender(
-      @PluginAttribute("accessToken") @Required final String accessToken,
+      @PluginAttribute("accessToken") final String accessToken,
       @PluginAttribute("codeVersion") final String codeVersion,
       @PluginAttribute("endpoint") final String endpoint,
       @PluginAttribute("environment") final String environment,
@@ -88,6 +90,11 @@ public class RollbarAppender extends AbstractAppender {
       @PluginElement("Filter") Filter filter,
       @PluginAttribute("ignoreExceptions") final String ignore
   ) {
+    // No @Required(a || b) in log4j, so we check this manually
+    if (isEmpty(accessToken) && isEmpty(configProviderClassName)) {
+      throw new ConfigurationException("Either accessToken or configProviderClassName must be "
+              + "provided");
+    }
 
     ConfigProvider configProvider = ConfigProviderHelper
         .getConfigProvider(configProviderClassName);
