@@ -26,6 +26,7 @@ For actual usage, the easiest way to get started is by looking at the examples:
 - [rollbar-logback](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-logback)
 - [rollbar-spring-webmvc](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-spring-webmvc)
 - [rollbar-spring-boot-webmvc](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-spring-boot-webmvc)
+- [rollbar-reactive-streams-reactor](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-reactive-streams-reactor)
 
 ## Release History & Changelog
 

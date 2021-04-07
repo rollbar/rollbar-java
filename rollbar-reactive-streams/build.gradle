@@ -1,0 +1,46 @@
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "com.netflix.nebula:nebula-project-plugin:3.4.0"
+    }
+}
+
+apply plugin: "nebula.integtest"
+
+dependencies {
+    api project(':rollbar-java')
+    api 'org.reactivestreams:reactive-streams:1.0.3'
+    compileOnly 'org.apache.httpcomponents.client5:httpclient5:5.0.3'
+
+    testImplementation 'org.reactivestreams:reactive-streams-tck:1.0.3'
+    testImplementation 'org.testng:testng:7.4.0'
+    testImplementation 'org.mockito:mockito-testng:0.3.0'
+    testImplementation 'org.apache.httpcomponents.client5:httpclient5:5.0.3'
+    testImplementation 'org.apache.commons:commons-lang3:3.12.0'
+    testImplementation 'com.google.code.gson:gson:2.8.2'
+
+    testImplementation platform('io.projectreactor:reactor-bom:2020.0.6')
+    testImplementation 'io.projectreactor:reactor-core'
+
+    // We'll reuse some of the tests since we're providing compatible implementations
+    testImplementation(project(path: ':rollbar-java', configuration: 'integTestRuntime'))
+    testImplementation(project(path: ':rollbar-java', configuration: 'integTestArtifacts'))
+
+    integTestImplementation group: 'com.github.tomakehurst', name: 'wiremock-jre8', version: '2.27.2'
+    integTestImplementation group: 'com.google.code.gson', name: 'gson', version: '2.8.2'
+}
+
+// The reactive streams TCK tests use TestNG
+task tckTest(type: Test) {
+    useTestNG()
+}
+
+project.tasks.check.dependsOn(tckTest)
+
+integrationTest {
+    dependsOn project(':rollbar-java').tasks.integTestJar
+}

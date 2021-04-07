@@ -1,0 +1,15 @@
+acceptedBreaks:
+  "1.7.6":
+    com.rollbar:rollbar-java:
+    - code: "java.field.removed"
+      old: "field com.rollbar.notifier.config.ConfigBuilder.defaultErrorLevel"
+      justification: "Removing protected fields, deriving from ConfigBuilder should\
+        \ be done by other SDK classes only"
+    - code: "java.field.removed"
+      old: "field com.rollbar.notifier.config.ConfigBuilder.defaultMessageLevel"
+      justification: "Removing protected fields, deriving from ConfigBuilder should\
+        \ be done by other SDK classes only"
+    - code: "java.field.removed"
+      old: "field com.rollbar.notifier.config.ConfigBuilder.defaultThrowableLevel"
+      justification: "Removing protected fields, deriving from ConfigBuilder should\
+        \ be done by other SDK classes only"

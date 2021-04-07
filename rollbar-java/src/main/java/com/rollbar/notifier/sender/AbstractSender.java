@@ -1,15 +1,13 @@
 package com.rollbar.notifier.sender;
 
-import static java.util.Collections.unmodifiableList;
-
 import com.rollbar.api.payload.Payload;
 import com.rollbar.notifier.sender.exception.ApiException;
 import com.rollbar.notifier.sender.exception.SenderException;
 import com.rollbar.notifier.sender.listener.SenderListener;
+import com.rollbar.notifier.sender.listener.SenderListenerCollection;
 import com.rollbar.notifier.sender.result.Response;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +21,7 @@ public abstract class AbstractSender implements Sender {
 
   private Logger thisLogger = LoggerFactory.getLogger(this.getClass());
 
-  private final List<SenderListener> listeners = new ArrayList<>();
+  private final SenderListenerCollection listeners = new SenderListenerCollection();
 
   /**
    * This method just do the send logic.
@@ -49,17 +47,16 @@ public abstract class AbstractSender implements Sender {
 
   @Override
   public final void addListener(SenderListener listener) {
-    this.listeners.add(listener);
+    this.listeners.addListener(listener);
   }
 
   @Override
   public final List<SenderListener> getListeners() {
-    return unmodifiableList(this.listeners);
+    return listeners.getListeners();
   }
 
   @Override
   public void close() throws IOException {
-
   }
 
   @Override
@@ -69,15 +66,12 @@ public abstract class AbstractSender implements Sender {
 
   private void notifyResult(Payload payload, Response response) {
     thisLogger.debug("Payload sent uuid: {}", response.getResult().getContent());
-    for (SenderListener listener : listeners) {
-      listener.onResponse(payload, response);
-    }
+    listeners.onResponse(payload, response);
   }
 
   private void notifyError(Payload payload, Exception error) {
     thisLogger.error("Error sending the payload.", error);
-    for (SenderListener listener : listeners) {
-      listener.onError(payload, error);
-    }
+    listeners.onError(payload, error);
   }
+
 }

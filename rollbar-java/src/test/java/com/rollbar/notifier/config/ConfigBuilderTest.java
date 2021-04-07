@@ -2,11 +2,13 @@ package com.rollbar.notifier.config;
 
 import static com.rollbar.notifier.config.ConfigBuilder.withConfig;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 
 import com.rollbar.api.payload.data.Client;
+import com.rollbar.api.payload.data.Level;
 import com.rollbar.api.payload.data.Notifier;
 import com.rollbar.api.payload.data.Person;
 import com.rollbar.api.payload.data.Request;
@@ -17,7 +19,6 @@ import com.rollbar.notifier.provider.Provider;
 import com.rollbar.notifier.provider.notifier.NotifierProvider;
 import com.rollbar.notifier.sender.BufferedSender;
 import com.rollbar.notifier.sender.Sender;
-import com.rollbar.notifier.sender.SyncSender;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
 import java.net.Proxy;
@@ -94,6 +95,10 @@ public class ConfigBuilderTest {
     assertThat(config.handleUncaughtErrors(), is(true));
     assertThat(config.isEnabled(), is(true));
     assertThat(config.proxy(), is(nullValue()));
+
+    assertThat(config.defaultMessageLevel(), equalTo(Level.WARNING));
+    assertThat(config.defaultThrowableLevel(), equalTo(Level.ERROR));
+    assertThat(config.defaultErrorLevel(), equalTo(Level.CRITICAL));
   }
 
   @Test
