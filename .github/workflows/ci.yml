@@ -14,6 +14,10 @@ jobs:
         java: [8, 11]
     steps:
       - uses: actions/checkout@v2
+        
+      - name: Fetch git tags
+        run: ./.github/fetch_to_tag.sh
+          
       # Our build uses JDK7's rt.jar to make sure the artifact is fully
       # compatible with Java 7, so we let this action set Java 7 up for us
       # and we store its JAVA_HOME
