@@ -38,9 +38,8 @@ task createVersionClass() {
     def pkg = ["com", "rollbar", "notifier", "provider", "notifier"];
 
     def pkgName = pkg.join(".");
-    def pkgPath = "${ext.OUTPUT_DIR}${File.separator}" +
-            (['src', 'generated'] + pkg).join(File.separator)
-    def escapedVersion = VERSION_NAME.replace('"', '\\"');
+    def pkgPath = "${ext.OUTPUT_DIR}${File.separator}${pkg.join(File.separator)}"
+    def escapedVersion = VERSION_NAME.replace('\\', '\\\\').replace('"', '\\"');
 
     def classText = """package ${pkgName};
 
