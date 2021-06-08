@@ -67,3 +67,9 @@ atlassian-ide-plugin.xml
 
 # Others
 **/.flattened-pom.xml
+
+# Secrets
+.github/secring.gpg
+
+# Local gradle properties
+local.properties

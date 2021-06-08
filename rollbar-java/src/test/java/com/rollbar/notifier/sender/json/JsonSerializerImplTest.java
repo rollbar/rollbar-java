@@ -1,12 +1,19 @@
 package com.rollbar.notifier.sender.json;
 
+import static com.rollbar.notifier.sender.json.JsonTestHelper.fromString;
+import static com.rollbar.notifier.sender.json.JsonTestHelper.getValue;
 import static java.lang.String.format;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.core.Is.is;
 
 import com.rollbar.api.payload.Payload;
+import com.rollbar.api.payload.data.Data;
 import com.rollbar.notifier.sender.result.Result;
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class JsonSerializerImplTest {
 
@@ -62,6 +69,22 @@ public class JsonSerializerImplTest {
   }
 
   @Test
+  public void shouldDeserializeCustomFormattedResponse() {
+    Result expected = new Result.Builder()
+            .code(0)
+            .body(UUID)
+            .build();
+
+    JsonSerializerImpl sut = new JsonSerializerImpl();
+
+    String customResponseJson = SUCCESS_RESPONSE.replace(":", ":\n")
+            .replace("}", "\n}");
+
+    Result actual = sut.resultFrom(customResponseJson);
+    assertThat(actual, is(expected));
+  }
+
+  @Test
   public void shouldSerializeJsonPayload() {
     String json = "{\"foo\":\"bar\"}";
 
@@ -70,5 +93,56 @@ public class JsonSerializerImplTest {
     JsonSerializerImpl sut = new JsonSerializerImpl();
 
     assertThat(sut.toJson(payload), is(json));
+  }
+
+  @Test
+  public void shouldSerializeThrowableInCustom() {
+    Throwable t = new Throwable() {
+      @Override
+      public String toString() {
+        return "Throwable(\"quoted\")";
+      }
+    };
+
+    Payload payload = payloadWithCustom("throwable", t);
+
+    JsonSerializerImpl sut = new JsonSerializerImpl();
+
+    String serialized = sut.toJson(payload);
+
+    Map<String, Object> recovered = fromString(serialized);
+
+    String result = getValue(recovered, "data", "custom", "throwable");
+    assertThat(result, equalTo("Throwable(\"quoted\")"));
+  }
+
+  @Test
+  public void shouldSerializeObjectInCustom() {
+    Object obj = new Object() {
+      @Override
+      public String toString() {
+        return "Object(\"quoted\")";
+      }
+    };
+
+    Payload payload = payloadWithCustom("object", obj);
+
+    JsonSerializerImpl sut = new JsonSerializerImpl();
+
+    String serialized = sut.toJson(payload);
+
+    Map<String, Object> recovered = fromString(serialized);
+
+    String result = getValue(recovered, "data", "custom", "object");
+    assertThat(result, equalTo("Object(\"quoted\")"));
+  }
+
+  private Payload payloadWithCustom(String key, Object value) {
+    Map<String, Object> custom = new HashMap<>();
+    custom.put(key, value);
+
+    return new Payload.Builder()
+            .data(new Data.Builder()
+                    .custom(custom).build()).build();
   }
 }

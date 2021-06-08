@@ -1,0 +1,10 @@
+apply plugin: 'com.palantir.revapi'
+
+revapi {
+    oldGroup = GROUP
+    // By default, revapi will check against the version matching the most recent
+    // git tag, so we don't need to specify anything else here.
+    // If an artifact with the given version doesn't exist on maven, it will skip
+    // the check, so new projects won't cause any failures, and after the first
+    // version of a project is published it will start checking it.
+}

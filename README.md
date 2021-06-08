@@ -1,6 +1,6 @@
 # Rollbar for Java and Android
 
-[![Build Status](https://travis-ci.org/rollbar/rollbar-java.svg?branch=master)](https://travis-ci.org/rollbar/rollbar-java)
+[![Build Status](https://github.com/rollbar/rollbar-java/workflows/rollbar-java%20CI/badge.svg?branch=master)](https://github.com/rollbar/rollbar-java/actions/workflows/ci.yml?query=branch%3Amaster)
 
 The current library has undergone a major overhaul between versions 0.5.4 and 1.0.0.
 We recommend upgrading from prior versions of `rollbar-java`, but that process may require some

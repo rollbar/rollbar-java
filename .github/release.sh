@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ev
+set -e
 
 # https://github.com/fsaintjacques/semver-tool/blob/master/src/semver
 NAT='0|[1-9][0-9]*'
@@ -17,17 +17,30 @@ REPO="rollbar/rollbar-java"
 BRANCH="master"
 VERSION=`cat gradle.properties | awk -F= '/^VERSION_NAME/ { print $2 }'`
 
-if [[ "$TRAVIS_REPO_SLUG" != "$REPO" ]]; then
-  echo "Skipping release: wrong repository. Expected '$REPO' but was '$TRAVIS_REPO_SLUG'."
-elif [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then
+IS_PULL_REQUEST=false
+# According to GH docs, this is only set for PRs. There doesn't seem to be a specific variable
+# to indicate a job is running due to a PR
+# See https://docs.github.com/en/actions/reference/environment-variables
+if [[ "$GITHUB_BASE_REF" != "" ]]; then
+  IS_PULL_REQUEST=true
+fi
+
+EXPECTED_REF="refs/heads/${BRANCH}"
+
+if [[ "$GITHUB_REPOSITORY" != "$REPO" ]]; then
+  echo "Skipping release: wrong repository. Expected '$REPO' but was '$GITHUB_REPOSITORY'."
+elif [[ "$IS_PULL_REQUEST" != "false" ]]; then
   echo "Skipping release. It was pull request."
-elif [[ "$TRAVIS_BRANCH" != "$BRANCH" ]]; then
-  echo "Skipping release. Expected '$BRANCH' but was '$TRAVIS_BRANCH'."
+elif [[ "$GITHUB_REF" != "$EXPECTED_REF" ]]; then
+  echo "Skipping release. Expected '$EXPECTED_REF' but was '$GITHUB_REF'."
 elif [[ -z $VERSION ]]; then
   echo "Skipping release. Version value not found."
 elif ! [[ $VERSION =~ $SEMVER_REGEX ]]; then
   echo "Skipping release. Bad version used."
 else
+  # Gradle needs the absolute path to the secring
+  export GPG_KEY_LOCATION="$(realpath "$GPG_KEY_LOCATION")"
+
   if [[ ${BASH_REMATCH[5]} == 'SNAPSHOT' ]]; then
     echo "Doing SNAPSHOT release..."
     ./gradlew -Dorg.gradle.internal.http.socketTimeout=300000 -Dorg.gradle.internal.http.connectionTimeout=300000 publishToSonatype

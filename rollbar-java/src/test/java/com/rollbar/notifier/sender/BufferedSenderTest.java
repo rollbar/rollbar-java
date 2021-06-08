@@ -10,6 +10,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.rollbar.api.payload.Payload;
@@ -197,7 +198,7 @@ public class BufferedSenderTest {
   }
 
   @Test
-  public void sendTaskShouldNotThrowErrorIfSenderFails() {
+  public void sendTaskShouldNotThrowErrorIfSenderThrowsException() {
     Payload payload1 = mock(Payload.class);
     Payload payload2 = mock(Payload.class);
 
@@ -211,6 +212,31 @@ public class BufferedSenderTest {
 
     verify(sender).send(payload1);
     verify(sender).send(payload2);
+  }
+
+  @Test
+  public void sendTaskShouldNotThrowErrorIfSenderThrowsError() {
+    Payload payload1 = mock(Payload.class);
+    Payload payload2 = mock(Payload.class);
+
+    when(queue.poll()).thenReturn(payload1, payload2, null);
+
+    doThrow(new StackOverflowError("Fake")).when(sender).send(eq(payload1));
+
+    SendTask sut = new SendTask(2, queue, sender);
+
+    sut.run();
+
+    // For non-exception throwables, we catch the error and log it, but we don't continue with the
+    // batch since the error might be fatal.
+    verify(sender).send(eq(payload1));
+    verifyNoMoreInteractions(sender);
+
+    // If the process is still alive after that, on a second scheduled run we try the next payload.
+    sut.run();
+
+    verify(sender).send(eq(payload2));
+    verifyNoMoreInteractions(sender);
   }
 
 }
