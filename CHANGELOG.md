@@ -1,6 +1,98 @@
 # Change Log
 
-The change log has moved to this repo's [GitHub Releases Page](https://github.com/rollbar/rollbar-java/releases).
+# 1.7.8
+
+- Fix serialization of objects containing quotes in custom section of payload.
+- Set enabled to true by default in log4j2 appender. [#270](https://github.com/rollbar/rollbar-java/issues/270)
+
+# 1.7.7
+
+-  Don't require an access token in log4j appender when configuration class is provided.
+-  Add revapi binary and source backwards compatibility check to build.
+-  Use generated class instead of jar manifest to populate notifier version in payload.
+
+# 1.7.6
+
+- Add struts2 integration with examples.
+- Add all request parameters for post request method.
+- Move all Travis build steps to Github action.
+- Fix build on JDK 11 and add JDK 11 to GH action matrix.
+- Catch Throwable in payload send task, to ensure it doesn't stop being scheduled. [#246](https://github.com/rollbar/rollbar-java/issues/246)
+
+# 1.7.5
+
+rollbar-logback
+--------------
+- Adds new param for Argument Array.
+
+# 1.7.4
+
+rollbar-log4j2
+--------------
+- Fix [#230](https://github.com/rollbar/rollbar-java/issues/230)
+
+# 1.7.3
+
+Build system
+------------
+- Upgrade to use gradle 6.3. [#221](https://github.com/rollbar/rollbar-java/pull/221)
+
+rollbar-api
+-----------
+- Fix not present `method` property when json serialization. [#222](https://github.com/rollbar/rollbar-java/pull/222)
+
+# 1.7.2
+
+New integrations
+----------------
+- rollbar-spring-webmvc
+- rollbar-spring-boot-webmvc
+
+Update to existing integrations
+-------------------------------
+- \[rollbar-android\] Remove VERSION constant in rollbar-android and load from metadata. [#214](https://github.com/rollbar/rollbar-java/pull/214)
+
+# 1.7.1
+
+rollbar-android
+---------------
+- Fix jacoco error that breaks the application.
+- Add proguard rules to keep classes need for Serialization.
+- Make `DiskQueue` to delete payload files error when reading.
+
+# 1.7.0
+NOTE: **This build was broken when publishing to maven. Please do not use.** [#202](https://github.com/rollbar/rollbar-java/issues/202)
+
+rollbar-android
+---------------
+- Use by default `DiskQueue` instead of `ConcurrentLinkedQueue` in sender. [#200](https://github.com/rollbar/rollbar-java/pull/200)
+- Fix IndexOutOfBoundsException in DiskQueue.poll(). [#200](https://github.com/rollbar/rollbar-java/pull/200)
+- Use setDefaultUncaughtExceptionHandler to capture all uncaught exceptions. [#200](https://github.com/rollbar/rollbar-java/pull/200)
+
+rollbar-java
+------------
+- Fix for not expected server responses. [#198](https://github.com/rollbar/rollbar-java/pull/198)
+
+# 1.6.0
+- Add codeVersion as an option to Log4j2 appender. [#196](https://github.com/rollbar/rollbar-java/pull/196)
+- Allow configuring more options via logback xml. [#194](https://github.com/rollbar/rollbar-java/pull/194)
+- Fix pre filter error NullPointerException. [#190](https://github.com/rollbar/rollbar-java/pull/190)
+- Add enabled as an option to log4j2 appender. [#188](https://github.com/rollbar/rollbar-java/pull/188)
+
+# 1.5.2
+- Make `RollbarAppender(Rollbar rollbar)` constructor public and allow `start()` to skip `Rollbar` 
+  instantiation so `RollbarAppender` can be constructed and started programmatically. [#184](https://github.com/rollbar/rollbar-java/issues/184)
+
+# 1.5.1
+- Make RollbarFilter dependency-injectable for rollbar-web. [#182](https://github.com/rollbar/rollbar-java/issues/182)
+
+# 1.5.0
+- Enable sending complete JSON payloads, as proxy for other SDKs. [#180](https://github.com/rollbar/rollbar-java/pull/180)
+
+# 1.4.1
+- Add configuration to determine default item level. [#179](https://github.com/rollbar/rollbar-java/pull/179)
+- Allow the maximum number of logcat lines to be configured. [#178](https://github.com/rollbar/rollbar-java/pull/178)
+- Provide convenience setter for JsonSerializer. [#177](https://github.com/rollbar/rollbar-java/pull/177)
 
 # 1.4.0
 - Capture local variables in stack frames with a native agent. [#169](https://github.com/rollbar/rollbar-java/pull/169)
