@@ -70,3 +70,6 @@ atlassian-ide-plugin.xml
 
 # Secrets
 .github/secring.gpg
+
+# Local gradle properties
+local.properties

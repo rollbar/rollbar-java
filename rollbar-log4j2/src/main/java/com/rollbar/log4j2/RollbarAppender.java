@@ -83,7 +83,7 @@ public class RollbarAppender extends AbstractAppender {
       @PluginAttribute("endpoint") final String endpoint,
       @PluginAttribute("environment") final String environment,
       @PluginAttribute("language") final String language,
-      @PluginAttribute("enabled") final boolean enabled,
+      @PluginAttribute(value = "enabled", defaultBoolean = true) final boolean enabled,
       @PluginAttribute("configProviderClassName") final String configProviderClassName,
       @PluginAttribute("name") @Required final String name,
       @PluginElement("Layout") Layout<? extends Serializable> layout,

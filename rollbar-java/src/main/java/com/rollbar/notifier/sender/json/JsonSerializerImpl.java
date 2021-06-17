@@ -158,11 +158,11 @@ public class JsonSerializerImpl implements JsonSerializer {
   private static void serializeThrowable(StringBuilder builder, Throwable value) {
     final StringWriter writer = new StringWriter();
     value.printStackTrace(new PrintWriter(writer));
-    builder.append(String.format("\"%s\"", writer.toString()));
+    serializeString(builder, value.toString());
   }
 
   private static void serializeDefault(StringBuilder builder, Object value) {
-    builder.append(String.format("\"%s\"", value));
+    serializeString(builder, value == null ? "" : value.toString());
   }
 
   private static void serializeNumber(StringBuilder builder, Number value) {

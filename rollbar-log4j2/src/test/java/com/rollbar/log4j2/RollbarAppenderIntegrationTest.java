@@ -130,7 +130,7 @@ public class RollbarAppenderIntegrationTest {
 
         @Override
         public Config provide(ConfigBuilder builder) {
-            return builder.accessToken(TEST_TOKEN).enabled(true).sender(SENDER.get()).build();
+            return builder.accessToken(TEST_TOKEN).sender(SENDER.get()).build();
         }
     }
 }
