@@ -1,10 +1,13 @@
+plugins {
+    id "com.vmlens.interleave" version "1.1.5"
+}
+
 dependencies {
     api project(':rollbar-reactive-streams')
 
     compileOnly platform('io.projectreactor:reactor-bom:2020.0.6')
     compileOnly 'io.projectreactor.netty:reactor-netty-http'
     compileOnly 'io.projectreactor:reactor-core'
-
 
     testImplementation platform('org.junit:junit-bom:5.7.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -25,6 +28,10 @@ dependencies {
 
     testImplementation group: 'com.github.tomakehurst', name: 'wiremock-jre8', version: '2.27.2'
     testImplementation group: 'com.google.code.gson', name: 'gson', version: '2.8.2'
+
+    testImplementation('com.vmlens:interleave:1.1.5') {
+        exclude group: 'org.apache.maven.plugins', module: 'maven-surefire-plugin'
+    }
 }
 
 compileJava {
@@ -40,16 +47,38 @@ compileJava {
 }
 
 test {
-    // Use Junit 5 to take advantage of reactor's Blockhound verification
+    // Our core suite uses Junit 5 to take advantage of reactor's Blockhound verification.
     useJUnitPlatform()
+
     testLogging {
         events "passed", "skipped", "failed"
     }
 }
 
+String VMLENS_CATEGORY = 'com.rollbar.reactivestreams.interleave.VMLensTest'
+
+// We reuse some rollbar-java tests since we provide a compatible implementation. Those are JUnit 4 tests so we need
+// a JUnit 4 task.
 task junit4Test(type: Test) {
     dependsOn project(':rollbar-java').tasks.integTestJar
-    useJUnit();
+    useJUnit() {
+        // These run with VMLens, as a separate task, so they're excluded here.
+        excludeCategories VMLENS_CATEGORY
+    }
 }
 
 project.tasks.check.dependsOn(junit4Test)
+
+// VMLens based concurrency tests, which run with special instrumentation. VMLens only supports JUnit 4.
+interleave {
+    useJUnit() {
+        includeCategories VMLENS_CATEGORY
+    }
+
+    // The Jacoco agent doesn't get along with the VMLens agent.
+    jacoco {
+        enabled = false
+    }
+}
+
+project.tasks.check.dependsOn(interleave)

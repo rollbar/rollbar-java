@@ -71,7 +71,7 @@ public class AsyncSender implements Sender {
 
   @Override
   public void close() throws Exception {
-    this.close(false);
+    httpClient.close();
   }
 
   /**

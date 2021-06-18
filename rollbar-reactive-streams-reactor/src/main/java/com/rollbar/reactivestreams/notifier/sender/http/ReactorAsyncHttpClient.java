@@ -7,7 +7,7 @@ import java.net.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
+
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
@@ -19,11 +19,11 @@ import reactor.netty.transport.ProxyProvider;
  * <a href="https://projectreactor.io/">Project Reactor</a> {@link AsyncHttpClient} implementation.
  */
 public class ReactorAsyncHttpClient implements AsyncHttpClient {
-  private final AtomicInteger runningRequests;
+  private final RequestDrainSignal runningRequests;
   private final HttpClient httpClient;
 
   ReactorAsyncHttpClient(Builder builder) {
-    this.runningRequests = new AtomicInteger(0);
+    this.runningRequests = new RequestDrainSignal();
 
     HttpClient httpClient;
     if (builder.connectionProvider != null) {
@@ -61,8 +61,8 @@ public class ReactorAsyncHttpClient implements AsyncHttpClient {
         .send(buf)
         .responseSingle((res, content) ->
             content.map(body -> new AbstractMap.SimpleEntry<>(res, body)))
-        .doOnSubscribe(sig -> runningRequests.incrementAndGet())
-        .doAfterTerminate(runningRequests::decrementAndGet)
+        .doOnSubscribe(sig -> runningRequests.increment())
+        .doAfterTerminate(runningRequests::decrement)
         .map(ReactorAsyncHttpClient::mapResponse);
   }
 
@@ -87,19 +87,23 @@ public class ReactorAsyncHttpClient implements AsyncHttpClient {
   }
 
   @Override
-  public void close(boolean wait) {
-    while (runningRequests.get() > 0) {
-      try {
-        Thread.sleep(50);
-      } catch (InterruptedException ignored) {
-        return;
-      }
-    }
+  public void close() {
+    this.close(false);
   }
 
   @Override
-  public void close() throws Exception {
-    close(true);
+  public void close(boolean wait) {
+    // We can't shutdown the IO reactor from here, it's either provided by the user via the
+    // connection provider, or it's managed internally by the HTTP client and GCd later.
+    // We can wait for requests to complete though.
+
+    if (wait) {
+      // Project Reactor marks the reactor threads, and then makes sure blocking methods are
+      // not called from those threads. Our close methods are only meant to be used at shutdown,
+      // outside of high throughput reactor activity, so using Mono.block here will make it very
+      // visible if users accidentally call this from the reactive parts of their application.
+      Mono.from(runningRequests.toPublisher()).block();
+    }
   }
 
   private static InetSocketAddress getProxyAddress(ProxyProvider.Proxy proxyType, Proxy proxy) {
@@ -171,4 +175,5 @@ public class ReactorAsyncHttpClient implements AsyncHttpClient {
       return new ReactorAsyncHttpClient(this);
     }
   }
+
 }

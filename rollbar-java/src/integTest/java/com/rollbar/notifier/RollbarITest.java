@@ -58,6 +58,7 @@ import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -101,6 +102,11 @@ public class RollbarITest {
     this.configBuilder = withAccessToken(ACCESS_TOKEN)
         .sender(sender)
         .timestamp(timeProvider);
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    this.sender.close(true);
   }
 
   @Test
