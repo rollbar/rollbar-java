@@ -1,42 +1,29 @@
 package com.rollbar.notifier;
 
 import com.rollbar.api.payload.Payload;
-import com.rollbar.api.payload.data.Data;
 import com.rollbar.api.payload.data.Level;
-import com.rollbar.jvmti.ThrowableCache;
 import com.rollbar.notifier.config.Config;
 import com.rollbar.notifier.config.ConfigBuilder;
 import com.rollbar.notifier.config.ConfigProvider;
 import com.rollbar.notifier.uncaughtexception.RollbarUncaughtExceptionHandler;
 import com.rollbar.notifier.util.BodyFactory;
 import com.rollbar.notifier.util.ObjectsUtils;
-import com.rollbar.notifier.wrapper.RollbarThrowableWrapper;
 import com.rollbar.notifier.wrapper.ThrowableWrapper;
 import java.lang.Thread.UncaughtExceptionHandler;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * This is the current Rollbar notifier and the main starting point to send the data to Rollbar.
  */
-public class Rollbar {
+public class Rollbar extends RollbarBase<Void, Config> {
 
   private static Logger LOGGER = LoggerFactory.getLogger(Rollbar.class);
 
+  private static final Void VOID = null;
+
   private static volatile Rollbar notifier;
-
-  private Config config;
-
-  private final ReadWriteLock configReadWriteLock = new ReentrantReadWriteLock();
-  private final Lock configReadLock = configReadWriteLock.readLock();
-  private final Lock configWriteLock = configReadWriteLock.writeLock();
-
-  private BodyFactory bodyFactory;
 
   /**
    * Constructor.
@@ -48,8 +35,7 @@ public class Rollbar {
   }
 
   Rollbar(Config config, BodyFactory bodyFactory) {
-    this.config = config;
-    this.bodyFactory = bodyFactory;
+    super(config, bodyFactory, VOID);
 
     if (config.handleUncaughtErrors()) {
       this.handleUncaughtErrors();
@@ -127,14 +113,22 @@ public class Rollbar {
    * @param config the new configuration.
    */
   public void configure(Config config) {
-    LOGGER.debug("Reloading configuration.");
-    this.configWriteLock.lock();
-    try {
-      this.config = config;
-      processAppPackages(config);
-    } finally {
-      this.configWriteLock.unlock();
-    }
+    super.configure(config);
+  }
+
+  /**
+   * Get the level of the error or message. The Config passed in contains the defaults
+   * to use for the cases of an Error, Throwable, or a Message. The default in the Config
+   * if otherwise left unspecified is: CRITICAL for {@link Error}, ERROR for other
+   * {@link Throwable}, WARNING for messages. Use the methods on ConfigBuilder to
+   * change these defaults
+   *
+   * @param config the current Config.
+   * @param error  the error.
+   * @return the level.
+   */
+  public Level level(Config config, Throwable error) {
+    return super.level(config, error);
   }
 
   /**
@@ -144,12 +138,6 @@ public class Rollbar {
    */
   public Config config() {
     return config;
-  }
-
-  private void processAppPackages(Config config) {
-    for (String appPackage : config.appPackages()) {
-      ThrowableCache.addAppPackage(appPackage);
-    }
   }
 
   /**
@@ -172,10 +160,10 @@ public class Rollbar {
   }
 
   /**
-   * Record a critical error with extra information attached.
+   * Record a critical error with custom data attached.
    *
    * @param error the error.
-   * @param custom the extra information.
+   * @param custom the custom data.
    */
   public void critical(Throwable error, Map<String, Object> custom) {
     critical(error, custom, null);
@@ -191,17 +179,17 @@ public class Rollbar {
   }
 
   /**
-   * Record a critical message with extra information attached.
+   * Record a critical message with custom data attached.
    *
    * @param message the message.
-   * @param custom the extra information.
+   * @param custom the custom data.
    */
   public void critical(String message, Map<String, Object> custom) {
     critical(null, custom, message);
   }
 
   /**
-   * Record a critical error with custom parameters and human readable description.
+   * Record a critical error with custom data and human readable description.
    *
    * @param error the error.
    * @param custom the custom data.
@@ -231,10 +219,10 @@ public class Rollbar {
   }
 
   /**
-   * Record an error with extra information attached.
+   * Record an error with custom data attached.
    *
    * @param error the error.
-   * @param custom the extra information.
+   * @param custom the custom data.
    */
   public void error(Throwable error, Map<String, Object> custom) {
     error(error, custom, null);
@@ -250,17 +238,17 @@ public class Rollbar {
   }
 
   /**
-   * Record a error message with extra information attached.
+   * Record a error message with custom data attached.
    *
    * @param message the message.
-   * @param custom the extra information.
+   * @param custom the custom data.
    */
   public void error(String message, Map<String, Object> custom) {
     error(null, custom, message);
   }
 
   /**
-   * Record an error with custom parameters and human readable description.
+   * Record an error with custom data and human readable description.
    *
    * @param error the error.
    * @param custom the custom data.
@@ -290,10 +278,10 @@ public class Rollbar {
   }
 
   /**
-   * Record a warning error with extra information attached.
+   * Record a warning error with custom data attached.
    *
    * @param error the error.
-   * @param custom the extra information.
+   * @param custom the custom data.
    */
   public void warning(Throwable error, Map<String, Object> custom) {
     warning(error, custom, null);
@@ -309,17 +297,17 @@ public class Rollbar {
   }
 
   /**
-   * Record a warning message with extra information attached.
+   * Record a warning message with custom data attached.
    *
    * @param message the message.
-   * @param custom the extra information.
+   * @param custom the custom data.
    */
   public void warning(String message, Map<String, Object> custom) {
     warning(null, custom, message);
   }
 
   /**
-   * Record a warning error with custom parameters and human readable description.
+   * Record a warning error with data and human readable description.
    *
    * @param error the error.
    * @param custom the custom data.
@@ -349,10 +337,10 @@ public class Rollbar {
   }
 
   /**
-   * Record an info error with extra information attached.
+   * Record an info error with custom data attached.
    *
    * @param error the error.
-   * @param custom the extra information.
+   * @param custom the custom data.
    */
   public void info(Throwable error, Map<String, Object> custom) {
     info(error, custom, null);
@@ -368,17 +356,17 @@ public class Rollbar {
   }
 
   /**
-   * Record an informational message with extra information attached.
+   * Record an informational message with custom data attached.
    *
    * @param message the message.
-   * @param custom the extra information.
+   * @param custom the custom data.
    */
   public void info(String message, Map<String, Object> custom) {
     info(null, custom, message);
   }
 
   /**
-   * Record an info error with custom parameters and human readable description.
+   * Record an info error with custom data and human readable description.
    *
    * @param error the error.
    * @param custom the custom data.
@@ -408,10 +396,10 @@ public class Rollbar {
   }
 
   /**
-   * Record a debug error with extra information attached.
+   * Record a debug error with custom data attached.
    *
    * @param error the error.
-   * @param custom the extra information.
+   * @param custom the custom data.
    */
   public void debug(Throwable error, Map<String, Object> custom) {
     debug(error, custom, null);
@@ -427,17 +415,17 @@ public class Rollbar {
   }
 
   /**
-   * Record a debugging message with extra information attached.
+   * Record a debugging message with custom data attached.
    *
    * @param message the message.
-   * @param custom the extra information.
+   * @param custom the custom data.
    */
   public void debug(String message, Map<String, Object> custom) {
     debug(null, custom, message);
   }
 
   /**
-   * Record a debug error with custom parameters and human readable description.
+   * Record a debug error with custom data and human readable description.
    *
    * @param error the error.
    * @param custom the custom data.
@@ -468,21 +456,21 @@ public class Rollbar {
   }
 
   /**
-   * Record an error with extra information attached at the default level returned by {@link
+   * Record an error with custom data attached at the default level returned by {@link
    * Rollbar#level}.
    *
    * @param error the error.
-   * @param custom the extra information.
+   * @param custom the custom data.
    */
   public void log(Throwable error, Map<String, Object> custom) {
     log(error, custom, null, null);
   }
 
   /**
-   * Record an error with extra information attached at the level specified.
+   * Record an error with custom data attached at the level specified.
    *
    * @param error the error.
-   * @param custom the extra information.
+   * @param custom the custom data.
    * @param level the level.
    */
   public void log(Throwable error, Map<String, Object> custom, Level level) {
@@ -511,7 +499,7 @@ public class Rollbar {
   }
 
   /**
-   * Record an error with custom parameters and human readable description at the default level
+   * Record an error with custom data and human readable description at the default level
    * returned by {@link Rollbar#level}.
    *
    * @param error the error.
@@ -533,11 +521,11 @@ public class Rollbar {
   }
 
   /**
-   * Record a message with extra information attached at the default level returned by {@link
+   * Record a message with custom data attached at the default level returned by {@link
    * Rollbar#level}, (WARNING unless level overridden).
    *
    * @param message the message.
-   * @param custom the extra information.
+   * @param custom the custom data.
    */
   public void log(String message, Map<String, Object> custom) {
     log(null, custom, message, null);
@@ -554,10 +542,10 @@ public class Rollbar {
   }
 
   /**
-   * Record a message with extra information attached at the specified level.
+   * Record a message with custom data attached at the specified level.
    *
    * @param message the message.
-   * @param custom the extra information.
+   * @param custom the custom data.
    * @param level the level.
    */
   public void log(String message, Map<String, Object> custom, Level level) {
@@ -595,12 +583,7 @@ public class Rollbar {
    */
   public void log(Throwable error, Map<String, Object> custom, String description, Level level,
       boolean isUncaught) {
-    RollbarThrowableWrapper rollbarThrowableWrapper = null;
-
-    if (error != null) {
-      rollbarThrowableWrapper = new RollbarThrowableWrapper(error);
-    }
-    this.log(rollbarThrowableWrapper, custom, description, level, isUncaught);
+    this.log(wrapThrowable(error), custom, description, level, isUncaught);
   }
 
   /**
@@ -625,27 +608,6 @@ public class Rollbar {
     }
   }
 
-  /**
-   * Get the level of the error or message. The Config passed in contains the defaults
-   * to use for the cases of an Error, Throwable, or a Message. The default in the Config
-   * if otherwise left unspecified is: CRITICAL for {@link Error}, ERROR for other
-   * {@link Throwable}, WARNING for messages. Use the methods on ConfigBuilder to
-   * change these defaults
-   *
-   * @param config the current Config.
-   * @param error the error.
-   * @return the level.
-   */
-  public Level level(Config config, Throwable error) {
-    if (error == null) {
-      return config.defaultMessageLevel();
-    }
-    if (error instanceof Error) {
-      return config.defaultErrorLevel();
-    }
-    return config.defaultThrowableLevel();
-  }
-
   public void close(boolean wait) throws Exception {
     this.config.sender().close(wait);
   }
@@ -667,150 +629,13 @@ public class Rollbar {
     }
   }
 
-  private void process(ThrowableWrapper error, Map<String, Object> custom, String description,
-      Level level, boolean isUncaught) {
-    this.configReadLock.lock();
-    Config config = this.config;
-    this.configReadLock.unlock();
-
-    if (!config.isEnabled()) {
-      LOGGER.debug("Notifier disabled.");
-      return;
-    }
-
-    // Pre filter
-    if (config.filter() != null && config.filter().preProcess(level,
-            error != null ? error.getThrowable() : null, custom, description)) {
-      LOGGER.debug("Pre-filtered error: {}", error);
-      return;
-    }
-
-    LOGGER.debug("Gathering information to build the payload.");
-    // Gather information to build a payload.
-    Data data = buildData(config, error, custom, description, level, isUncaught);
-
-    // Transform the data
-    if (config.transformer() != null) {
-      LOGGER.debug("Transforming the data.");
-      data = config.transformer().transform(data);
-    }
-
-    // Append if needed uuid or fingerprint data.
-    if (config.uuidGenerator() != null || config.fingerPrintGenerator() != null) {
-      Data.Builder dataBuilder = new Data.Builder(data);
-
-      // UUID
-      if (config.uuidGenerator() != null) {
-        LOGGER.debug("Generating UUID.");
-        dataBuilder.uuid(config.uuidGenerator().from(data));
-      }
-
-      // Fingerprint
-      if (config.fingerPrintGenerator() != null) {
-        LOGGER.debug("Generating fingerprint.");
-        dataBuilder.fingerprint(config.fingerPrintGenerator().from(data));
-      }
-      data = dataBuilder.build();
-    }
-
-    // Post filter
-    if (config.filter() != null && config.filter().postProcess(data)) {
-      LOGGER.debug("Post-filtered error: {}", error);
-      return;
-    }
-
-    // Payload
-    Payload payload = new Payload.Builder()
-        .accessToken(config.accessToken())
-        .data(data).build();
-
-    LOGGER.debug("Payload built: {}", payload);
-
-    // Send
-    sendPayload(config, payload);
-  }
-
-  private Data buildData(Config config, ThrowableWrapper error, Map<String, Object> custom,
-      String description, Level level, boolean isUncaught) {
-
-    Data.Builder dataBuilder = new Data.Builder()
-        .environment(config.environment())
-        .codeVersion(config.codeVersion())
-        .platform(config.platform())
-        .language(config.language())
-        .framework(config.framework())
-        .level(level != null ? level : error != null ? level(config, error.getThrowable())
-            : level(config, null))
-        .body(bodyFactory.from(error, description))
-        .isUncaught(isUncaught);
-
-    // Gather data from providers.
-
-    // Context
-    if (config.context() != null) {
-      LOGGER.debug("Gathering context info.");
-      dataBuilder.context(config.context().provide());
-    }
-
-    // Request
-    if (config.request() != null) {
-      LOGGER.debug("Gathering request info.");
-      dataBuilder.request(config.request().provide());
-    }
-
-    // Person
-    if (config.person() != null) {
-      LOGGER.debug("Gathering person info.");
-      dataBuilder.person(config.person().provide());
-    }
-
-    // Server
-    if (config.server() != null) {
-      LOGGER.debug("Gathering server info.");
-      dataBuilder.server(config.server().provide());
-    }
-
-    // Client
-    if (config.client() != null) {
-      LOGGER.debug("Gathering client info.");
-      dataBuilder.client(config.client().provide());
-    }
-
-    // Custom
-    Map<String, Object> tmpCustom = new HashMap<>();
-    if (config.custom() != null) {
-      LOGGER.debug("Gathering custom info.");
-      Map<String, Object> customProvided = config.custom().provide();
-      if (customProvided != null) {
-        tmpCustom.putAll(customProvided);
-      }
-    }
-    if (custom != null) {
-      tmpCustom.putAll(custom);
-    }
-    if (tmpCustom.size() > 0) {
-      dataBuilder.custom(tmpCustom);
-    }
-
-    // Notifier
-    if (config.notifier() != null) {
-      LOGGER.debug("Gathering notifier info.");
-      dataBuilder.notifier(config.notifier().provide());
-    }
-
-    // Timestamp
-    if (config.timestamp() != null) {
-      LOGGER.debug("Gathering timestamp info.");
-      dataBuilder.timestamp(config.timestamp().provide());
-    }
-
-    return dataBuilder.build();
-  }
-
-  private void sendPayload(Config config, Payload payload) {
+  @Override
+  protected Void sendPayload(Config config, Payload payload) {
     if (config.sender() != null) {
       LOGGER.debug("Sending payload.");
       config.sender().send(payload);
     }
+
+    return VOID;
   }
 }

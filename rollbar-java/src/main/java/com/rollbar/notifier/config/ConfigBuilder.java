@@ -80,11 +80,7 @@ public class ConfigBuilder {
 
   protected boolean enabled;
 
-  protected Level defaultMessageLevel;
-
-  protected Level defaultErrorLevel;
-
-  protected Level defaultThrowableLevel;
+  protected final DefaultLevels defaultLevels;
 
   /**
    * Constructor with an access token.
@@ -94,9 +90,7 @@ public class ConfigBuilder {
     this.accessToken = accessToken;
     this.handleUncaughtErrors = true;
     this.enabled = true;
-    this.defaultMessageLevel = Level.WARNING;
-    this.defaultErrorLevel = Level.CRITICAL;
-    this.defaultThrowableLevel = Level.ERROR;
+    this.defaultLevels = new DefaultLevels();
   }
 
   /**
@@ -127,9 +121,7 @@ public class ConfigBuilder {
     this.endpoint = config.endpoint();
     this.proxy = config.proxy();
     this.appPackages = config.appPackages();
-    this.defaultMessageLevel = config.defaultMessageLevel();
-    this.defaultErrorLevel = config.defaultErrorLevel();
-    this.defaultThrowableLevel = config.defaultThrowableLevel();
+    this.defaultLevels = new DefaultLevels(config);
   }
 
   /**
@@ -433,7 +425,7 @@ public class ConfigBuilder {
    * @return the builder instance.
    */
   public ConfigBuilder defaultMessageLevel(Level level) {
-    this.defaultMessageLevel = level;
+    this.defaultLevels.setMessage(level);
     return this;
   }
 
@@ -444,7 +436,7 @@ public class ConfigBuilder {
    * @return the builder instance.
    */
   public ConfigBuilder defaultErrorLevel(Level level) {
-    this.defaultErrorLevel = level;
+    this.defaultLevels.setError(level);
     return this;
   }
 
@@ -455,7 +447,7 @@ public class ConfigBuilder {
    * @return the builder instance.
    */
   public ConfigBuilder defaultThrowableLevel(Level level) {
-    this.defaultThrowableLevel = level;
+    this.defaultLevels.setThrowable(level);
     return this;
   }
 
@@ -542,11 +534,7 @@ public class ConfigBuilder {
 
     private final boolean enabled;
 
-    private Level defaultMessageLevel;
-
-    private Level defaultErrorLevel;
-
-    private Level defaultThrowableLevel;
+    private DefaultLevels defaultLevels;
 
     ConfigImpl(ConfigBuilder builder) {
       this.accessToken = builder.accessToken;
@@ -577,9 +565,7 @@ public class ConfigBuilder {
       }
       this.handleUncaughtErrors = builder.handleUncaughtErrors;
       this.enabled = builder.enabled;
-      this.defaultMessageLevel = builder.defaultMessageLevel;
-      this.defaultErrorLevel = builder.defaultErrorLevel;
-      this.defaultThrowableLevel = builder.defaultThrowableLevel;
+      this.defaultLevels = builder.defaultLevels;
     }
 
     @Override
@@ -704,17 +690,17 @@ public class ConfigBuilder {
 
     @Override
     public Level defaultMessageLevel() {
-      return defaultMessageLevel;
+      return defaultLevels.getMessage();
     }
 
     @Override
     public Level defaultErrorLevel() {
-      return defaultErrorLevel;
+      return defaultLevels.getError();
     }
 
     @Override
     public Level defaultThrowableLevel() {
-      return defaultThrowableLevel;
+      return defaultLevels.getThrowable();
     }
   }
 }

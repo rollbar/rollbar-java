@@ -31,13 +31,13 @@ spotbugsMain {
     }
 }
 spotbugsTest {
-    ignoreFailures = true
+    enabled = false
 }
 
 afterEvaluate {
     if (project.tasks.findByPath("spotbugsIntegTest") != null) {
         spotbugsIntegTest {
-            ignoreFailures = true
+            enabled = false
         }
     }
 }

@@ -9,6 +9,8 @@ include ":rollbar-api",
         ":rollbar-spring-webmvc",
         ":rollbar-spring-boot-webmvc",
         ":rollbar-struts2",
+        ":rollbar-reactive-streams",
+        ":rollbar-reactive-streams-reactor",
         ":examples:rollbar-java",
         ":examples:rollbar-web",
         ":examples:rollbar-android",
@@ -18,5 +20,5 @@ include ":rollbar-api",
         ":examples:rollbar-spring-webmvc",
         ":examples:rollbar-spring-boot-webmvc",
         ":examples:rollbar-struts2",
-        ":examples:rollbar-struts2-spring"
-
+        ":examples:rollbar-struts2-spring",
+        ":examples:rollbar-reactive-streams-reactor"

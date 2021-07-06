@@ -11,6 +11,10 @@ buildscript {
 
 apply plugin: "nebula.integtest"
 
+configurations {
+    integTestArtifacts
+}
+
 dependencies {
   api project(':rollbar-api')
 
@@ -75,4 +79,14 @@ test {
   // This helps us test the VersionHelper class since there's no jar manifest available when
   // running tests. 
   systemProperty 'ROLLBAR_IMPLEMENTATION_VERSION', VERSION_NAME
+}
+
+// The 'java-test-fixtures' plugin is not getting along with 'nebula.integtest', so we'll use this instead
+task integTestJar(type: Jar, dependsOn: project.tasks.integTestClasses) {
+    archiveClassifier.set('integtest')
+    from sourceSets.integTest.output
+}
+
+artifacts {
+    integTestArtifacts integTestJar
 }

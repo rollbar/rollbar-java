@@ -23,7 +23,7 @@ public class SyncSender extends AbstractSender {
 
   public static final String DEFAULT_API_ENDPOINT = "https://api.rollbar.com/api/1/item/";
 
-  private static final String UTF_8 = "UTF-8";
+  public static final String UTF_8 = "UTF-8";
 
   private final URL url;
 
