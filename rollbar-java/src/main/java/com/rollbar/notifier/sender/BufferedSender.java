@@ -3,6 +3,7 @@ package com.rollbar.notifier.sender;
 import com.rollbar.api.payload.Payload;
 import com.rollbar.notifier.sender.exception.SenderException;
 import com.rollbar.notifier.sender.listener.SenderListener;
+import com.rollbar.notifier.sender.result.Response;
 import com.rollbar.notifier.util.ObjectsUtils;
 
 import java.io.IOException;
@@ -13,6 +14,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,15 +28,27 @@ public class BufferedSender implements Sender {
   private static final long DEFAULT_FLUSH_FREQ = TimeUnit.SECONDS.toMillis(5);
   private static final long DEFAULT_INITIAL_FLUSH_DELAY = DEFAULT_FLUSH_FREQ;
 
+  // We only retry payloads when we suspect the failure is caused by the network being unavailable,
+  // so it makes sense to keep this high. In the case of android for example, when users enable
+  // connectivity detection, sending occurrences is suspended for up to 5 minutes when the network
+  // is down. So 30 retries gives us 2.5 hours of downtime before a payload is discarded.
+  private static final int DEFAULT_MAX_SEND_ATTEMPT_COUNT = 30;
+
   private final int batchSize;
+
+  private final int maxSendAttemptCount;
 
   private Sender sender;
 
   private Queue<Payload> queue;
 
+  private final SenderFailureStrategy senderFailureStrategy;
+
   private ScheduledExecutorService executorService;
 
   private SendTask sendTask;
+
+  private static Logger LOGGER = LoggerFactory.getLogger(BufferedSender.class);
 
   BufferedSender(Builder builder) {
     this(builder, Executors.newSingleThreadScheduledExecutor(new SenderThreadFactory()));
@@ -45,10 +59,17 @@ public class BufferedSender implements Sender {
     ObjectsUtils.requireNonNull(builder.queue, "The queue can not be null");
 
     this.batchSize = builder.batchSize;
+    this.maxSendAttemptCount = DEFAULT_MAX_SEND_ATTEMPT_COUNT;
     this.sender = builder.sender;
     this.queue = builder.queue;
+    this.senderFailureStrategy = builder.senderFailureStrategy;
 
-    this.sendTask = new SendTask(batchSize, queue, sender);
+    if (this.senderFailureStrategy != null) {
+      FailureListener failureListener = new FailureListener(builder.senderFailureStrategy);
+      this.sender.addListener(failureListener);
+    }
+
+    this.sendTask = new SendTask(batchSize, queue, sender, this.senderFailureStrategy);
 
     // Schedule executor service to send events in background with a thread factory that sets the
     // thread as daemons to allow the jvm exit.
@@ -97,6 +118,9 @@ public class BufferedSender implements Sender {
 
   @Override
   public void close() throws IOException {
+    if (this.senderFailureStrategy != null) {
+      this.senderFailureStrategy.close();
+    }
     this.executorService.shutdown();
     this.sender.close();
   }
@@ -135,6 +159,8 @@ public class BufferedSender implements Sender {
     private Queue<Payload> queue;
 
     private Sender sender;
+
+    private SenderFailureStrategy senderFailureStrategy;
 
     /**
      * Constructor.
@@ -197,6 +223,16 @@ public class BufferedSender implements Sender {
     }
 
     /**
+     * The strategy to use when sending fails.
+     * @param strategy the strategy.
+     * @return the builder instance.
+     */
+    public Builder senderFailureStrategy(SenderFailureStrategy strategy) {
+      this.senderFailureStrategy = strategy;
+      return this;
+    }
+
+    /**
      * Builds the {@link BufferedSender buffered sender}.
      *
      * @return the buffered sender.
@@ -213,19 +249,20 @@ public class BufferedSender implements Sender {
   }
 
   static final class SendTask implements Runnable {
-
-    private static Logger LOGGER = LoggerFactory.getLogger(BufferedSender.class);
-
     private final int batchSize;
 
     private final Queue<Payload> queue;
 
     private final Sender sender;
 
-    public SendTask(int batchSize, Queue<Payload> queue, Sender sender) {
+    private final SenderFailureStrategy senderFailureStrategy;
+
+    public SendTask(int batchSize, Queue<Payload> queue, Sender sender,
+                    SenderFailureStrategy senderFailureStrategy) {
       this.batchSize = batchSize;
       this.queue = queue;
       this.sender = sender;
+      this.senderFailureStrategy = senderFailureStrategy;
     }
 
     @Override
@@ -234,8 +271,9 @@ public class BufferedSender implements Sender {
       int numberOfSent = 0;
 
       try {
-        while (numberOfSent < batchSize && (payload = queue.poll()) != null) {
+        while (numberOfSent < batchSize && (payload = getItemFromQueue()) != null) {
           try {
+            payload.incrementSendAttemptCount();
             sender.send(payload);
           } catch (Exception e) {
             // Swallow it. The sender should notify of errors by itself and don't propagate them.
@@ -265,6 +303,21 @@ public class BufferedSender implements Sender {
         // logging still works, that's all we can do.
       }
     }
+
+    private Payload getItemFromQueue() {
+      if (isSuspended()) {
+        return null;
+      } else {
+        return queue.poll();
+      }
+    }
+
+    private boolean isSuspended() {
+      if (senderFailureStrategy == null) {
+        return false;
+      }
+      return senderFailureStrategy.isSendingSuspended();
+    }
   }
 
   static final class SenderThreadFactory implements ThreadFactory {
@@ -276,5 +329,45 @@ public class BufferedSender implements Sender {
       thread.setDaemon(true);
       return thread;
     }
+  }
+
+  private class FailureListener implements SenderListener {
+    private final SenderFailureStrategy senderFailureStrategy;
+
+    public FailureListener(SenderFailureStrategy senderFailureStrategy) {
+      ObjectsUtils.requireNonNull(senderFailureStrategy,
+              "The senderFailureStrategy cannot be null");
+      this.senderFailureStrategy = senderFailureStrategy;
+    }
+
+    @Override
+    public void onResponse(Payload payload, Response response) {
+      apply(payload, this.senderFailureStrategy.getAction(payload, response));
+    }
+
+    @Override
+    public void onError(Payload payload, Exception error) {
+      apply(payload, this.senderFailureStrategy.getAction(payload, error));
+    }
+
+    private void apply(Payload payload, SenderFailureStrategy.PayloadAction action) {
+      switch (action) {
+        case NONE:
+          break;
+        case CAN_BE_RETRIED:
+          if (tooManySendAttempts(payload)) {
+            LOGGER.warn("Discarding payload after " + payload.getSendAttemptCount() + " attempts");
+          } else {
+            send(payload);
+          }
+          break;
+        default:
+          throw new IllegalArgumentException("Unknown action type " + action);
+      }
+    }
+  }
+
+  private boolean tooManySendAttempts(Payload payload) {
+    return payload.getSendAttemptCount() >= maxSendAttemptCount;
   }
 }
