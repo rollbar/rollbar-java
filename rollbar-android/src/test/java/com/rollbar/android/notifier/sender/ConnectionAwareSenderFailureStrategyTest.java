@@ -12,6 +12,7 @@ import org.mockito.ArgumentCaptor;
 import java.net.ConnectException;
 
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -45,7 +46,7 @@ public abstract class ConnectionAwareSenderFailureStrategyTest {
   public static class BaseTest extends ConnectionAwareSenderFailureStrategyTest {
     @Test
     public void shouldNotBeSuspendedAfterInitialization() {
-      assertFalse(sut.isSendingSuspended());
+        assertThat(sut.isSendingSuspended(), is(false));
     }
 
     @Test
@@ -56,11 +57,11 @@ public abstract class ConnectionAwareSenderFailureStrategyTest {
           new ConnectException("No connection"));
 
       assertThat(action, equalTo(SenderFailureStrategy.PayloadAction.CAN_BE_RETRIED));
-      assertTrue(sut.isSendingSuspended());
+      assertThat(sut.isSendingSuspended(), is(true));
 
       networkRestoredSignal.run();
 
-      assertFalse(sut.isSendingSuspended());
+      assertThat(sut.isSendingSuspended(), is(false));
     }
   }
 
@@ -74,15 +75,15 @@ public abstract class ConnectionAwareSenderFailureStrategyTest {
       SenderFailureStrategy.PayloadAction action = sut.getAction(payload, exception);
 
       assertThat(action, equalTo(SenderFailureStrategy.PayloadAction.CAN_BE_RETRIED));
-      assertTrue(sut.isSendingSuspended());
+      assertThat(sut.isSendingSuspended(), is(true));
 
       moveTimeForward(299999);
 
-      assertTrue(sut.isSendingSuspended());
+      assertThat(sut.isSendingSuspended(), is(true));
 
       moveTimeForward(1);
 
-      assertFalse(sut.isSendingSuspended());
+      assertThat(sut.isSendingSuspended(), is(false));
     }
 
     @Test
@@ -92,15 +93,15 @@ public abstract class ConnectionAwareSenderFailureStrategyTest {
       SenderFailureStrategy.PayloadAction action = sut.getAction(payload, exception);
 
       assertThat(action, equalTo(SenderFailureStrategy.PayloadAction.CAN_BE_RETRIED));
-      assertTrue(sut.isSendingSuspended());
+      assertThat(sut.isSendingSuspended(), is(true));
 
       moveTimeForward(999);
 
-      assertTrue(sut.isSendingSuspended());
+      assertThat(sut.isSendingSuspended(), is(true));
 
       moveTimeForward(1);
 
-      assertFalse(sut.isSendingSuspended());
+      assertThat(sut.isSendingSuspended(), is(false));
     }
   }
 
@@ -114,7 +115,7 @@ public abstract class ConnectionAwareSenderFailureStrategyTest {
       SenderFailureStrategy.PayloadAction action = sut.getAction(payload, exception);
 
       assertThat(action, equalTo(SenderFailureStrategy.PayloadAction.NONE));
-      assertFalse(sut.isSendingSuspended());
+      assertThat(sut.isSendingSuspended(), is(false));
     }
 
     @Test
@@ -124,7 +125,7 @@ public abstract class ConnectionAwareSenderFailureStrategyTest {
       SenderFailureStrategy.PayloadAction action = sut.getAction(payload, exception);
 
       assertThat(action, equalTo(SenderFailureStrategy.PayloadAction.NONE));
-      assertFalse(sut.isSendingSuspended());
+      assertThat(sut.isSendingSuspended(), is(false));
     }
   }
 
@@ -155,15 +156,15 @@ public abstract class ConnectionAwareSenderFailureStrategyTest {
       SenderFailureStrategy.PayloadAction action = sut.getAction(payload, response);
 
       assertThat(action, equalTo(SenderFailureStrategy.PayloadAction.CAN_BE_RETRIED));
-      assertTrue(sut.isSendingSuspended());
+      assertThat(sut.isSendingSuspended(), is(true));
 
       moveTimeForward(299999);
 
-      assertTrue(sut.isSendingSuspended());
+      assertThat(sut.isSendingSuspended(), is(true));
 
       moveTimeForward(1);
 
-      assertFalse(sut.isSendingSuspended());
+      assertThat(sut.isSendingSuspended(), is(false));
     }
 
     @Test
@@ -173,7 +174,7 @@ public abstract class ConnectionAwareSenderFailureStrategyTest {
       SenderFailureStrategy.PayloadAction action = sut.getAction(payload, response);
 
       assertThat(action, equalTo(SenderFailureStrategy.PayloadAction.NONE));
-      assertFalse(sut.isSendingSuspended());
+      assertThat(sut.isSendingSuspended(), is(false));
     }
   }
 
@@ -206,7 +207,7 @@ public abstract class ConnectionAwareSenderFailureStrategyTest {
       SenderFailureStrategy.PayloadAction action = sut.getAction(payload, response);
 
       assertThat(action, equalTo(SenderFailureStrategy.PayloadAction.NONE));
-      assertFalse(sut.isSendingSuspended());
+      assertThat(sut.isSendingSuspended(), is(false));
     }
 
     @Test
@@ -216,7 +217,7 @@ public abstract class ConnectionAwareSenderFailureStrategyTest {
       SenderFailureStrategy.PayloadAction action = sut.getAction(payload, response);
 
       assertThat(action, equalTo(SenderFailureStrategy.PayloadAction.NONE));
-      assertFalse(sut.isSendingSuspended());
+      assertThat(sut.isSendingSuspended(), is(false));
     }
   }
 }
