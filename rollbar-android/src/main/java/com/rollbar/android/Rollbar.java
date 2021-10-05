@@ -193,10 +193,10 @@ public class Rollbar implements Closeable {
     if (rollbar != null) {
       try {
         rollbar.close(false);
-        rollbar = null;
       } catch (Exception e) {
         throw new IOException(e);
       }
+      rollbar = null;
     }
   }
 
