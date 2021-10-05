@@ -360,7 +360,7 @@ public class Rollbar implements Closeable {
         .accessToken(accessToken)
         .build();
 
-    BufferedSender.Builder senderBuilder =new BufferedSender.Builder()
+    BufferedSender.Builder senderBuilder = new BufferedSender.Builder()
             .queue(queue)
             .sender(innerSender)
             .initialFlushDelay(TimeUnit.SECONDS.toMillis(DEFAULT_ITEM_SCHEDULE_STARTUP_DELAY))

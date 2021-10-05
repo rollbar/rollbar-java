@@ -144,10 +144,8 @@ public class ConnectionAwareSenderFailureStrategy implements SenderFailureStrate
   }
 
   private NetworkStatus getNetworkStatus(Throwable error) {
-    NetworkStatus status = NetworkStatus.OK;
-
     if (error == null) {
-      return status;
+      return NetworkStatus.OK;
     }
 
     if (error instanceof SocketException || error instanceof UnknownHostException) {
