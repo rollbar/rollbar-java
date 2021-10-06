@@ -46,7 +46,7 @@ public abstract class ConnectionAwareSenderFailureStrategyTest {
   public static class BaseTest extends ConnectionAwareSenderFailureStrategyTest {
     @Test
     public void shouldNotBeSuspendedAfterInitialization() {
-        assertThat(sut.isSendingSuspended(), is(false));
+      assertThat(sut.isSendingSuspended(), is(false));
     }
 
     @Test
