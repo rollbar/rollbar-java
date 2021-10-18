@@ -4,8 +4,7 @@ import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 import com.rollbar.api.payload.Payload;
 import java.io.File;
@@ -15,9 +14,12 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.UUID;
 
+import com.rollbar.api.payload.data.Data;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -150,5 +152,43 @@ public class DiskQueueTest {
 
     assertThat(result, is(nullValue()));
     assertFalse(new File(queueFile.getPath()).exists());
+  }
+
+  @Test
+  public void shouldStoreAndRetrieveRetryCount() {
+    Payload payload1 = new Payload.Builder().data(
+            new Data.Builder().uuid("a1").build()
+    ).build();
+
+    payload1.incrementSendAttemptCount();
+
+    Payload payload2 = new Payload.Builder().data(
+            new Data.Builder().uuid("a2").build()
+    ).build();
+
+    payload2.incrementSendAttemptCount();
+    payload2.incrementSendAttemptCount();
+
+    sut.add(payload1);
+    sut.add(payload2);
+
+    assertThat(sut.size(), is(2));
+
+    // The queue is written as files in a directory, so we are not guaranteed their order here.
+    ArrayList<Payload> payloads = new ArrayList<>();
+    payloads.add(sut.poll());
+    payloads.add(sut.poll());
+    payloads.sort(Comparator.comparing(o -> o.getData().getUuid()));
+
+    Payload retrieved1 = payloads.get(0);
+    assertThat(retrieved1.getData().getUuid(), equalTo("a1"));
+    // Ensure they're not the same object, otherwise the test isn't testing anything
+    assertNotSame(retrieved1, payload1);
+    assertThat(retrieved1.getSendAttemptCount(), equalTo(1));
+
+    Payload retrieved2 = payloads.get(1);
+    assertThat(retrieved2.getData().getUuid(), equalTo("a2"));
+    assertNotSame(retrieved2, payload2);
+    assertThat(retrieved2.getSendAttemptCount(), equalTo(2));
   }
 }

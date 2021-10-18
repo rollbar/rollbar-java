@@ -19,10 +19,13 @@ public class Payload implements JsonSerializable {
 
   public final String json;
 
+  private int sendAttemptCount;
+
   private Payload(Builder builder) {
     this.accessToken = builder.accessToken;
     this.data = builder.data;
     this.json = null;
+    this.sendAttemptCount = 0;
   }
 
   /**
@@ -34,6 +37,7 @@ public class Payload implements JsonSerializable {
     this.accessToken = null;
     this.data = null;
     this.json = json;
+    this.sendAttemptCount = 0;
   }
 
   /**
@@ -96,6 +100,14 @@ public class Payload implements JsonSerializable {
     }
 
     return values;
+  }
+
+  public int getSendAttemptCount() {
+    return sendAttemptCount;
+  }
+
+  public void incrementSendAttemptCount() {
+    ++this.sendAttemptCount;
   }
 
   /**

@@ -10,6 +10,7 @@ import android.content.pm.PackageInfo;
 import android.os.Bundle;
 
 import android.util.Log;
+import com.rollbar.android.notifier.sender.ConnectionAwareSenderFailureStrategy;
 import com.rollbar.android.provider.ClientProvider;
 import com.rollbar.notifier.config.ConfigProvider;
 import com.rollbar.notifier.uncaughtexception.RollbarUncaughtExceptionHandler;
@@ -23,13 +24,15 @@ import com.rollbar.notifier.sender.SyncSender;
 import com.rollbar.notifier.sender.queue.DiskQueue;
 import com.rollbar.notifier.util.ObjectsUtils;
 
+import java.io.Closeable;
 import java.io.File;
+import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class Rollbar {
+public class Rollbar implements Closeable {
 
   private static final String ITEM_DIR_NAME = "rollbar-items";
   private static final String ANDROID = "android";
@@ -37,9 +40,17 @@ public class Rollbar {
 
   private static final int DEFAULT_ITEM_SCHEDULE_STARTUP_DELAY = 1;
   private static final int DEFAULT_ITEM_SCHEDULE_DELAY = 15;
+  private static final boolean DEFAULT_REGISTER_EXCEPTION_HANDLER = true;
+  private static final boolean DEFAULT_INCLUDE_LOGCAT = false;
+  private static final ConfigProvider DEFAULT_CONFIG_PROVIDER = null;
+  private static final String DEFAULT_CAPTURE_IP = "full";
+  private static final int DEFAULT_MAX_LOGCAT_SIZE = -1;
+  private static final boolean DEFAULT_SUSPEND_WHEN_NETWORK_IS_UNAVAILABLE = false;
 
   public static final String TAG = "Rollbar";
   private static final String MANIFEST_ACCESS_TOKEN = ROLLBAR_NAMESPACE + ".ACCESS_TOKEN";
+
+  private final ConnectionAwareSenderFailureStrategy senderFailureStrategy;
 
   private com.rollbar.notifier.Rollbar rollbar;
   private static Rollbar notifier;
@@ -68,7 +79,21 @@ public class Rollbar {
    * @return the managed instance of Rollbar.
    */
   public static Rollbar init(Context context, String accessToken, String environment) {
-    return init(context, accessToken, environment, true);
+    return init(context, accessToken, environment, DEFAULT_REGISTER_EXCEPTION_HANDLER);
+  }
+
+  /**
+   * Initialize the singleton instance of Rollbar.
+   *
+   * @param context     Android context to use.
+   * @param accessToken a Rollbar access token with at least post_client_item scope
+   * @param suspendWhenNetworkIsUnavailable if true, sending occurrences will be suspended while the network is unavailable
+   * @return the managed instance of Rollbar.
+   */
+  public static Rollbar init(Context context, String accessToken,
+                             boolean suspendWhenNetworkIsUnavailable) {
+    return init(context, accessToken, DEFAULT_ENVIRONMENT, DEFAULT_REGISTER_EXCEPTION_HANDLER,
+            DEFAULT_INCLUDE_LOGCAT, DEFAULT_CONFIG_PROVIDER, suspendWhenNetworkIsUnavailable);
   }
 
   /**
@@ -81,7 +106,7 @@ public class Rollbar {
    * @return the managed instance of Rollbar.
    */
   public static Rollbar init(Context context, String accessToken, String environment, boolean registerExceptionHandler) {
-    return init(context, accessToken, environment, registerExceptionHandler, false);
+    return init(context, accessToken, environment, registerExceptionHandler, DEFAULT_INCLUDE_LOGCAT);
   }
 
   /**
@@ -95,7 +120,7 @@ public class Rollbar {
    * @return the managed instance of Rollbar.
    */
   public static Rollbar init(Context context, String accessToken, String environment, boolean registerExceptionHandler, boolean includeLogcat) {
-    return init(context, accessToken, environment, registerExceptionHandler, includeLogcat, null);
+    return init(context, accessToken, environment, registerExceptionHandler, includeLogcat, DEFAULT_CONFIG_PROVIDER);
   }
 
   /**
@@ -110,12 +135,41 @@ public class Rollbar {
    * @return the managed instance of Rollbar.
    */
   public static Rollbar init(Context context, String accessToken, String environment, boolean registerExceptionHandler, boolean includeLogcat, ConfigProvider provider) {
+    return init(context, accessToken, environment, registerExceptionHandler, includeLogcat,
+            provider, DEFAULT_SUSPEND_WHEN_NETWORK_IS_UNAVAILABLE);
+  }
+
+  /**
+   * Initialize the singleton instance of Rollbar.
+   *
+   * @param context     Android context to use.
+   * @param accessToken a Rollbar access token with at least post_client_item scope
+   * @param environment the environment to set for items
+   * @param registerExceptionHandler whether or not to handle uncaught exceptions.
+   * @param includeLogcat whether or not to include logcat output with items
+   * @param provider a configuration provider that can be used to customize the configuration further.
+   * @param suspendWhenNetworkIsUnavailable if true, sending occurrences will be suspended while the network is unavailable
+   * @return the managed instance of Rollbar.
+   */
+  public static Rollbar init(Context context, String accessToken, String environment,
+                             boolean registerExceptionHandler, boolean includeLogcat,
+                             ConfigProvider provider, boolean suspendWhenNetworkIsUnavailable) {
     if (isInit()) {
       Log.w(TAG, "Rollbar.init() called when it was already initialized.");
+      // This is likely an activity that was destroyed and recreated, so we need to update it
+      notifier.updateContext(context);
     } else {
-      notifier = new Rollbar(context, accessToken, environment, registerExceptionHandler, includeLogcat, provider);
+      notifier = new Rollbar(context, accessToken, environment, registerExceptionHandler,
+              includeLogcat, provider, DEFAULT_CAPTURE_IP, DEFAULT_MAX_LOGCAT_SIZE,
+              suspendWhenNetworkIsUnavailable);
     }
     return notifier;
+  }
+
+  private void updateContext(Context context) {
+    if (this.senderFailureStrategy != null) {
+      this.senderFailureStrategy.updateContext(context);
+    }
   }
 
   /**
@@ -132,6 +186,18 @@ public class Rollbar {
       notifier = new Rollbar(context, null, null, true, false, provider);
     }
     return notifier;
+  }
+
+  @Override
+  public void close() throws IOException {
+    if (rollbar != null) {
+      try {
+        rollbar.close(false);
+      } catch (Exception e) {
+        throw new IOException(e);
+      }
+      rollbar = null;
+    }
   }
 
   /**
@@ -202,7 +268,7 @@ public class Rollbar {
    * @param configProvider a configuration provider that can be used to customize the configuration further.
    */
   public Rollbar(Context context, String accessToken, String environment, boolean registerExceptionHandler, boolean includeLogcat, ConfigProvider configProvider) {
-    this(context, accessToken, environment, registerExceptionHandler, includeLogcat, configProvider, "full");
+    this(context, accessToken, environment, registerExceptionHandler, includeLogcat, configProvider, DEFAULT_CAPTURE_IP);
   }
 
   /**
@@ -217,8 +283,10 @@ public class Rollbar {
    * @param captureIp one of: full, anonymize, none. This determines how the remote ip is captured.
    */
   public Rollbar(Context context, String accessToken, String environment, boolean registerExceptionHandler, boolean includeLogcat, ConfigProvider configProvider, String captureIp) {
-    this(context, accessToken, environment, registerExceptionHandler, includeLogcat, configProvider, captureIp, -1);
+    this(context, accessToken, environment, registerExceptionHandler, includeLogcat, configProvider,
+            captureIp, DEFAULT_MAX_LOGCAT_SIZE);
   }
+
 
   /**
    * Construct a new Rollbar instance.
@@ -233,6 +301,27 @@ public class Rollbar {
    * @param maxLogcatSize the maximum number of logcat lines to capture with items (ignored unless positive)
    */
   public Rollbar(Context context, String accessToken, String environment, boolean registerExceptionHandler, boolean includeLogcat, ConfigProvider configProvider, String captureIp, int maxLogcatSize) {
+    this(context, accessToken, environment, registerExceptionHandler, includeLogcat, configProvider,
+            captureIp, maxLogcatSize, DEFAULT_SUSPEND_WHEN_NETWORK_IS_UNAVAILABLE);
+  }
+
+  /**
+   * Construct a new Rollbar instance.
+   *
+   * @param context Android context to use.
+   * @param accessToken a Rollbar access token with at least post_client_item scope
+   * @param environment the environment to set for items
+   * @param registerExceptionHandler whether or not to handle uncaught exceptions.
+   * @param includeLogcat whether or not to include logcat output with items
+   * @param configProvider a configuration provider that can be used to customize the configuration further.
+   * @param captureIp one of: full, anonymize, none. This determines how the remote ip is captured.
+   * @param maxLogcatSize the maximum number of logcat lines to capture with items (ignored unless positive)
+   * @param suspendWhenNetworkIsUnavailable if true, sending occurrences will be suspended while the network is unavailable
+   */
+  public Rollbar(Context context, String accessToken, String environment,
+                 boolean registerExceptionHandler, boolean includeLogcat,
+                 ConfigProvider configProvider, String captureIp, int maxLogcatSize,
+                 boolean suspendWhenNetworkIsUnavailable) {
     if (accessToken == null) {
       try {
         accessToken = loadAccessTokenFromManifest(context);
@@ -271,12 +360,20 @@ public class Rollbar {
         .accessToken(accessToken)
         .build();
 
-    BufferedSender sender = new BufferedSender.Builder()
-        .queue(queue)
-        .sender(innerSender)
-        .initialFlushDelay(TimeUnit.SECONDS.toMillis(DEFAULT_ITEM_SCHEDULE_STARTUP_DELAY))
-        .flushFreq(TimeUnit.SECONDS.toMillis(DEFAULT_ITEM_SCHEDULE_DELAY))
-        .build();
+    BufferedSender.Builder senderBuilder = new BufferedSender.Builder()
+            .queue(queue)
+            .sender(innerSender)
+            .initialFlushDelay(TimeUnit.SECONDS.toMillis(DEFAULT_ITEM_SCHEDULE_STARTUP_DELAY))
+            .flushFreq(TimeUnit.SECONDS.toMillis(DEFAULT_ITEM_SCHEDULE_DELAY));
+
+    if (suspendWhenNetworkIsUnavailable) {
+      this.senderFailureStrategy = new ConnectionAwareSenderFailureStrategy(context);
+      senderBuilder.senderFailureStrategy(this.senderFailureStrategy);
+    } else {
+      this.senderFailureStrategy = null;
+    }
+
+    BufferedSender sender = senderBuilder.build();
 
     ConfigBuilder defaultConfig = ConfigBuilder.withAccessToken(accessToken)
         .client(clientProvider)
