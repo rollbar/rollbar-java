@@ -1,5 +1,10 @@
 # Change Log
 
+# 1.7.9
+
+- Add rollbar-android option to detect when the network is unavailable and suspend sending occurrences.
+- Add [reactive-streams](http://www.reactive-streams.org/) Notifier implementation with optional [Reactor](https://projectreactor.io/) support.
+
 # 1.7.8
 
 - Fix serialization of objects containing quotes in custom section of payload.
