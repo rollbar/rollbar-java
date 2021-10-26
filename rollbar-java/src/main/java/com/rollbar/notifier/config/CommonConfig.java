@@ -9,6 +9,7 @@ import com.rollbar.api.payload.data.Server;
 import com.rollbar.notifier.filter.Filter;
 import com.rollbar.notifier.fingerprint.FingerprintGenerator;
 import com.rollbar.notifier.provider.Provider;
+import com.rollbar.notifier.sender.json.JsonSerializer;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
 import java.util.List;
@@ -152,6 +153,13 @@ public interface CommonConfig {
   UuidGenerator uuidGenerator();
 
   /**
+   * The serializer to convert a payload to JSON.
+   *
+   * @return The {@link JsonSerializer instance}.
+   */
+  JsonSerializer jsonSerializer();
+
+  /**
    * Get the list of packages considered to be in your app.
    *
    * @return the list of packages.
@@ -192,4 +200,14 @@ public interface CommonConfig {
    * @return the level.
    */
   Level defaultThrowableLevel();
+
+
+  /**
+   * <p>
+   * If set to true, the notifier will attempt to truncate payloads that are larger than the
+   * maximum size Rollbar allows. Default: false.
+   * </p>
+   * @return true to truncate payloads otherwise false.
+   */
+  boolean truncateLargePayloads();
 }

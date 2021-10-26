@@ -1,13 +1,17 @@
 package com.rollbar.api.payload.data;
 
+import static com.rollbar.api.truncation.TruncationHelper.truncateString;
+
 import com.rollbar.api.json.JsonSerializable;
+import com.rollbar.api.truncation.StringTruncatable;
+
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Information about this notifier, or one based off of this.
  */
-public class Notifier implements JsonSerializable {
+public class Notifier implements JsonSerializable, StringTruncatable<Notifier> {
 
   private static final long serialVersionUID = -2605608164795462842L;
 
@@ -80,6 +84,19 @@ public class Notifier implements JsonSerializable {
     }
 
     return values;
+  }
+
+
+  @Override
+  public Notifier truncateStrings(int maxLength) {
+    if (name == null && version == null) {
+      return this;
+    }
+
+    return new Notifier.Builder(this)
+        .name(truncateString(name, maxLength))
+        .version(truncateString(version, maxLength))
+        .build();
   }
 
   /**

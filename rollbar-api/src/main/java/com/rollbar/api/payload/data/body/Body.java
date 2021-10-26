@@ -1,12 +1,14 @@
 package com.rollbar.api.payload.data.body;
 
 import com.rollbar.api.json.JsonSerializable;
+import com.rollbar.api.truncation.StringTruncatable;
+
 import java.util.HashMap;
 
 /**
  * A container for the actual error(s), message, or crash report that caused this error.
  */
-public class Body implements JsonSerializable {
+public class Body implements JsonSerializable, StringTruncatable<Body> {
 
   private static final long serialVersionUID = -2783273957046705016L;
 
@@ -33,6 +35,17 @@ public class Body implements JsonSerializable {
     }
 
     return values;
+  }
+
+  @Override
+  public Body truncateStrings(int maxSize) {
+    if (bodyContent != null) {
+      return new Body.Builder(this)
+          .bodyContent(bodyContent.truncateStrings(maxSize))
+          .build();
+    } else {
+      return this;
+    }
   }
 
   @Override

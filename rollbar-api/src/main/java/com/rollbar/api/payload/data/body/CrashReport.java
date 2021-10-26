@@ -1,6 +1,8 @@
 package com.rollbar.api.payload.data.body;
 
 import com.rollbar.api.json.JsonSerializable;
+import com.rollbar.api.truncation.TruncationHelper;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,6 +42,13 @@ public class CrashReport implements BodyContent, JsonSerializable {
     }
 
     return values;
+  }
+
+  @Override
+  public CrashReport truncateStrings(int maxLength) {
+    return new CrashReport.Builder(this)
+        .raw(TruncationHelper.truncateString(getRaw(), maxLength))
+        .build();
   }
 
   @Override

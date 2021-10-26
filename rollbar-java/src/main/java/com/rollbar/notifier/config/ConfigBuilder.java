@@ -16,6 +16,7 @@ import com.rollbar.notifier.sender.BufferedSender;
 import com.rollbar.notifier.sender.Sender;
 import com.rollbar.notifier.sender.SyncSender;
 import com.rollbar.notifier.sender.json.JsonSerializer;
+import com.rollbar.notifier.sender.json.JsonSerializerImpl;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
 import java.lang.Thread.UncaughtExceptionHandler;
@@ -82,11 +83,14 @@ public class ConfigBuilder {
 
   protected final DefaultLevels defaultLevels;
 
+  protected boolean truncateLargePayloads;
+
   /**
    * Constructor with an access token.
    */
   protected ConfigBuilder(String accessToken) {
     // Defaults
+    this.jsonSerializer = new JsonSerializerImpl();
     this.accessToken = accessToken;
     this.handleUncaughtErrors = true;
     this.enabled = true;
@@ -97,6 +101,7 @@ public class ConfigBuilder {
    * Constructor from another Config.
    */
   private ConfigBuilder(Config config) {
+    this.jsonSerializer = new JsonSerializerImpl();
     this.accessToken = config.accessToken();
     this.environment = config.environment();
     this.codeVersion = config.codeVersion();
@@ -119,9 +124,11 @@ public class ConfigBuilder {
     this.handleUncaughtErrors = config.handleUncaughtErrors();
     this.enabled = config.isEnabled();
     this.endpoint = config.endpoint();
+    this.jsonSerializer = config.jsonSerializer();
     this.proxy = config.proxy();
     this.appPackages = config.appPackages();
     this.defaultLevels = new DefaultLevels(config);
+    this.truncateLargePayloads = config.truncateLargePayloads();
   }
 
   /**
@@ -452,6 +459,19 @@ public class ConfigBuilder {
   }
 
   /**
+   * <p>
+   * If set to true, the notifier will attempt to truncate payloads that are larger than the
+   * maximum size Rollbar allows. Default: false.
+   * </p>
+   * @param truncate true to enable truncation.
+   * @return the builder instance.
+   */
+  public ConfigBuilder truncateLargePayloads(boolean truncate) {
+    this.truncateLargePayloads = truncate;
+    return this;
+  }
+
+  /**
    * Builds the {@link Config config}.
    *
    * @return the config.
@@ -526,6 +546,8 @@ public class ConfigBuilder {
 
     private final Sender sender;
 
+    private final JsonSerializer jsonSerializer;
+
     private final Proxy proxy;
 
     private final List<String> appPackages;
@@ -535,6 +557,8 @@ public class ConfigBuilder {
     private final boolean enabled;
 
     private DefaultLevels defaultLevels;
+
+    private final boolean truncateLargePayloads;
 
     ConfigImpl(ConfigBuilder builder) {
       this.accessToken = builder.accessToken;
@@ -557,6 +581,7 @@ public class ConfigBuilder {
       this.fingerPrintGenerator = builder.fingerPrintGenerator;
       this.uuidGenerator = builder.uuidGenerator;
       this.sender = builder.sender;
+      this.jsonSerializer = builder.jsonSerializer;
       this.proxy = builder.proxy;
       if (builder.appPackages == null) {
         this.appPackages = Collections.<String>emptyList();
@@ -566,6 +591,7 @@ public class ConfigBuilder {
       this.handleUncaughtErrors = builder.handleUncaughtErrors;
       this.enabled = builder.enabled;
       this.defaultLevels = builder.defaultLevels;
+      this.truncateLargePayloads = builder.truncateLargePayloads;
     }
 
     @Override
@@ -669,6 +695,11 @@ public class ConfigBuilder {
     }
 
     @Override
+    public JsonSerializer jsonSerializer() {
+      return jsonSerializer;
+    }
+
+    @Override
     public Proxy proxy() {
       return proxy;
     }
@@ -701,6 +732,11 @@ public class ConfigBuilder {
     @Override
     public Level defaultThrowableLevel() {
       return defaultLevels.getThrowable();
+    }
+
+    @Override
+    public boolean truncateLargePayloads() {
+      return this.truncateLargePayloads;
     }
   }
 }
