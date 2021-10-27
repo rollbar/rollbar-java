@@ -98,7 +98,6 @@ public class TruncationMatchers {
     };
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
   private static String findStringLongerThan(Object value, int length) {
     if (value == null) {
       return null;
@@ -110,7 +109,9 @@ public class TruncationMatchers {
         return (String) value;
       }
     } else if (value instanceof Iterable) {
-      for (Object element : (Iterable) value) {
+      @SuppressWarnings("rawtypes")
+      Iterable valueAsIterable = (Iterable) value;
+      for (Object element : valueAsIterable) {
         String result = findStringLongerThan(element, length);
         if (result != null) {
           return result;
@@ -126,7 +127,9 @@ public class TruncationMatchers {
         }
       }
     } else if (value instanceof Map) {
-      for (Map.Entry<String, Object> entry : ((Map<String, Object>)value).entrySet()) {
+      @SuppressWarnings("unchecked")
+      Map<String, Object> valueAsMap = (Map<String, Object>) value;
+      for (Map.Entry<String, Object> entry : valueAsMap.entrySet()) {
         String result = findStringLongerThan(entry.getValue(), length);
         if (result != null) {
           return result;
