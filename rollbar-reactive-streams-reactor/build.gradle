@@ -73,6 +73,12 @@ project.tasks.check.dependsOn(junit4Test)
 interleave {
     useJUnit() {
         includeCategories VMLENS_CATEGORY
+
+        // VMLens occasionally generates invalid bytecode under Java > 8. This will either be fixed,
+        // or VMLens will have to be removed. For now we need consistent builds, and the concurrency
+        // code we test under Java 8 has the same semantics under Java 11 so testing only Java 8 is
+        // an acceptable compromise.
+        enabled = JavaVersion.current().compareTo(JavaVersion.VERSION_1_9) < 0
     }
 
     // The Jacoco agent doesn't get along with the VMLens agent.
