@@ -1,7 +1,10 @@
 package com.rollbar.api.payload;
 
+import static com.rollbar.api.truncation.TruncationHelper.truncateStringsInObject;
+
 import com.rollbar.api.json.JsonSerializable;
 import com.rollbar.api.payload.data.Data;
+import com.rollbar.api.truncation.StringTruncatable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,7 +12,7 @@ import java.util.Map;
  * Represents the payload to send to Rollbar. A successfully constructed Payload matches Rollbar's
  * spec, and should be successful when serialized and POSTed to the correct endpoint.
  */
-public class Payload implements JsonSerializable {
+public class Payload implements JsonSerializable, StringTruncatable<Payload> {
 
   private static final long serialVersionUID = 3054041443735286159L;
 
@@ -100,6 +103,17 @@ public class Payload implements JsonSerializable {
     }
 
     return values;
+  }
+
+  @Override
+  public Payload truncateStrings(int maxLength) {
+    if (this.data == null) {
+      return this;
+    }
+
+    return new Payload.Builder(this)
+        .data(truncateStringsInObject(data, maxLength))
+        .build();
   }
 
   public int getSendAttemptCount() {

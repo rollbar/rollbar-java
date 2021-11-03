@@ -13,3 +13,15 @@ acceptedBreaks:
       old: "field com.rollbar.notifier.config.ConfigBuilder.defaultThrowableLevel"
       justification: "Removing protected fields, deriving from ConfigBuilder should\
         \ be done by other SDK classes only"
+  "1.7.9":
+    com.rollbar:rollbar-java:
+    - code: "java.method.addedToInterface"
+      new: "method boolean com.rollbar.notifier.config.CommonConfig::truncateLargePayloads()"
+      justification: "This is a binary compatible change, which could only break custom\
+        \ implementations of our config interfaces, but those interfaces are not meant\
+        \ to be implemented by users"
+    - code: "java.method.addedToInterface"
+      new: "method com.rollbar.notifier.sender.json.JsonSerializer com.rollbar.notifier.config.CommonConfig::jsonSerializer()"
+      justification: "This is a binary compatible change, which could only break custom\
+        \ implementations of our config interfaces, but those interfaces are not meant\
+        \ to be implemented by users"

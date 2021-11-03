@@ -2,6 +2,8 @@ package com.rollbar.notifier.config;
 
 import com.rollbar.notifier.Rollbar;
 import com.rollbar.notifier.sender.Sender;
+import com.rollbar.notifier.sender.json.JsonSerializer;
+
 import java.net.Proxy;
 
 /**

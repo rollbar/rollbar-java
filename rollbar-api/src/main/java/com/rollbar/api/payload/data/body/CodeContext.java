@@ -1,8 +1,11 @@
 package com.rollbar.api.payload.data.body;
 
+import static com.rollbar.api.truncation.TruncationHelper.truncateStringsInList;
 import static java.util.Collections.unmodifiableList;
 
 import com.rollbar.api.json.JsonSerializable;
+import com.rollbar.api.truncation.StringTruncatable;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,7 +15,7 @@ import java.util.Map;
  * Represents the context around the code where the error occurred (lines before, 'pre', and after,
  * 'post').
  */
-public class CodeContext implements JsonSerializable {
+public class CodeContext implements JsonSerializable, StringTruncatable<CodeContext> {
 
   private static final long serialVersionUID = 1271972843983198079L;
 
@@ -53,6 +56,14 @@ public class CodeContext implements JsonSerializable {
     }
 
     return values;
+  }
+
+  @Override
+  public CodeContext truncateStrings(int maxLength) {
+    return new CodeContext.Builder(this)
+        .pre(truncateStringsInList(pre, maxLength))
+        .post(truncateStringsInList(post, maxLength))
+        .build();
   }
 
   @Override

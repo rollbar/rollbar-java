@@ -1,8 +1,14 @@
 package com.rollbar.api.payload.data;
 
+import static com.rollbar.api.truncation.TruncationHelper.truncateString;
+import static com.rollbar.api.truncation.TruncationHelper.truncateStringsInMap;
+import static com.rollbar.api.truncation.TruncationHelper.truncateStringsInStringListMap;
+import static com.rollbar.api.truncation.TruncationHelper.truncateStringsInStringMap;
 import static java.util.Collections.unmodifiableMap;
 
 import com.rollbar.api.json.JsonSerializable;
+import com.rollbar.api.truncation.StringTruncatable;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,7 +16,7 @@ import java.util.Map;
 /**
  * Represents the HTTP request that triggered the error.
  */
-public class Request implements JsonSerializable {
+public class Request implements JsonSerializable, StringTruncatable<Request> {
 
   private static final long serialVersionUID = 3552594955980476301L;
 
@@ -164,6 +170,22 @@ public class Request implements JsonSerializable {
     }
 
     return values;
+  }
+
+  @Override
+  public Request truncateStrings(int maxLength) {
+    return new Builder(this)
+        .metadata(truncateStringsInMap(metadata, maxLength))
+        .url(truncateString(url, maxLength))
+        .method(truncateString(method, maxLength))
+        .headers(truncateStringsInStringMap(headers, maxLength))
+        .params(truncateStringsInStringMap(params, maxLength))
+        .get(truncateStringsInStringListMap(get, maxLength))
+        .queryString(truncateString(queryString, maxLength))
+        .post(truncateStringsInMap(post, maxLength))
+        .body(truncateString(body, maxLength))
+        .userIp(truncateString(userIp, maxLength))
+        .build();
   }
 
   private Map<String, Object> processGetParams(Map<String, List<String>> map) {

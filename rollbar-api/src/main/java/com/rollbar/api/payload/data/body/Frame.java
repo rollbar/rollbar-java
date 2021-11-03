@@ -1,9 +1,15 @@
 package com.rollbar.api.payload.data.body;
 
+import static com.rollbar.api.truncation.TruncationHelper.truncateString;
+import static com.rollbar.api.truncation.TruncationHelper.truncateStringsInMap;
+import static com.rollbar.api.truncation.TruncationHelper.truncateStringsInObject;
+import static com.rollbar.api.truncation.TruncationHelper.truncateStringsInObjectList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 
 import com.rollbar.api.json.JsonSerializable;
+import com.rollbar.api.truncation.StringTruncatable;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,7 +18,7 @@ import java.util.Map;
 /**
  * Represents a single frame from a stack trace.
  */
-public class Frame implements JsonSerializable {
+public class Frame implements JsonSerializable, StringTruncatable<Frame> {
 
   private static final long serialVersionUID = 8146147181798580520L;
 
@@ -167,6 +173,20 @@ public class Frame implements JsonSerializable {
     }
 
     return values;
+  }
+
+  @Override
+  public Frame truncateStrings(int maxLength) {
+    return new Frame.Builder(this)
+        .filename(truncateString(filename, maxLength))
+        .method(truncateString(method, maxLength))
+        .code(truncateString(code, maxLength))
+        .className(truncateString(className, maxLength))
+        .context(truncateStringsInObject(context, maxLength))
+        .args(truncateStringsInObjectList(args, maxLength))
+        .keywordArgs(truncateStringsInMap(keywordArgs, maxLength))
+        .locals(truncateStringsInMap(locals, maxLength))
+        .build();
   }
 
   @Override

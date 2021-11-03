@@ -1,14 +1,20 @@
 package com.rollbar.api.payload.data;
 
+import static com.rollbar.api.truncation.TruncationHelper.truncateString;
+import static com.rollbar.api.truncation.TruncationHelper.truncateStringsInMap;
+import static com.rollbar.api.truncation.TruncationHelper.truncateStringsInObject;
+
 import com.rollbar.api.json.JsonSerializable;
 import com.rollbar.api.payload.data.body.Body;
+import com.rollbar.api.truncation.StringTruncatable;
+
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Represents the actual data being posted to Rollbar.
  */
-public class Data implements JsonSerializable {
+public class Data implements JsonSerializable, StringTruncatable<Data> {
 
   private static final long serialVersionUID = 4996853277611613397L;
 
@@ -304,6 +310,28 @@ public class Data implements JsonSerializable {
     }
 
     return values;
+  }
+
+  @Override
+  public Data truncateStrings(int maxLength) {
+    return new Builder(this)
+        .environment(truncateString(environment, maxLength))
+        .body(truncateStringsInObject(body, maxLength))
+        .codeVersion(truncateString(codeVersion, maxLength))
+        .platform(truncateString(platform, maxLength))
+        .language(truncateString(language, maxLength))
+        .framework(truncateString(framework, maxLength))
+        .context(truncateString(context, maxLength))
+        .request(truncateStringsInObject(request, maxLength))
+        .person(truncateStringsInObject(person, maxLength))
+        .server(truncateStringsInObject(server, maxLength))
+        .client(truncateStringsInObject(client, maxLength))
+        .custom(truncateStringsInMap(custom, maxLength))
+        .fingerprint(truncateString(fingerprint, maxLength))
+        .title(truncateString(title, maxLength))
+        .uuid(truncateString(uuid, maxLength))
+        .notifier(truncateStringsInObject(notifier, maxLength))
+        .build();
   }
 
   @Override

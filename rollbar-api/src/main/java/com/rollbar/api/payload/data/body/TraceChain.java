@@ -39,6 +39,25 @@ public class TraceChain implements BodyContent, JsonSerializable {
   }
 
   @Override
+  public TraceChain truncateStrings(int maxLength) {
+    if (traces == null || traces.isEmpty()) {
+      return this;
+    }
+
+    // Type erasure + BodyContent inheritance means a generic helper would end up seeing a
+    // BodyContent return type instead of Trace, forcing a cast. We do everything here instead,
+    // where we can take advantage of the overriden method returning Trace.
+    List<Trace> truncatedTraces = new ArrayList<>();
+    for (Trace trace : traces) {
+      truncatedTraces.add(trace.truncateStrings(maxLength));
+    }
+
+    return new Builder(this)
+        .traces(truncatedTraces)
+        .build();
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;

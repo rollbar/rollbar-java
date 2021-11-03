@@ -1,6 +1,10 @@
 package com.rollbar.api.payload.data.body;
 
+import static com.rollbar.api.truncation.TruncationHelper.truncateString;
+
 import com.rollbar.api.json.JsonSerializable;
+import com.rollbar.api.truncation.StringTruncatable;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -8,7 +12,7 @@ import java.util.Map;
  * Represents *non-stacktrace* information about an exception, like class, description, and
  * message.
  */
-public class ExceptionInfo implements JsonSerializable {
+public class ExceptionInfo implements JsonSerializable, StringTruncatable<ExceptionInfo> {
 
   private static final long serialVersionUID = -2271411217988417830L;
 
@@ -63,6 +67,19 @@ public class ExceptionInfo implements JsonSerializable {
     }
 
     return values;
+  }
+
+  @Override
+  public ExceptionInfo truncateStrings(int maxLength) {
+    if (className == null && message == null && description == null) {
+      return this;
+    }
+
+    return new Builder(this)
+        .className(truncateString(className, maxLength))
+        .message(truncateString(message, maxLength))
+        .description(truncateString(description, maxLength))
+        .build();
   }
 
   @Override

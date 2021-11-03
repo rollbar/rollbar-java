@@ -58,6 +58,7 @@ public final class ConfigBuilder {
   private boolean handleUncaughtErrors;
   private boolean enabled;
   private DefaultLevels defaultLevels;
+  private boolean truncateLargePayloads;
 
   /**
    * Constructor with an access token.
@@ -98,6 +99,7 @@ public final class ConfigBuilder {
     this.endpoint = config.endpoint();
     this.appPackages = config.appPackages();
     this.defaultLevels = new DefaultLevels(config);
+    this.truncateLargePayloads = config.truncateLargePayloads();
   }
 
   private ConfigBuilder(Sender sender) {
@@ -447,6 +449,19 @@ public final class ConfigBuilder {
   }
 
   /**
+   * <p>
+   * If set to true, the notifier will attempt to truncate payloads that are larger than the
+   * maximum size Rollbar allows. Default: false.
+   * </p>
+   * @param truncate true to enable truncation.
+   * @return the builder instance.
+   */
+  public ConfigBuilder truncateLargePayloads(boolean truncate) {
+    this.truncateLargePayloads = truncate;
+    return this;
+  }
+
+  /**
    * Builds the {@link Config config}.
    *
    * @return the config.
@@ -508,6 +523,8 @@ public final class ConfigBuilder {
     private final boolean handleUncaughtErrors;
     private final boolean enabled;
     private final DefaultLevels defaultLevels;
+    private final JsonSerializer jsonSerializer;
+    private final boolean truncateLargePayloads;
 
     ConfigImpl(ConfigBuilder builder) {
       this.accessToken = builder.accessToken;
@@ -538,6 +555,8 @@ public final class ConfigBuilder {
       this.handleUncaughtErrors = builder.handleUncaughtErrors;
       this.enabled = builder.enabled;
       this.defaultLevels = builder.defaultLevels;
+      this.jsonSerializer = builder.jsonSerializer;
+      this.truncateLargePayloads = builder.truncateLargePayloads;
     }
 
     @Override
@@ -636,6 +655,11 @@ public final class ConfigBuilder {
     }
 
     @Override
+    public JsonSerializer jsonSerializer() {
+      return jsonSerializer;
+    }
+
+    @Override
     public Sender asyncSender() {
       return asyncSender;
     }
@@ -668,6 +692,11 @@ public final class ConfigBuilder {
     @Override
     public Level defaultThrowableLevel() {
       return defaultLevels.getThrowable();
+    }
+
+    @Override
+    public boolean truncateLargePayloads() {
+      return truncateLargePayloads;
     }
   }
 }

@@ -1,15 +1,19 @@
 package com.rollbar.api.payload.data;
 
+import static com.rollbar.api.truncation.TruncationHelper.truncateString;
+import static com.rollbar.api.truncation.TruncationHelper.truncateStringsInMap;
 import static java.util.Collections.unmodifiableMap;
 
 import com.rollbar.api.json.JsonSerializable;
+import com.rollbar.api.truncation.StringTruncatable;
+
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Represents the user affected by an error.
  */
-public class Person implements JsonSerializable {
+public class Person implements JsonSerializable, StringTruncatable<Person> {
 
   private static final long serialVersionUID = -1589474813294741393L;
 
@@ -79,6 +83,16 @@ public class Person implements JsonSerializable {
     }
 
     return values;
+  }
+
+  @Override
+  public Person truncateStrings(int maxLength) {
+    return new Builder(this)
+        .metadata(truncateStringsInMap(metadata, maxLength))
+        .id(truncateString(id, maxLength))
+        .username(truncateString(username, maxLength))
+        .email(truncateString(email, maxLength))
+        .build();
   }
 
   @Override

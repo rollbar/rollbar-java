@@ -3,6 +3,8 @@ package com.rollbar.api.payload.data.body;
 import static java.util.Collections.unmodifiableMap;
 
 import com.rollbar.api.json.JsonSerializable;
+import com.rollbar.api.truncation.TruncationHelper;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -51,6 +53,18 @@ public class Message implements BodyContent, JsonSerializable {
     }
     message.put("body", this.body);
     return message;
+  }
+
+  @Override
+  public Message truncateStrings(int maxLength) {
+    if (this.metadata == null && this.body == null) {
+      return this;
+    }
+
+    return new Message.Builder(this)
+        .metadata(TruncationHelper.truncateStringsInMap(this.metadata, maxLength))
+        .body(TruncationHelper.truncateString(getBody(), maxLength))
+        .build();
   }
 
   @Override

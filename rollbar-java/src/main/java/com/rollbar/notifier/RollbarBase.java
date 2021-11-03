@@ -6,7 +6,10 @@ import com.rollbar.api.payload.data.Data;
 import com.rollbar.api.payload.data.Level;
 import com.rollbar.jvmti.ThrowableCache;
 import com.rollbar.notifier.config.CommonConfig;
+import com.rollbar.notifier.sender.json.JsonSerializer;
+import com.rollbar.notifier.truncation.PayloadTruncator;
 import com.rollbar.notifier.util.BodyFactory;
+import com.rollbar.notifier.util.ObjectsUtils;
 import com.rollbar.notifier.wrapper.RollbarThrowableWrapper;
 import com.rollbar.notifier.wrapper.ThrowableWrapper;
 import java.util.HashMap;
@@ -27,8 +30,10 @@ import org.slf4j.LoggerFactory;
 public abstract class RollbarBase<RESULT, C extends CommonConfig> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(RollbarBase.class);
+  private static final int MAX_PAYLOAD_SIZE_BYTES = 512 * 1024; // 512kb
 
   protected BodyFactory bodyFactory;
+  protected PayloadTruncator payloadTruncator;
 
   protected C config;
 
@@ -39,6 +44,7 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
 
   protected RollbarBase(C config, BodyFactory bodyFactory, RESULT emptyResult) {
     this.config = config;
+    configureTruncation(config);
     this.bodyFactory = bodyFactory;
     this.emptyResult = emptyResult;
   }
@@ -53,9 +59,20 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
     this.configWriteLock.lock();
     try {
       this.config = config;
+      configureTruncation(config);
       processAppPackages(config);
     } finally {
       this.configWriteLock.unlock();
+    }
+  }
+
+  private void configureTruncation(C config) {
+    if (config.truncateLargePayloads()) {
+      ObjectsUtils.requireNonNull(config.jsonSerializer(),
+          "A JSON serializer is required when performing payload truncation.");
+      this.payloadTruncator = new PayloadTruncator(config.jsonSerializer());
+    } else {
+      this.payloadTruncator = null;
     }
   }
 
@@ -233,8 +250,27 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
 
     LOGGER.debug("Payload built: {}", payload);
 
+    payload = truncateIfNecessary(config, payload);
+
     // Send
     return sendPayload(config, payload);
+  }
+
+  private Payload truncateIfNecessary(C config, Payload payload) {
+    boolean doTruncate = config.truncateLargePayloads();
+    PayloadTruncator truncator = this.payloadTruncator;
+
+    if (doTruncate && truncator != null) {
+      PayloadTruncator.PayloadTruncationResult result =
+          truncator.truncate(payload, MAX_PAYLOAD_SIZE_BYTES);
+      payload = result.getPayload();
+      if (result.finalSize > MAX_PAYLOAD_SIZE_BYTES) {
+        LOGGER.warn("Sending payload with size " + result.finalSize + " bytes, "
+            + "which is over the limit of " + MAX_PAYLOAD_SIZE_BYTES + " bytes");
+      }
+    }
+
+    return payload;
   }
 
   protected RollbarThrowableWrapper wrapThrowable(Throwable error) {

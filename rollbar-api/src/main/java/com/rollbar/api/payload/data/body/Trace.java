@@ -3,6 +3,8 @@ package com.rollbar.api.payload.data.body;
 import static java.util.Collections.unmodifiableList;
 
 import com.rollbar.api.json.JsonSerializable;
+import com.rollbar.api.truncation.StringTruncatable;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,6 +59,31 @@ public class Trace implements BodyContent, JsonSerializable {
     }
 
     return values;
+  }
+
+  @Override
+  public Trace truncateStrings(int maxLength) {
+    if ((frames == null || frames.isEmpty()) && exception == null) {
+      return this;
+    }
+
+    ArrayList<Frame> truncatedFrames = null;
+    if (frames != null) {
+      truncatedFrames = new ArrayList<>();
+      for (Frame f : frames) {
+        truncatedFrames.add(f.truncateStrings(maxLength));
+      }
+    }
+
+    ExceptionInfo truncatedException = null;
+    if (exception != null) {
+      truncatedException = exception.truncateStrings(maxLength);
+    }
+
+    return new Trace.Builder(this)
+        .frames(truncatedFrames)
+        .exception(truncatedException)
+        .build();
   }
 
   @Override

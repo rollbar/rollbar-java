@@ -10,26 +10,27 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static com.rollbar.notifier.config.ConfigBuilder.withAccessToken;
 import static java.lang.String.format;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.http.Fault;
-import com.github.tomakehurst.wiremock.http.trafficlistener.ConsoleNotifyingWiremockNetworkTrafficListener;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.rollbar.api.payload.Payload;
 import com.rollbar.api.payload.data.Data;
 import com.rollbar.api.payload.data.Level;
-import com.rollbar.api.payload.data.body.Body;
-import com.rollbar.api.payload.data.body.Message;
+import com.rollbar.api.payload.data.body.*;
 import com.rollbar.notifier.config.Config;
 import com.rollbar.notifier.config.ConfigBuilder;
 import com.rollbar.notifier.provider.Provider;
 import com.rollbar.notifier.sender.Sender;
 import com.rollbar.notifier.sender.SyncSender;
+import com.rollbar.notifier.sender.json.JsonTestHelper;
 import com.rollbar.notifier.sender.listener.SenderListener;
 import com.rollbar.notifier.sender.result.Response;
+import com.rollbar.notifier.truncation.PayloadTruncator;
 import com.rollbar.notifier.util.ConstantTimeProvider;
 import com.rollbar.notifier.util.RollbarResponse;
 import com.rollbar.notifier.util.SenderAssertions;
@@ -41,13 +42,13 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Proxy.Type;
-import java.util.Locale;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 import org.eclipse.jetty.proxy.ConnectHandler;
 import org.eclipse.jetty.proxy.ProxyServlet;
 import org.eclipse.jetty.server.Request;
@@ -309,6 +310,51 @@ public class RollbarITest {
     listener.assertCalled();
   }
 
+  @SuppressWarnings("unchecked")
+  @Test
+  public void ifPayloadIsTooLargeItShouldBeTruncated() {
+    final String uuid = UUID.randomUUID().toString();
+
+    Config config = configBuilder
+        .truncateLargePayloads(true)
+        .build();
+
+    stubFor(post(urlEqualTo("/api/1/item/"))
+        .withHeader("Accept", equalTo("application/json"))
+        .withHeader("Accept-Charset", equalTo("UTF-8"))
+        .withHeader("Content-Type", equalTo("application/json; charset=UTF-8"))
+        .withHeader("x-rollbar-access-token", equalTo(ACCESS_TOKEN))
+        .willReturn(aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(gson.toJson(RollbarResponse.success(uuid)))));
+
+    SenderAssertions.SuccessAssertion listener =
+        SenderAssertions.assertResponseSuccess(uuid);
+
+    sender.addListener(listener);
+
+    Rollbar rollbar = new Rollbar(config);
+
+    rollbar.error(new TooLargeException(5000));
+
+    listener.assertCalled();
+
+    Payload payload = listener.getLatestPayload();
+    assertThat(payload, notNullValue());
+
+    String payloadJsonString = config.jsonSerializer().toJson(payload);
+    Map<String, Object> map = new Gson().fromJson(payloadJsonString, Map.class);
+    List<Map<String, Object>> frames =
+        getValue(map, "data", "body", "trace", "frames");
+
+    // By default 10 head and 10 tail frames are kept
+    assertThat(frames, hasSize(20));
+
+    assertThat(PayloadTruncator.sizeInBytes(payloadJsonString),
+        lessThanOrEqualTo(512 * 1024));
+  }
+
   protected Sender buildSender(String url, String accessToken, Proxy proxy) {
     SyncSender.Builder builder = new SyncSender.Builder()
         .url(url);
@@ -433,5 +479,51 @@ public class RollbarITest {
                        HttpServletResponse response) {
       counter.incrementAndGet();
     }
+  }
+
+  private static class TooLargeException extends Throwable {
+    private StackTraceElement[] frames;
+
+    public TooLargeException(int frameCount) {
+      this.frames = new StackTraceElement[frameCount];
+      for (int j = 0; j < frames.length; ++j) {
+        this.frames[j] = new StackTraceElement("loader1", "module",
+            repeat("filename", 100), j + 1);
+      }
+    }
+
+    @Override
+    public StackTraceElement[] getStackTrace() {
+      return this.frames;
+    }
+  }
+
+  private static String repeat(String value, int count) {
+    StringBuilder sb = new StringBuilder();
+    for (int j = 0; j < count; ++j) {
+      sb.append(value);
+    }
+
+    return sb.toString();
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <T> T getValue(Map<String, Object> source, String attribute,
+                                String... attributes) {
+    Object value = source.get(attribute);
+
+    if (attributes.length == 0) {
+      return (T) value;
+    }
+
+    if (value == null) {
+      throw new NullPointerException("No value with key " + attribute);
+    }
+
+    Map<String, Object> asMap = (Map<String, Object>)value;
+    String[] newAttributes = new String[attributes.length - 1];
+    System.arraycopy(attributes, 1, newAttributes, 0, newAttributes.length);
+
+    return getValue(asMap, attributes[0], newAttributes);
   }
 }

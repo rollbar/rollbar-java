@@ -63,8 +63,17 @@ public class JsonSerializerImpl implements JsonSerializer {
       return payload.json;
     }
 
+    return toJson(payload.asJson());
+  }
+
+  /**
+   * Converts the map to a JSON string.
+   * @param map The map to be converted to a JSON string.
+   * @return A JSON string that represents the map.
+   */
+  public String toJson(Map<String, Object> map) {
     StringBuilder builder = new StringBuilder();
-    serializeValue(builder, payload, 0);
+    serializeObject(map, builder, 0);
     return builder.toString();
   }
 

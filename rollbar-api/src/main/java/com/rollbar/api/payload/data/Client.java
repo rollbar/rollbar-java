@@ -1,15 +1,19 @@
 package com.rollbar.api.payload.data;
 
+import static com.rollbar.api.truncation.TruncationHelper.truncateStringsInMap;
+import static com.rollbar.api.truncation.TruncationHelper.truncateStringsInNestedMap;
 import static java.util.Collections.unmodifiableMap;
 
 import com.rollbar.api.json.JsonSerializable;
+import com.rollbar.api.truncation.StringTruncatable;
+
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Represents the client info to send to Rollbar.
  */
-public class Client implements JsonSerializable {
+public class Client implements JsonSerializable, StringTruncatable<Client> {
 
   private static final long serialVersionUID = 1975664872679919021L;
 
@@ -17,8 +21,12 @@ public class Client implements JsonSerializable {
   private final Map<String, Object> topLevelData;
 
   private Client(Builder builder) {
-    this.data = unmodifiableMap(new HashMap<>(builder.data));
-    this.topLevelData = unmodifiableMap(new HashMap<>(builder.topLevelData));
+    this(builder.data, builder.topLevelData);
+  }
+
+  private Client(Map<String, Map<String, Object>> data, Map<String, Object> topLevelData) {
+    this.data = unmodifiableMap(new HashMap<>(data));
+    this.topLevelData = unmodifiableMap(new HashMap<>(topLevelData));
   }
 
   /**
@@ -43,6 +51,16 @@ public class Client implements JsonSerializable {
     values.putAll(data);
     values.putAll(topLevelData);
     return values;
+  }
+
+
+  @Override
+  public Client truncateStrings(int maxLength) {
+    // The Client builder class is different from the rest, it doesn't map to each of the built
+    // object's properties, so we call the constructor directly.
+    Map<String, Map<String, Object>> truncatedData = truncateStringsInNestedMap(data, maxLength);
+    Map<String, Object> truncatedTopLevelData = truncateStringsInMap(topLevelData, maxLength);
+    return new Client(truncatedData, truncatedTopLevelData);
   }
 
   @Override

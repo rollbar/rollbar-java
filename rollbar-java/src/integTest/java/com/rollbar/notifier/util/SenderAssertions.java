@@ -98,6 +98,7 @@ public final class SenderAssertions {
     private volatile boolean called;
     private final Thread testThread;
     private Runnable deferredAsserts;
+    private Payload latestPayload;
 
     private AssertListener(Thread testThread) {
       this.testThread = testThread;
@@ -114,6 +115,7 @@ public final class SenderAssertions {
     @Override
     public void onResponse(Payload payload, Response response) {
       this.called = true;
+      this.latestPayload = payload;
       if (Thread.currentThread().equals(testThread)) {
         onResponseAssert(payload, response);
       } else {
@@ -128,6 +130,7 @@ public final class SenderAssertions {
     @Override
     public void onError(Payload payload, Exception error) {
       this.called = true;
+      this.latestPayload = payload;
       if (Thread.currentThread().equals(testThread)) {
         onErrorAssert(payload, error);
       } else {
@@ -137,6 +140,10 @@ public final class SenderAssertions {
           onErrorAssert(payload, error);
         };
       }
+    }
+
+    public Payload getLatestPayload() {
+      return latestPayload;
     }
 
     public abstract void onResponseAssert(Payload payload, Response response);
