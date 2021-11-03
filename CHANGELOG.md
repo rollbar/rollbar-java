@@ -1,5 +1,10 @@
 # Change Log
 
+# 1.7.10
+
+- Add option to truncate payloads before sending them to Rollbar.
+- Disable vmlens tests when running in Java 11, since it occasionally generates invalid bytecode.
+
 # 1.7.9
 
 - Add rollbar-android option to detect when the network is unavailable and suspend sending occurrences.
