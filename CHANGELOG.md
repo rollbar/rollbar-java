@@ -1,5 +1,12 @@
 # Change Log
 
+# 1.8.0
+
+- Update log4j dependencies to v 2.16.0 (#287)
+- log4j 2.15.0 - fixes security vulnerability CVE-2021-44228 (#285) (#286)
+  This change removes Java 7 compatibility for `rollbar-log4j2`. See [rollbar-log4j2/README.md](rollbar-log4j2/README.md) for more details.
+- Update PR template (#284)
+
 # 1.7.10
 
 - Add option to truncate payloads before sending them to Rollbar.
