@@ -17,7 +17,8 @@ nexusStaging {
     packageGroup = GROUP
     username = System.getenv('NEXUS_USERNAME')
     password = System.getenv('NEXUS_PASSWORD')
-    numberOfRetries = 60
+    numberOfRetries = 180
+    delayBetweenRetriesInMillis = 3000
 }
 
 allprojects {
