@@ -1,5 +1,9 @@
 # Change Log
 
+# 1.8.2
+
+- Update log4j dependencies to v2.17.2 [#294](https://github.com/rollbar/rollbar-java/pull/294)
+
 # 1.8.1
 
 - Update log4j dependencies to v2.17.0 to fix CVE-2021-45105 [#291](https://github.com/rollbar/rollbar-java/pull/291)

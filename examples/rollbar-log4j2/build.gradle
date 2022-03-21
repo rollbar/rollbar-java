@@ -12,5 +12,5 @@ application {
 dependencies {
     implementation project(":rollbar-log4j2")
 
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.17.0'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.17.2'
 }
