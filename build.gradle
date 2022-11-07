@@ -37,10 +37,7 @@ subprojects { project ->
             !project.name.contains('examples')) {
         apply plugin: 'java-library'
 
-        // reactive-streams support will be published along with Spring Webflux 
-        if (!project.name.startsWith('rollbar-reactive-streams')) {
-            apply from: "$rootDir/gradle/release.gradle"
-        }
+        apply from: "$rootDir/gradle/release.gradle"
 
         apply from: "$rootDir/gradle/quality.gradle"
         
