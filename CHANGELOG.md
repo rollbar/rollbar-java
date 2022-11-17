@@ -1,5 +1,9 @@
 # Change Log
 
+# 1.9.0
+
+- Enable maven publishing for rollbar-reactive-streams and rollbar-reactive-streams-reactor artifacts. [#297](https://github.com/rollbar/rollbar-java/pull/297)
+
 # 1.8.1
 
 - Update log4j dependencies to v2.17.0 to fix CVE-2021-45105 [#291](https://github.com/rollbar/rollbar-java/pull/291)
