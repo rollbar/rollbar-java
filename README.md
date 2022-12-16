@@ -21,7 +21,7 @@ The code is documented with javadoc and therefore should be usable from viewing
 the documentation in the source. There are examples in the `examples` directory showing different
 use cases for consuming these libraries.
 
-## Key benefits of using Rollbar.js are:
+## Key benefits of using Rollbar Java SDK are:
 - **Cross platform:** Rollbar Java SDK supports both server-side and mobile Java applications, including plaforms such as <a href="https://docs.rollbar.com/docs/android">Android</a>, <a href="https://docs.rollbar.com/docs/scala">Scala</a>, <a href="https://docs.rollbar.com/docs/spring">Spring</a>, <a href="https://docs.rollbar.com/docs/web">Web</a> and more!
 - **Automatic error grouping:** Rollbar aggregates Occurrences caused by the same error into Items that represent application issues. <a href="https://docs.rollbar.com/docs/grouping-occurrences">Learn more about reducing log noise</a>.
 - **Advanced search:** Filter items by many different properties. <a href="https://docs.rollbar.com/docs/search-items">Learn more about search</a>.
