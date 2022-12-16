@@ -1,4 +1,15 @@
-# Rollbar for Java and Android
+<p align="center">
+  <img alt="rollbar-logo" src="https://user-images.githubusercontent.com/3300063/207964480-54eda665-d6fe-4527-ba51-b0ab3f41f10b.png" />
+</p>
+
+<h1 align="center">Rollbar Java SDK</h1>
+
+<p align="center">
+  <strong>Proactively discover, predict, and resolve errors in real-time with <a href="https://rollbar.com">Rollbar’s</a> error monitoring platform. <a href="https://rollbar.com/signup/">Start tracking errors today</a>!</strong>
+</p>
+
+---
+
 
 [![Build Status](https://github.com/rollbar/rollbar-java/workflows/rollbar-java%20CI/badge.svg?branch=master)](https://github.com/rollbar/rollbar-java/actions/workflows/ci.yml?query=branch%3Amaster)
 
@@ -9,6 +20,13 @@ work on your end for the more complex use cases of the old library.
 The code is documented with javadoc and therefore should be usable from viewing
 the documentation in the source. There are examples in the `examples` directory showing different
 use cases for consuming these libraries.
+
+## Key benefits of using Rollbar.js are:
+- **Cross platform:** Rollbar Java SDK supports both server-side and mobile Java applications, including plaforms such as <a href="https://docs.rollbar.com/docs/android">Android</a>, <a href="https://docs.rollbar.com/docs/scala">Scala</a>, <a href="https://docs.rollbar.com/docs/spring">Spring</a>, <a href="https://docs.rollbar.com/docs/web">Web</a> and more!
+- **Automatic error grouping:** Rollbar aggregates Occurrences caused by the same error into Items that represent application issues. <a href="https://docs.rollbar.com/docs/grouping-occurrences">Learn more about reducing log noise</a>.
+- **Advanced search:** Filter items by many different properties. <a href="https://docs.rollbar.com/docs/search-items">Learn more about search</a>.
+- **Customizable notifications:** Rollbar supports several messaging and incident management tools where your team can get notified about errors and important events by real-time alerts. <a href="https://docs.rollbar.com/docs/notifications">Learn more about Rollbar notifications</a>.
+
 
 ## Setup Instructions
 1. [Sign up for a Rollbar account](https://rollbar.com/signup)
