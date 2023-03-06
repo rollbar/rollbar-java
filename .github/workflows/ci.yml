@@ -14,10 +14,10 @@ jobs:
         java: [8, 11]
     steps:
       - uses: actions/checkout@v2
-        
+
       - name: Fetch git tags
         run: ./.github/fetch_to_tag.sh
-          
+
       # Our build uses JDK7's rt.jar to make sure the artifact is fully
       # compatible with Java 7, so we let this action set Java 7 up for us
       # and we store its JAVA_HOME
@@ -28,6 +28,14 @@ jobs:
 
       - name: Capture JDK7_HOME
         run: echo "export JDK7_HOME=\"$JAVA_HOME\"" > ~/.jdk7_home
+
+      - name: Set up Java 17 (needed for Spring Boot 3)
+        uses: actions/setup-java@v1
+        with:
+          java-version: 17
+
+      - name: Capture JDK17_HOME
+        run: echo "export JDK17_HOME=\"$JAVA_HOME\"" > ~/.jdk17_home
 
       # This is the JDK that'll run the build
       - name: Set up Java ${{ matrix.java }}

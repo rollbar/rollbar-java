@@ -10,7 +10,7 @@ checkstyle {
 }
 
 spotbugs {
-    toolVersion = '3.1.10'
+    toolVersion = '4.7.3'
     includeFilter = file("$rootDir/tools/findbugs/findbugs.xml")
 }
 
@@ -40,6 +40,10 @@ afterEvaluate {
             enabled = false
         }
     }
+}
+
+jacoco {
+    toolVersion = "0.8.8"
 }
 
 test {

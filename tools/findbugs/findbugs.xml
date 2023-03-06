@@ -98,9 +98,6 @@
     <Bug pattern="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE"/>
   </Match>
   <Match>
-    <Bug pattern="EI_EXPOSE_REP2"/>
-  </Match>
-  <Match>
     <Bug pattern="RV_REM_OF_RANDOM_INT"/>
   </Match>
   <Match>
@@ -633,9 +630,6 @@
   </Match>
   <Match>
     <Bug pattern="BC_BAD_CAST_TO_ABSTRACT_COLLECTION"/>
-  </Match>
-  <Match>
-    <Bug pattern="EI_EXPOSE_REP"/>
   </Match>
   <Match>
     <Bug pattern="BIT_IOR_OF_SIGNED_BYTE"/>
