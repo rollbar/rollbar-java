@@ -1,5 +1,9 @@
 # Change Log
 
+# 1.10.0
+
+- Add support for Spring 6.x and Spring Boot 3.x. [#302](https://github.com/rollbar/rollbar-java/pull/302)
+
 # 1.9.0
 
 - Enable maven publishing for rollbar-reactive-streams and rollbar-reactive-streams-reactor artifacts. [#297](https://github.com/rollbar/rollbar-java/pull/297)
