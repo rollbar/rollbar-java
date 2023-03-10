@@ -1,0 +1,25 @@
+ext {
+    jakartaServletVersion = '6.0.0'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+
+compileJava {
+    options.release = 11
+}
+
+compileTestJava {
+    options.release = 11
+}
+
+dependencies {
+    api project(':rollbar-java')
+
+    compileOnly group: 'jakarta.servlet', name: 'jakarta.servlet-api', version: jakartaServletVersion
+
+    testImplementation group: 'jakarta.servlet', name: 'jakarta.servlet-api', version: jakartaServletVersion
+}

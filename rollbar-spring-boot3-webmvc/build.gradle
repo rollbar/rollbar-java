@@ -1,0 +1,25 @@
+ext {
+    jakartaServletVersion = '6.0.0'
+    springBootVersion = '3.0.0'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+compileJava {
+    options.release = 17
+}
+
+compileTestJava {
+    options.release = 17
+}
+
+dependencies {
+    api project(':rollbar-spring6-webmvc')
+
+    implementation 'org.springframework.boot:spring-boot:' + springBootVersion
+    implementation group: 'jakarta.servlet', name: 'jakarta.servlet-api', version: jakartaServletVersion
+}

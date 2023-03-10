@@ -73,3 +73,5 @@ atlassian-ide-plugin.xml
 
 # Local gradle properties
 local.properties
+
+bin/
