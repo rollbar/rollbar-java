@@ -19,7 +19,13 @@ import org.slf4j.LoggerFactory;
  */
 public class Rollbar extends RollbarBase<Void, Config> {
 
-  private static Logger LOGGER = LoggerFactory.getLogger(Rollbar.class);
+  private static class LogInstance {
+    private static final Logger INSTANCE = LoggerFactory.getLogger(Rollbar.class);
+  }
+
+  private static Logger logger() {
+    return LogInstance.INSTANCE;
+  }
 
   private static final Void VOID = null;
 
@@ -55,7 +61,7 @@ public class Rollbar extends RollbarBase<Void, Config> {
       synchronized (Rollbar.class) {
         if (notifier == null) {
           notifier = new Rollbar(config);
-          LOGGER.debug("Rollbar managed notifier created.");
+          logger().debug("Rollbar managed notifier created.");
         }
       }
     }
@@ -77,7 +83,7 @@ public class Rollbar extends RollbarBase<Void, Config> {
    */
   public void handleUncaughtErrors(Thread thread) {
     ObjectsUtils.requireNonNull(thread, "thread");
-    LOGGER.debug("Handling uncaught errors for thread: {}.", thread);
+    logger().debug("Handling uncaught errors for thread: {}.", thread);
     UncaughtExceptionHandler uncaughtExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
     thread.setUncaughtExceptionHandler(new RollbarUncaughtExceptionHandler(this,
         uncaughtExceptionHandler));
@@ -604,7 +610,7 @@ public class Rollbar extends RollbarBase<Void, Config> {
     try {
       process(error, custom, description, level, isUncaught);
     } catch (Exception e) {
-      LOGGER.error("Error while processing payload to send to Rollbar: {}", e);
+      logger().error("Error while processing payload to send to Rollbar: {}", e);
     }
   }
 
@@ -625,14 +631,14 @@ public class Rollbar extends RollbarBase<Void, Config> {
 
       sendPayload(config, new Payload(json));
     } catch (Exception e) {
-      LOGGER.error("Error while sending payload to Rollbar: {}", e);
+      logger().error("Error while sending payload to Rollbar: {}", e);
     }
   }
 
   @Override
   protected Void sendPayload(Config config, Payload payload) {
     if (config.sender() != null) {
-      LOGGER.debug("Sending payload.");
+      logger().debug("Sending payload.");
       config.sender().send(payload);
     }
 

@@ -155,13 +155,13 @@ public class DiskQueue extends AbstractQueue<Payload> {
       error = true;
       throw new RuntimeException(e);
     } finally {
+      ObjectsUtils.close(objectInput);
       // If some error happened discard the payload independently of remove flag.
       if (remove || error) {
         if (!file.delete()) {
           LOGGER.error("Can not delete the file: {}", file.getPath());
         }
       }
-      ObjectsUtils.close(objectInput);
     }
   }
 

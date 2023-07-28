@@ -11,7 +11,14 @@ import org.slf4j.LoggerFactory;
  */
 public class ObjectsUtils {
 
-  private static Logger logger = LoggerFactory.getLogger(ObjectsUtils.class);
+  private static class LogInstance {
+    private static final Logger INSTANCE = LoggerFactory.getLogger(ObjectsUtils.class);
+  }
+
+  private static Logger logger() {
+    return LogInstance.INSTANCE;
+  }
+
 
   public static boolean equals(Object object1, Object object2) {
     return object1 == object2 || object1 != null && object1.equals(object2);
@@ -49,7 +56,7 @@ public class ObjectsUtils {
         closeable.close();
       }
     } catch (IOException e) {
-      logger.error("Unable to close stream.", e);
+      logger().error("Unable to close stream.", e);
     }
   }
 }
