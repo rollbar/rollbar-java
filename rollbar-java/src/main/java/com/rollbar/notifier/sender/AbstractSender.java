@@ -9,6 +9,7 @@ import com.rollbar.notifier.sender.result.Response;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +20,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractSender implements Sender {
 
-  private Logger thisLogger = LoggerFactory.getLogger(this.getClass());
+  private final AtomicReference<Logger> loggerHolder = new AtomicReference<>();
 
   private final SenderListenerCollection listeners = new SenderListenerCollection();
 
@@ -64,13 +65,22 @@ public abstract class AbstractSender implements Sender {
     this.close();
   }
 
+  private Logger logger() {
+    Logger log = loggerHolder.get();
+    if (log != null) {
+      return log;
+    }
+    loggerHolder.compareAndSet(null, LoggerFactory.getLogger(this.getClass()));
+    return loggerHolder.get();
+  }
+
   private void notifyResult(Payload payload, Response response) {
-    thisLogger.debug("Payload sent uuid: {}", response.getResult().getContent());
+    logger().debug("Payload sent uuid: {}", response.getResult().getContent());
     listeners.onResponse(payload, response);
   }
 
   private void notifyError(Payload payload, Exception error) {
-    thisLogger.error("Error sending the payload.", error);
+    logger().error("Error sending the payload.", error);
     listeners.onError(payload, error);
   }
 
