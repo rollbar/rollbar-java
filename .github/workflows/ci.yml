@@ -58,8 +58,8 @@ jobs:
           ./gradlew --version
           echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
           ls -a ${ANDROID_SDK_ROOT}
-          ls -a ${ANDROID_SDK_ROOT}/tools
-          ls -la ${ANDROID_SDK_ROOT}/tools/bin
+          ls -a ${ANDROID_SDK_ROOT}/cmdline-tools
+          ls -la ${ANDROID_SDK_ROOT}/cmdline-tools/bin
           ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager --version
           echo JAVA_HOME: ${JAVA_HOME}
           java -version
