@@ -58,7 +58,6 @@ jobs:
           ./gradlew --version
           echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
           ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager --version
-          echo crb java: ${{ matrix.java }}
           echo JAVA_HOME: ${JAVA_HOME}
           java -version
           javac -version
