@@ -18,17 +18,6 @@ jobs:
       - name: Fetch git tags
         run: ./.github/fetch_to_tag.sh
 
-      # Our build uses JDK7's rt.jar to make sure the artifact is fully
-      # compatible with Java 7, so we let this action set Java 7 up for us
-      # and we store its JAVA_HOME
-      - name: Set up Java 7
-        uses: actions/setup-java@v1
-        with:
-          java-version: 7
-
-      - name: Capture JDK7_HOME
-        run: echo "export JDK7_HOME=\"$JAVA_HOME\"" > ~/.jdk7_home
-
       - name: Set up Java 17 (needed for Spring Boot 3)
         uses: actions/setup-java@v1
         with:
@@ -58,15 +47,16 @@ jobs:
           ./gradlew --version
           echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
           ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager --version
-          echo JAVA_HOME: ${JAVA_HOME}
+          echo CRB JDK7:$JDK7_HOME
+          echo JAVA_HOME: $JAVA_HOME
           java -version
           javac -version
 
       - name: Build
-        run: 'source ~/.jdk7_home && ./gradlew clean build'
+        run: './gradlew clean build'
 
       - name: Check
-        run: 'source ~/.jdk7_home && ./gradlew clean check'
+        run: './gradlew clean check'
 
       - name: Cleanup Gradle cache
         # Recommended by https://docs.github.com/en/actions/guides/building-and-testing-java-with-gradle
@@ -83,14 +73,6 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v2
-
-      - name: Set up Java 7
-        uses: actions/setup-java@v1
-        with:
-          java-version: 7
-
-      - name: Capture JDK7_HOME
-        run: echo "export JDK7_HOME=\"$JAVA_HOME\"" > ~/.jdk7_home
 
       - name: Set up Java 8
         uses: actions/setup-java@v1
@@ -121,7 +103,6 @@ jobs:
           if test "$GITHUB_REPOSITORY" = "rollbar/rollbar-java" -a "$GITHUB_BASE_REF" = ""; then
             openssl enc -aes-256-cbc -K "$SECRING_GPG_KEY" -iv "$SECRING_GPG_IV" -in "$ENCRYPTED_GPG_KEY_LOCATION" -out "$GPG_KEY_LOCATION" -d
           fi &&
-          source ~/.jdk7_home &&
           ./.github/release.sh
 
       - name: Cleanup Gradle cache
