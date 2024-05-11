@@ -58,11 +58,9 @@ jobs:
           ./gradlew --version
           echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
           echo CRB SDK ROOT
-          ls -a ${ANDROID_SDK_ROOT}
-          echo CRB tools
-          ls -a ${ANDROID_SDK_ROOT}/tools
-          echo CRB tools bin
-          ls -la ${ANDROID_SDK_ROOT}/tools/bin
+          ls -la ${ANDROID_SDK_ROOT}
+          echo CRB build-tools
+          ls -la ${ANDROID_SDK_ROOT}/build-tools
           echo CRB cmdline-tools
           ls -la ${ANDROID_SDK_ROOT}/cmdline-tools
           echo CRB cmdline-tools latest
