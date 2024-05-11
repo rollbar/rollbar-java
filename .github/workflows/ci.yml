@@ -57,6 +57,18 @@ jobs:
         run: |
           ./gradlew --version
           echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
+          echo CRB SDK ROOT
+          ls -a ${ANDROID_SDK_ROOT}
+          echo CRB tools
+          ls -a ${ANDROID_SDK_ROOT}/tools
+          echo CRB tools bin
+          ls -la ${ANDROID_SDK_ROOT}/tools/bin
+          echo CRB cmdline-tools
+          ls -la ${ANDROID_SDK_ROOT}/cmdline-tools
+          echo CRB cmdline-tools latest
+          ls -la ${ANDROID_SDK_ROOT}/cmdline-tools/latest
+          echo CRB cmdline-tools bin
+          ls -la ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin
           ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --version
           echo JAVA_HOME: ${JAVA_HOME}
           java -version
