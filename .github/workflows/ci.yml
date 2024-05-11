@@ -61,15 +61,8 @@ jobs:
           ls -la ${ANDROID_SDK_ROOT}/build-tools          
           echo CRB build-tools 31.0.0
           ls -la ${ANDROID_SDK_ROOT}/build-tools/31.0.0
-          ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --install "cmdline-tools;2.0"
-          echo CRB cmdline-tools
-          ls -la ${ANDROID_SDK_ROOT}/cmdline-tools
-          echo CRB cmdline-tools latest
-          ls -la ${ANDROID_SDK_ROOT}/cmdline-tools/latest
-          echo CRB cmdline-tools bin
-          ls -la ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin
+          echo crb
           echo ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --version
-          ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --version
           echo JAVA_HOME: ${JAVA_HOME}
           java -version
           javac -version
