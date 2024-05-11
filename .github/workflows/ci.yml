@@ -46,7 +46,7 @@ jobs:
         run: |
           ./gradlew --version
           echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
-          ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --version
+          ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager --version
           echo CRB JDK7:$JDK7_HOME
           echo JAVA_HOME: $JAVA_HOME
           java -version
