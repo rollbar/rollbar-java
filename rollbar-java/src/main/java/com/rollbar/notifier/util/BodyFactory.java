@@ -1,5 +1,6 @@
 package com.rollbar.notifier.util;
 
+import com.rollbar.api.payload.data.TelemetryEvent;
 import com.rollbar.api.payload.data.body.Body;
 import com.rollbar.api.payload.data.body.ExceptionInfo;
 import com.rollbar.api.payload.data.body.Frame;
@@ -46,6 +47,24 @@ public class BodyFactory {
    */
   public Body from(ThrowableWrapper throwableWrapper, String description) {
     Body.Builder builder = new Body.Builder();
+    return from(throwableWrapper, description, builder);
+  }
+
+  /**
+   * Builds the body from the {@link ThrowableWrapper throwableWrapper}, the description
+   * supplied and telemetry events.
+   *
+   * @param throwableWrapper the throwable proxy.
+   * @param description the description.
+   * @param telemetryEvents the telemetry events.
+   * @return the body.
+   */
+  public Body from(ThrowableWrapper throwableWrapper, String description, List<TelemetryEvent> telemetryEvents) {
+    Body.Builder builder = new Body.Builder().telemetryEvents(telemetryEvents);
+    return from(throwableWrapper, description, builder);
+  }
+
+  private Body from(ThrowableWrapper throwableWrapper, String description, Body.Builder builder) {
     if (throwableWrapper == null) {
       return builder.bodyContent(message(description)).build();
     }

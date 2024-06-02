@@ -4,16 +4,18 @@ import com.rollbar.api.annotations.Unstable;
 import com.rollbar.api.payload.Payload;
 import com.rollbar.api.payload.data.Data;
 import com.rollbar.api.payload.data.Level;
+import com.rollbar.api.payload.data.TelemetryEvent;
+import com.rollbar.api.payload.data.body.Body;
 import com.rollbar.jvmti.ThrowableCache;
 import com.rollbar.notifier.config.CommonConfig;
-import com.rollbar.notifier.sender.json.JsonSerializer;
 import com.rollbar.notifier.truncation.PayloadTruncator;
 import com.rollbar.notifier.util.BodyFactory;
 import com.rollbar.notifier.util.ObjectsUtils;
 import com.rollbar.notifier.wrapper.RollbarThrowableWrapper;
 import com.rollbar.notifier.wrapper.ThrowableWrapper;
-import java.util.HashMap;
-import java.util.Map;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -31,6 +33,7 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(RollbarBase.class);
   private static final int MAX_PAYLOAD_SIZE_BYTES = 512 * 1024; // 512kb
+  private final Queue<TelemetryEvent> telemetryEvents = new ConcurrentLinkedQueue<>();
 
   protected BodyFactory bodyFactory;
   protected PayloadTruncator payloadTruncator;
@@ -47,6 +50,10 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
     configureTruncation(config);
     this.bodyFactory = bodyFactory;
     this.emptyResult = emptyResult;
+  }
+
+  protected void addEvent(TelemetryEvent telemetryEvent) {
+    telemetryEvents.add(telemetryEvent);
   }
 
   /**
@@ -120,9 +127,8 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
         .language(config.language())
         .framework(config.framework())
         .level(getOccurrenceLevel(config, error, level))
-        .body(bodyFactory.from(error, description))
+        .body(makeBody(error, description))
         .isUncaught(isUncaught);
-
     // Gather data from providers.
 
     // Context
@@ -284,4 +290,13 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
   }
 
   protected abstract RESULT sendPayload(C config, Payload payload);
+
+  private Body makeBody(ThrowableWrapper error, String description) {
+    if (telemetryEvents.isEmpty()) {
+      return bodyFactory.from(error, description);
+    }
+    Body body = bodyFactory.from(error, description, new ArrayList<>(telemetryEvents));
+    telemetryEvents.clear();
+    return body;
+  }
 }

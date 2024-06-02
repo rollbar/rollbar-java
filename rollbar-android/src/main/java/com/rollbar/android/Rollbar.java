@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.util.Log;
 import com.rollbar.android.notifier.sender.ConnectionAwareSenderFailureStrategy;
 import com.rollbar.android.provider.ClientProvider;
+import com.rollbar.api.payload.data.TelemetryEvent;
 import com.rollbar.notifier.config.ConfigProvider;
 import com.rollbar.notifier.uncaughtexception.RollbarUncaughtExceptionHandler;
 import com.rollbar.android.provider.NotifierProvider;
@@ -498,6 +499,9 @@ public class Rollbar implements Closeable {
     this.rollbar.configure(config);
   }
 
+  public void addEvent(TelemetryEvent telemetryEvent) {
+    rollbar.addEvent(telemetryEvent);
+  }
   /**
    * Record a critical error.
    *
