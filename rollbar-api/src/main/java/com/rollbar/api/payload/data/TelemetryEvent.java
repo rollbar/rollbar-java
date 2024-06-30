@@ -16,7 +16,9 @@ public class TelemetryEvent implements JsonSerializable, StringTruncatable<Telem
     private final Map<String, String> body;
     private static final long serialVersionUID = 2843361810242481727L;
     private static final String SOURCE = "client";
-    private static final String MESSAGE_KEY = "message";
+    private static final String LOG_KEY_MESSAGE = "message";
+    private static final String NAVIGATION_KEY_FROM = "from";
+    private static final String NAVIGATION_KEY_TO = "to";
 
     private TelemetryEvent(
       TelemetryType telemetryType,
@@ -29,15 +31,38 @@ public class TelemetryEvent implements JsonSerializable, StringTruncatable<Telem
         this.body = body;
     }
 
+    private TelemetryEvent(
+            Long timestamp,
+            TelemetryType telemetryType,
+            Level level,
+            Map<String, String> body
+    ) {
+        this.timestamp = timestamp;
+        type = telemetryType;
+        this.level = level;
+        this.body = body;
+    }
+
 
     public static TelemetryEvent log(Level level, final String message) {
         Map<String, String> body = new HashMap<String, String>() {
             private static final long serialVersionUID = 3746979871039874692L;
             {
-                put(MESSAGE_KEY, message);
+                put(LOG_KEY_MESSAGE, message);
             }
         };
         return new TelemetryEvent(TelemetryType.LOG, level, body);
+    }
+
+    public static TelemetryEvent navigation(Level level, final String from, final String to) {
+        Map<String, String> body = new HashMap<String, String>() {
+            private static final long serialVersionUID = 3746979871039874692L;
+            {
+                put(NAVIGATION_KEY_FROM, from);
+                put(NAVIGATION_KEY_TO, to);
+            }
+        };
+        return new TelemetryEvent(TelemetryType.NAVIGATION, level, body);
     }
 
     @Override
@@ -53,9 +78,17 @@ public class TelemetryEvent implements JsonSerializable, StringTruncatable<Telem
 
     @Override
     public TelemetryEvent truncateStrings(int maxLength) {
-        String message = body.get(MESSAGE_KEY);
-        if (message == null) return this;
-        return log(level, TruncationHelper.truncateString(message, maxLength));
+        Map<String, String> truncatedMap = new HashMap<>();
+        for (Map.Entry<String, String> entry : body.entrySet()) {
+            String truncatedValue = TruncationHelper.truncateString(entry.getValue(), maxLength);
+            truncatedMap.put(entry.getKey(), truncatedValue);
+        }
+        return new TelemetryEvent(
+                this.timestamp,
+                this.type,
+                this.level,
+                truncatedMap
+        );
     }
 
     @Override

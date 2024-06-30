@@ -52,7 +52,7 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
     this.emptyResult = emptyResult;
   }
 
-  protected void addEvent(TelemetryEvent telemetryEvent) {
+  public void addEvent(TelemetryEvent telemetryEvent) {
     telemetryEvents.add(telemetryEvent);
   }
 
