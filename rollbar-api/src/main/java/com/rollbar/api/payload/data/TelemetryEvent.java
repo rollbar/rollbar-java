@@ -19,6 +19,9 @@ public class TelemetryEvent implements JsonSerializable, StringTruncatable<Telem
     private static final String LOG_KEY_MESSAGE = "message";
     private static final String NAVIGATION_KEY_FROM = "from";
     private static final String NAVIGATION_KEY_TO = "to";
+    private static final String NETWORK_KEY_METHOD = "method";
+    private static final String NETWORK_KEY_URL = "url";
+    private static final String NETWORK_KEY_STATUS_CODE = "status_code";
 
     private TelemetryEvent(
       TelemetryType telemetryType,
@@ -63,6 +66,18 @@ public class TelemetryEvent implements JsonSerializable, StringTruncatable<Telem
             }
         };
         return new TelemetryEvent(TelemetryType.NAVIGATION, level, body);
+    }
+
+    public static TelemetryEvent network(Level level, final String method, final String url, final String statusCode) {
+        Map<String, String> body = new HashMap<String, String>() {
+            private static final long serialVersionUID = 3746979871039874692L;
+            {
+                put(NETWORK_KEY_METHOD, method);
+                put(NETWORK_KEY_URL, url);
+                put(NETWORK_KEY_STATUS_CODE, statusCode);
+            }
+        };
+        return new TelemetryEvent(TelemetryType.NETWORK, level, body);
     }
 
     @Override
