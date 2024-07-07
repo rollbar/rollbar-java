@@ -57,6 +57,16 @@ public class TelemetryEvent implements JsonSerializable, StringTruncatable<Telem
         return new TelemetryEvent(TelemetryType.LOG, level, body);
     }
 
+    public static TelemetryEvent manual(Level level, final String message) {
+        Map<String, String> body = new HashMap<String, String>() {
+            private static final long serialVersionUID = 3746979871039874692L;
+            {
+                put(LOG_KEY_MESSAGE, message);
+            }
+        };
+        return new TelemetryEvent(TelemetryType.MANUAL, level, body);
+    }
+
     public static TelemetryEvent navigation(Level level, final String from, final String to) {
         Map<String, String> body = new HashMap<String, String>() {
             private static final long serialVersionUID = 3746979871039874692L;

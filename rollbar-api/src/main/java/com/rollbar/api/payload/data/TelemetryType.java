@@ -3,9 +3,10 @@ package com.rollbar.api.payload.data;
 import com.rollbar.api.json.JsonSerializable;
 
 public enum TelemetryType implements JsonSerializable {
-  NETWORK("network"),
+  LOG("log"),
+  MANUAL("manual"),
   NAVIGATION("navigation"),
-  LOG("log");
+  NETWORK("network");
 
   private final String jsonName;
 
