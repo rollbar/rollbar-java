@@ -46,7 +46,12 @@ public class TelemetryEvent implements JsonSerializable, StringTruncatable<Telem
         this.body = body;
     }
 
-
+    /**
+     * Creates a Log TelemetryEvent ({@link TelemetryType#LOG}).
+     *
+     * @param level the TelemetryEvent severity (e.g. {@link Level#DEBUG}).
+     * @param message the message sent for this event (e.g. "hello world").
+     */
     public static TelemetryEvent log(Level level, final String message) {
         Map<String, String> body = new HashMap<String, String>() {
             private static final long serialVersionUID = 3746979871039874692L;
@@ -57,6 +62,12 @@ public class TelemetryEvent implements JsonSerializable, StringTruncatable<Telem
         return new TelemetryEvent(TelemetryType.LOG, level, body);
     }
 
+    /**
+     * Creates a Manual TelemetryEvent ({@link TelemetryType#MANUAL}) .
+     *
+     * @param level the TelemetryEvent severity (e.g. {@link Level#DEBUG}).
+     * @param message the message sent for this event (e.g. "hello world").
+     */
     public static TelemetryEvent manual(Level level, final String message) {
         Map<String, String> body = new HashMap<String, String>() {
             private static final long serialVersionUID = 3746979871039874692L;
@@ -67,6 +78,13 @@ public class TelemetryEvent implements JsonSerializable, StringTruncatable<Telem
         return new TelemetryEvent(TelemetryType.MANUAL, level, body);
     }
 
+    /**
+     * Creates a Navigation TelemetryEvent ({@link TelemetryType#NAVIGATION}) .
+     *
+     * @param level the TelemetryEvent severity (e.g. {@link Level#DEBUG}).
+     * @param from the starting point (e.g. "SettingView").
+     * @param to the destination point (e.g. "HomeView").
+     */
     public static TelemetryEvent navigation(Level level, final String from, final String to) {
         Map<String, String> body = new HashMap<String, String>() {
             private static final long serialVersionUID = 3746979871039874692L;
@@ -78,6 +96,14 @@ public class TelemetryEvent implements JsonSerializable, StringTruncatable<Telem
         return new TelemetryEvent(TelemetryType.NAVIGATION, level, body);
     }
 
+    /**
+     * Creates a Network TelemetryEvent ({@link TelemetryType#NETWORK}).
+     *
+     * @param level the TelemetryEvent severity (e.g. {@link Level#DEBUG}).
+     * @param method the verb used (e.g. "POST").
+     * @param url the api url (e.g. "<a href="http://rollbar.com/test/api">http://rollbar.com/test/api</a>").
+     * @param statusCode the response status code (e.g. "404").
+     */
     public static TelemetryEvent network(Level level, final String method, final String url, final String statusCode) {
         Map<String, String> body = new HashMap<String, String>() {
             private static final long serialVersionUID = 3746979871039874692L;
