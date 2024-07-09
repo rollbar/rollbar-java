@@ -53,6 +53,9 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
   }
 
   public void addEvent(TelemetryEvent telemetryEvent) {
+    if (telemetryEvents.size() >= config.maximumTelemetryData()) {
+      telemetryEvents.poll();
+    }
     telemetryEvents.add(telemetryEvent);
   }
 

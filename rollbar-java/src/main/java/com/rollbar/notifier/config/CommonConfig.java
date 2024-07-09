@@ -210,4 +210,6 @@ public interface CommonConfig {
    * @return true to truncate payloads otherwise false.
    */
   boolean truncateLargePayloads();
+
+  int maximumTelemetryData();
 }

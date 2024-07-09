@@ -85,6 +85,14 @@ public class ConfigBuilder {
 
   protected boolean truncateLargePayloads;
 
+  private int maximumTelemetryData = DEFAULT_CAPACITY_FOR_TELEMETRY_EVENTS;
+
+  private final static int MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 1;
+
+  private final static int DEFAULT_CAPACITY_FOR_TELEMETRY_EVENTS = 10;
+
+  private final static int MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 50;
+
   /**
    * Constructor with an access token.
    */
@@ -472,6 +480,29 @@ public class ConfigBuilder {
   }
 
   /**
+   * <p>
+   * Maximum Telemetry Events sent in a payload (This value can be between 1 and 50, exceed any of
+   * these thresholds and the closest will be taken). Default: 10.
+   * </p>
+   * @param maximumTelemetryData max quantity of telemetry events sent.
+   * @return the builder instance.
+   */
+  public ConfigBuilder maximumTelemetryData(int maximumTelemetryData) {
+    if (maximumTelemetryData < MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS) {
+      this.maximumTelemetryData = MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS;
+      return this;
+    }
+
+    if (maximumTelemetryData > MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS) {
+      this.maximumTelemetryData = MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS;
+      return this;
+    }
+
+    this.maximumTelemetryData = maximumTelemetryData;
+    return this;
+  }
+
+  /**
    * Builds the {@link Config config}.
    *
    * @return the config.
@@ -560,6 +591,8 @@ public class ConfigBuilder {
 
     private final boolean truncateLargePayloads;
 
+    private final int maximumTelemetryData;
+
     ConfigImpl(ConfigBuilder builder) {
       this.accessToken = builder.accessToken;
       this.endpoint = builder.endpoint;
@@ -592,6 +625,7 @@ public class ConfigBuilder {
       this.enabled = builder.enabled;
       this.defaultLevels = builder.defaultLevels;
       this.truncateLargePayloads = builder.truncateLargePayloads;
+      this.maximumTelemetryData = builder.maximumTelemetryData;
     }
 
     @Override
@@ -737,6 +771,11 @@ public class ConfigBuilder {
     @Override
     public boolean truncateLargePayloads() {
       return this.truncateLargePayloads;
+    }
+
+    @Override
+    public int maximumTelemetryData() {
+      return this.maximumTelemetryData;
     }
   }
 }
