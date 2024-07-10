@@ -5,9 +5,12 @@ import com.rollbar.api.payload.Payload;
 import com.rollbar.api.payload.data.Data;
 import com.rollbar.api.payload.data.Level;
 import com.rollbar.api.payload.data.TelemetryEvent;
+import com.rollbar.api.payload.data.TelemetryType;
 import com.rollbar.api.payload.data.body.Body;
 import com.rollbar.jvmti.ThrowableCache;
 import com.rollbar.notifier.config.CommonConfig;
+import com.rollbar.notifier.provider.timestamp.TimestampProvider;
+import com.rollbar.notifier.telemetry.TelemetryEventTracker;
 import com.rollbar.notifier.truncation.PayloadTruncator;
 import com.rollbar.notifier.util.BodyFactory;
 import com.rollbar.notifier.util.ObjectsUtils;
@@ -15,7 +18,6 @@ import com.rollbar.notifier.wrapper.RollbarThrowableWrapper;
 import com.rollbar.notifier.wrapper.ThrowableWrapper;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -33,7 +35,6 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(RollbarBase.class);
   private static final int MAX_PAYLOAD_SIZE_BYTES = 512 * 1024; // 512kb
-  private final Queue<TelemetryEvent> telemetryEvents = new ConcurrentLinkedQueue<>();
 
   protected BodyFactory bodyFactory;
   protected PayloadTruncator payloadTruncator;
@@ -44,19 +45,57 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
   protected final Lock configReadLock = configReadWriteLock.readLock();
   protected final Lock configWriteLock = configReadWriteLock.writeLock();
   private final RESULT emptyResult;
+  private final TelemetryEventTracker telemetryEventTracker;
 
   protected RollbarBase(C config, BodyFactory bodyFactory, RESULT emptyResult) {
     this.config = config;
     configureTruncation(config);
     this.bodyFactory = bodyFactory;
     this.emptyResult = emptyResult;
+    this.telemetryEventTracker = new TelemetryEventTracker(new TimestampProvider(), config.maximumTelemetryData());
   }
 
-  public void addEvent(TelemetryEvent telemetryEvent) {
-    if (telemetryEvents.size() >= config.maximumTelemetryData()) {
-      telemetryEvents.poll();
-    }
-    telemetryEvents.add(telemetryEvent);
+  /**
+   * Record log telemetry event. ({@link TelemetryType#LOG}).
+   *
+   * @param level   the TelemetryEvent severity (e.g. {@link Level#DEBUG}).
+   * @param message the message sent for this event (e.g. "hello world").
+   */
+  public void recordLogEventFor(Level level, final String message) {
+    telemetryEventTracker.recordLogEventFor(level, config.platform(), message);
+  }
+
+  /**
+   * Record manual telemetry event. ({@link TelemetryType#MANUAL})
+   *
+   * @param level   the TelemetryEvent severity (e.g. {@link Level#DEBUG}).
+   * @param message the message sent for this event (e.g. "hello world").
+   */
+  public void recordManualEventFor(Level level, final String message) {
+    telemetryEventTracker.recordManualEventFor(level, config.platform(), message);
+  }
+
+  /**
+   * Record navigation telemetry event with from (origin) and to (destination).({@link TelemetryType#NAVIGATION})
+   *
+   * @param level the TelemetryEvent severity (e.g. {@link Level#DEBUG}).
+   * @param from  the starting point (e.g. "SettingView").
+   * @param to    the destination point (e.g. "HomeView").
+   */
+  public void recordNavigationEventFor(Level level, final String from, final String to) {
+    telemetryEventTracker.recordNavigationEventFor(level, config.platform(), from, to);
+  }
+
+  /**
+   * Record network telemetry event with method, url, and status code.({@link TelemetryType#NETWORK})
+   *
+   * @param level      the TelemetryEvent severity (e.g. {@link Level#DEBUG}).
+   * @param method     the verb used (e.g. "POST").
+   * @param url        the api url (e.g. "<a href="http://rollbar.com/test/api">http://rollbar.com/test/api</a>").
+   * @param statusCode the response status code (e.g. "404").
+   */
+  public void recordNetworkEventFor(Level level, final String method, final String url, final String statusCode) {
+    telemetryEventTracker.recordNetworkEventFor(level, config.platform(), method, url, statusCode);
   }
 
   /**
@@ -295,11 +334,10 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
   protected abstract RESULT sendPayload(C config, Payload payload);
 
   private Body makeBody(ThrowableWrapper error, String description) {
+    List<TelemetryEvent> telemetryEvents = telemetryEventTracker.dump();
     if (telemetryEvents.isEmpty()) {
       return bodyFactory.from(error, description);
     }
-    Body body = bodyFactory.from(error, description, new ArrayList<>(telemetryEvents));
-    telemetryEvents.clear();
-    return body;
+    return bodyFactory.from(error, description, telemetryEvents);
   }
 }
