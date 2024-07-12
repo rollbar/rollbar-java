@@ -43,13 +43,8 @@ public class TelemetryEventTracker {
    * @param message the message sent for this event (e.g. "hello world").
    */
   public void recordLogEventFor(Level level, String source, final String message) {
-    Map<String, String> body = new HashMap<String, String>() {
-      private static final long serialVersionUID = 3746979871039874692L;
-
-      {
-        put(LOG_KEY_MESSAGE, message);
-      }
-    };
+    Map<String, String> body = new HashMap<>();
+    body.put(LOG_KEY_MESSAGE, message);
     addEvent(new TelemetryEvent(TelemetryType.LOG, level, timestampProvider.provide(), source, body));
   }
 
@@ -60,13 +55,8 @@ public class TelemetryEventTracker {
    * @param message the message sent for this event (e.g. "hello world").
    */
   public void recordManualEventFor(Level level, String source, final String message) {
-    Map<String, String> body = new HashMap<String, String>() {
-      private static final long serialVersionUID = 3746979871039874692L;
-
-      {
-        put(LOG_KEY_MESSAGE, message);
-      }
-    };
+    Map<String, String> body = new HashMap<>();
+    body.put(LOG_KEY_MESSAGE, message);
     addEvent(new TelemetryEvent(TelemetryType.MANUAL, level, timestampProvider.provide(), source, body));
   }
 
@@ -78,14 +68,9 @@ public class TelemetryEventTracker {
    * @param to    the destination point (e.g. "HomeView").
    */
   public void recordNavigationEventFor(Level level, String source, final String from, final String to) {
-    Map<String, String> body = new HashMap<String, String>() {
-      private static final long serialVersionUID = 3746979871039874692L;
-
-      {
-        put(NAVIGATION_KEY_FROM, from);
-        put(NAVIGATION_KEY_TO, to);
-      }
-    };
+    Map<String, String> body = new HashMap<>();
+    body.put(NAVIGATION_KEY_FROM, from);
+    body.put(NAVIGATION_KEY_TO, to);
     addEvent(new TelemetryEvent(TelemetryType.NAVIGATION, level, timestampProvider.provide(), source, body));
   }
 
@@ -98,15 +83,10 @@ public class TelemetryEventTracker {
    * @param statusCode the response status code (e.g. "404").
    */
   public void recordNetworkEventFor(Level level, String source, final String method, final String url, final String statusCode) {
-    Map<String, String> body = new HashMap<String, String>() {
-      private static final long serialVersionUID = 3746979871039874692L;
-
-      {
-        put(NETWORK_KEY_METHOD, method);
-        put(NETWORK_KEY_URL, url);
-        put(NETWORK_KEY_STATUS_CODE, statusCode);
-      }
-    };
+    Map<String, String> body = new HashMap<>();
+    body.put(NETWORK_KEY_METHOD, method);
+    body.put(NETWORK_KEY_URL, url);
+    body.put(NETWORK_KEY_STATUS_CODE, statusCode);
     addEvent(new TelemetryEvent(TelemetryType.NETWORK, level, timestampProvider.provide(), source, body));
   }
 
