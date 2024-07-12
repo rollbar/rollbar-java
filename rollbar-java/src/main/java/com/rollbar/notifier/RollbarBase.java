@@ -9,7 +9,6 @@ import com.rollbar.api.payload.data.TelemetryType;
 import com.rollbar.api.payload.data.body.Body;
 import com.rollbar.jvmti.ThrowableCache;
 import com.rollbar.notifier.config.CommonConfig;
-import com.rollbar.notifier.provider.timestamp.TimestampProvider;
 import com.rollbar.notifier.telemetry.TelemetryEventTracker;
 import com.rollbar.notifier.truncation.PayloadTruncator;
 import com.rollbar.notifier.util.BodyFactory;
@@ -52,7 +51,7 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
     configureTruncation(config);
     this.bodyFactory = bodyFactory;
     this.emptyResult = emptyResult;
-    this.telemetryEventTracker = new TelemetryEventTracker(new TimestampProvider(), config.maximumTelemetryData());
+    this.telemetryEventTracker = config.telemetryEventTracker();
   }
 
   /**
@@ -61,8 +60,8 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
    * @param level   the TelemetryEvent severity (e.g. {@link Level#DEBUG}).
    * @param message the message sent for this event (e.g. "hello world").
    */
-  public void recordLogEventFor(Level level, final String message) {
-    telemetryEventTracker.recordLogEventFor(level, config.platform(), message);
+  public void recordLogEventFor(Level level, String message) {
+    telemetryEventTracker.recordLogEventFor(level, getSource(), message);
   }
 
   /**
@@ -71,8 +70,8 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
    * @param level   the TelemetryEvent severity (e.g. {@link Level#DEBUG}).
    * @param message the message sent for this event (e.g. "hello world").
    */
-  public void recordManualEventFor(Level level, final String message) {
-    telemetryEventTracker.recordManualEventFor(level, config.platform(), message);
+  public void recordManualEventFor(Level level, String message) {
+    telemetryEventTracker.recordManualEventFor(level, getSource(), message);
   }
 
   /**
@@ -82,8 +81,8 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
    * @param from  the starting point (e.g. "SettingView").
    * @param to    the destination point (e.g. "HomeView").
    */
-  public void recordNavigationEventFor(Level level, final String from, final String to) {
-    telemetryEventTracker.recordNavigationEventFor(level, config.platform(), from, to);
+  public void recordNavigationEventFor(Level level, String from, String to) {
+    telemetryEventTracker.recordNavigationEventFor(level, getSource(), from, to);
   }
 
   /**
@@ -94,8 +93,8 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
    * @param url        the api url (e.g. "<a href="http://rollbar.com/test/api">http://rollbar.com/test/api</a>").
    * @param statusCode the response status code (e.g. "404").
    */
-  public void recordNetworkEventFor(Level level, final String method, final String url, final String statusCode) {
-    telemetryEventTracker.recordNetworkEventFor(level, config.platform(), method, url, statusCode);
+  public void recordNetworkEventFor(Level level, String method, String url, String statusCode) {
+    telemetryEventTracker.recordNetworkEventFor(level, getSource(), method, url, statusCode);
   }
 
   /**
@@ -339,5 +338,14 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
       return bodyFactory.from(error, description);
     }
     return bodyFactory.from(error, description, telemetryEvents);
+  }
+
+  private String getSource() {
+    String platform = config.platform();
+    if ("android".equals(platform)) {
+      return "client";
+    } else {
+      return "server";
+    }
   }
 }

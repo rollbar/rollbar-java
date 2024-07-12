@@ -15,6 +15,8 @@ import com.rollbar.notifier.provider.notifier.NotifierProvider;
 import com.rollbar.notifier.provider.timestamp.TimestampProvider;
 import com.rollbar.notifier.sender.SyncSender;
 import com.rollbar.notifier.sender.json.JsonSerializer;
+import com.rollbar.notifier.telemetry.RollbarTelemetryEventTracker;
+import com.rollbar.notifier.telemetry.TelemetryEventTracker;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
 import com.rollbar.reactivestreams.notifier.sender.AsyncSender;
@@ -60,6 +62,7 @@ public final class ConfigBuilder {
   private DefaultLevels defaultLevels;
   private boolean truncateLargePayloads;
   private int maximumTelemetryData = DEFAULT_CAPACITY_FOR_TELEMETRY_EVENTS;
+  private TelemetryEventTracker telemetryEventTracker;
   private final static int MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 1;
   private final static int DEFAULT_CAPACITY_FOR_TELEMETRY_EVENTS = 10;
   private final static int MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 50;
@@ -104,6 +107,8 @@ public final class ConfigBuilder {
     this.appPackages = config.appPackages();
     this.defaultLevels = new DefaultLevels(config);
     this.truncateLargePayloads = config.truncateLargePayloads();
+    this.maximumTelemetryData = config.maximumTelemetryData();
+    this.telemetryEventTracker = config.telemetryEventTracker();
   }
 
   private ConfigBuilder(Sender sender) {
@@ -489,6 +494,19 @@ public final class ConfigBuilder {
   }
 
   /**
+   * <p>
+   * Set a {@link TelemetryEventTracker} implementation.
+   * Default: {@link RollbarTelemetryEventTracker} with a {@link TimestampProvider}.
+   * </p>
+   * @param telemetryEventTracker true to enable truncation.
+   * @return the builder instance.
+   */
+  public ConfigBuilder telemetryEventTracker(TelemetryEventTracker telemetryEventTracker) {
+    this.telemetryEventTracker = telemetryEventTracker;
+    return this;
+  }
+
+  /**
    * Builds the {@link Config config}.
    *
    * @return the config.
@@ -519,6 +537,10 @@ public final class ConfigBuilder {
     }
     if (this.timestamp == null) {
       this.timestamp = new TimestampProvider();
+    }
+
+    if (telemetryEventTracker == null) {
+      telemetryEventTracker = new RollbarTelemetryEventTracker(new TimestampProvider(), maximumTelemetryData);
     }
 
     return new ConfigImpl(this);
@@ -553,6 +575,7 @@ public final class ConfigBuilder {
     private final JsonSerializer jsonSerializer;
     private final boolean truncateLargePayloads;
     private final int maximumTelemetryData;
+    private final TelemetryEventTracker telemetryEventTracker;
 
     ConfigImpl(ConfigBuilder builder) {
       this.accessToken = builder.accessToken;
@@ -586,6 +609,7 @@ public final class ConfigBuilder {
       this.jsonSerializer = builder.jsonSerializer;
       this.truncateLargePayloads = builder.truncateLargePayloads;
       this.maximumTelemetryData = builder.maximumTelemetryData;
+      this.telemetryEventTracker = builder.telemetryEventTracker;
     }
 
     @Override
@@ -731,6 +755,11 @@ public final class ConfigBuilder {
     @Override
     public int maximumTelemetryData() {
       return this.maximumTelemetryData;
+    }
+
+    @Override
+    public TelemetryEventTracker telemetryEventTracker() {
+      return this.telemetryEventTracker;
     }
   }
 }

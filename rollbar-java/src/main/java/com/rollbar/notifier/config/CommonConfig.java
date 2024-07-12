@@ -10,6 +10,7 @@ import com.rollbar.notifier.filter.Filter;
 import com.rollbar.notifier.fingerprint.FingerprintGenerator;
 import com.rollbar.notifier.provider.Provider;
 import com.rollbar.notifier.sender.json.JsonSerializer;
+import com.rollbar.notifier.telemetry.TelemetryEventTracker;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
 import java.util.List;
@@ -212,4 +213,6 @@ public interface CommonConfig {
   boolean truncateLargePayloads();
 
   int maximumTelemetryData();
+
+  TelemetryEventTracker telemetryEventTracker();
 }

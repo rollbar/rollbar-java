@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TelemetryEventTrackerTest {
+public class RollbarTelemetryEventTrackerTest {
 
   private static final String SOURCE = "Any source";
   private static final String MESSAGE = "Any message";
@@ -27,7 +27,7 @@ public class TelemetryEventTrackerTest {
   private static final int MAXIMUM_TELEMETRY_DATA = 2;
   private static final long TIMESTAMP = 10L;
   private final TimestampProvider fakeTimestampProvider = new TimestampProviderFake();
-  private final TelemetryEventTracker telemetryEventTracker = new TelemetryEventTracker(
+  private final RollbarTelemetryEventTracker telemetryEventTracker = new RollbarTelemetryEventTracker(
       fakeTimestampProvider,
       MAXIMUM_TELEMETRY_DATA
   );
