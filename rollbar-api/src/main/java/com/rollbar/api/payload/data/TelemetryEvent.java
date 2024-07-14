@@ -31,7 +31,7 @@ public class TelemetryEvent implements JsonSerializable, StringTruncatable<Telem
     this.timestamp = timestamp;
     this.level = level;
     this.source = source;
-    this.body = body;
+    this.body = new HashMap<>(body);
   }
 
   @Override
@@ -62,19 +62,6 @@ public class TelemetryEvent implements JsonSerializable, StringTruncatable<Telem
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hash(type, level, body);
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    TelemetryEvent that = (TelemetryEvent) o;
-    return Objects.equals(type, that.type) && Objects.equals(level, that.level) && Objects.equals(timestamp, that.timestamp) && Objects.equals(body, that.body);
-  }
-
-  @Override
   public String toString() {
     return "TelemetryEvent{" +
         "type='" + type.asJson() + '\'' +
@@ -83,5 +70,18 @@ public class TelemetryEvent implements JsonSerializable, StringTruncatable<Telem
         ", timestamp_ms=" + timestamp +
         ", body=" + body +
         '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    TelemetryEvent that = (TelemetryEvent) o;
+    return type == that.type && level == that.level && Objects.equals(timestamp, that.timestamp) && Objects.equals(body, that.body) && Objects.equals(source, that.source);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(type, level, timestamp, body, source);
   }
 }
