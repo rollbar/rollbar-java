@@ -795,7 +795,7 @@ public class Rollbar implements Closeable {
   }
 
   /**
-   * Log an error at the level returned by {@link Level}.
+   * Log an error at the level returned by {@link com.rollbar.notifier.Rollbar#level}.
    *
    * @param error the error.
    */
@@ -805,7 +805,7 @@ public class Rollbar implements Closeable {
 
   /**
    * Record an error with human readable description at the default level returned by {@link
-   * Level}.
+   * com.rollbar.notifier.Rollbar#level}.
    *
    * @param error       the error.
    * @param description human readable description of error.
@@ -816,7 +816,7 @@ public class Rollbar implements Closeable {
 
   /**
    * Record an error with extra information attached at the default level returned by {@link
-   * Level}.
+   * com.rollbar.notifier.Rollbar#level}.
    *
    * @param error  the error.
    * @param custom the extra information.
@@ -859,7 +859,7 @@ public class Rollbar implements Closeable {
 
   /**
    * Record an error with custom parameters and human readable description at the default level
-   * returned by {@link Level}.
+   * returned by {@link com.rollbar.notifier.Rollbar#level}.
    *
    * @param error       the error.
    * @param custom      the custom data.
@@ -870,7 +870,7 @@ public class Rollbar implements Closeable {
   }
 
   /**
-   * Record a debugging message at the level returned by {@link Level} (WARNING unless level
+   * Record a debugging message at the level returned by {@link com.rollbar.notifier.Rollbar#level} (WARNING unless level
    * is overridden).
    *
    * @param message the message.
@@ -881,7 +881,7 @@ public class Rollbar implements Closeable {
 
   /**
    * Record a message with extra information attached at the default level returned by {@link
-   * Level}, (WARNING unless level overridden).
+   * com.rollbar.notifier.Rollbar#level}, (WARNING unless level overridden).
    *
    * @param message the message.
    * @param custom  the extra information.
