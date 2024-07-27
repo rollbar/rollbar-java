@@ -53,11 +53,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-${{ matrix.java }}-
 
+      # Set up Android SDK and install platform-tools
+      - name: Set up Android SDK
+        run: |
+          SDKMANAGER=${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager
+          echo "y" | ${SDKMANAGER} "platform-tools"
+
       - name: Environment info
         run: |
           ./gradlew --version
           echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
-          ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager --version
+          ${SDKMANAGER} --version
           echo JAVA_HOME: ${JAVA_HOME}
           java -version
           javac -version
