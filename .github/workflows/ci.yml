@@ -24,6 +24,7 @@ jobs:
           wget https://dl.google.com/android/repository/commandlinetools-linux-6609375_latest.zip -O commandlinetools.zip
           unzip commandlinetools.zip -d ${ANDROID_SDK_ROOT}
           rm commandlinetools.zip
+          ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager --install "platform-tools"
 
       # Our build uses JDK7's rt.jar to make sure the artifact is fully
       # compatible with Java 7, so we let this action set Java 7 up for us
