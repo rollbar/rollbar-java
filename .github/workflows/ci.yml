@@ -25,45 +25,30 @@ jobs:
           unzip commandlinetools.zip -d ${ANDROID_SDK_ROOT}
           rm commandlinetools.zip
 
-      # Set up Java 8 (needed for sdkmanager)
-      - name: Set up Java 8
-        uses: actions/setup-java@v2
-        with:
-          java-version: 8
-          distribution: 'zulu'
-
-      - name: Set up Android SDK and install platform-tools
-        run: |
-          SDKMANAGER=${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager
-          echo "y" | ${SDKMANAGER} "platform-tools"
-
       # Our build uses JDK7's rt.jar to make sure the artifact is fully
       # compatible with Java 7, so we let this action set Java 7 up for us
       # and we store its JAVA_HOME
       - name: Set up Java 7
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v1
         with:
           java-version: 7
-          distribution: 'zulu'
 
       - name: Capture JDK7_HOME
         run: echo "export JDK7_HOME=\"$JAVA_HOME\"" > ~/.jdk7_home
 
       - name: Set up Java 17 (needed for Spring Boot 3)
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v1
         with:
           java-version: 17
-          distribution: 'zulu'
 
       - name: Capture JDK17_HOME
         run: echo "export JDK17_HOME=\"$JAVA_HOME\"" > ~/.jdk17_home
 
       # This is the JDK that'll run the build
       - name: Set up Java ${{ matrix.java }}
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v1
         with:
           java-version: ${{ matrix.java }}
-          distribution: 'zulu'
 
       - name: Cache Gradle packages
         uses: actions/cache@v2
@@ -107,19 +92,17 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Set up Java 7
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v1
         with:
           java-version: 7
-          distribution: 'zulu'
 
       - name: Capture JDK7_HOME
         run: echo "export JDK7_HOME=\"$JAVA_HOME\"" > ~/.jdk7_home
 
       - name: Set up Java 8
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v1
         with:
           java-version: 8
-          distribution: 'zulu'
 
       - name: Cache Gradle packages
         uses: actions/cache@v2
