@@ -62,12 +62,12 @@ jobs:
 
       - name: Environment info
         run: |
+          java -version
+          javac -version
+          echo JAVA_HOME: ${JAVA_HOME}
           ./gradlew --version
           echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
           ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager --version
-          echo JAVA_HOME: ${JAVA_HOME}
-          java -version
-          javac -version
 
       - name: Build
         run: 'source ~/.jdk7_home && ./gradlew clean build'
