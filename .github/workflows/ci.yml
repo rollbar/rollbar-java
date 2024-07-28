@@ -21,7 +21,7 @@ jobs:
       # Download and set up an older version of the Android Command Line Tools
       - name: Download Android Command Line Tools (older version)
         run: |
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9862592_latest.zip -O commandlinetools.zip
+          wget https://dl.google.com/android/repository/commandlinetools-linux-6200805_latest.zip -O commandlinetools.zip
           unzip commandlinetools.zip -d ${ANDROID_SDK_ROOT}
           rm commandlinetools.zip
 
