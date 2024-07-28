@@ -21,10 +21,9 @@ jobs:
       # Download and set up an older version of the Android Command Line Tools
       - name: Download Android Command Line Tools (older version)
         run: |
-          wget https://dl.google.com/android/repository/commandlinetools-linux-6609375_latest.zip -O commandlinetools.zip
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9862592_latest.zip -O commandlinetools.zip
           unzip commandlinetools.zip -d ${ANDROID_SDK_ROOT}
           rm commandlinetools.zip
-          ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager --install "platform-tools"
 
       # Our build uses JDK7's rt.jar to make sure the artifact is fully
       # compatible with Java 7, so we let this action set Java 7 up for us
