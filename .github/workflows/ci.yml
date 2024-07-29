@@ -19,12 +19,13 @@ jobs:
         run: ./.github/fetch_to_tag.sh
 
       # Download and set up an older version of the Android Command Line Tools
-      - name: Download Android Command Line Tools (older version)
-        run: |
-          wget https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip -O commandlinetools.zip
-          unzip commandlinetools.zip -d ${ANDROID_SDK_ROOT}
-          rm commandlinetools.zip
-          ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager --version
+      - name: Setup Android SDK 27, 28, 29 and 30
+        uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: 9123335
+        run: sdkmanager tools "platforms;android-27" "platforms;android-28" "platforms;android-29" "platforms;android-30"
+
+
 
       # Our build uses JDK7's rt.jar to make sure the artifact is fully
       # compatible with Java 7, so we let this action set Java 7 up for us
@@ -68,7 +69,7 @@ jobs:
           echo JAVA_HOME: ${JAVA_HOME}
           ./gradlew --version
           echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
-          
+          ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager --version
 
       - name: Build
         run: 'source ~/.jdk7_home && ./gradlew clean build'
