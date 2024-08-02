@@ -22,7 +22,7 @@ jobs:
       - name: Setup Android SDK 27, 28, 29 and 30
         uses: android-actions/setup-android@v3
         with:
-          cmdline-tools-version: 9123335
+          cmdline-tools-version: 6858069
       - run: sdkmanager tools "platforms;android-27" "platforms;android-28" "platforms;android-29" "platforms;android-30"
 
 
