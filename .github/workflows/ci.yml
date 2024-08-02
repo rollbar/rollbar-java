@@ -69,7 +69,7 @@ jobs:
           echo JAVA_HOME: ${JAVA_HOME}
           ./gradlew --version
           echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
-          ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager --version
+          ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --version
 
       - name: Build
         run: 'source ~/.jdk7_home && ./gradlew clean build'
