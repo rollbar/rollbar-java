@@ -7,7 +7,7 @@ on:
 
 jobs:
   validation:
-    name: "Gradle wrapper validation"
+    name: Gradle wrapper validation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,9 +15,10 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    name: Build and check with Java ${{ matrix.java }}
+    name: Build with Java ${{ matrix.java }}
     needs: [validation]
     strategy:
+      fail-fast: false
       matrix:
         java: [8, 11, 17, 21, 22]
     steps:
@@ -33,6 +34,9 @@ jobs:
           distribution: 'zulu'
           cache: 'gradle'
 
+      # gradle/actions/setup-gradle@v3 might offer better caching and other benefits through better integration
+      # https://github.com/gradle/actions/blob/main/docs/setup-gradle.md
+
       - name: Environment info
         run: |
           ./gradlew --version
@@ -43,7 +47,7 @@ jobs:
       - name: Android SDK info
         run: |
           echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
-          ls -la ${ANDROID_SDK_ROOT}
+          sdkmanager --list 
 
       - name: Build
         run: ./gradlew clean build
