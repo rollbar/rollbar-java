@@ -47,12 +47,14 @@ jobs:
       - name: Android SDK info
         run: |
           echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
-          ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --version
+#          Doesn't work with Java 8
+#          ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --version
 
       - name: Build
         run: ./gradlew clean build
 
       - name: Upload build reports
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: build-reports
