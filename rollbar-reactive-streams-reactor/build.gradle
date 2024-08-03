@@ -34,18 +34,6 @@ dependencies {
     }
 }
 
-compileJava {
-    if (JavaVersion.current() >= JavaVersion.VERSION_1_9) {
-        options.release = 8
-    } else {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-
-    // Unset this since it's been set to Java 7's rt.jar by the parent project
-    options.bootstrapClasspath = null
-}
-
 test {
     // Our core suite uses Junit 5 to take advantage of reactor's Blockhound verification.
     useJUnitPlatform()

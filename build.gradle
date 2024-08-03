@@ -27,7 +27,6 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-        jcenter()
     }
 }
 
@@ -61,11 +60,8 @@ subprojects { project ->
         }
 
         compileJava {
-            if (JavaVersion.current().compareTo(JavaVersion.VERSION_1_9) >= 0) {
-                // Use the --release javac flag, available since JDK9, which is equivalent to setting
-                // the source, target, and bootstrap classpath, and catches all usages of stdlib
-                // features not available in the target version.
-                options.release = 7
+            if (JavaVersion.current().isJava9Compatible()) {
+                options.release = 8
             } else {
                 sourceCompatibility = JavaVersion.VERSION_1_8
                 targetCompatibility = JavaVersion.VERSION_1_8
@@ -73,7 +69,7 @@ subprojects { project ->
         }
 
         compileTestJava {
-            if (JavaVersion.current().compareTo(JavaVersion.VERSION_1_9) >= 0) {
+            if (JavaVersion.current().isJava9Compatible()) {
                 options.release = 8
             } else {
                 sourceCompatibility = JavaVersion.VERSION_1_8
