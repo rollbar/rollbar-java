@@ -15,7 +15,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    name: Java ${{ matrix.java }}
+    name: Build and check with Java ${{ matrix.java }}
     needs: [validation]
     strategy:
       matrix:
@@ -26,18 +26,6 @@ jobs:
       - name: Fetch git tags
         run: ./.github/scripts/fetch_to_tag.sh
 
-
-#      - name: Set up Java 17 (needed for Spring Boot 3)
-#        uses: actions/setup-java@v4
-#        with:
-#          java-version: 17
-#          distribution: 'zulu'
-#          cache: 'gradle'
-#
-#      - name: Capture JDK17_HOME
-#        run: echo "export JDK17_HOME=\"$JAVA_HOME\"" > ~/.jdk17_home
-
-      # This is the JDK that'll run the build
       - name: Set up Java ${{ matrix.java }}
         uses: actions/setup-java@v4
         with:
@@ -55,19 +43,13 @@ jobs:
       - name: Android SDK info
         run: |
           echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
-#          ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager --version
+          ${ANDROID_SDK_ROOT} --version
 
       - name: Build
         run: ./gradlew clean build
 
       - name: Check
         run: ./gradlew clean check
-
-      - name: Cleanup Gradle cache
-        # Recommended by https://docs.github.com/en/actions/guides/building-and-testing-java-with-gradle
-        run: |
-          rm -f ~/.gradle/caches/modules-2/modules-2.lock
-          rm -f ~/.gradle/caches/modules-2/gc.properties
 
   release:
     runs-on: ubuntu-latest
@@ -102,8 +84,3 @@ jobs:
             openssl enc -aes-256-cbc -K "$SECRING_GPG_KEY" -iv "$SECRING_GPG_IV" -in "$ENCRYPTED_GPG_KEY_LOCATION" -out "$GPG_KEY_LOCATION" -d
           fi &&
           ./.github/scripts/release.sh
-
-      - name: Cleanup Gradle cache
-        run: |
-          rm -f ~/.gradle/caches/modules-2/modules-2.lock
-          rm -f ~/.gradle/caches/modules-2/gc.properties
