@@ -28,10 +28,10 @@ jobs:
 
 
 #      - name: Set up Java 17 (needed for Spring Boot 3)
-#        uses: actions/setup-java@v3
+#        uses: actions/setup-java@v4
 #        with:
 #          java-version: 17
-#          distribution: 'azul'
+#          distribution: 'zulu'
 #          cache: 'gradle'
 #
 #      - name: Capture JDK17_HOME
@@ -39,10 +39,10 @@ jobs:
 
       # This is the JDK that'll run the build
       - name: Set up Java ${{ matrix.java }}
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: ${{ matrix.java }}
-          distribution: 'azul'
+          distribution: 'zulu'
           cache: 'gradle'
 
       - name: Environment info
@@ -80,10 +80,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Java 8
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: 8
-          distribution: 'azul'
+          distribution: 'zulu'
           cache: 'gradle'
 
       - name: Capture JDK8_HOME
