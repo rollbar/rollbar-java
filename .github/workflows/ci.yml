@@ -21,7 +21,8 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
-          cmdline-tools-version: 8512546
+          cmdline-tools-version: 9123335
+
 
 
       # Our build uses JDK7's rt.jar to make sure the artifact is fully
