@@ -19,7 +19,7 @@ jobs:
     needs: [validation]
     strategy:
       matrix:
-        java: [8, 11]
+        java: [8, 11, 17, 21, 22]
     steps:
       - uses: actions/checkout@v4
 
@@ -43,7 +43,7 @@ jobs:
       - name: Android SDK info
         run: |
           echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
-          ${ANDROID_SDK_ROOT} --version
+          ls -la ${ANDROID_SDK_ROOT}
 
       - name: Build
         run: ./gradlew clean build
