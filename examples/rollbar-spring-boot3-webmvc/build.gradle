@@ -6,7 +6,11 @@ plugins {
 
 group = 'com.rollbar.example'
 version = VERSION_NAME
-sourceCompatibility = '17'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
 
 repositories {
     mavenLocal()
