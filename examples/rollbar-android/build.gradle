@@ -13,10 +13,12 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 27
-    buildToolsVersion "28.0.3"
+    buildToolsVersion "30.0.2"
     defaultConfig {
         applicationId "com.rollbar.example.android"
         minSdkVersion 16
+        // FIXME: Pending further discussion
+        //noinspection ExpiredTargetSdkVersion
         targetSdkVersion 27
         versionCode 1
         versionName "1.0"

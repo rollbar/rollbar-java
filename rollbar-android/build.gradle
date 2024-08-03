@@ -20,10 +20,12 @@ apply from: "$rootDir/gradle/android.quality.gradle"
 
 android {
     compileSdkVersion 27
-    buildToolsVersion '28.0.3'
+    buildToolsVersion '30.0.2'
 
     defaultConfig {
         minSdkVersion 16
+        // FIXME: Pending further discussion
+        //noinspection ExpiredTargetSdkVersion
         targetSdkVersion 27
         consumerProguardFiles 'proguard-rules.pro'
         manifestPlaceholders = [notifierVersion: VERSION_NAME]
