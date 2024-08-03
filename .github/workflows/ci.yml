@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Fetch git tags
-        run: ./.github/fetch_to_tag.sh
+        run: ./.github/scripts/fetch_to_tag.sh
 
 
 #      - name: Set up Java 17 (needed for Spring Boot 3)
@@ -71,6 +71,7 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
+    name: Release
     # It would be nice to run this as part of the build job, since it would be
     # faster and have less duplicated Yaml, it would not be possible to check
     # for all matrix results before publishing if this were just another step
@@ -86,9 +87,6 @@ jobs:
           distribution: 'zulu'
           cache: 'gradle'
 
-      - name: Capture JDK8_HOME
-        run: echo "export JDK8_HOME=\"$JAVA_HOME\"" > ~/.jdk8_home
-
       - name: Release
         env:
           SECRING_GPG_IV: ${{ secrets.SECRING_GPG_IV }}
@@ -103,8 +101,7 @@ jobs:
           if test "$GITHUB_REPOSITORY" = "rollbar/rollbar-java" -a "$GITHUB_BASE_REF" = ""; then
             openssl enc -aes-256-cbc -K "$SECRING_GPG_KEY" -iv "$SECRING_GPG_IV" -in "$ENCRYPTED_GPG_KEY_LOCATION" -out "$GPG_KEY_LOCATION" -d
           fi &&
-          source ~/.jdk8_home &&
-          ./.github/release.sh
+          ./.github/scripts/release.sh
 
       - name: Cleanup Gradle cache
         run: |
