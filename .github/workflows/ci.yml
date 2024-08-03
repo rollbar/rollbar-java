@@ -19,7 +19,7 @@ jobs:
         run: ./.github/fetch_to_tag.sh
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@07976c6290703d34c16d382cb36445f98bb43b1f
 
 
       # Our build uses JDK7's rt.jar to make sure the artifact is fully
