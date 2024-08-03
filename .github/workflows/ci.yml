@@ -13,7 +13,7 @@ jobs:
       matrix:
         java: [8, 11]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Fetch git tags
         run: ./.github/fetch_to_tag.sh
@@ -82,7 +82,7 @@ jobs:
     # in that job.
     needs: build
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Set up Java 7
         uses: actions/setup-java@v1
