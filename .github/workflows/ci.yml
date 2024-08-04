@@ -21,7 +21,7 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
-          cmdline-tools-version: 10406996
+          cmdline-tools-version: 9477386
 
 
 
@@ -35,6 +35,16 @@ jobs:
 
       - name: Capture JDK7_HOME
         run: echo "export JDK7_HOME=\"$JAVA_HOME\"" > ~/.jdk7_home
+
+      - name: Set up Java 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 8
+
+      - name: Capture JDK8_HOME and set it to SDK manager
+        run: | 
+          echo "export JDK8_HOME=\"$JAVA_HOME\"" > ~/.jdk8_home
+          sed -i "2i export JAVA_HOME=${JDK8_HOME}" ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager
 
       - name: Set up Java 17 (needed for Spring Boot 3)
         uses: actions/setup-java@v1
