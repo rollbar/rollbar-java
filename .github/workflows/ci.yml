@@ -35,11 +35,6 @@ jobs:
           echo "export JDK8_HOME=\"$JAVA_HOME\"" > ~/.jdk8_home
           sed -i "2i export JAVA_HOME=${JAVA_HOME}" ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager
 
-      - name: Set up Android SDK and install platform-tools
-        run: |
-          echo "y" | ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager --licenses
-          echo "y" | ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager "platform-tools"
-
       # Our build uses JDK7's rt.jar to make sure the artifact is fully
       # compatible with Java 7, so we let this action set Java 7 up for us
       # and we store its JAVA_HOME
