@@ -29,24 +29,24 @@ EXPECTED_REF="refs/heads/${BRANCH}"
 
 if [[ "$GITHUB_REPOSITORY" != "$REPO" ]]; then
   echo "Skipping release: wrong repository. Expected '$REPO' but was '$GITHUB_REPOSITORY'."
-elif [[ "$IS_PULL_REQUEST" != "false" ]]; then
-  echo "Skipping release. It was pull request."
-elif [[ "$GITHUB_REF" != "$EXPECTED_REF" ]]; then
-  echo "Skipping release. Expected '$EXPECTED_REF' but was '$GITHUB_REF'."
+#elif [[ "$IS_PULL_REQUEST" != "false" ]]; then
+#  echo "Skipping release. It was pull request."
+#elif [[ "$GITHUB_REF" != "$EXPECTED_REF" ]]; then
+#  echo "Skipping release. Expected '$EXPECTED_REF' but was '$GITHUB_REF'."
 elif [[ -z $VERSION ]]; then
   echo "Skipping release. Version value not found."
-elif ! [[ $VERSION =~ $SEMVER_REGEX ]]; then
-  echo "Skipping release. Bad version used."
+#elif ! [[ $VERSION =~ $SEMVER_REGEX ]]; then
+#  echo "Skipping release. Bad version used."
 else
   # Gradle needs the absolute path to the secring
   export GPG_KEY_LOCATION="$(realpath "$GPG_KEY_LOCATION")"
 
-  if [[ ${BASH_REMATCH[5]} == 'SNAPSHOT' ]]; then
+  # if [[ ${BASH_REMATCH[5]} == 'SNAPSHOT' ]]; then
     echo "Doing SNAPSHOT release..."
     ./gradlew -Dorg.gradle.internal.http.socketTimeout=300000 -Dorg.gradle.internal.http.connectionTimeout=300000 publishToSonatype
-  else
-    echo "Doing release..."
-    ./gradlew -Dorg.gradle.internal.http.socketTimeout=300000 -Dorg.gradle.internal.http.connectionTimeout=300000 publishToSonatype closeAndReleaseRepository
-  fi
+  # else
+  #   echo "Doing release..."
+  #   ./gradlew -Dorg.gradle.internal.http.socketTimeout=300000 -Dorg.gradle.internal.http.connectionTimeout=300000 publishToSonatype closeAndReleaseRepository
+  # fi
   echo "Release done!"
 fi
