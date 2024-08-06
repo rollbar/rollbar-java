@@ -18,12 +18,27 @@ jobs:
       - name: Fetch git tags
         run: ./.github/fetch_to_tag.sh
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      # Download and set up an older version of the Android Command Line Tools
+      - name: Download Android Command Line Tools (older version)
+        run: |
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O commandlinetools.zip
+          unzip commandlinetools.zip -d ${ANDROID_SDK_ROOT}
+          rm commandlinetools.zip
+
+      - name: Set up Java 8
+        uses: actions/setup-java@v1
         with:
-          cmdline-tools-version: 9477386
+          java-version: 8
 
+      - name: Capture JDK8_HOME and set it to SDK manager
+        run: |
+          echo "export JDK8_HOME=\"$JAVA_HOME\"" > ~/.jdk8_home
+          sed -i "2i export JAVA_HOME=${JAVA_HOME}" ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager
 
+      - name: Set up Android SDK and install platform-tools
+        run: |
+          echo "y" | ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager --licenses
+          echo "y" | ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager "platform-tools"
 
       # Our build uses JDK7's rt.jar to make sure the artifact is fully
       # compatible with Java 7, so we let this action set Java 7 up for us
@@ -35,16 +50,6 @@ jobs:
 
       - name: Capture JDK7_HOME
         run: echo "export JDK7_HOME=\"$JAVA_HOME\"" > ~/.jdk7_home
-
-      - name: Set up Java 8
-        uses: actions/setup-java@v1
-        with:
-          java-version: 8
-
-      - name: Capture JDK8_HOME and set it to SDK manager
-        run: | 
-          echo "export JDK8_HOME=\"$JAVA_HOME\"" > ~/.jdk8_home
-          sed -i "2i export JAVA_HOME=${JAVA_HOME}" ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager
 
       - name: Set up Java 17 (needed for Spring Boot 3)
         uses: actions/setup-java@v1
