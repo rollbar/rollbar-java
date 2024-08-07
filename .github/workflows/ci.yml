@@ -49,8 +49,8 @@ jobs:
       - name: Android SDK info
         run: |
           echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
-          Doesn't work with Java 8
-          ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --version
+#          Doesn't work with Java 8
+#          ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --version
 
       - name: Build
         run: ./gradlew clean build
@@ -92,7 +92,7 @@ jobs:
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
         run: |
-          if test "$GITHUB_REPOSITORY" = "rollbar/rollbar-java" -a "$GITHUB_BASE_REF" = ""; then
-            openssl enc -aes-256-cbc -K "$SECRING_GPG_KEY" -iv "$SECRING_GPG_IV" -in "$ENCRYPTED_GPG_KEY_LOCATION" -out "$GPG_KEY_LOCATION" -d
-          fi &&
-          ./.github/scripts/release.sh
+#          if test "$GITHUB_REPOSITORY" = "rollbar/rollbar-java" -a "$GITHUB_BASE_REF" = ""; then
+#            openssl enc -aes-256-cbc -K "$SECRING_GPG_KEY" -iv "$SECRING_GPG_IV" -in "$ENCRYPTED_GPG_KEY_LOCATION" -out "$GPG_KEY_LOCATION" -d
+#          fi &&
+          ./.github/scripts/temp-release.sh
