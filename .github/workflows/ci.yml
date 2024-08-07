@@ -22,7 +22,7 @@ jobs:
       matrix:
         # Must upgrade Gradle before we can go past Java 15 here.
         # https://docs.gradle.org/current/userguide/compatibility.html
-        java: [8, 11]
+        java: [8, 11, 15]
     steps:
       - uses: actions/checkout@v4
 
@@ -49,8 +49,8 @@ jobs:
       - name: Android SDK info
         run: |
           echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
-      #    Doesn't work with Java 8
-      #    ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --version
+          Doesn't work with Java 8
+          ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --version
 
       - name: Build
         run: ./gradlew clean build
