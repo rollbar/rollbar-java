@@ -1,3 +1,5 @@
+#!/bin/bash
+
 export GPG_KEY_LOCATION="$(realpath "$GPG_KEY_LOCATION")"
 
 echo "Doing SNAPSHOT release..."
