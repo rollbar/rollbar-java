@@ -1,9 +1,9 @@
 name: rollbar-java CI
 on:
   push:
-    branches: [master]
+    branches: [ master ]
   pull_request:
-    branches: [master]
+    branches: [ master ]
 
 jobs:
   validation:
@@ -16,13 +16,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     name: Build with Java ${{ matrix.java }}
-    needs: [validation]
+    needs: [ validation ]
     strategy:
       fail-fast: false
       matrix:
         # Must upgrade Gradle before we can go past Java 15 here.
         # https://docs.gradle.org/current/userguide/compatibility.html
-        java: [8, 11, 15]
+        java: [ 8, 11, 15 ]
     steps:
       - uses: actions/checkout@v4
 
@@ -43,14 +43,10 @@ jobs:
         run: |
           ./gradlew --version
           echo JAVA_HOME: ${JAVA_HOME}
+          echo ANDROID_HOME: ${ANDROID_HOME}
+          echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
           java -version
           javac -version
-
-      - name: Android SDK info
-        run: |
-          echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
-#          Doesn't work with Java 8
-#          ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --version
 
       - name: Build
         run: ./gradlew clean build
@@ -70,7 +66,7 @@ jobs:
     # faster and have less duplicated Yaml, it would not be possible to check
     # for all matrix results before publishing if this were just another step
     # in that job.
-    needs: [build]
+    needs: [ build ]
     steps:
       - uses: actions/checkout@v4
 
@@ -92,7 +88,5 @@ jobs:
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
         run: |
-#          if test "$GITHUB_REPOSITORY" = "rollbar/rollbar-java" -a "$GITHUB_BASE_REF" = ""; then
-#            openssl enc -aes-256-cbc -K "$SECRING_GPG_KEY" -iv "$SECRING_GPG_IV" -in "$ENCRYPTED_GPG_KEY_LOCATION" -out "$GPG_KEY_LOCATION" -d
-#          fi &&
+          openssl enc -aes-256-cbc -K "$SECRING_GPG_KEY" -iv "$SECRING_GPG_IV" -in "$ENCRYPTED_GPG_KEY_LOCATION" -out "$GPG_KEY_LOCATION" -d
           ./.github/scripts/temp-release.sh
