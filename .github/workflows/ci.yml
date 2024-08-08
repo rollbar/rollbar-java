@@ -1,9 +1,24 @@
 name: rollbar-java CI
 on:
+  workflow_call:
+    secrets:
+      SECRING_GPG_IV:
+        required: true
+      SECRING_GPG_KEY:
+        required: true
+      GPG_KEY_ID:
+        required: true
+      GPG_PASSPHRASE:
+        required: true
+      NEXUS_USERNAME:
+        required: true
+      NEXUS_PASSWORD:
+        required: true
   push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+
 
 jobs:
   validation:

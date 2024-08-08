@@ -38,10 +38,6 @@ android {
             testCoverageEnabled true
         }
     }
-
-    dexOptions {
-        preDexLibraries = false
-    }
 }
 
 dependencies {
