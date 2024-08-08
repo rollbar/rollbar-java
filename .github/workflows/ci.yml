@@ -79,7 +79,7 @@ jobs:
 
       - name: Install Android SDK
         run: |
-          echo "Android SDK Manager version: `${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --version}`"
+          echo "Android SDK Manager version: `${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --version`"
           ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "platforms;android-27" "build-tools;30.0.3"
 
       - name: Set up Java 8 for the build
