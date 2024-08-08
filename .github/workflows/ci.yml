@@ -43,10 +43,10 @@ jobs:
         run: |
           ./gradlew --version
           echo JAVA_HOME: ${JAVA_HOME}
-          echo ANDROID_HOME: ${ANDROID_HOME}
-          echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
           java -version
           javac -version
+          echo ANDROID_HOME: ${ANDROID_HOME}
+          echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
 
       - name: Build
         run: ./gradlew clean build
@@ -70,7 +70,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Java 8
+      - name: Set up Java 11 for the Android SDK Manager
+        uses: actions/setup-java@v4
+        with:
+          java-version: 11
+          distribution: 'zulu'
+          cache: 'gradle'
+
+      - name: Install Android SDK
+        run: |
+          echo "Android SDK Manager version: `${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --version}`"
+          ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "platforms;android-27" "build-tools;30.0.3"
+
+      - name: Set up Java 8 for the build
         uses: actions/setup-java@v4
         with:
           java-version: 8
