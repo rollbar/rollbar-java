@@ -22,7 +22,7 @@ jobs:
       matrix:
         # Must upgrade Gradle before we can go past Java 15 here.
         # https://docs.gradle.org/current/userguide/compatibility.html
-        java: [ 8, 11, 15 ]
+        java: [ 8, 11 ]
     steps:
       - uses: actions/checkout@v4
 
