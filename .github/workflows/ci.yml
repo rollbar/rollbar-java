@@ -23,13 +23,13 @@ on:
 jobs:
   validation:
     name: Gradle wrapper validation
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
       - uses: gradle/actions/wrapper-validation@v3
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     name: Build with Java ${{ matrix.java }}
     needs: [ validation ]
     strategy:
@@ -75,7 +75,7 @@ jobs:
             **/build/reports/*
 
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     name: Release
     # It would be nice to run this as part of the build job, since it would be
     # faster and have less duplicated Yaml, it would not be possible to check
