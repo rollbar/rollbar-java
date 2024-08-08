@@ -115,5 +115,6 @@ jobs:
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
         run: |
+          echo OpenSSL: `openssl version`
           openssl enc -aes-256-cbc -K "$SECRING_GPG_KEY" -iv "$SECRING_GPG_IV" -in "$ENCRYPTED_GPG_KEY_LOCATION" -out "$GPG_KEY_LOCATION" -d
           ./.github/scripts/temp-release.sh
