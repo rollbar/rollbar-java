@@ -2,13 +2,9 @@ name: rollbar-java CI
 on:
   workflow_call:
     secrets:
-      SECRING_GPG_IV:
+      RELEASE_GPG_PRIVATE_KEY:
         required: true
-      SECRING_GPG_KEY:
-        required: true
-      GPG_KEY_ID:
-        required: true
-      GPG_PASSPHRASE:
+      RELEASE_GPG_PRIVATE_KEY_PASSPHRASE:
         required: true
       NEXUS_USERNAME:
         required: true
@@ -104,39 +100,11 @@ jobs:
           distribution: 'zulu'
           cache: 'gradle'
 
-      - name: Check OpenSSL Variables
-        env:
-          SECRING_GPG_IV: ${{ secrets.SECRING_GPG_IV }}
-          SECRING_GPG_KEY: ${{ secrets.SECRING_GPG_KEY }}
-          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          ENCRYPTED_GPG_KEY_LOCATION: ./.github/secring.gpg.enc
-          GPG_KEY_LOCATION: ./.github/secring.gpg
-          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
-          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
-        run: |
-          echo "SECRING_GPG_KEY length: ${#SECRING_GPG_KEY}"
-          echo "SECRING_GPG_IV length: ${#SECRING_GPG_IV}"
-          if [ ${#SECRING_GPG_KEY} -ne 64 ]; then
-            echo "SECRING_GPG_KEY is not of correct length"
-            exit 1
-          fi
-          if [ ${#SECRING_GPG_IV} -ne 32 ]; then
-            echo "SECRING_GPG_IV is not of correct length"
-            exit 1
-          fi
-
       - name: Release
         env:
-          SECRING_GPG_IV: ${{ secrets.SECRING_GPG_IV }}
-          SECRING_GPG_KEY: ${{ secrets.SECRING_GPG_KEY }}
-          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          ENCRYPTED_GPG_KEY_LOCATION: ./.github/secring.gpg.enc
-          GPG_KEY_LOCATION: ./.github/secring.gpg
+          RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
+          RELEASE_GPG_PRIVATE_KEY_PASSPHRASE: ${{ secrets.RELEASE_GPG_PRIVATE_KEY_PASSPHRASE }}
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
         run: |
-          echo OpenSSL: `openssl version`
-          openssl enc -aes-256-cbc -K "$SECRING_GPG_KEY" -iv "$SECRING_GPG_IV" -in "$ENCRYPTED_GPG_KEY_LOCATION" -out "$GPG_KEY_LOCATION" -d
-          ./.github/scripts/temp-release.sh
+          ./gradlew -Dorg.gradle.internal.http.socketTimeout=300000 -Dorg.gradle.internal.http.connectionTimeout=300000 publishToSonatype

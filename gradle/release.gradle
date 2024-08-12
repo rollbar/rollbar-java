@@ -11,16 +11,6 @@ nexusPublishing {
     }
 }
 
-gradle.taskGraph.whenReady { taskGraph ->
-    if (taskGraph.allTasks.any { it instanceof Sign }) {
-        allprojects {
-            ext."signing.keyId" = System.getenv("GPG_KEY_ID")
-            ext."signing.secretKeyRingFile" = System.getenv("GPG_KEY_LOCATION")
-            ext."signing.password" = System.getenv("GPG_PASSPHRASE")
-        }
-    }
-}
-
 afterEvaluate {
     if (project.parent != null && !project.parent.name.equals("examples") && !project.name.contains('examples')) {
         if (!project.hasProperty('android')) {
@@ -92,6 +82,9 @@ afterEvaluate {
 
             signing {
                 required true
+                useInMemoryPgpKeys(
+                        findProperty("signingKey") ?: System.getenv("RELEASE_GPG_PRIVATE_KEY"),
+                        findProperty("signingPassword") ?: System.getenv("RELEASE_GPG_PRIVATE_KEY_PASSPHRASE"))
                 sign publishing.publications.maven
             }
         }
@@ -174,6 +167,9 @@ afterEvaluate {
                 }
                 signing {
                     required true
+                    useInMemoryPgpKeys(
+                        findProperty("signingKey") ?: System.getenv("RELEASE_GPG_PRIVATE_KEY"),
+                        findProperty("signingPassword") ?: System.getenv("RELEASE_GPG_PRIVATE_KEY_PASSPHRASE"))
                     sign publishing.publications.release
                 }
             }
