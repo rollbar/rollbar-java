@@ -56,11 +56,11 @@ jobs:
       - name: Environment info
         run: |
           ./gradlew --version
-          echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
-          ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager --version
           echo JAVA_HOME: ${JAVA_HOME}
           java -version
           javac -version
+          echo ANDROID_HOME: ${ANDROID_HOME}
+          echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
 
       - name: Build
         run: 'source ~/.jdk7_home && ./gradlew clean build'
@@ -83,6 +83,16 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v2
+
+      - name: Set up Java 11 for the Android SDK Manager
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: Install Android SDK
+        run: |
+          echo "Android SDK Manager version: `${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --version`"
+          ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "platforms;android-27" "build-tools;28.0.3"
 
       - name: Set up Java 7
         uses: actions/setup-java@v1
