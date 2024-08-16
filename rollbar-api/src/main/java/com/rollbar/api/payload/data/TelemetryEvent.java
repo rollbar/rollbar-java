@@ -21,7 +21,7 @@ public class TelemetryEvent implements JsonSerializable, StringTruncatable<Telem
   private static final long serialVersionUID = 2843361810242481727L;
 
   /**
-   * Construct a TelemetryEvent
+   * Construct a TelemetryEvent.
    *
    * @param telemetryType {@link TelemetryType}
    * @param level         {@link Level}
@@ -72,22 +72,26 @@ public class TelemetryEvent implements JsonSerializable, StringTruncatable<Telem
 
   @Override
   public String toString() {
-    return "TelemetryEvent{" +
-        "type='" + type.asJson() + '\'' +
-        ", level='" + level.asJson() + '\'' +
-        ", source='" + source + '\'' +
-        ", timestamp_ms=" + timestamp +
-        ", body=" + body +
-        '}';
+    return "TelemetryEvent{"
+        + "type='" + type.asJson() + '\''
+        + ", level='" + level.asJson() + '\''
+        + ", source='" + source + '\''
+        + ", timestamp_ms=" + timestamp
+        + ", body=" + body
+        + '}';
   }
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     TelemetryEvent that = (TelemetryEvent) o;
-    return type == that.type && level == that.level && Objects.equals(timestamp, that.timestamp) &&
-        Objects.equals(body, that.body) && Objects.equals(source, that.source);
+    return type == that.type && level == that.level && Objects.equals(timestamp, that.timestamp)
+        && Objects.equals(body, that.body) && Objects.equals(source, that.source);
   }
 
   @Override

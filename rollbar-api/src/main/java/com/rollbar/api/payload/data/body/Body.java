@@ -60,10 +60,17 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (!(o instanceof Body)) return false;
+    if (this == o) {
+      return true;
+    }
+
+    if (!(o instanceof Body)) {
+      return false;
+    }
+
     Body body = (Body) o;
-    return Objects.equals(bodyContent, body.bodyContent) && Objects.equals(telemetryEvents, body.telemetryEvents);
+    return Objects.equals(bodyContent, body.bodyContent)
+        && Objects.equals(telemetryEvents, body.telemetryEvents);
   }
 
   @Override
