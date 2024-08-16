@@ -43,12 +43,12 @@ public class DiskQueue extends AbstractQueue<Payload> {
 
     if (!this.queueFolder.exists()) {
       if (!this.queueFolder.mkdirs()) {
-        throw new RuntimeException("Could not create folder: " + queueFolder);
+        LOGGER.error("Could not create folder: {}", queueFolder);
       }
     }
 
     if (!this.queueFolder.canRead() || !this.queueFolder.canWrite()) {
-      throw new RuntimeException("Not enough permissions folder: " + queueFolder);
+      LOGGER.error("Not enough permissions folder: {}", queueFolder);
     }
   }
 
