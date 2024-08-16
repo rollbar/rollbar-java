@@ -54,5 +54,11 @@ public interface TelemetryEventTracker {
    *                   http://rollbar.com/test/api</a>").
    * @param statusCode the response status code (e.g. "404").
    */
-  void recordNetworkEventFor(Level level, Source source, String method, String url, String statusCode);
+  void recordNetworkEventFor(
+      Level level,
+      Source source,
+      String method,
+      String url,
+      String statusCode
+  );
 }
