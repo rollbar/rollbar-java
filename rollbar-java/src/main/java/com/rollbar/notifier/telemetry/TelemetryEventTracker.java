@@ -10,7 +10,7 @@ import java.util.List;
 public interface TelemetryEventTracker {
 
   /**
-   * Dump all the events recorded
+   * Dump all the events recorded.
    */
   List<TelemetryEvent> dump();
 
@@ -33,7 +33,8 @@ public interface TelemetryEventTracker {
   void recordManualEventFor(Level level, Source source, String message);
 
   /**
-   * Record navigation telemetry event with from (origin) and to (destination).({@link TelemetryType#NAVIGATION}) .
+   * Record navigation telemetry event with from (origin) and to (destination).
+   * ({@link TelemetryType#NAVIGATION}).
    *
    * @param level the TelemetryEvent severity (e.g. {@link Level#DEBUG}).
    * @param source the {@link Source} this event is recorded from (e.g. {@link Source#CLIENT}).
@@ -43,12 +44,14 @@ public interface TelemetryEventTracker {
   void recordNavigationEventFor(Level level, Source source, String from, String to);
 
   /**
-   * Record network telemetry event with method, url, and status code.({@link TelemetryType#NETWORK}).
+   * Record network telemetry event with method, url, and status code.
+   * ({@link TelemetryType#NETWORK}).
    *
    * @param level      the TelemetryEvent severity (e.g. {@link Level#DEBUG}).
    * @param source the {@link Source} this event is recorded from (e.g. {@link Source#CLIENT}).
    * @param method     the verb used (e.g. "POST").
-   * @param url        the api url (e.g. "<a href="http://rollbar.com/test/api">http://rollbar.com/test/api</a>").
+   * @param url        the api url (e.g. "<a href="http://rollbar.com/test/api">
+   *                   http://rollbar.com/test/api</a>").
    * @param statusCode the response status code (e.g. "404").
    */
   void recordNetworkEventFor(Level level, Source source, String method, String url, String statusCode);

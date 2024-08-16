@@ -17,7 +17,9 @@ import com.rollbar.notifier.util.ObjectsUtils;
 import com.rollbar.notifier.wrapper.RollbarThrowableWrapper;
 import com.rollbar.notifier.wrapper.ThrowableWrapper;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -76,7 +78,8 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
   }
 
   /**
-   * Record navigation telemetry event with from (origin) and to (destination).({@link TelemetryType#NAVIGATION})
+   * Record navigation telemetry event with from (origin) and to (destination).
+   * ({@link TelemetryType#NAVIGATION}).
    *
    * @param level the TelemetryEvent severity (e.g. {@link Level#DEBUG}).
    * @param from  the starting point (e.g. "SettingView").
@@ -87,11 +90,13 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
   }
 
   /**
-   * Record network telemetry event with method, url, and status code.({@link TelemetryType#NETWORK})
+   * Record network telemetry event with method, url, and status code.
+   * ({@link TelemetryType#NETWORK}).
    *
    * @param level      the TelemetryEvent severity (e.g. {@link Level#DEBUG}).
    * @param method     the verb used (e.g. "POST").
-   * @param url        the api url (e.g. "<a href="http://rollbar.com/test/api">http://rollbar.com/test/api</a>").
+   * @param url        the api url (e.g. "<a href="http://rollbar.com/test/api">
+   *                   http://rollbar.com/test/api</a>").
    * @param statusCode the response status code (e.g. "404").
    */
   public void recordNetworkEventFor(Level level, String method, String url, String statusCode) {

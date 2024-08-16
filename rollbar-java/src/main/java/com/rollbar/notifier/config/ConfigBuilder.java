@@ -91,11 +91,11 @@ public class ConfigBuilder {
 
   private TelemetryEventTracker telemetryEventTracker;
 
-  private final static int MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 1;
+  private static final int MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 1;
 
-  private final static int DEFAULT_CAPACITY_FOR_TELEMETRY_EVENTS = 10;
+  private static final int DEFAULT_CAPACITY_FOR_TELEMETRY_EVENTS = 10;
 
-  private final static int MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 50;
+  private static final int MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 50;
 
   /**
    * Constructor with an access token.
@@ -552,7 +552,8 @@ public class ConfigBuilder {
     }
 
     if (telemetryEventTracker == null) {
-      telemetryEventTracker = new RollbarTelemetryEventTracker(new TimestampProvider(), maximumTelemetryData);
+      telemetryEventTracker =
+        new RollbarTelemetryEventTracker(new TimestampProvider(), maximumTelemetryData);
     }
 
     return new ConfigImpl(this);

@@ -11,6 +11,7 @@ import com.rollbar.jvmti.CacheFrame;
 import com.rollbar.jvmti.ThrowableCache;
 import com.rollbar.notifier.wrapper.RollbarThrowableWrapper;
 import com.rollbar.notifier.wrapper.ThrowableWrapper;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -23,11 +24,10 @@ public class BodyFactory {
   /**
    * Builds the body for the throwable and description supplied.
    *
-   * @param throwable the throwable.
+   * @param throwable   the throwable.
    * @param description the description.
    * @return the body.
-   *
-   * @deprecated  Replaced by {@link #from(ThrowableWrapper, String)}.
+   * @deprecated Replaced by {@link #from(ThrowableWrapper, String)}.
    */
   @Deprecated
   public Body from(Throwable throwable, String description) {
@@ -42,7 +42,7 @@ public class BodyFactory {
    * supplied.
    *
    * @param throwableWrapper the throwable proxy.
-   * @param description the description.
+   * @param description      the description.
    * @return the body.
    */
   public Body from(ThrowableWrapper throwableWrapper, String description) {
@@ -55,11 +55,15 @@ public class BodyFactory {
    * supplied and telemetry events.
    *
    * @param throwableWrapper the throwable proxy.
-   * @param description the description.
-   * @param telemetryEvents the telemetry events.
+   * @param description      the description.
+   * @param telemetryEvents  the telemetry events.
    * @return the body.
    */
-  public Body from(ThrowableWrapper throwableWrapper, String description, List<TelemetryEvent> telemetryEvents) {
+  public Body from(
+      ThrowableWrapper throwableWrapper,
+      String description,
+      List<TelemetryEvent> telemetryEvents
+  ) {
     Body.Builder builder = new Body.Builder().telemetryEvents(telemetryEvents);
     return from(throwableWrapper, description, builder);
   }
