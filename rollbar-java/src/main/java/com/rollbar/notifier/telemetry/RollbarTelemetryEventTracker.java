@@ -1,6 +1,7 @@
 package com.rollbar.notifier.telemetry;
 
 import com.rollbar.api.payload.data.Level;
+import com.rollbar.api.payload.data.Source;
 import com.rollbar.api.payload.data.TelemetryEvent;
 import com.rollbar.api.payload.data.TelemetryType;
 import com.rollbar.notifier.provider.Provider;
@@ -43,7 +44,7 @@ public class RollbarTelemetryEventTracker implements TelemetryEventTracker {
    * @param level   the TelemetryEvent severity (e.g. {@link Level#DEBUG}).
    * @param message the message sent for this event (e.g. "hello world").
    */
-  public void recordLogEventFor(Level level, String source, String message) {
+  public void recordLogEventFor(Level level, Source source, String message) {
     Map<String, String> body = new HashMap<>();
     body.put(LOG_KEY_MESSAGE, message);
     addEvent(new TelemetryEvent(TelemetryType.LOG, level, timestampProvider.provide(), source, body));
@@ -55,7 +56,7 @@ public class RollbarTelemetryEventTracker implements TelemetryEventTracker {
    * @param level   the TelemetryEvent severity (e.g. {@link Level#DEBUG}).
    * @param message the message sent for this event (e.g. "hello world").
    */
-  public void recordManualEventFor(Level level, String source, String message) {
+  public void recordManualEventFor(Level level, Source source, String message) {
     Map<String, String> body = new HashMap<>();
     body.put(LOG_KEY_MESSAGE, message);
     addEvent(new TelemetryEvent(TelemetryType.MANUAL, level, timestampProvider.provide(), source, body));
@@ -68,7 +69,7 @@ public class RollbarTelemetryEventTracker implements TelemetryEventTracker {
    * @param from  the starting point (e.g. "SettingView").
    * @param to    the destination point (e.g. "HomeView").
    */
-  public void recordNavigationEventFor(Level level, String source, String from, String to) {
+  public void recordNavigationEventFor(Level level, Source source, String from, String to) {
     Map<String, String> body = new HashMap<>();
     body.put(NAVIGATION_KEY_FROM, from);
     body.put(NAVIGATION_KEY_TO, to);
@@ -83,7 +84,7 @@ public class RollbarTelemetryEventTracker implements TelemetryEventTracker {
    * @param url        the api url (e.g. "<a href="http://rollbar.com/test/api">http://rollbar.com/test/api</a>").
    * @param statusCode the response status code (e.g. "404").
    */
-  public void recordNetworkEventFor(Level level, String source, String method, String url, String statusCode) {
+  public void recordNetworkEventFor(Level level, Source source, String method, String url, String statusCode) {
     Map<String, String> body = new HashMap<>();
     body.put(NETWORK_KEY_METHOD, method);
     body.put(NETWORK_KEY_URL, url);

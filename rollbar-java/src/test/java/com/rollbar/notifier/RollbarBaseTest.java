@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 
 import com.rollbar.api.payload.Payload;
 import com.rollbar.api.payload.data.Level;
+import com.rollbar.api.payload.data.Source;
 import com.rollbar.notifier.config.Config;
 import com.rollbar.notifier.telemetry.TelemetryEventTracker;
 import com.rollbar.notifier.util.BodyFactory;
@@ -35,7 +36,7 @@ public class RollbarBaseTest {
 
     sut.recordLogEventFor(level, message);
 
-    verify(telemetryEventTracker).recordLogEventFor(level, "server", message);
+    verify(telemetryEventTracker).recordLogEventFor(level, Source.SERVER, message);
   }
 
   @Test
@@ -45,7 +46,7 @@ public class RollbarBaseTest {
 
     sut.recordLogEventFor(level, message);
 
-    verify(telemetryEventTracker).recordLogEventFor(level, "client", message);
+    verify(telemetryEventTracker).recordLogEventFor(level, Source.CLIENT, message);
   }
 
   @Test
@@ -55,7 +56,7 @@ public class RollbarBaseTest {
 
     sut.recordManualEventFor(level, message);
 
-    verify(telemetryEventTracker).recordManualEventFor(level, "server", message);
+    verify(telemetryEventTracker).recordManualEventFor(level, Source.SERVER, message);
   }
 
   @Test
@@ -65,7 +66,7 @@ public class RollbarBaseTest {
 
     sut.recordManualEventFor(level, message);
 
-    verify(telemetryEventTracker).recordManualEventFor(level, "client", message);
+    verify(telemetryEventTracker).recordManualEventFor(level, Source.CLIENT, message);
   }
 
   @Test
@@ -77,7 +78,7 @@ public class RollbarBaseTest {
 
     sut.recordNetworkEventFor(level, method, url, statusCode);
 
-    verify(telemetryEventTracker).recordNetworkEventFor(level, "server", method, url, statusCode);
+    verify(telemetryEventTracker).recordNetworkEventFor(level, Source.SERVER, method, url, statusCode);
   }
 
   @Test
@@ -89,7 +90,7 @@ public class RollbarBaseTest {
 
     sut.recordNetworkEventFor(level, method, url, statusCode);
 
-    verify(telemetryEventTracker).recordNetworkEventFor(level, "client", method, url, statusCode);
+    verify(telemetryEventTracker).recordNetworkEventFor(level, Source.CLIENT, method, url, statusCode);
   }
 
   @Test
@@ -100,7 +101,7 @@ public class RollbarBaseTest {
 
     sut.recordNavigationEventFor(level, from, to);
 
-    verify(telemetryEventTracker).recordNavigationEventFor(level, "server", from, to);
+    verify(telemetryEventTracker).recordNavigationEventFor(level, Source.SERVER, from, to);
   }
 
   @Test
@@ -111,7 +112,7 @@ public class RollbarBaseTest {
 
     sut.recordNavigationEventFor(level, from, to);
 
-    verify(telemetryEventTracker).recordNavigationEventFor(level, "client", from, to);
+    verify(telemetryEventTracker).recordNavigationEventFor(level, Source.CLIENT, from, to);
   }
 
   private Config getConfigWith(String platform) {

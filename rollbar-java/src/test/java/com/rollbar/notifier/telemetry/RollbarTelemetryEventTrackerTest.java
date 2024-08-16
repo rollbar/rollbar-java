@@ -4,6 +4,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
 import com.rollbar.api.payload.data.Level;
+import com.rollbar.api.payload.data.Source;
 import com.rollbar.api.payload.data.TelemetryEvent;
 import com.rollbar.api.payload.data.TelemetryType;
 import com.rollbar.notifier.provider.timestamp.TimestampProvider;
@@ -16,7 +17,7 @@ import java.util.Map;
 
 public class RollbarTelemetryEventTrackerTest {
 
-  private static final String SOURCE = "Any source";
+  private static final Source SOURCE = Source.SERVER;
   private static final String MESSAGE = "Any message";
   private static final String FROM = "Any origin";
   private static final String TO = "Any destination";
@@ -138,7 +139,7 @@ public class RollbarTelemetryEventTrackerTest {
   private Map<String, Object> commonFields() {
     Map<String, Object> map = new HashMap<>();
     map.put("level", LEVEL.asJson());
-    map.put("source", SOURCE);
+    map.put("source", SOURCE.asJson());
     map.put("timestamp_ms", TIMESTAMP);
     return map;
   }

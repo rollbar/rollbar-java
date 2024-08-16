@@ -4,6 +4,7 @@ import com.rollbar.api.annotations.Unstable;
 import com.rollbar.api.payload.Payload;
 import com.rollbar.api.payload.data.Data;
 import com.rollbar.api.payload.data.Level;
+import com.rollbar.api.payload.data.Source;
 import com.rollbar.api.payload.data.TelemetryEvent;
 import com.rollbar.api.payload.data.TelemetryType;
 import com.rollbar.api.payload.data.body.Body;
@@ -340,12 +341,12 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
     return bodyFactory.from(error, description, telemetryEvents);
   }
 
-  private String getSource() {
+  private Source getSource() {
     String platform = config.platform();
     if ("android".equals(platform)) {
-      return "client";
+      return Source.CLIENT;
     } else {
-      return "server";
+      return Source.SERVER;
     }
   }
 }

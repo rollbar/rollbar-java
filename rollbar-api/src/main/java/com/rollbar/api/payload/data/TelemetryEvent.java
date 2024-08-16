@@ -17,14 +17,14 @@ public class TelemetryEvent implements JsonSerializable, StringTruncatable<Telem
   private final Level level;
   private final Long timestamp;
   private final Map<String, String> body;
-  private final String source;
+  private final Source source;
   private static final long serialVersionUID = 2843361810242481727L;
 
   public TelemetryEvent(
       TelemetryType telemetryType,
       Level level,
       Long timestamp,
-      String source,
+      Source source,
       Map<String, String> body
   ) {
     type = telemetryType;
@@ -39,7 +39,7 @@ public class TelemetryEvent implements JsonSerializable, StringTruncatable<Telem
     Map<String, Object> values = new HashMap<>();
     values.put("type", type.asJson());
     values.put("level", level.asJson());
-    values.put("source", source);
+    values.put("source", source.asJson());
     values.put("timestamp_ms", timestamp);
     values.put("body", body);
     return values;
