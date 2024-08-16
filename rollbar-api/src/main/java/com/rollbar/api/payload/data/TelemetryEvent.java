@@ -20,6 +20,15 @@ public class TelemetryEvent implements JsonSerializable, StringTruncatable<Telem
   private final Source source;
   private static final long serialVersionUID = 2843361810242481727L;
 
+  /**
+   * Construct a TelemetryEvent
+   *
+   * @param telemetryType {@link TelemetryType}
+   * @param level         {@link Level}
+   * @param timestamp     the timestamp for this TelemetryEvent
+   * @param source        {@link Source}
+   * @param body          a map containing all the data required by the {@link TelemetryType}
+   */
   public TelemetryEvent(
       TelemetryType telemetryType,
       Level level,
@@ -77,7 +86,8 @@ public class TelemetryEvent implements JsonSerializable, StringTruncatable<Telem
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     TelemetryEvent that = (TelemetryEvent) o;
-    return type == that.type && level == that.level && Objects.equals(timestamp, that.timestamp) && Objects.equals(body, that.body) && Objects.equals(source, that.source);
+    return type == that.type && level == that.level && Objects.equals(timestamp, that.timestamp) &&
+        Objects.equals(body, that.body) && Objects.equals(source, that.source);
   }
 
   @Override
