@@ -78,8 +78,8 @@ public class TelemetryEventTest {
 
   @Test
   public void shouldNotBeEqualIfTheyHaveDifferentSource() {
-    TelemetryEvent clientEvent = builder.setSource("client").build();
-    TelemetryEvent serverEvent = builder.setSource("server").build();
+    TelemetryEvent clientEvent = builder.setSource(Source.CLIENT).build();
+    TelemetryEvent serverEvent = builder.setSource(Source.SERVER).build();
 
     boolean equality = clientEvent.equals(serverEvent);
 
@@ -125,7 +125,7 @@ public class TelemetryEventTest {
     HashMap<String, Object> expected = new HashMap<>();
     expected.put("type", "log");
     expected.put("level", "debug");
-    expected.put("source", TelemetryEventBuilder.DEFAULT_SOURCE);
+    expected.put("source", TelemetryEventBuilder.DEFAULT_SOURCE.asJson());
     expected.put("timestamp_ms", TelemetryEventBuilder.DEFAULT_TIMESTAMP);
     expected.put("body", defaultBody);
     TelemetryEvent telemetryEvent1 = builder.setBody(defaultBody).build();
@@ -173,11 +173,11 @@ public class TelemetryEventTest {
 
 class TelemetryEventBuilder {
   public static long DEFAULT_TIMESTAMP = 10L;
-  public static String DEFAULT_SOURCE = "client";
+  public static Source DEFAULT_SOURCE = Source.CLIENT;
   private long timestamp = DEFAULT_TIMESTAMP;
   private TelemetryType telemetryType = TelemetryType.LOG;
   private Level level = Level.DEBUG;
-  private String source = DEFAULT_SOURCE;
+  private Source source = DEFAULT_SOURCE;
   HashMap<String, String> body = new HashMap<>();
 
   TelemetryEventBuilder setTelemetryType(TelemetryType telemetryType) {
@@ -195,7 +195,7 @@ class TelemetryEventBuilder {
     return this;
   }
 
-  TelemetryEventBuilder setSource(String source) {
+  TelemetryEventBuilder setSource(Source source) {
     this.source = source;
     return this;
   }
