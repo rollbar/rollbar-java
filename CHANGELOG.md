@@ -1,5 +1,14 @@
 # Change Log
 
+# 1.10.3
+
+### rollbar-logback
+- Update Logback to version 1.3.14 [#310](https://github.com/rollbar/rollbar-java/pull/310)
+
+### rollbar-java
+- Fix: Log when the error reports folder can't be created instead of throwing an Exception, to
+prevent silent crashes [#318](https://github.com/rollbar/rollbar-java/pull/318)
+
 # 1.10.0
 
 - Add support for Spring 6.x and Spring Boot 3.x. [#302](https://github.com/rollbar/rollbar-java/pull/302)
