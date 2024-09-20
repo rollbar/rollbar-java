@@ -25,3 +25,11 @@ acceptedBreaks:
       justification: "This is a binary compatible change, which could only break custom\
         \ implementations of our config interfaces, but those interfaces are not meant\
         \ to be implemented by users"
+  "2.0.0":
+    com.rollbar:rollbar-java:
+    - code: "java.method.addedToInterface"
+      new: "method com.rollbar.notifier.telemetry.TelemetryEventTracker com.rollbar.notifier.config.CommonConfig::telemetryEventTracker()"
+      justification: "This is going to be added in a major version"
+    - code: "java.method.addedToInterface"
+      new: "method int com.rollbar.notifier.config.CommonConfig::maximumTelemetryData()"
+      justification: "This is going to be added in a major version"
