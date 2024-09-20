@@ -108,7 +108,7 @@ jobs:
           if test "$GITHUB_REPOSITORY" = "rollbar/rollbar-java" -a "$GITHUB_BASE_REF" = ""; then
             openssl enc -aes-256-cbc -K "$SECRING_GPG_KEY" -iv "$SECRING_GPG_IV" -in "$ENCRYPTED_GPG_KEY_LOCATION" -out "$GPG_KEY_LOCATION" -d
           fi &&
-          ./.github/release.sh
+          ./.github/scripts/release.sh
 
       - name: Cleanup Gradle cache
         run: |
