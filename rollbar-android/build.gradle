@@ -4,7 +4,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.6.2'
+        classpath 'com.android.tools.build:gradle:4.2.2'
     }
 }
 
@@ -19,10 +19,12 @@ apply from: "$rootDir/gradle/android.quality.gradle"
 
 android {
     compileSdkVersion 27
-    buildToolsVersion '28.0.3'
+    buildToolsVersion '30.0.3' // Going above here requires bumping the AGP to version 4+
 
     defaultConfig {
         minSdkVersion 16
+        // FIXME: Pending further discussion
+        //noinspection ExpiredTargetSdkVersion
         targetSdkVersion 27
         consumerProguardFiles 'proguard-rules.pro'
         manifestPlaceholders = [notifierVersion: VERSION_NAME]

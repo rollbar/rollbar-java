@@ -10,9 +10,9 @@ public class VersionHelperTest {
   @Test
   public void shouldReturnVersion() {
     VersionHelper helper = new VersionHelper();
-    // It will fail when we upgrade to 2.x, but it's stable enough. Better than nothing when running
+    // It will fail when we upgrade to 3.x, but it's stable enough. Better than nothing when running
     // from an IDE, without the version property that we set in Gradle.
-    assertThat(helper.version(), startsWith("1."));
+    assertThat(helper.version(), startsWith("2."));
   }
 
   @Test

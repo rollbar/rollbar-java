@@ -4,9 +4,9 @@
           android:versionCode="1"
           android:versionName="1.0" >
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application>
         <meta-data android:name="com.rollbar.android._notifier.version" android:value="${notifierVersion}" />
     </application>
-
-    <uses-permission android:name="android.permission.INTERNET" />
 </manifest>

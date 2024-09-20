@@ -31,9 +31,7 @@ allprojects {
 }
 
 subprojects { project ->
-    if (!project.name.contains('android') &&
-            !project.parent.name.equals("examples") &&
-            !project.name.contains('examples')) {
+    if (!project.name.contains('android') && !project.parent.name.equals("examples") && !project.name.contains('examples')) {
         apply plugin: 'java-library'
 
         apply from: "$rootDir/gradle/release.gradle"
@@ -62,23 +60,16 @@ subprojects { project ->
         }
 
         compileJava {
-            if (JavaVersion.current().compareTo(JavaVersion.VERSION_1_9) >= 0) {
-                // Use the --release javac flag, available since JDK9, which is equivalent to setting
-                // the source, target, and bootstrap classpath, and catches all usages of stdlib
-                // features not available in the target version.
-                options.release = 7
+            if (JavaVersion.current().isJava9Compatible()) {
+                options.release = 8
             } else {
-                sourceCompatibility = JavaVersion.VERSION_1_7
-                targetCompatibility = JavaVersion.VERSION_1_7
-            }
-
-            if (System.env.JDK7_HOME) {
-                options.bootstrapClasspath = files("${System.env.JDK7_HOME}/jre/lib/rt.jar")
+                sourceCompatibility = JavaVersion.VERSION_1_8
+                targetCompatibility = JavaVersion.VERSION_1_8
             }
         }
 
         compileTestJava {
-            if (JavaVersion.current().compareTo(JavaVersion.VERSION_1_9) >= 0) {
+            if (JavaVersion.current().isJava9Compatible()) {
                 options.release = 8
             } else {
                 sourceCompatibility = JavaVersion.VERSION_1_8
