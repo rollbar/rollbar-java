@@ -38,8 +38,6 @@ elif [[ -z $VERSION ]]; then
 elif ! [[ $VERSION =~ $SEMVER_REGEX ]]; then
   echo "Skipping release. Bad version used."
 else
-  # Gradle needs the absolute path to the secring
-  export GPG_KEY_LOCATION="$(realpath "$GPG_KEY_LOCATION")"
 
   if [[ ${BASH_REMATCH[5]} == 'SNAPSHOT' ]]; then
     echo "Doing SNAPSHOT release..."

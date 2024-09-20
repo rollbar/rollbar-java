@@ -41,14 +41,18 @@ public class DiskQueue extends AbstractQueue<Payload> {
     this.maxSize = builder.maxSize;
     this.queueFolder = builder.queueFolder;
 
+    /*
+    A RuntimeException can cause a silent crash, since the error would not be saved and in the next
+    session there would be no payload to send. So we just log the error.
+    */
     if (!this.queueFolder.exists()) {
       if (!this.queueFolder.mkdirs()) {
-        throw new RuntimeException("Could not create folder: " + queueFolder);
+        LOGGER.error("Could not create folder: {}", queueFolder);
       }
     }
 
     if (!this.queueFolder.canRead() || !this.queueFolder.canWrite()) {
-      throw new RuntimeException("Not enough permissions folder: " + queueFolder);
+      LOGGER.error("Not enough permissions folder: {}", queueFolder);
     }
   }
 
