@@ -33,8 +33,9 @@ public class RollbarTelemetryEventTracker implements TelemetryEventTracker {
    * Construct a {@link RollbarTelemetryEventTracker}.
    *
    * @param timestampProvider    A Provider of timestamps for the events
-   * @param maximumTelemetryData Maximum number of accumulated events (This value can be between 1 and 50, exceed any of
-   * these thresholds and the closest will be taken)
+   * @param maximumTelemetryData Maximum number of accumulated events (This value can be between 1
+   *                             and 50, exceed any of these thresholds and the closest will be
+   *                             taken)
    */
   public RollbarTelemetryEventTracker(
       Provider<Long> timestampProvider,
