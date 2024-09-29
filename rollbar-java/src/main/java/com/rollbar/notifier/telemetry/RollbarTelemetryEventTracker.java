@@ -26,19 +26,27 @@ public class RollbarTelemetryEventTracker implements TelemetryEventTracker {
   private static final String NETWORK_KEY_METHOD = "method";
   private static final String NETWORK_KEY_URL = "url";
   private static final String NETWORK_KEY_STATUS_CODE = "status_code";
+  private static final int MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 1;
+  private static final int MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 50;
 
   /**
    * Construct a {@link RollbarTelemetryEventTracker}.
    *
    * @param timestampProvider    A Provider of timestamps for the events
-   * @param maximumTelemetryData Maximum number of accumulated events
+   * @param maximumTelemetryData Maximum number of accumulated events (This value can be between 1 and 50, exceed any of
+   * these thresholds and the closest will be taken)
    */
   public RollbarTelemetryEventTracker(
       Provider<Long> timestampProvider,
       int maximumTelemetryData
   ) {
+    if (maximumTelemetryData < MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS) {
+      this.maximumTelemetryData = MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS;
+    } else {
+      this.maximumTelemetryData =
+          Math.min(maximumTelemetryData, MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS);
+    }
     this.timestampProvider = timestampProvider;
-    this.maximumTelemetryData = maximumTelemetryData;
   }
 
   @Override

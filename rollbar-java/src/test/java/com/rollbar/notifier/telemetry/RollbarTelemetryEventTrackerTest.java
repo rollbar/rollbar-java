@@ -1,7 +1,7 @@
 package com.rollbar.notifier.telemetry;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.rollbar.api.payload.data.Level;
 import com.rollbar.api.payload.data.Source;
@@ -28,10 +28,9 @@ public class RollbarTelemetryEventTrackerTest {
   private static final int MAXIMUM_TELEMETRY_DATA = 2;
   private static final long TIMESTAMP = 10L;
   private final TimestampProvider fakeTimestampProvider = new TimestampProviderFake();
-  private final RollbarTelemetryEventTracker telemetryEventTracker = new RollbarTelemetryEventTracker(
-      fakeTimestampProvider,
-      MAXIMUM_TELEMETRY_DATA
-  );
+  private final TelemetryEventTracker telemetryEventTracker = newEventTracker(MAXIMUM_TELEMETRY_DATA);
+  private static final int MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 1;
+  private static final int MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 50;
 
   @Test
   public void shouldDiscardOldestEventsWhenMaxCapacityIsReached() {
@@ -79,6 +78,48 @@ public class RollbarTelemetryEventTrackerTest {
     telemetryEventTracker.recordNetworkEventFor(LEVEL, SOURCE, METHOD, URL, STATUS_CODE);
 
     assertThat(getTrackedEventAsJson(), is(expectedJson));
+  }
+
+  @Test
+  public void shouldSetTheMaximumTelemetryDataLimitedToItsLowerLimit() {
+    TelemetryEventTracker telemetryEventTracker = newEventTracker(MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS - 1);
+
+    List<TelemetryEvent> telemetryEvents = record70EventsAndDump(telemetryEventTracker);
+
+    assertThat(telemetryEvents.size(), is(MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS));
+  }
+
+  @Test
+  public void shouldSetTheMaximumTelemetryDataLimitedToItsUpperLimit() {
+    TelemetryEventTracker telemetryEventTracker = newEventTracker(MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS + 1);
+
+    List<TelemetryEvent> telemetryEvents = record70EventsAndDump(telemetryEventTracker);
+
+    assertThat(telemetryEvents.size(), is(MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS));
+  }
+
+  @Test
+  public void shouldSetTheMaximumTelemetryDataLimitedToAValueBetweenBounds() {
+    int maximumTelemetryEvents = 20;
+    TelemetryEventTracker telemetryEventTracker = newEventTracker(maximumTelemetryEvents);
+
+    List<TelemetryEvent> telemetryEvents = record70EventsAndDump(telemetryEventTracker);
+
+    assertThat(telemetryEvents.size(), is(maximumTelemetryEvents));
+  }
+
+  private TelemetryEventTracker newEventTracker(int maximumTelemetryData) {
+    return new RollbarTelemetryEventTracker(
+        fakeTimestampProvider,
+        maximumTelemetryData
+    );
+  }
+
+  private List<TelemetryEvent> record70EventsAndDump(TelemetryEventTracker telemetryEventTracker) {
+    for (int i = 0; i < 70; i++) {
+      telemetryEventTracker.recordManualEventFor(LEVEL, SOURCE, MESSAGE);
+    }
+    return telemetryEventTracker.dump();
   }
 
   private Map<String, Object> getTrackedEventAsJson() {

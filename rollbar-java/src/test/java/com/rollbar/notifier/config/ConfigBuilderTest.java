@@ -45,10 +45,6 @@ public class ConfigBuilderTest {
 
   private static final int DEFAULT_CAPACITY_FOR_TELEMETRY_EVENTS = 10;
 
-  private static final int MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 1;
-
-  private static final int MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 50;
-
   @Rule
   public MockitoRule rule = MockitoJUnit.rule();
 
@@ -207,29 +203,5 @@ public class ConfigBuilderTest {
     assertThat(config.handleUncaughtErrors(), is(copy.handleUncaughtErrors()));
     assertThat(config.isEnabled(), is(copy.isEnabled()));
     assertThat(config.maximumTelemetryData(), is(maximumTelemetryData));
-  }
-
-  @Test
-  public void shouldSetTheMaximumTelemetryDataLimitedToItsLowerLimit() {
-    int maximumTelemetryData = MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS - 1;
-
-    Config config = ConfigBuilder
-            .withAccessToken(ACCESS_TOKEN)
-            .maximumTelemetryData(maximumTelemetryData)
-            .build();
-
-    assertThat(config.maximumTelemetryData(), is(MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS));
-  }
-
-  @Test
-  public void shouldSetTheMaximumTelemetryDataLimitedToItsUpperLimit() {
-    int maximumTelemetryData = MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS + 1;
-
-    Config config = ConfigBuilder
-            .withAccessToken(ACCESS_TOKEN)
-            .maximumTelemetryData(maximumTelemetryData)
-            .build();
-
-    assertThat(config.maximumTelemetryData(), is(MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS));
   }
 }
