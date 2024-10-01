@@ -87,15 +87,10 @@ public class ConfigBuilder {
 
   protected boolean truncateLargePayloads;
 
-  private int maximumTelemetryData = DEFAULT_CAPACITY_FOR_TELEMETRY_EVENTS;
+  private int maximumTelemetryData =
+      RollbarTelemetryEventTracker.MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS;
 
   private TelemetryEventTracker telemetryEventTracker;
-
-  private static final int MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 1;
-
-  private static final int DEFAULT_CAPACITY_FOR_TELEMETRY_EVENTS = 10;
-
-  private static final int MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 50;
 
   /**
    * Constructor with an access token.
@@ -487,23 +482,13 @@ public class ConfigBuilder {
 
   /**
    * <p>
-   * Maximum Telemetry Events sent in a payload (This value can be between 1 and 50, exceed any of
-   * these thresholds and the closest will be taken). Default: 10.
+   * Maximum Telemetry Events sent in a payload. Default is
+   * {@value RollbarTelemetryEventTracker#MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS}.
    * </p>
    * @param maximumTelemetryData max quantity of telemetry events sent.
    * @return the builder instance.
    */
   public ConfigBuilder maximumTelemetryData(int maximumTelemetryData) {
-    if (maximumTelemetryData < MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS) {
-      this.maximumTelemetryData = MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS;
-      return this;
-    }
-
-    if (maximumTelemetryData > MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS) {
-      this.maximumTelemetryData = MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS;
-      return this;
-    }
-
     this.maximumTelemetryData = maximumTelemetryData;
     return this;
   }

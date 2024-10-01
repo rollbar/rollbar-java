@@ -43,7 +43,7 @@ public class ConfigBuilderTest {
 
   static final String FRAMEWORK = "framework";
 
-  private static final int DEFAULT_CAPACITY_FOR_TELEMETRY_EVENTS = 10;
+  private static final int DEFAULT_CAPACITY_FOR_TELEMETRY_EVENTS = 100;
 
   @Rule
   public MockitoRule rule = MockitoJUnit.rule();

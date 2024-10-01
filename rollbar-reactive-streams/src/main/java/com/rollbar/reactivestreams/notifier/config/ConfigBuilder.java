@@ -61,9 +61,9 @@ public final class ConfigBuilder {
   private boolean enabled;
   private DefaultLevels defaultLevels;
   private boolean truncateLargePayloads;
-  private int maximumTelemetryData = DEFAULT_CAPACITY_FOR_TELEMETRY_EVENTS;
+  private int maximumTelemetryData =
+      RollbarTelemetryEventTracker.MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS;
   private TelemetryEventTracker telemetryEventTracker;
-  private static final int DEFAULT_CAPACITY_FOR_TELEMETRY_EVENTS = 10;
 
 
   /**
@@ -471,9 +471,8 @@ public final class ConfigBuilder {
 
   /**
    * <p>
-   * Maximum Telemetry Events sent in a payload (can be overwritten if the
-   * {@link TelemetryEventTracker} has thresholds like the {@link RollbarTelemetryEventTracker}).
-   * Default: 10.
+   * Maximum Telemetry Events sent in a payload. Default is
+   * {@value RollbarTelemetryEventTracker#MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS}.
    * </p>
    * @param maximumTelemetryData max quantity of telemetry events sent.
    * @return the builder instance.

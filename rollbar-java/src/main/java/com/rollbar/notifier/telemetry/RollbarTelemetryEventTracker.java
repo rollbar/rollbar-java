@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * Default {@link TelemetryEventTracker}.
  */
 public class RollbarTelemetryEventTracker implements TelemetryEventTracker {
+  public static final int MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 100;
   private final int maximumTelemetryData;
   private final Queue<TelemetryEvent> telemetryEvents = new ConcurrentLinkedQueue<>();
   private final Provider<Long> timestampProvider;
@@ -27,7 +28,6 @@ public class RollbarTelemetryEventTracker implements TelemetryEventTracker {
   private static final String NETWORK_KEY_URL = "url";
   private static final String NETWORK_KEY_STATUS_CODE = "status_code";
   private static final int NO_CAPACITY = 0;
-  private static final int MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 100;
 
   /**
    * Construct a {@link RollbarTelemetryEventTracker}.
