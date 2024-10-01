@@ -26,23 +26,23 @@ public class RollbarTelemetryEventTracker implements TelemetryEventTracker {
   private static final String NETWORK_KEY_METHOD = "method";
   private static final String NETWORK_KEY_URL = "url";
   private static final String NETWORK_KEY_STATUS_CODE = "status_code";
-  private static final int MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 1;
-  private static final int MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 50;
+  private static final int NO_CAPACITY = 0;
+  private static final int MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 100;
 
   /**
    * Construct a {@link RollbarTelemetryEventTracker}.
    *
    * @param timestampProvider    A Provider of timestamps for the events
-   * @param maximumTelemetryData Maximum number of accumulated events (This value can be between 1
-   *                             and 50, exceed any of these thresholds and the closest will be
+   * @param maximumTelemetryData Maximum number of accumulated events (This value can be between 0
+   *                             and 100, exceed any of these thresholds and the closest will be
    *                             taken)
    */
   public RollbarTelemetryEventTracker(
       Provider<Long> timestampProvider,
       int maximumTelemetryData
   ) {
-    if (maximumTelemetryData < MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS) {
-      this.maximumTelemetryData = MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS;
+    if (maximumTelemetryData < NO_CAPACITY) {
+      this.maximumTelemetryData = NO_CAPACITY;
     } else {
       this.maximumTelemetryData =
           Math.min(maximumTelemetryData, MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS);
@@ -95,10 +95,24 @@ public class RollbarTelemetryEventTracker implements TelemetryEventTracker {
   }
 
   private void addEvent(TelemetryEvent telemetryEvent) {
-    if (telemetryEvents.size() >= maximumTelemetryData) {
-      telemetryEvents.poll();
+    if (doNotRecordEvents()) return;
+
+    if (maxCapacityReached()) {
+      removeOldestEvent();
     }
     telemetryEvents.add(telemetryEvent);
+  }
+
+  private boolean doNotRecordEvents() {
+    return maximumTelemetryData == NO_CAPACITY;
+  }
+
+  private boolean maxCapacityReached() {
+    return telemetryEvents.size() >= maximumTelemetryData;
+  }
+
+  private void removeOldestEvent() {
+    telemetryEvents.poll();
   }
 
   private long getTimestamp() {

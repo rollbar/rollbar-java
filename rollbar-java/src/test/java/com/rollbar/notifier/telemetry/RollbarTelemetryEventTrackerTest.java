@@ -29,8 +29,8 @@ public class RollbarTelemetryEventTrackerTest {
   private static final long TIMESTAMP = 10L;
   private final TimestampProvider fakeTimestampProvider = new TimestampProviderFake();
   private final TelemetryEventTracker telemetryEventTracker = newEventTracker(MAXIMUM_TELEMETRY_DATA);
-  private static final int MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 1;
-  private static final int MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 50;
+  private static final int MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 0;
+  private static final int MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 100;
 
   @Test
   public void shouldDiscardOldestEventsWhenMaxCapacityIsReached() {
@@ -116,7 +116,7 @@ public class RollbarTelemetryEventTrackerTest {
   }
 
   private List<TelemetryEvent> record70EventsAndDump(TelemetryEventTracker telemetryEventTracker) {
-    for (int i = 0; i < 70; i++) {
+    for (int i = 0; i < 120; i++) {
       telemetryEventTracker.recordManualEventFor(LEVEL, SOURCE, MESSAGE);
     }
     return telemetryEventTracker.dump();
