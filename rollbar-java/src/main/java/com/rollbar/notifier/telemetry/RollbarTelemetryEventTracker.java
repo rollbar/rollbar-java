@@ -95,7 +95,9 @@ public class RollbarTelemetryEventTracker implements TelemetryEventTracker {
   }
 
   private void addEvent(TelemetryEvent telemetryEvent) {
-    if (doNotRecordEvents()) return;
+    if (doNotRecordEvents()) {
+      return;
+    }
 
     if (maxCapacityReached()) {
       removeOldestEvent();
