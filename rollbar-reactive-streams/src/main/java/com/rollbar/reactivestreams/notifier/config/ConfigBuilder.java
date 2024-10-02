@@ -471,7 +471,8 @@ public final class ConfigBuilder {
 
   /**
    * <p>
-   * Maximum Telemetry Events sent in a payload. Default is
+   * Maximum Telemetry events sent in a payload, only for the default TelemetryEventTracker, if
+   * a custom implementation is used this value will be ignored. Default is
    * {@value RollbarTelemetryEventTracker#MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS}.
    * </p>
    * @param maximumTelemetryData max quantity of telemetry events sent.
