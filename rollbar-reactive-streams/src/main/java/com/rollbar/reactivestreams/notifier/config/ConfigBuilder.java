@@ -487,7 +487,7 @@ public final class ConfigBuilder {
    * Set a {@link TelemetryEventTracker} implementation.
    * Default: {@link RollbarTelemetryEventTracker} with a {@link TimestampProvider}.
    * </p>
-   * @param telemetryEventTracker true to enable truncation.
+   * @param telemetryEventTracker the TelemetryEventTracker implementation.
    * @return the builder instance.
    */
   public ConfigBuilder telemetryEventTracker(TelemetryEventTracker telemetryEventTracker) {
