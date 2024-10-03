@@ -1,5 +1,11 @@
 # Change Log
 
+# 2.0.0-alpha.1
+
+- Remove Java 7 support [#316](https://github.com/rollbar/rollbar-java/pull/316)
+- Feat: Telemetry (no automatic captures for the moment, only manual)
+[#313](https://github.com/rollbar/rollbar-java/pull/313)
+
 # 1.10.3
 
 ### rollbar-logback
