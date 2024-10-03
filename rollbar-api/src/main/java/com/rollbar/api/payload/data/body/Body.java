@@ -1,9 +1,12 @@
 package com.rollbar.api.payload.data.body;
 
 import com.rollbar.api.json.JsonSerializable;
+import com.rollbar.api.payload.data.TelemetryEvent;
 import com.rollbar.api.truncation.StringTruncatable;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * A container for the actual error(s), message, or crash report that caused this error.
@@ -14,8 +17,11 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
 
   private final BodyContent bodyContent;
 
+  private final List<TelemetryEvent> telemetryEvents;
+
   private Body(Builder builder) {
     this.bodyContent = builder.bodyContent;
+    this.telemetryEvents = builder.telemetryEvents;
   }
 
   /**
@@ -32,6 +38,10 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
 
     if (bodyContent != null) {
       values.put(bodyContent.getKeyName(), bodyContent);
+    }
+
+    if (telemetryEvents != null) {
+      values.put("telemetry", telemetryEvents);
     }
 
     return values;
@@ -53,24 +63,26 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
     if (this == o) {
       return true;
     }
-    if (o == null || getClass() != o.getClass()) {
+
+    if (!(o instanceof Body)) {
       return false;
     }
 
     Body body = (Body) o;
-
-    return bodyContent != null ? bodyContent.equals(body.bodyContent) : body.bodyContent == null;
+    return Objects.equals(bodyContent, body.bodyContent)
+        && Objects.equals(telemetryEvents, body.telemetryEvents);
   }
 
   @Override
   public int hashCode() {
-    return bodyContent != null ? bodyContent.hashCode() : 0;
+    return Objects.hash(bodyContent, telemetryEvents);
   }
 
   @Override
   public String toString() {
     return "Body{"
         + "bodyContent=" + bodyContent
+        + ", telemetry=" + telemetryEvents
         + '}';
   }
 
@@ -80,6 +92,8 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
   public static final class Builder {
 
     private BodyContent bodyContent;
+
+    private List<TelemetryEvent> telemetryEvents;
 
     /**
      * Constructor.
@@ -95,6 +109,7 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
      */
     public Builder(Body body) {
       this.bodyContent = body.bodyContent;
+      this.telemetryEvents = body.telemetryEvents;
     }
 
     /**
@@ -106,6 +121,17 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
      */
     public Builder bodyContent(BodyContent bodyContent) {
       this.bodyContent = bodyContent;
+      return this;
+    }
+
+    /**
+     * The Telemetry events of this body.
+     *
+     * @param telemetryEvents the events captured until this payload;
+     * @return the builder instance.
+     */
+    public Builder telemetryEvents(List<TelemetryEvent> telemetryEvents) {
+      this.telemetryEvents = telemetryEvents;
       return this;
     }
 

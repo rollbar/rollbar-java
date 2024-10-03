@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.util.Log;
 import com.rollbar.android.notifier.sender.ConnectionAwareSenderFailureStrategy;
 import com.rollbar.android.provider.ClientProvider;
+import com.rollbar.api.payload.data.TelemetryType;
 import com.rollbar.notifier.config.ConfigProvider;
 import com.rollbar.notifier.uncaughtexception.RollbarUncaughtExceptionHandler;
 import com.rollbar.android.provider.NotifierProvider;
@@ -924,6 +925,49 @@ public class Rollbar implements Closeable {
    */
   public void log(final Throwable error, final Map<String, Object> custom, final String description, final Level level) {
     rollbar.log(error, custom, description, level);
+  }
+
+  /**
+   * Record log telemetry event. ({@link TelemetryType#LOG}).
+   *
+   * @param level   the TelemetryEvent severity (e.g. {@link Level#DEBUG}).
+   * @param message the message sent for this event (e.g. "hello world").
+   */
+  public void recordLogEventFor(Level level, final String message) {
+    rollbar.recordLogEventFor(level, message);
+  }
+
+  /**
+   * Record manual telemetry event. ({@link TelemetryType#MANUAL})
+   *
+   * @param level   the TelemetryEvent severity (e.g. {@link Level#DEBUG}).
+   * @param message the message sent for this event (e.g. "hello world").
+   */
+  public void recordManualEventFor(Level level, final String message) {
+    rollbar.recordManualEventFor(level, message);
+  }
+
+  /**
+   * Record navigation telemetry event with from (origin) and to (destination).({@link TelemetryType#NAVIGATION})
+   *
+   * @param level the TelemetryEvent severity (e.g. {@link Level#DEBUG}).
+   * @param from  the starting point (e.g. "SettingView").
+   * @param to    the destination point (e.g. "HomeView").
+   */
+  public void recordNavigationEventFor(Level level, final String from, final String to) {
+    rollbar.recordNavigationEventFor(level, from, to);
+  }
+
+  /**
+   * Record network telemetry event with method, url, and status code.({@link TelemetryType#NETWORK})
+   *
+   * @param level      the TelemetryEvent severity (e.g. {@link Level#DEBUG}).
+   * @param method     the verb used (e.g. "POST").
+   * @param url        the api url (e.g. "<a href="http://rollbar.com/test/api">http://rollbar.com/test/api</a>").
+   * @param statusCode the response status code (e.g. "404").
+   */
+  public void recordNetworkEventFor(Level level, final String method, final String url, final String statusCode) {
+    rollbar.recordNetworkEventFor(level, method, url, statusCode);
   }
 
   /**
