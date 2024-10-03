@@ -309,6 +309,8 @@ public class Data implements JsonSerializable, StringTruncatable<Data> {
       values.put("notifier", notifier);
     }
 
+    values.put("is_uncaught", isUncaught);
+
     return values;
   }
 

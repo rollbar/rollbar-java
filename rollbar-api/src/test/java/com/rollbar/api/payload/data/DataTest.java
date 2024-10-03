@@ -80,6 +80,8 @@ public class DataTest {
       expected.put("notifier", data.getNotifier());
     }
 
+    expected.put("is_uncaught", data.isUncaught());
+    
     assertThat(data.asJson(), is(expected));
   }
 }
