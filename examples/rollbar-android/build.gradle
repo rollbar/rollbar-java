@@ -11,14 +11,14 @@ buildscript {
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion 33
     buildToolsVersion "30.0.3"
     defaultConfig {
         applicationId "com.rollbar.example.android"
-        minSdkVersion 16
+        minSdkVersion 21
         // FIXME: Pending further discussion
         //noinspection ExpiredTargetSdkVersion
-        targetSdkVersion 27
+        targetSdkVersion 33
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
