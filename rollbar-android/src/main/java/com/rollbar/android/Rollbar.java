@@ -10,6 +10,10 @@ import android.content.pm.PackageInfo;
 import android.os.Bundle;
 
 import android.util.Log;
+
+import com.rollbar.android.anr.AnrDetector;
+import com.rollbar.android.anr.AnrDetectorFactory;
+import com.rollbar.android.anr.AnrException;
 import com.rollbar.android.notifier.sender.ConnectionAwareSenderFailureStrategy;
 import com.rollbar.android.provider.ClientProvider;
 import com.rollbar.api.payload.data.TelemetryType;
@@ -30,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -164,6 +169,8 @@ public class Rollbar implements Closeable {
               includeLogcat, provider, DEFAULT_CAPTURE_IP, DEFAULT_MAX_LOGCAT_SIZE,
               suspendWhenNetworkIsUnavailable);
     }
+    AnrDetector anrDetector = AnrDetectorFactory.create(context, error -> reportANR(error));
+    anrDetector.init();
     return notifier;
   }
 
@@ -1084,6 +1091,12 @@ public class Rollbar implements Closeable {
     } else {
       Log.e(TAG, "Rollbar not initialized with an access token!");
     }
+  }
+
+  private static void reportANR(AnrException error){
+    Map<String, Object> map = new HashMap<>();
+    map.put("TYPE", "ANR");
+    notifier.log(error, map);
   }
 
 }
