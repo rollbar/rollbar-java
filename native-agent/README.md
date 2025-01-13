@@ -1,5 +1,7 @@
 # JVMTI Native Agent
 
+**Proof of concept not in active development. Code has been removed from main branch, but can be found at commit [d9a28e](https://github.com/rollbar/rollbar-java/tree/d9a28e3fe4b8e8b0ca8fb11610ceb3f9729278e5/native-agent)**
+
 This Rust library implements a native agent for interacting with the JVM via the
 [JVMTI](https://docs.oracle.com/javase/8/docs/platform/jvmti/jvmti.html). Currently this is used for
 enriching stack traces with local variables for each frame. This works by interacting with some
