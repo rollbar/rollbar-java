@@ -40,8 +40,6 @@ public class Frame implements JsonSerializable, StringTruncatable<Frame> {
 
   private final Map<String, Object> keywordArgs;
 
-  private final Map<String, Object> locals;
-
   private Frame(Builder builder) {
     this.filename = builder.filename;
     this.lineNumber = builder.lineNumber;
@@ -53,8 +51,6 @@ public class Frame implements JsonSerializable, StringTruncatable<Frame> {
     this.args = builder.args != null ? unmodifiableList(new ArrayList<>(builder.args)) : null;
     this.keywordArgs = builder.keywordArgs != null
         ? unmodifiableMap(new HashMap<>(builder.keywordArgs)) : null;
-    this.locals = builder.locals != null
-        ? unmodifiableMap(new HashMap<>(builder.locals)) : null;
   }
 
   /**
@@ -130,14 +126,6 @@ public class Frame implements JsonSerializable, StringTruncatable<Frame> {
     return keywordArgs;
   }
 
-  /**
-   * Getter.
-   * @return the local variables for this frame.
-   */
-  public Map<String, Object> getLocals() {
-    return locals;
-  }
-
   @Override
   public Object asJson() {
     Map<String, Object> values = new HashMap<>();
@@ -168,9 +156,6 @@ public class Frame implements JsonSerializable, StringTruncatable<Frame> {
     if (keywordArgs != null) {
       values.put("kwargs", keywordArgs);
     }
-    if (locals != null) {
-      values.put("locals", locals);
-    }
 
     return values;
   }
@@ -185,7 +170,6 @@ public class Frame implements JsonSerializable, StringTruncatable<Frame> {
         .context(truncateStringsInObject(context, maxLength))
         .args(truncateStringsInObjectList(args, maxLength))
         .keywordArgs(truncateStringsInMap(keywordArgs, maxLength))
-        .locals(truncateStringsInMap(locals, maxLength))
         .build();
   }
 
@@ -225,10 +209,7 @@ public class Frame implements JsonSerializable, StringTruncatable<Frame> {
     if (args != null ? !args.equals(frame.args) : frame.args != null) {
       return false;
     }
-    if (keywordArgs != null ? !keywordArgs.equals(frame.keywordArgs) : frame.keywordArgs != null) {
-      return false;
-    }
-    return locals != null ? locals.equals(frame.locals) : frame.locals == null;
+    return keywordArgs != null ? keywordArgs.equals(frame.keywordArgs) : frame.keywordArgs == null;
   }
 
   @Override
@@ -242,7 +223,6 @@ public class Frame implements JsonSerializable, StringTruncatable<Frame> {
     result = 31 * result + (context != null ? context.hashCode() : 0);
     result = 31 * result + (args != null ? args.hashCode() : 0);
     result = 31 * result + (keywordArgs != null ? keywordArgs.hashCode() : 0);
-    result = 31 * result + (locals != null ? locals.hashCode() : 0);
     return result;
   }
 
@@ -258,7 +238,6 @@ public class Frame implements JsonSerializable, StringTruncatable<Frame> {
         + ", context=" + context
         + ", args=" + args
         + ", keywordArgs=" + keywordArgs
-        + ", locals=" + locals
         + '}';
   }
 
@@ -285,8 +264,6 @@ public class Frame implements JsonSerializable, StringTruncatable<Frame> {
 
     private Map<String, Object> keywordArgs;
 
-    private Map<String, Object> locals;
-
     /**
      * Constructor.
      */
@@ -309,7 +286,6 @@ public class Frame implements JsonSerializable, StringTruncatable<Frame> {
       this.context = frame.context;
       this.args = frame.args;
       this.keywordArgs = frame.keywordArgs;
-      this.locals = frame.locals;
     }
 
     /**
@@ -408,17 +384,6 @@ public class Frame implements JsonSerializable, StringTruncatable<Frame> {
      */
     public Builder keywordArgs(Map<String, Object> keywordArgs) {
       this.keywordArgs = keywordArgs;
-      return this;
-    }
-
-    /**
-     * The local variables for this method from the stack frame (if available).
-     *
-     * @param locals the local variables.
-     * @return the builder instance.
-     */
-    public Builder locals(Map<String, Object> locals) {
-      this.locals = locals;
       return this;
     }
 
