@@ -62,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
 
   private void clickAction() {
     Rollbar rollbar = Rollbar.instance();
+    // comment
     if (rollbar == null) {
       Log.d("yo", "Rollbar is null, initialize before using");
       return;
