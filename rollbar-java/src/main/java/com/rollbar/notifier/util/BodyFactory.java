@@ -7,14 +7,11 @@ import com.rollbar.api.payload.data.body.Frame;
 import com.rollbar.api.payload.data.body.Message;
 import com.rollbar.api.payload.data.body.Trace;
 import com.rollbar.api.payload.data.body.TraceChain;
-import com.rollbar.jvmti.CacheFrame;
-import com.rollbar.jvmti.ThrowableCache;
 import com.rollbar.notifier.wrapper.RollbarThrowableWrapper;
 import com.rollbar.notifier.wrapper.ThrowableWrapper;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Body factory helper to build the proper body depending on the throwable or the description.
@@ -105,25 +102,9 @@ public class BodyFactory {
 
   private static List<Frame> frames(ThrowableWrapper throwableWrapper) {
     StackTraceElement[] elements = throwableWrapper.getStackTrace();
-    CacheFrame[] cachedFrames = ThrowableCache.get(throwableWrapper.getThrowable());
-    int j = 0;
-    if (cachedFrames != null) {
-      j = cachedFrames.length - 1;
-    }
-
     ArrayList<Frame> result = new ArrayList<>();
-    for (int i = elements.length - 1; i >= 0; i--, j--) {
-      StackTraceElement element = elements[i];
-      Map<String, Object> locals = null;
-      if (cachedFrames != null) {
-        while (j >= 0 && !cachedFrames[j].getMethod().getName().equals(element.getMethodName())) {
-          j--;
-        }
-        if (j >= 0) {
-          locals = cachedFrames[j].getLocals();
-        }
-      }
-      result.add(frame(element, locals));
+    for (int i = elements.length - 1; i >= 0; i--) {
+      result.add(frame(elements[i]));
     }
 
     return result;
@@ -139,7 +120,7 @@ public class BodyFactory {
         .build();
   }
 
-  private static Frame frame(StackTraceElement element, Map<String, Object> locals) {
+  private static Frame frame(StackTraceElement element) {
     String filename = element.getFileName();
     Integer lineNumber = element.getLineNumber();
     String method = element.getMethodName();
@@ -150,7 +131,6 @@ public class BodyFactory {
         .lineNumber(lineNumber)
         .method(method)
         .className(className)
-        .locals(locals)
         .build();
   }
 }

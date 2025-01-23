@@ -161,13 +161,6 @@ public interface CommonConfig {
   JsonSerializer jsonSerializer();
 
   /**
-   * Get the list of packages considered to be in your app.
-   *
-   * @return the list of packages.
-   */
-  List<String> appPackages();
-
-  /**
    * Flag to indicate that the Rollbar notifier should handle the uncaught errors.
    *
    * @return true to handle otherwise false.
