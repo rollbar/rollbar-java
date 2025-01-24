@@ -1,5 +1,9 @@
 # Change Log
 
+# 2.0.0
+
+- Same content as 2.0.0-alpha.1
+
 # 2.0.0-alpha.1
 
 - Remove Java 7 support [#316](https://github.com/rollbar/rollbar-java/pull/316)
