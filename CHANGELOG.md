@@ -2,7 +2,7 @@
 
 # 2.0.0
 
-- Same content as 2.0.0-alpha.1
+- Switching to full release
 
 # 2.0.0-alpha.1
 
