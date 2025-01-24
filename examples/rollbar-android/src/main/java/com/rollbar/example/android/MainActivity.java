@@ -66,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
       Log.d("yo", "Rollbar is null, initialize before using");
       return;
     }
+
     rollbar.error("this should exist");
     rollbar.setPersonData("42", "andy", null);
     Log.d("yo", "hey");
