@@ -50,14 +50,11 @@ public class ThreadDumpParser {
 
   private final boolean isBackground;
 
-  private final StackTraceFactory stackTraceFactory;
-
   public ThreadDumpParser(final boolean isBackground) {
     this.isBackground = isBackground;
-    this.stackTraceFactory = new StackTraceFactory();
   }
 
-  
+
   public List<RollbarThread> parse(final  Lines lines) {
     final List<RollbarThread> rollbarThreads = new ArrayList<>();
 
@@ -71,8 +68,7 @@ public class ThreadDumpParser {
         return rollbarThreads;
       }
       final String text = line.text;
-      // we only handle managed threads, as unmanaged/not attached do not have the thread id and
-      // our protocol does not support this case
+
       if (matches(beginManagedThreadRe, text) || matches(beginUnmanagedNativeThreadRe, text)) {
         lines.rewind();
 
@@ -91,7 +87,6 @@ public class ThreadDumpParser {
     final Matcher beginManagedThreadRe = BEGIN_MANAGED_THREAD_RE.matcher("");
     final Matcher beginUnmanagedNativeThreadRe = BEGIN_UNMANAGED_NATIVE_THREAD_RE.matcher("");
 
-    // thread attributes
     if (!lines.hasNext()) {
       return null;
     }
@@ -109,8 +104,7 @@ public class ThreadDumpParser {
       RollbarThread.setId(threadId);
       RollbarThread.setName(beginManagedThreadRe.group(1));
       final String state = beginManagedThreadRe.group(5);
-      // sanitizing thread that have more details after their actual state, e.g.
-      // "Native (still starting up)" <- we just need "Native" here
+
       if (state != null) {
         if (state.contains(" ")) {
           RollbarThread.setState(state.substring(0, state.indexOf(' ')));
@@ -132,18 +126,16 @@ public class ThreadDumpParser {
     if (threadName != null) {
       boolean isMain = threadName.equals("main");
       RollbarThread.setMain(isMain);
-      // since it's an ANR, the crashed thread will always be main
       RollbarThread.setCrashed(isMain);
       RollbarThread.setCurrent(isMain && !isBackground);
     }
 
-    // thread stacktrace
     final StackTrace stackTrace = parseStacktrace(lines, RollbarThread);
     RollbarThread.setStacktrace(stackTrace);
     return RollbarThread;
   }
 
-  
+
   private StackTrace parseStacktrace(
       final  Lines lines, final RollbarThread rollbarThread) {
     final List<StackFrame> frames = new ArrayList<>();
@@ -190,7 +182,6 @@ public class ThreadDumpParser {
         frame.setFunction(javaRe.group(3));
         frame.setFilename(javaRe.group(4));
         frame.setLineno(getUInteger(javaRe, 5, null));
-        frame.setInApp(stackTraceFactory.isInApp(module));
         frames.add(frame);
         lastJavaFrame = frame;
       } else if (matches(jniRe, text)) {
@@ -200,7 +191,6 @@ public class ThreadDumpParser {
         final String module = String.format("%s.%s", packageName, className);
         frame.setModule(module);
         frame.setFunction(jniRe.group(3));
-        frame.setInApp(stackTraceFactory.isInApp(module));
         frames.add(frame);
         lastJavaFrame = frame;
       } else if (matches(lockedRe, text)) {
@@ -268,7 +258,6 @@ public class ThreadDumpParser {
 
     Collections.reverse(frames);//Todo review later
     final StackTrace stackTrace = new StackTrace(frames);
-    // it's a thread dump
     stackTrace.setSnapshot(true);
     return stackTrace;
   }
@@ -286,7 +275,6 @@ public class ThreadDumpParser {
     }
     final LockReason prev = heldLocks.get(lockReason.getAddress());
     if (prev != null) {
-      // higher type prevails as we are tagging thread with the most severe lock reason
       prev.setType(Math.max(prev.getType(), lockReason.getType()));
     } else {
       heldLocks.put(lockReason.getAddress(), new LockReason(lockReason));
@@ -307,7 +295,7 @@ public class ThreadDumpParser {
   private Integer getInteger(
       final  Matcher matcher, final int group, final  Integer defaultValue) {
     final String str = matcher.group(group);
-    if (str == null || str.length() == 0) {
+    if (str == null || str.isEmpty()) {
       return defaultValue;
     } else {
       return Integer.parseInt(str);
@@ -317,7 +305,7 @@ public class ThreadDumpParser {
   private Integer getUInteger(
       final Matcher matcher, final int group, final  Integer defaultValue) {
     final String str = matcher.group(group);
-    if (str == null || str.length() == 0) {
+    if (str == null || str.isEmpty()) {
       return defaultValue;
     } else {
       final Integer parsed = Integer.parseInt(str);

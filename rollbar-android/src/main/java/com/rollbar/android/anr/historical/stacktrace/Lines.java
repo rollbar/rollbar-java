@@ -1,8 +1,6 @@
 package com.rollbar.android.anr.historical.stacktrace;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -13,13 +11,6 @@ public final class Lines {
 
   /** The read position inside the list. */
   public int pos;
-
-  /** Read the whole file into a Lines object. */
-  public static Lines readLines(final File file) throws IOException {
-    try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-      return Lines.readLines(reader);
-    }
-  }
 
   /** Read the whole file into a Lines object. */
   public static Lines readLines(final BufferedReader in) throws IOException {

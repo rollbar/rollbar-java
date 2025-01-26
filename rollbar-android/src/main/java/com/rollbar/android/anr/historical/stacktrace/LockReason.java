@@ -14,8 +14,6 @@ public class LockReason implements JsonSerializable {
   public static final int SLEEPING = 4;
   public static final int BLOCKED = 8;
 
-  public static final int ANY = LOCKED | WAITING | SLEEPING | BLOCKED;
-
   private int type;
   private  String address;
   private  String packageName;
@@ -54,27 +52,12 @@ public class LockReason implements JsonSerializable {
     this.address = address;
   }
 
-
-  public String getPackageName() {
-    return packageName;
-  }
-
   public void setPackageName(final  String packageName) {
     this.packageName = packageName;
   }
 
-
-  public String getClassName() {
-    return className;
-  }
-
   public void setClassName(final  String className) {
     this.className = className;
-  }
-
-
-  public Long getThreadId() {
-    return threadId;
   }
 
   public void setThreadId(final  Long threadId) {
