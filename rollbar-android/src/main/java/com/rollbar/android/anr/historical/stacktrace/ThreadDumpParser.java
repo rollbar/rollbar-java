@@ -67,7 +67,7 @@ public class ThreadDumpParser {
         LOGGER.warn("No line: Internal error while parsing thread dump");
         return rollbarThreads;
       }
-      final String text = line.text;
+      final String text = line.getText();
 
       if (matches(beginManagedThreadRe, text) || matches(beginUnmanagedNativeThreadRe, text)) {
         lines.rewind();
@@ -95,7 +95,7 @@ public class ThreadDumpParser {
       LOGGER.warn("Internal error while parsing thread dump");
       return null;
     }
-    if (matches(beginManagedThreadRe, line.text)) {
+    if (matches(beginManagedThreadRe, line.getText())) {
       Long threadId = getLong(beginManagedThreadRe, 4, null);
       if (threadId == null) {
         LOGGER.debug("No thread id in the dump, skipping thread");
@@ -112,7 +112,7 @@ public class ThreadDumpParser {
           RollbarThread.setState(state);
         }
       }
-    } else if (matches(beginUnmanagedNativeThreadRe, line.text)) {
+    } else if (matches(beginUnmanagedNativeThreadRe, line.getText())) {
       Long systemThreadId = getLong(beginUnmanagedNativeThreadRe, 3, null);
       if (systemThreadId == null) {
         LOGGER.debug("No thread id in the dump, skipping thread");
@@ -159,7 +159,7 @@ public class ThreadDumpParser {
         LOGGER.warn("Internal error while parsing thread dump");
         break;
       }
-      final String text = line.text;
+      final String text = line.getText();
       if (matches(nativeRe, text)) {
         final StackFrame frame = new StackFrame();
         frame.setPackage(nativeRe.group(1));

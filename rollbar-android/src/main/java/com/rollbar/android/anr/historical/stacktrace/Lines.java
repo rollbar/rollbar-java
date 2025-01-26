@@ -16,11 +16,9 @@ public final class Lines {
   public static Lines readLines(final BufferedReader in) throws IOException {
     final ArrayList<Line> list = new ArrayList<>();
 
-    int lineno = 0;
     String text;
     while ((text = in.readLine()) != null) {
-      lineno++;
-      list.add(new Line(lineno, text));
+      list.add(new Line(text));
     }
 
     return new Lines(list);

@@ -1,11 +1,13 @@
 package com.rollbar.android.anr.historical.stacktrace;
 
 public final class Line {
-  public int lineno;
-  public String text;
+  private String text;
 
-  public Line(final int lineno, final String text) {
-    this.lineno = lineno;
+  public Line(final String text) {
     this.text = text;
+  }
+
+  public String getText() {
+    return text;
   }
 }
