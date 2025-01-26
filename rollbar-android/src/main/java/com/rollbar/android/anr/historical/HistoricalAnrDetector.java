@@ -43,6 +43,10 @@ public class HistoricalAnrDetector implements AnrDetector {
 
   @Override
   public void init() {
+    if (anrListener == null) {
+      LOGGER.error("AnrListener is null");
+      return;
+    }
     Thread thread = new Thread("HistoricalAnrDetectorThread") {
       @Override
       public void run() {
@@ -56,11 +60,6 @@ public class HistoricalAnrDetector implements AnrDetector {
 
 
   private void evaluateLastExitReasons() {
-    if (anrListener == null) {
-      LOGGER.error("AnrListener is null");
-      return;
-    }
-
     List<ApplicationExitInfo> applicationExitInfoList = getApplicationExitInformation();
 
     if (applicationExitInfoList.isEmpty()) {
