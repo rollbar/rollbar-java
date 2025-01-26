@@ -21,6 +21,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -80,7 +81,12 @@ public class HistoricalAnrDetector implements AnrDetector {
           continue;//Todo: Do something ?
         }
 
-        anrListener.onAppNotResponding(createAnrException(threads));
+        AnrException anrException = createAnrException(threads);
+        if (anrException == null) {
+          LOGGER.error("Main thread not found, skipping ANR");
+        } else {
+          anrListener.onAppNotResponding(anrException);
+        }
       } catch (Throwable e) {
         LOGGER.error("Can't parse ANR", e);
       }
@@ -92,7 +98,20 @@ public class HistoricalAnrDetector implements AnrDetector {
   }
 
   private AnrException createAnrException(List<RollbarThread> threads) {
-    return new AnrException(threads.get(0).toStackTraceElement());
+    List<RollbarThread> rollbarThreads = new ArrayList<>();
+    RollbarThread mainThread = null;
+    for (RollbarThread thread: threads) {
+      if (thread.isMain()) {
+        mainThread = thread;
+      } else {
+        rollbarThreads.add(thread);
+      }
+    }
+
+    if (mainThread == null) {
+      return null;
+    }
+    return new AnrException(mainThread.toStackTraceElement(), rollbarThreads);
   }
 
   private List<ApplicationExitInfo> getApplicationExitInformation() {

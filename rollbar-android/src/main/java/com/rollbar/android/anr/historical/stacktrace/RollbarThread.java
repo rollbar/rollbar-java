@@ -2,6 +2,7 @@ package com.rollbar.android.anr.historical.stacktrace;
 
 import com.rollbar.api.json.JsonSerializable;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -159,7 +160,7 @@ public class RollbarThread implements JsonSerializable {
         ", current=" + current +
         ", daemon=" + daemon +
         ", main=" + main +
-        ", stacktrace=" + stacktrace +
+        ", stacktrace=" + Arrays.toString(toStackTraceElement()) +
         ", heldLocks=" + heldLocks +
         ", unknown=" + unknown +
         '}';

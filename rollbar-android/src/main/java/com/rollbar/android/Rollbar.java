@@ -1096,6 +1096,7 @@ public class Rollbar implements Closeable {
   private static void reportANR(AnrException error){
     Map<String, Object> map = new HashMap<>();
     map.put("TYPE", "ANR");
+    map.put("Threads", error.getThreads());
     notifier.log(error, map);
   }
 
