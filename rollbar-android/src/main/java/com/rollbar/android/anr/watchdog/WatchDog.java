@@ -32,9 +32,10 @@ public final class WatchDog extends Thread {
   public WatchDog(
       Context context,
       AnrListener anrListener,
+      LooperHandler looperHandler,
       Provider<Long> timeProvider
   ) {
-    uiHandler = new LooperHandler();
+    uiHandler = looperHandler;
     this.anrListener = anrListener;
     this.context = context;
     this.timeProvider = timeProvider;
