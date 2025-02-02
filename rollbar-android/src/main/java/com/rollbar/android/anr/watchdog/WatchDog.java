@@ -67,9 +67,7 @@ public final class WatchDog extends Thread {
 
       if (isMainThreadNotHandlerTicker()) {
         if (isProcessNotResponding() && reported.compareAndSet(false, true)) {
-          if (anrListener != null) {
-            anrListener.onAppNotResponding(makeException());
-          }
+          anrListener.onAppNotResponding(makeException());
         }
       }
     }

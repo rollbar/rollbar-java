@@ -28,6 +28,8 @@ public class WatchdogAnrDetector implements AnrDetector, Closeable {
 
   @Override
   public void init() {
+    if (watchDog == null) return;
+
     Thread thread = new Thread("WatchdogAnrDetectorThread") {
       @Override
       public void run() {
@@ -55,7 +57,10 @@ public class WatchdogAnrDetector implements AnrDetector, Closeable {
       Context context,
       AnrListener anrListener
   ) {
-    watchDog = new WatchDog(context, anrListener, new TimestampProvider());
+    if (context == null) return;
+    if (anrListener == null) return;
+
+    watchDog = new WatchDog(context, anrListener, new LooperHandler(), new TimestampProvider());
   }
 
   private void interruptWatchdog() {
