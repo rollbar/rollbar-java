@@ -40,7 +40,6 @@ public class Rollbar extends RollbarBase<Void, Config> {
     if (config.handleUncaughtErrors()) {
       this.handleUncaughtErrors();
     }
-    processAppPackages(config);
   }
 
   /**

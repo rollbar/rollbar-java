@@ -77,8 +77,6 @@ public class ConfigBuilder {
 
   protected Proxy proxy;
 
-  protected List<String> appPackages;
-
   protected boolean handleUncaughtErrors;
 
   protected boolean enabled;
@@ -133,7 +131,6 @@ public class ConfigBuilder {
     this.endpoint = config.endpoint();
     this.jsonSerializer = config.jsonSerializer();
     this.proxy = config.proxy();
-    this.appPackages = config.appPackages();
     this.defaultLevels = new DefaultLevels(config);
     this.truncateLargePayloads = config.truncateLargePayloads();
     this.maximumTelemetryData = config.maximumTelemetryData();
@@ -402,17 +399,6 @@ public class ConfigBuilder {
   }
 
   /**
-   * The list of packages to be considered in your app.
-   *
-   * @param appPackages the list of packages.
-   * @return the builder instance.
-   */
-  public ConfigBuilder appPackages(List<String> appPackages) {
-    this.appPackages = appPackages;
-    return this;
-  }
-
-  /**
    * Flag to set the default handler for uncaught errors,
    * see {@link UncaughtExceptionHandler}.
    * @param handleUncaughtErrors true to handle uncaught errors otherwise false.
@@ -591,8 +577,6 @@ public class ConfigBuilder {
 
     private final Proxy proxy;
 
-    private final List<String> appPackages;
-
     private final boolean handleUncaughtErrors;
 
     private final boolean enabled;
@@ -628,11 +612,6 @@ public class ConfigBuilder {
       this.sender = builder.sender;
       this.jsonSerializer = builder.jsonSerializer;
       this.proxy = builder.proxy;
-      if (builder.appPackages == null) {
-        this.appPackages = Collections.<String>emptyList();
-      } else {
-        this.appPackages = builder.appPackages;
-      }
       this.handleUncaughtErrors = builder.handleUncaughtErrors;
       this.enabled = builder.enabled;
       this.defaultLevels = builder.defaultLevels;
@@ -749,11 +728,6 @@ public class ConfigBuilder {
     @Override
     public Proxy proxy() {
       return proxy;
-    }
-
-    @Override
-    public List<String> appPackages() {
-      return appPackages;
     }
 
     @Override

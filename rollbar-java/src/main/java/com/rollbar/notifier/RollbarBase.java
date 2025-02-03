@@ -8,7 +8,6 @@ import com.rollbar.api.payload.data.Source;
 import com.rollbar.api.payload.data.TelemetryEvent;
 import com.rollbar.api.payload.data.TelemetryType;
 import com.rollbar.api.payload.data.body.Body;
-import com.rollbar.jvmti.ThrowableCache;
 import com.rollbar.notifier.config.CommonConfig;
 import com.rollbar.notifier.telemetry.TelemetryEventTracker;
 import com.rollbar.notifier.truncation.PayloadTruncator;
@@ -114,7 +113,6 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
     try {
       this.config = config;
       configureTruncation(config);
-      processAppPackages(config);
     } finally {
       this.configWriteLock.unlock();
     }
@@ -127,12 +125,6 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
       this.payloadTruncator = new PayloadTruncator(config.jsonSerializer());
     } else {
       this.payloadTruncator = null;
-    }
-  }
-
-  protected void processAppPackages(CommonConfig config) {
-    for (String appPackage : config.appPackages()) {
-      ThrowableCache.addAppPackage(appPackage);
     }
   }
 

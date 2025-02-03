@@ -4,12 +4,11 @@ import com.rollbar.notifier.Rollbar;
 import com.rollbar.notifier.config.Config;
 import com.rollbar.notifier.config.ConfigBuilder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,11 +29,9 @@ public class Application {
   public Application() {
     this.greeting = new Greeting();
     LOGGER.info("Configuring Rollbar");
-    List<String> appPackages = Arrays.asList("com.rollbar.example");
     Config config = ConfigBuilder.withAccessToken(System.getenv("ROLLBAR_ACCESSTOKEN"))
         .environment("development")
         .codeVersion("1.0.0")
-        .appPackages(appPackages)
         .build();
     LOGGER.info("Initializing Rollbar");
     this.rollbar = Rollbar.init(config);

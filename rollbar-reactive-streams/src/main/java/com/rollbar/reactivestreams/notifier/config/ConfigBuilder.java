@@ -56,7 +56,6 @@ public final class ConfigBuilder {
   private AsyncHttpClient httpClient;
   private Sender asyncSender;
   private JsonSerializer jsonSerializer;
-  private List<String> appPackages;
   private boolean handleUncaughtErrors;
   private boolean enabled;
   private DefaultLevels defaultLevels;
@@ -103,7 +102,6 @@ public final class ConfigBuilder {
     this.handleUncaughtErrors = config.handleUncaughtErrors();
     this.enabled = config.isEnabled();
     this.endpoint = config.endpoint();
-    this.appPackages = config.appPackages();
     this.defaultLevels = new DefaultLevels(config);
     this.truncateLargePayloads = config.truncateLargePayloads();
     this.maximumTelemetryData = config.maximumTelemetryData();
@@ -390,17 +388,6 @@ public final class ConfigBuilder {
   }
 
   /**
-   * The list of packages to be considered in your app.
-   *
-   * @param appPackages the list of packages.
-   * @return the builder instance.
-   */
-  public ConfigBuilder appPackages(List<String> appPackages) {
-    this.appPackages = appPackages;
-    return this;
-  }
-
-  /**
    * Flag to set the default handler for uncaught errors,
    * see {@link UncaughtExceptionHandler}.
    *
@@ -559,7 +546,6 @@ public final class ConfigBuilder {
     private final FingerprintGenerator fingerPrintGenerator;
     private final UuidGenerator uuidGenerator;
     private final Sender asyncSender;
-    private final List<String> appPackages;
     private final boolean handleUncaughtErrors;
     private final boolean enabled;
     private final DefaultLevels defaultLevels;
@@ -589,11 +575,6 @@ public final class ConfigBuilder {
       this.fingerPrintGenerator = builder.fingerPrintGenerator;
       this.uuidGenerator = builder.uuidGenerator;
       this.asyncSender = builder.asyncSender;
-      if (builder.appPackages == null) {
-        this.appPackages = Collections.emptyList();
-      } else {
-        this.appPackages = builder.appPackages;
-      }
       this.handleUncaughtErrors = builder.handleUncaughtErrors;
       this.enabled = builder.enabled;
       this.defaultLevels = builder.defaultLevels;
@@ -706,11 +687,6 @@ public final class ConfigBuilder {
     @Override
     public Sender asyncSender() {
       return asyncSender;
-    }
-
-    @Override
-    public List<String> appPackages() {
-      return appPackages;
     }
 
     @Override
