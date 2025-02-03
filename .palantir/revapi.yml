@@ -33,3 +33,11 @@ acceptedBreaks:
     - code: "java.method.addedToInterface"
       new: "method int com.rollbar.notifier.config.CommonConfig::maximumTelemetryData()"
       justification: "This is going to be added in a major version"
+  "2.1.0":
+    com.rollbar:rollbar-api:
+      - code: "java.method.removed"
+        old: "method com.rollbar.api.payload.data.body.Frame.Builder com.rollbar.api.payload.data.body.Frame.Builder::locals(java.util.Map<java.lang.String, java.lang.Object>)"
+        justification: "Native agent removed"
+      - code: "java.method.removed"
+        old: "method java.util.Map<java.lang.String, java.lang.Object> com.rollbar.api.payload.data.body.Frame::getLocals()"
+        justification: "Native agent removed"
