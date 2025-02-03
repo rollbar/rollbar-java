@@ -68,8 +68,9 @@ acceptedBreaks:
         old: "method void com.rollbar.notifier.RollbarBase<RESULT, C extends com.rollbar.notifier.config.CommonConfig>::processAppPackages(com.rollbar.notifier.config.CommonConfig) @ com.rollbar.reactivestreams.notifier.Rollbar"
         justification: "Native agent removed"
       - code: "java.method.removed"
-        old: "method void com.rollbar.notifier.RollbarBase<RESULT, C extends com.rollbar.notifier.config.CommonConfig>::processAppPackages(com.rollbar.notifier.config.CommonConfig) @ com.rollbar.reactivestreams.notifier.ReactorRollbar"
-        justification: "Native agent removed"
-      - code: "java.method.removed"
         old: "method com.rollbar.reactivestreams.notifier.config.ConfigBuilder com.rollbar.reactivestreams.notifier.config.ConfigBuilder::appPackages(java.util.List<java.lang.String>)"
+        justification: "Native agent removed"
+    com.rollbar:rollbar-reactive-streams-reactor:
+      - code: "java.method.removed"
+        old: "method void com.rollbar.notifier.RollbarBase<RESULT, C extends com.rollbar.notifier.config.CommonConfig>::processAppPackages(com.rollbar.notifier.config.CommonConfig) @ com.rollbar.reactivestreams.notifier.ReactorRollbar"
         justification: "Native agent removed"
