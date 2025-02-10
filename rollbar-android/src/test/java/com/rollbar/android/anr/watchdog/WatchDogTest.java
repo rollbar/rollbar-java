@@ -35,16 +35,16 @@ public class WatchDogTest {
       "methodName", "fileName", 7);
 
   @Mock
-  Thread thread;
+  private Thread thread;
 
   @Mock
-  ActivityManager activityManager;
+  private ActivityManager activityManager;
 
   @Mock
-  Context context;
+  private Context context;
 
   @Mock
-  LooperHandler looperHandler;
+  private LooperHandler looperHandler;
 
   private final Provider<Long> timeProvider = new TimestampProviderFake();
 
