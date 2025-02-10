@@ -13,7 +13,6 @@ import com.rollbar.android.anr.historical.stacktrace.RollbarThread;
 import com.rollbar.android.anr.historical.stacktrace.ThreadDumpParser;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -27,24 +26,25 @@ import java.util.Objects;
 
 @SuppressLint("NewApi") // Validated in the Factory
 public class HistoricalAnrDetector implements AnrDetector {
-  private final static Logger LOGGER = LoggerFactory.getLogger(HistoricalAnrDetector.class);
-
+  private final Logger logger;
   private final Context context;
   private final AnrListener anrListener;
   ThreadDumpParser threadDumpParser = new ThreadDumpParser(true);//todo remove isBackground
 
   public HistoricalAnrDetector(
       Context context,
-      AnrListener anrListener
+      AnrListener anrListener,
+      Logger logger
   ) {
     this.context = context;
     this.anrListener = anrListener;
+    this.logger = logger;
   }
 
   @Override
   public void init() {
     if (anrListener == null) {
-      LOGGER.error("AnrListener is null");
+      logger.error("AnrListener is null");
       return;
     }
     Thread thread = new Thread("HistoricalAnrDetectorThread") {
@@ -63,7 +63,7 @@ public class HistoricalAnrDetector implements AnrDetector {
     List<ApplicationExitInfo> applicationExitInfoList = getApplicationExitInformation();
 
     if (applicationExitInfoList.isEmpty()) {
-      LOGGER.debug("Empty ApplicationExitInfo List");
+      logger.debug("Empty ApplicationExitInfo List");
       return;
     }
 
@@ -76,18 +76,18 @@ public class HistoricalAnrDetector implements AnrDetector {
         List<RollbarThread> threads = getThreads(applicationExitInfo);
 
         if (threads.isEmpty()) {
-          LOGGER.warn("Error parsing ANR");
-          continue;//Todo: Do something ?
+          logger.error("Error parsing ANR");
+          continue;
         }
 
         AnrException anrException = createAnrException(threads);
         if (anrException == null) {
-          LOGGER.error("Main thread not found, skipping ANR");
+          logger.error("Main thread not found, skipping ANR");
         } else {
           anrListener.onAppNotResponding(anrException);
         }
       } catch (Throwable e) {
-        LOGGER.error("Can't parse ANR", e);
+        logger.error("Can't parse ANR", e);
       }
     }
   }

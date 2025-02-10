@@ -18,10 +18,14 @@ public class AnrDetectorFactory {
   ) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
       LOGGER.debug("Creating HistoricalAnrDetector");
-      return new HistoricalAnrDetector(context, anrListener);
+      return new HistoricalAnrDetector(context, anrListener, createHistoricalAnrDetectorLogger());
     } else {
       LOGGER.debug("Creating WatchdogAnrDetector");
       return new WatchdogAnrDetector(context, anrListener);
     }
+  }
+
+  private static Logger createHistoricalAnrDetectorLogger() {
+    return LoggerFactory.getLogger(HistoricalAnrDetector.class);
   }
 }
