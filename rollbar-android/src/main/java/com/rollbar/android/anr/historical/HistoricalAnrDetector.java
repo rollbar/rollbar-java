@@ -10,7 +10,7 @@ import com.rollbar.android.anr.AnrException;
 import com.rollbar.android.anr.AnrListener;
 import com.rollbar.android.anr.historical.stacktrace.Lines;
 import com.rollbar.android.anr.historical.stacktrace.RollbarThread;
-import com.rollbar.android.anr.historical.stacktrace.ThreadDumpParser;
+import com.rollbar.android.anr.historical.stacktrace.ThreadParser;
 
 import org.slf4j.Logger;
 
@@ -29,7 +29,6 @@ public class HistoricalAnrDetector implements AnrDetector {
   private final Logger logger;
   private final Context context;
   private final AnrListener anrListener;
-  ThreadDumpParser threadDumpParser = new ThreadDumpParser(true);//todo remove isBackground
 
   public HistoricalAnrDetector(
       Context context,
@@ -121,7 +120,12 @@ public class HistoricalAnrDetector implements AnrDetector {
 
   private List<RollbarThread> getThreads(ApplicationExitInfo applicationExitInfo) throws IOException {
     Lines lines = getLines(applicationExitInfo);
-    return threadDumpParser.parse(lines);
+    ThreadParser threadParser = new ThreadParser(isBackground(applicationExitInfo));
+    return threadParser.parse(lines);
+  }
+
+  private boolean isBackground(ApplicationExitInfo applicationExitInfo) {
+    return applicationExitInfo.getImportance() != ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
   }
 
   private Lines getLines(ApplicationExitInfo applicationExitInfo) throws IOException {

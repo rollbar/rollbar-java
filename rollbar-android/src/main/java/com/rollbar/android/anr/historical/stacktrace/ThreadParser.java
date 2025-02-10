@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ThreadDumpParser {
+public class ThreadParser {
   private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
   private static final Pattern BEGIN_MANAGED_THREAD_RE =
@@ -50,7 +50,7 @@ public class ThreadDumpParser {
 
   private final boolean isBackground;
 
-  public ThreadDumpParser(final boolean isBackground) {
+  public ThreadParser(final boolean isBackground) {
     this.isBackground = isBackground;
   }
 
