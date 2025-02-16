@@ -54,7 +54,13 @@ public class WatchDogTest {
   public void setup() {
     MockitoAnnotations.initMocks(this);
     currentTimeMs = 0;
-    watchDog = new WatchDog(context, anrListener, looperHandler, timeProvider);
+    watchDog = new WatchDog(
+        context,
+        anrListener,
+        looperHandler,
+        new WatchdogConfiguration.Builder().build(),
+        timeProvider
+    );
   }
 
   @After
@@ -97,6 +103,7 @@ public class WatchDogTest {
 
   private void thenAnrExceptionIsTheExpected() {
     assertNotNull(anrException);
+    assertEquals(anrException.getMessage(), "Application Not Responding for at least 5000 ms.");
     assertEquals(stacktrace.getClassName(), anrException.getStackTrace()[0].getClassName());
   }
 

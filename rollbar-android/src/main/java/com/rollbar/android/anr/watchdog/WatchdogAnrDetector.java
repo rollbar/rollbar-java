@@ -20,10 +20,11 @@ public class WatchdogAnrDetector implements AnrDetector, Closeable {
 
   public WatchdogAnrDetector(
       Context context,
+      WatchdogConfiguration watchdogConfiguration,
       AnrListener anrListener
   ) {
     interruptWatchdog();
-    createWatchdog(context, anrListener);
+    createWatchdog(context, watchdogConfiguration, anrListener);
   }
 
   @Override
@@ -55,12 +56,19 @@ public class WatchdogAnrDetector implements AnrDetector, Closeable {
 
   private void createWatchdog(
       Context context,
+      WatchdogConfiguration watchdogConfiguration,
       AnrListener anrListener
   ) {
     if (context == null) return;
     if (anrListener == null) return;
 
-    watchDog = new WatchDog(context, anrListener, new LooperHandler(), new TimestampProvider());
+    watchDog = new WatchDog(
+        context,
+        anrListener,
+        new LooperHandler(),
+        watchdogConfiguration,
+        new TimestampProvider()
+    );
   }
 
   private void interruptWatchdog() {

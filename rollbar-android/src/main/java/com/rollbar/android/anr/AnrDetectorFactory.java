@@ -10,18 +10,42 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AnrDetectorFactory {
-  private final static Logger LOGGER = LoggerFactory.getLogger(AnrDetectorFactory.class);
 
   public static AnrDetector create(
       Context context,
+      Logger logger,
+      AnrConfiguration anrConfiguration,
       AnrListener anrListener
   ) {
+    if (anrConfiguration == null) {
+      logger.warn("No ANR configuration");
+      return null;
+    }
+    if (context == null) {
+      logger.warn("No context");
+      return null;
+    }
+
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-      LOGGER.debug("Creating HistoricalAnrDetector");
+      if (!anrConfiguration.captureHistoricalAnr) {
+        logger.warn("Historical ANR capture is off");
+        return null;
+      }
+
+      logger.debug("Creating HistoricalAnrDetector");
       return new HistoricalAnrDetector(context, anrListener, createHistoricalAnrDetectorLogger());
     } else {
-      LOGGER.debug("Creating WatchdogAnrDetector");
-      return new WatchdogAnrDetector(context, anrListener);
+      if (anrConfiguration.watchdogConfiguration == null) {
+        logger.warn("No Watchdog configuration");
+        return null;
+      }
+
+      logger.debug("Creating WatchdogAnrDetector");
+      return new WatchdogAnrDetector(
+          context,
+          anrConfiguration.watchdogConfiguration,
+          anrListener
+      );
     }
   }
 

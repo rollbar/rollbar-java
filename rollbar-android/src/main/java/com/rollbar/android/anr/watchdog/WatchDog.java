@@ -17,9 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class WatchDog extends Thread {
   private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
-  private static final long POLLING_INTERVAL_MILLIS = 500;
-  private static final long TIMEOUT_MILLIS = 5000;
-  private static final String MESSAGE = "Application Not Responding for at least " + TIMEOUT_MILLIS + " ms.";
+  private static final String MESSAGE = "Application Not Responding for at least %s ms.";
 
   private final LooperHandler uiHandler;
   private final Provider<Long> timeProvider;
@@ -28,17 +26,20 @@ public final class WatchDog extends Thread {
   private final Runnable ticker;
   private final Context context;
   private final AnrListener anrListener;
+  private final WatchdogConfiguration watchdogConfiguration;
 
   public WatchDog(
       Context context,
       AnrListener anrListener,
       LooperHandler looperHandler,
+      WatchdogConfiguration watchdogConfiguration,
       Provider<Long> timeProvider
   ) {
     uiHandler = looperHandler;
     this.anrListener = anrListener;
     this.context = context;
     this.timeProvider = timeProvider;
+    this.watchdogConfiguration = watchdogConfiguration;
     this.ticker =
         () -> {
           lastKnownActiveUiTimestampMs = timeProvider.provide();
@@ -54,7 +55,7 @@ public final class WatchDog extends Thread {
       uiHandler.post(ticker);
 
       try {
-        Thread.sleep(POLLING_INTERVAL_MILLIS);
+        Thread.sleep(watchdogConfiguration.getPollingIntervalMillis());
       } catch (InterruptedException e) {
         try {
           Thread.currentThread().interrupt();
@@ -75,12 +76,16 @@ public final class WatchDog extends Thread {
   }
 
   private AnrException makeException() {
-    return new AnrException(MESSAGE, uiHandler.getThread());
+    return new AnrException(createAnrMessage(), uiHandler.getThread());
+  }
+
+  private String createAnrMessage() {
+    return String.format(MESSAGE, watchdogConfiguration.getTimeOutMillis());
   }
 
   private boolean isMainThreadNotHandlerTicker() {
     long unresponsiveDurationMs = timeProvider.provide() - lastKnownActiveUiTimestampMs;
-    return unresponsiveDurationMs > TIMEOUT_MILLIS;
+    return unresponsiveDurationMs > watchdogConfiguration.getTimeOutMillis();
   }
 
   private boolean isProcessNotResponding() {
