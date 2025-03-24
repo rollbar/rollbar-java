@@ -3,7 +3,8 @@ package com.rollbar.notifier.util;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.mockito.Mockito.verify;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import com.rollbar.api.payload.data.body.Body;
 import com.rollbar.api.payload.data.body.ExceptionInfo;
@@ -15,6 +16,7 @@ import com.rollbar.notifier.wrapper.RollbarThrowableWrapper;
 import com.rollbar.notifier.wrapper.ThrowableWrapper;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,6 +47,29 @@ public class BodyFactoryTest {
 
     assertThat(body2.getContents(), is(instanceOf(Message.class)));
     assertThat(((Message) body2.getContents()).getBody(), is(DESCRIPTION));
+  }
+
+  @Test
+  public void shouldBuildBodyWithDescriptionAndTelemetryEvents() {
+    Body body = sut.from(null, DESCRIPTION, new ArrayList<>());
+
+    assertThat(body.getContents(), is(instanceOf(Message.class)));
+    assertThat(((Message) body.getContents()).getBody(), is(DESCRIPTION));
+    HashMap<String, Object> map = (HashMap<String, Object>) body.asJson();
+    assertNotNull(map.get("telemetry"));
+    assertNull(map.get("threads"));
+  }
+
+  @Test
+  public void shouldBuildBodyWithThreads() {
+    Throwable throwable = buildSimpleThrowable();
+    ThrowableWrapper throwableWrapper = new RollbarThrowableWrapper(throwable, Thread.currentThread());
+    Body body = sut.from(throwableWrapper, DESCRIPTION);
+
+    assertThat(body.getContents(), is(instanceOf(Trace.class)));
+    HashMap<String, Object> map = (HashMap<String, Object>) body.asJson();
+    assertNull(map.get("telemetry"));
+    assertNotNull(map.get("threads"));
   }
 
   @Test

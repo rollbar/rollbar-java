@@ -19,9 +19,12 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
 
   private final List<TelemetryEvent> telemetryEvents;
 
+  private final List<RollbarThread> rollbarThreads;
+
   private Body(Builder builder) {
     this.bodyContent = builder.bodyContent;
     this.telemetryEvents = builder.telemetryEvents;
+    this.rollbarThreads = builder.rollbarThreads;
   }
 
   /**
@@ -42,6 +45,10 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
 
     if (telemetryEvents != null) {
       values.put("telemetry", telemetryEvents);
+    }
+
+    if (rollbarThreads != null) {
+      values.put("threads", rollbarThreads);
     }
 
     return values;
@@ -83,6 +90,7 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
     return "Body{"
         + "bodyContent=" + bodyContent
         + ", telemetry=" + telemetryEvents
+        + ", threads=" + rollbarThreads
         + '}';
   }
 
@@ -94,6 +102,8 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
     private BodyContent bodyContent;
 
     private List<TelemetryEvent> telemetryEvents;
+
+    private List<RollbarThread> rollbarThreads;
 
     /**
      * Constructor.
@@ -108,8 +118,9 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
      * @param body the {@link Body body} to initialize a new builder instance.
      */
     public Builder(Body body) {
-      this.bodyContent = body.bodyContent;
-      this.telemetryEvents = body.telemetryEvents;
+      bodyContent = body.bodyContent;
+      telemetryEvents = body.telemetryEvents;
+      rollbarThreads = body.rollbarThreads;
     }
 
     /**
@@ -132,6 +143,17 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
      */
     public Builder telemetryEvents(List<TelemetryEvent> telemetryEvents) {
       this.telemetryEvents = telemetryEvents;
+      return this;
+    }
+
+    /**
+     * Information from other threads.
+     *
+     * @param rollbarThreads a list of threads without the thread where the Exception occurred;
+     * @return the builder instance.
+     */
+    public Builder rollbarThreads(List<RollbarThread> rollbarThreads) {
+      this.rollbarThreads = rollbarThreads;
       return this;
     }
 
