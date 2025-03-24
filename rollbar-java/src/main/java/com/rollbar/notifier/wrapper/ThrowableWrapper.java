@@ -1,5 +1,7 @@
 package com.rollbar.notifier.wrapper;
 
+import java.util.Map;
+
 /**
  * Throwable wrapper to wrap a {@link Throwable thowable} or to represent a not available one.
  */
@@ -39,4 +41,8 @@ public interface ThrowableWrapper {
    * @return the throwable.
    */
   Throwable getThrowable();
+
+  Thread getThread();
+
+  Map<Thread, StackTraceElement[]> getAllStackTraces();
 }
