@@ -94,7 +94,7 @@ public class BodyFactory {
   }
 
   private RollbarThread makeInitialRollbarThread(ThrowableWrapper throwableWrapper, String description) {
-    BodyContent bodyContent = makeBodyContent(throwableWrapper, description);
+    BodyContent bodyContent = traceChain(throwableWrapper, description);
     return new RollbarThread(throwableWrapper.getThread(), bodyContent);
   }
 
@@ -103,9 +103,9 @@ public class BodyFactory {
     Map<Thread, StackTraceElement[]> allStackTraces
   ) {
     for (Map.Entry<Thread, StackTraceElement[]> entry : allStackTraces.entrySet()) {
-      List<Frame> frames = frames(entry.getValue());
-      Trace trace = new Trace.Builder().frames(frames).build();
-      rollbarThreads.add(new RollbarThread(entry.getKey(), trace));
+      TraceChain traceChain = traceChain(entry.getValue());
+      RollbarThread rollbarThread = new RollbarThread(entry.getKey(), traceChain);
+      rollbarThreads.add(rollbarThread);
     }
     return rollbarThreads;
   }
@@ -133,6 +133,14 @@ public class BodyFactory {
       .frames(frames(throwableWrapper))
       .exception(info(throwableWrapper, description))
       .build();
+  }
+
+  private TraceChain traceChain(StackTraceElement[] stackTraceElements) {
+    List<Frame> frames = frames(stackTraceElements);
+    Trace trace = new Trace.Builder().frames(frames).build();
+    ArrayList<Trace> chain = new ArrayList<>();
+    chain.add(trace);
+    return new TraceChain.Builder().traces(chain).build();
   }
 
   private static TraceChain traceChain(ThrowableWrapper throwableWrapper, String description) {
