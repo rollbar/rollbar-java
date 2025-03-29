@@ -30,11 +30,11 @@ public class TelemetryEvent implements JsonSerializable, StringTruncatable<Telem
    * @param body          a map containing all the data required by the {@link TelemetryType}
    */
   public TelemetryEvent(
-      TelemetryType telemetryType,
-      Level level,
-      Long timestamp,
-      Source source,
-      Map<String, String> body
+    TelemetryType telemetryType,
+    Level level,
+    Long timestamp,
+    Source source,
+    Map<String, String> body
   ) {
     type = telemetryType;
     this.timestamp = timestamp;
@@ -56,29 +56,24 @@ public class TelemetryEvent implements JsonSerializable, StringTruncatable<Telem
 
   @Override
   public TelemetryEvent truncateStrings(int maxLength) {
-    Map<String, String> truncatedMap = new HashMap<>();
-    for (Map.Entry<String, String> entry : body.entrySet()) {
-      String truncatedValue = TruncationHelper.truncateString(entry.getValue(), maxLength);
-      truncatedMap.put(entry.getKey(), truncatedValue);
-    }
     return new TelemetryEvent(
-        this.type,
-        this.level,
-        this.timestamp,
-        this.source,
-        truncatedMap
+      this.type,
+      this.level,
+      this.timestamp,
+      this.source,
+      TruncationHelper.truncateStringsInStringMap(body, maxLength)
     );
   }
 
   @Override
   public String toString() {
     return "TelemetryEvent{"
-        + "type='" + type.asJson() + '\''
-        + ", level='" + level.asJson() + '\''
-        + ", source='" + source + '\''
-        + ", timestamp_ms=" + timestamp
-        + ", body=" + body
-        + '}';
+      + "type='" + type.asJson() + '\''
+      + ", level='" + level.asJson() + '\''
+      + ", source='" + source + '\''
+      + ", timestamp_ms=" + timestamp
+      + ", body=" + body
+      + '}';
   }
 
   @Override
@@ -91,7 +86,7 @@ public class TelemetryEvent implements JsonSerializable, StringTruncatable<Telem
     }
     TelemetryEvent that = (TelemetryEvent) o;
     return type == that.type && level == that.level && Objects.equals(timestamp, that.timestamp)
-        && Objects.equals(body, that.body) && Objects.equals(source, that.source);
+      && Objects.equals(body, that.body) && Objects.equals(source, that.source);
   }
 
   @Override
