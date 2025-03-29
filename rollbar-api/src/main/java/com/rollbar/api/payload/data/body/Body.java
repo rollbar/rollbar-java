@@ -3,6 +3,7 @@ package com.rollbar.api.payload.data.body;
 import com.rollbar.api.json.JsonSerializable;
 import com.rollbar.api.payload.data.TelemetryEvent;
 import com.rollbar.api.truncation.StringTruncatable;
+import com.rollbar.api.truncation.TruncationHelper;
 
 import java.util.*;
 
@@ -58,7 +59,7 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
     if (bodyContent != null) {
       return new Body.Builder(this)
         .bodyContent(bodyContent.truncateStrings(maxSize))
-        .telemetryEvents(truncatedTelemetryEvents(maxSize))
+        .telemetryEvents(TruncationHelper.truncate(telemetryEvents, maxSize))
         .build();
     } else {
       return this;
@@ -92,18 +93,6 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
       + ", telemetry=" + telemetryEvents
       + ", group=" + groups
       + '}';
-  }
-
-  private List<TelemetryEvent> truncatedTelemetryEvents(int maxSize) {
-    if (telemetryEvents == null) {
-      return null;
-    }
-
-    List<TelemetryEvent> truncatedTelemetryEvents = new ArrayList<>();
-    for (TelemetryEvent telemetryEvent : telemetryEvents) {
-      truncatedTelemetryEvents.add(telemetryEvent.truncateStrings(maxSize));
-    }
-    return truncatedTelemetryEvents;
   }
 
   /**
