@@ -4,9 +4,7 @@ import com.rollbar.api.json.JsonSerializable;
 import com.rollbar.api.payload.data.TelemetryEvent;
 import com.rollbar.api.truncation.StringTruncatable;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * A container for the actual error(s), message, or crash report that caused this error.
@@ -29,6 +27,7 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
 
   /**
    * Getter.
+   *
    * @return the contents.
    */
   public BodyContent getContents() {
@@ -58,8 +57,9 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
   public Body truncateStrings(int maxSize) {
     if (bodyContent != null) {
       return new Body.Builder(this)
-          .bodyContent(bodyContent.truncateStrings(maxSize))
-          .build();
+        .bodyContent(bodyContent.truncateStrings(maxSize))
+        .telemetryEvents(truncatedTelemetryEvents(maxSize))
+        .build();
     } else {
       return this;
     }
@@ -77,7 +77,7 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
 
     Body body = (Body) o;
     return Objects.equals(bodyContent, body.bodyContent)
-        && Objects.equals(telemetryEvents, body.telemetryEvents);
+      && Objects.equals(telemetryEvents, body.telemetryEvents);
   }
 
   @Override
@@ -88,10 +88,22 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
   @Override
   public String toString() {
     return "Body{"
-        + "bodyContent=" + bodyContent
-        + ", telemetry=" + telemetryEvents
-        + ", group=" + groups
-        + '}';
+      + "bodyContent=" + bodyContent
+      + ", telemetry=" + telemetryEvents
+      + ", group=" + groups
+      + '}';
+  }
+
+  private List<TelemetryEvent> truncatedTelemetryEvents(int maxSize) {
+    if (telemetryEvents == null) {
+      return null;
+    }
+
+    List<TelemetryEvent> truncatedTelemetryEvents = new ArrayList<>();
+    for (TelemetryEvent telemetryEvent : telemetryEvents) {
+      truncatedTelemetryEvents.add(telemetryEvent.truncateStrings(maxSize));
+    }
+    return truncatedTelemetryEvents;
   }
 
   /**

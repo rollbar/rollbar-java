@@ -3,9 +3,12 @@ package com.rollbar.notifier.util;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
+import com.rollbar.api.payload.data.Level;
+import com.rollbar.api.payload.data.Source;
+import com.rollbar.api.payload.data.TelemetryEvent;
+import com.rollbar.api.payload.data.TelemetryType;
 import com.rollbar.api.payload.data.body.Body;
 import com.rollbar.api.payload.data.body.ExceptionInfo;
 import com.rollbar.api.payload.data.body.Frame;
@@ -14,10 +17,9 @@ import com.rollbar.api.payload.data.body.Trace;
 import com.rollbar.api.payload.data.body.TraceChain;
 import com.rollbar.notifier.wrapper.RollbarThrowableWrapper;
 import com.rollbar.notifier.wrapper.ThrowableWrapper;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
+
+import java.util.*;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -58,6 +60,23 @@ public class BodyFactoryTest {
     HashMap<String, Object> map = (HashMap<String, Object>) body.asJson();
     assertNotNull(map.get("telemetry"));
     assertNull(map.get("group"));
+  }
+
+  @Test
+  public void shouldTruncateTelemetryEvents() {
+    Map<String, String> telemetryBody = new HashMap<>();
+    telemetryBody.put("message", "1234567890");
+    TelemetryEvent telemetryEvent = makeTelemetryEvent(telemetryBody);
+    ArrayList<TelemetryEvent> telemetryEvents = new ArrayList<>();
+    telemetryEvents.add(telemetryEvent);
+
+    Body body = sut.from(null, DESCRIPTION, telemetryEvents).truncateStrings(5);
+
+    HashMap<String, Object> map = (HashMap<String, Object>) body.asJson();
+    List<TelemetryEvent> truncatedTelemetryEvents = (List<TelemetryEvent>) map.get("telemetry");
+    telemetryBody.put("message", "12345");
+    TelemetryEvent expected = makeTelemetryEvent(telemetryBody);
+    assertEquals(expected, truncatedTelemetryEvents.get(0));
   }
 
   @Test
@@ -111,6 +130,10 @@ public class BodyFactoryTest {
 
     assertThat(body.getContents(), is(instanceOf(TraceChain.class)));
     verifyTraceChain((TraceChain) body.getContents(), throwable);
+  }
+
+  private TelemetryEvent makeTelemetryEvent( Map<String, String> body) {
+    return new TelemetryEvent(TelemetryType.LOG, Level.DEBUG, 12L, Source.CLIENT, body);
   }
 
   private void verifyTrace(Trace trace, Throwable throwable, String description) {
