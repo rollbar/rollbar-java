@@ -57,7 +57,7 @@ public class BodyFactoryTest {
     assertThat(((Message) body.getContents()).getBody(), is(DESCRIPTION));
     HashMap<String, Object> map = (HashMap<String, Object>) body.asJson();
     assertNotNull(map.get("telemetry"));
-    assertNull(map.get("threads"));
+    assertNull(map.get("group"));
   }
 
   @Test
@@ -69,7 +69,7 @@ public class BodyFactoryTest {
     assertThat(body.getContents(), is(instanceOf(Trace.class)));
     HashMap<String, Object> map = (HashMap<String, Object>) body.asJson();
     assertNull(map.get("telemetry"));
-    assertNotNull(map.get("threads"));
+    assertNotNull(map.get("group"));
   }
 
   @Test

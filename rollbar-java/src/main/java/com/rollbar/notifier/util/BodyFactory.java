@@ -71,11 +71,11 @@ public class BodyFactory {
   ) {
     return builder
       .bodyContent(makeBodyContent(throwableWrapper, description))
-      .rollbarThreads(makeRollbarThreads(throwableWrapper, description))
+      .groups(makeGroups(throwableWrapper, description))
       .build();
   }
 
-  private List<RollbarThread> makeRollbarThreads(
+  private List<Group> makeGroups(
     ThrowableWrapper throwableWrapper,
     String description
   ) {
@@ -90,7 +90,9 @@ public class BodyFactory {
 
     ArrayList<RollbarThread> rollbarThreads = new ArrayList<>();
     rollbarThreads.add(makeInitialRollbarThread(throwableWrapper, description));
-    return addOtherThreads(rollbarThreads, allStackTraces);
+    ArrayList<Group> groups = new ArrayList<>();
+    groups.add(new Group(addOtherThreads(rollbarThreads, allStackTraces)));
+    return groups;
   }
 
   private RollbarThread makeInitialRollbarThread(ThrowableWrapper throwableWrapper, String description) {

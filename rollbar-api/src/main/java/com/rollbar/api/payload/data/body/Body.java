@@ -19,12 +19,12 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
 
   private final List<TelemetryEvent> telemetryEvents;
 
-  private final List<RollbarThread> rollbarThreads;
+  private final List<Group> groups;
 
   private Body(Builder builder) {
     this.bodyContent = builder.bodyContent;
     this.telemetryEvents = builder.telemetryEvents;
-    this.rollbarThreads = builder.rollbarThreads;
+    this.groups = builder.groups;
   }
 
   /**
@@ -47,8 +47,8 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
       values.put("telemetry", telemetryEvents);
     }
 
-    if (rollbarThreads != null) {
-      values.put("threads", rollbarThreads);
+    if (groups != null) {
+      values.put("group", groups);
     }
 
     return values;
@@ -90,7 +90,7 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
     return "Body{"
         + "bodyContent=" + bodyContent
         + ", telemetry=" + telemetryEvents
-        + ", threads=" + rollbarThreads
+        + ", group=" + groups
         + '}';
   }
 
@@ -103,7 +103,7 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
 
     private List<TelemetryEvent> telemetryEvents;
 
-    private List<RollbarThread> rollbarThreads;
+    private List<Group> groups;
 
     /**
      * Constructor.
@@ -120,7 +120,7 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
     public Builder(Body body) {
       bodyContent = body.bodyContent;
       telemetryEvents = body.telemetryEvents;
-      rollbarThreads = body.rollbarThreads;
+      groups = body.groups;
     }
 
     /**
@@ -147,13 +147,13 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
     }
 
     /**
-     * Information from other threads.
+     * Information from a group of threads.
      *
-     * @param rollbarThreads a list of threads without the thread where the Exception occurred;
+     * @param groups a group with a list of threads;
      * @return the builder instance.
      */
-    public Builder rollbarThreads(List<RollbarThread> rollbarThreads) {
-      this.rollbarThreads = rollbarThreads;
+    public Builder groups(List<Group> groups) {
+      this.groups = groups;
       return this;
     }
 
