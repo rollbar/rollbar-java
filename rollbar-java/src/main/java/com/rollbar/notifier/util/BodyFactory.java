@@ -71,18 +71,17 @@ public class BodyFactory {
   ) {
     return builder
       .bodyContent(makeBodyContent(throwableWrapper, description))
-      .groups(makeGroups(throwableWrapper, description))
+      .rollbarThreads(makeRollbarThreads(throwableWrapper, description))
       .build();
   }
 
-  private List<Group> makeGroups(
+  private List<RollbarThread> makeRollbarThreads(
     ThrowableWrapper throwableWrapper,
     String description
   ) {
     if (throwableWrapper == null) {
       return null;
     }
-
     Map<Thread, StackTraceElement[]> allStackTraces = throwableWrapper.getAllStackTraces();
     if (allStackTraces == null) {
       return null;
@@ -90,14 +89,12 @@ public class BodyFactory {
 
     ArrayList<RollbarThread> rollbarThreads = new ArrayList<>();
     rollbarThreads.add(makeInitialRollbarThread(throwableWrapper, description));
-    ArrayList<Group> groups = new ArrayList<>();
-    groups.add(new Group(addOtherThreads(rollbarThreads, allStackTraces)));
-    return groups;
+    return addOtherThreads(rollbarThreads, allStackTraces);
   }
 
   private RollbarThread makeInitialRollbarThread(ThrowableWrapper throwableWrapper, String description) {
-    BodyContent bodyContent = traceChain(throwableWrapper, description);
-    return new RollbarThread(throwableWrapper.getThread(), bodyContent);
+    TraceChain traceChain = traceChain(throwableWrapper, description);
+    return new RollbarThread(throwableWrapper.getThread(), new Group(traceChain));
   }
 
   private ArrayList<RollbarThread> addOtherThreads(
@@ -106,7 +103,7 @@ public class BodyFactory {
   ) {
     for (Map.Entry<Thread, StackTraceElement[]> entry : allStackTraces.entrySet()) {
       TraceChain traceChain = traceChain(entry.getValue());
-      RollbarThread rollbarThread = new RollbarThread(entry.getKey(), traceChain);
+      RollbarThread rollbarThread = new RollbarThread(entry.getKey(), new Group(traceChain));
       rollbarThreads.add(rollbarThread);
     }
     return rollbarThreads;

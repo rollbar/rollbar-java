@@ -96,7 +96,7 @@ public class BodyFactoryTest {
     assertThat(body.getContents(), is(instanceOf(Trace.class)));
     HashMap<String, Object> map = (HashMap<String, Object>) body.asJson();
     assertNull(map.get("telemetry"));
-    assertNotNull(map.get("group"));
+    assertNotNull(map.get("threads"));
   }
 
   @Test
@@ -152,13 +152,13 @@ public class BodyFactoryTest {
 
   private Trace getFirstTraceFromGroup(Body body) {
     HashMap<String, Object> bodyJson = (HashMap<String, Object>) body.asJson();
-    List<Group> groups = (List<Group>) bodyJson.get("group");
+    List<RollbarThread> rollbarThreads = (List<RollbarThread>) bodyJson.get("threads");
 
-    HashMap<String, Object> groupJson = (HashMap<String, Object>) groups.get(0).asJson();
-    List<RollbarThread> rollbarThreads = (List<RollbarThread>) groupJson.get("threads");
+    HashMap<String, Object> groupJson = (HashMap<String, Object>) rollbarThreads.get(0).asJson();
+    Group group = (Group) groupJson.get("group");
 
-    HashMap<String, Object> rollbarThreadJson = (HashMap<String, Object>) rollbarThreads.get(0).asJson();
-    TraceChain traceChain = (TraceChain) rollbarThreadJson.get("trace_chain");
+    List<HashMap<String, Object>> rollbarThreadJson = (List<HashMap<String, Object>>) group.asJson();
+    TraceChain traceChain = (TraceChain) rollbarThreadJson.get(0).get("trace_chain");
     return traceChain.getTraces().get(0);
   }
 

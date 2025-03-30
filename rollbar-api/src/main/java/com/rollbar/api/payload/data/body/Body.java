@@ -18,12 +18,12 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
 
   private final List<TelemetryEvent> telemetryEvents;
 
-  private final List<Group> groups;
+  private final List<RollbarThread> rollbarThreads;
 
   private Body(Builder builder) {
     this.bodyContent = builder.bodyContent;
     this.telemetryEvents = builder.telemetryEvents;
-    this.groups = builder.groups;
+    this.rollbarThreads = builder.rollbarThreads;
   }
 
   /**
@@ -47,8 +47,8 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
       values.put("telemetry", telemetryEvents);
     }
 
-    if (groups != null) {
-      values.put("group", groups);
+    if (rollbarThreads != null) {
+      values.put("threads", rollbarThreads);
     }
 
     return values;
@@ -60,7 +60,7 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
       return new Body.Builder(this)
         .bodyContent(bodyContent.truncateStrings(maxSize))
         .telemetryEvents(TruncationHelper.truncate(telemetryEvents, maxSize))
-        .groups(TruncationHelper.truncate(groups, maxSize))
+        .rollbarThreads(TruncationHelper.truncate(rollbarThreads, maxSize))
         .build();
     } else {
       return this;
@@ -92,7 +92,7 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
     return "Body{"
       + "bodyContent=" + bodyContent
       + ", telemetry=" + telemetryEvents
-      + ", group=" + groups
+      + ", threads=" + rollbarThreads
       + '}';
   }
 
@@ -105,7 +105,7 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
 
     private List<TelemetryEvent> telemetryEvents;
 
-    private List<Group> groups;
+    private List<RollbarThread> rollbarThreads;
 
     /**
      * Constructor.
@@ -122,7 +122,7 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
     public Builder(Body body) {
       bodyContent = body.bodyContent;
       telemetryEvents = body.telemetryEvents;
-      groups = body.groups;
+      rollbarThreads = body.rollbarThreads;
     }
 
     /**
@@ -149,13 +149,13 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
     }
 
     /**
-     * Information from a group of threads.
+     * Information from threads.
      *
-     * @param groups a group with a list of threads;
+     * @param rollbarThreads a list of threads;
      * @return the builder instance.
      */
-    public Builder groups(List<Group> groups) {
-      this.groups = groups;
+    public Builder rollbarThreads(List<RollbarThread> rollbarThreads) {
+      this.rollbarThreads = rollbarThreads;
       return this;
     }
 
