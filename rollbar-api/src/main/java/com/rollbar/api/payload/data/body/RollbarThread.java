@@ -8,28 +8,21 @@ import java.util.Map;
 import java.util.Objects;
 
 public class RollbarThread implements JsonSerializable, StringTruncatable<RollbarThread> {
-
-  private final String name;
-  private final String id;
-  private final String priority;
-  private final String state;
+  private final Thread thread;
   private final BodyContent bodyContent;
 
   public RollbarThread(Thread thread, BodyContent bodyContent) {
-    name = thread.getName();
-    id = String.valueOf(thread.getId());
-    priority = String.valueOf(thread.getPriority());
-    state = thread.getState().toString();
+    this.thread = thread;
     this.bodyContent = bodyContent;
   }
 
   @Override
   public Object asJson() {
     Map<String, Object> values = new HashMap<>();
-    values.put("name", name);
-    values.put("id", id);
-    values.put("priority", priority);
-    values.put("state", state);
+    values.put("name", getThreadName());
+    values.put("id", getThreadId());
+    values.put("priority", getThreadPriority());
+    values.put("state", getThreadState());
     if (bodyContent != null) {
       values.put(bodyContent.getKeyName(), bodyContent);
     }
@@ -38,36 +31,45 @@ public class RollbarThread implements JsonSerializable, StringTruncatable<Rollba
 
   @Override
   public RollbarThread truncateStrings(int maxLength) {
-    return null;
+    return new RollbarThread(thread, bodyContent.truncateStrings(maxLength));
   }
 
   @Override
   public String toString() {
     return "RollbarThread{" +
-      "name='" + name + '\'' +
-      ", id='" + id + '\'' +
-      ", priority='" + priority + '\'' +
-      ", state='" + state + '\'' +
+      "name='" + getThreadName() + '\'' +
+      ", id='" + getThreadId() + '\'' +
+      ", priority='" + getThreadPriority() + '\'' +
+      ", state='" + getThreadState() + '\'' +
       ", " + bodyContent.getKeyName() + "=" + bodyContent +
       '}';
+  }
+
+  private String getThreadName() {
+    return thread.getName();
+  }
+
+  private String getThreadId() {
+    return String.valueOf(thread.getId());
+  }
+
+  private String getThreadPriority() {
+    return  String.valueOf(thread.getPriority());
+  }
+
+  private String getThreadState() {
+    return thread.getState().toString();
   }
 
   @Override
   public boolean equals(Object o) {
     if (!(o instanceof RollbarThread)) return false;
     RollbarThread that = (RollbarThread) o;
-    return Objects.equals(name, that.name) && Objects.equals(id, that.id) && Objects.equals(priority, that.priority) && Objects.equals(state, that.state) && Objects.equals(bodyContent, that.bodyContent);
+    return Objects.equals(thread, that.thread) && Objects.equals(bodyContent, that.bodyContent);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, id, priority, state, bodyContent);
-  }
-
-  /**
-   * Builder class for {@link RollbarThread RollbarThread}.
-   */
-  public static final class Builder {
-
+    return Objects.hash(thread, bodyContent);
   }
 }

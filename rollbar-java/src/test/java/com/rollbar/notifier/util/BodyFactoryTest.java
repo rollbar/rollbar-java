@@ -9,12 +9,7 @@ import com.rollbar.api.payload.data.Level;
 import com.rollbar.api.payload.data.Source;
 import com.rollbar.api.payload.data.TelemetryEvent;
 import com.rollbar.api.payload.data.TelemetryType;
-import com.rollbar.api.payload.data.body.Body;
-import com.rollbar.api.payload.data.body.ExceptionInfo;
-import com.rollbar.api.payload.data.body.Frame;
-import com.rollbar.api.payload.data.body.Message;
-import com.rollbar.api.payload.data.body.Trace;
-import com.rollbar.api.payload.data.body.TraceChain;
+import com.rollbar.api.payload.data.body.*;
 import com.rollbar.notifier.wrapper.RollbarThrowableWrapper;
 import com.rollbar.notifier.wrapper.ThrowableWrapper;
 
@@ -72,11 +67,24 @@ public class BodyFactoryTest {
 
     Body body = sut.from(null, DESCRIPTION, telemetryEvents).truncateStrings(5);
 
-    HashMap<String, Object> map = (HashMap<String, Object>) body.asJson();
-    List<TelemetryEvent> truncatedTelemetryEvents = (List<TelemetryEvent>) map.get("telemetry");
     telemetryBody.put("message", "12345");
     TelemetryEvent expected = makeTelemetryEvent(telemetryBody);
-    assertEquals(expected, truncatedTelemetryEvents.get(0));
+    assertEquals(expected, getFirstTelemetryEvent(body));
+  }
+
+  @Test
+  public void shouldTruncateGroups() {
+    int expectedLength = 5;
+    Throwable throwable = buildSimpleThrowable();
+    ThrowableWrapper throwableWrapper = new RollbarThrowableWrapper(throwable, Thread.currentThread());
+
+    Body truncatedBody = sut.from(throwableWrapper, DESCRIPTION).truncateStrings(expectedLength);
+
+    Trace trace = getFirstTraceFromGroup(truncatedBody);
+    assertEquals(expectedLength, trace.getException().getMessage().length());
+    assertEquals(expectedLength, trace.getException().getClassName().length());
+    assertEquals(expectedLength, trace.getException().getDescription().length());
+    assertEquals(expectedLength, trace.getFrames().get(0).getClassName().length());
   }
 
   @Test
@@ -134,6 +142,24 @@ public class BodyFactoryTest {
 
   private TelemetryEvent makeTelemetryEvent( Map<String, String> body) {
     return new TelemetryEvent(TelemetryType.LOG, Level.DEBUG, 12L, Source.CLIENT, body);
+  }
+
+  private TelemetryEvent getFirstTelemetryEvent(Body body) {
+    HashMap<String, Object> map = (HashMap<String, Object>) body.asJson();
+    List<TelemetryEvent> telemetryEvents = (List<TelemetryEvent>) map.get("telemetry");
+    return telemetryEvents.get(0);
+  }
+
+  private Trace getFirstTraceFromGroup(Body body) {
+    HashMap<String, Object> bodyJson = (HashMap<String, Object>) body.asJson();
+    List<Group> groups = (List<Group>) bodyJson.get("group");
+
+    HashMap<String, Object> groupJson = (HashMap<String, Object>) groups.get(0).asJson();
+    List<RollbarThread> rollbarThreads = (List<RollbarThread>) groupJson.get("threads");
+
+    HashMap<String, Object> rollbarThreadJson = (HashMap<String, Object>) rollbarThreads.get(0).asJson();
+    TraceChain traceChain = (TraceChain) rollbarThreadJson.get("trace_chain");
+    return traceChain.getTraces().get(0);
   }
 
   private void verifyTrace(Trace trace, Throwable throwable, String description) {

@@ -60,6 +60,7 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
       return new Body.Builder(this)
         .bodyContent(bodyContent.truncateStrings(maxSize))
         .telemetryEvents(TruncationHelper.truncate(telemetryEvents, maxSize))
+        .groups(TruncationHelper.truncate(groups, maxSize))
         .build();
     } else {
       return this;
