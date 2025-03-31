@@ -5,7 +5,9 @@ import com.rollbar.api.payload.data.TelemetryEvent;
 import com.rollbar.api.truncation.StringTruncatable;
 import com.rollbar.api.truncation.TruncationHelper;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Objects;
+import java.util.List;
 
 /**
  * A container for the actual error(s), message, or crash report that caused this error.
