@@ -2,13 +2,14 @@ package com.rollbar.api.payload.data.body;
 
 import com.rollbar.api.json.JsonSerializable;
 import com.rollbar.api.truncation.StringTruncatable;
-import com.rollbar.api.truncation.TruncationHelper;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Represents Thread information
+ */
 public class RollbarThread implements JsonSerializable, StringTruncatable<RollbarThread> {
   private final String name;
   private final String id;
@@ -62,21 +63,27 @@ public class RollbarThread implements JsonSerializable, StringTruncatable<Rollba
 
   @Override
   public String toString() {
-    return "RollbarThread{" +
-        "name='" + name + '\'' +
-        ", id='" + id + '\'' +
-        ", priority='" + priority + '\'' +
-        ", state='" + state + '\'' +
-        ", group='" + group +
-        '}';
+    return "RollbarThread{"
+        + "name='" + name + '\''
+        + ", id='" + id + '\''
+        + ", priority='" + priority + '\''
+        + ", state='" + state + '\''
+        + ", group='" + group
+        + '}';
   }
 
 
   @Override
   public boolean equals(Object o) {
-    if (o == null || getClass() != o.getClass()) return false;
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     RollbarThread that = (RollbarThread) o;
-    return Objects.equals(name, that.name) && Objects.equals(id, that.id) && Objects.equals(priority, that.priority) && Objects.equals(state, that.state) && Objects.equals(group, that.group);
+    return Objects.equals(name, that.name)
+        && Objects.equals(id, that.id)
+        && Objects.equals(priority, that.priority)
+        && Objects.equals(state, that.state)
+        && Objects.equals(group, that.group);
   }
 
   @Override
