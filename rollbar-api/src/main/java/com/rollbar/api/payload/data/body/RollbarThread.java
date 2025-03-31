@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Represents Thread information
+ * Represents Thread information.
  */
 public class RollbarThread implements JsonSerializable, StringTruncatable<RollbarThread> {
   private final String name;
@@ -17,6 +17,11 @@ public class RollbarThread implements JsonSerializable, StringTruncatable<Rollba
   private final String state;
   private final Group group;
 
+  /**
+   * Constructor.
+   * @param thread the Thread.
+   * @param group the Group of trace chains.
+   */
   public RollbarThread(Thread thread, Group group) {
     name = thread.getName();
     id = String.valueOf(thread.getId());

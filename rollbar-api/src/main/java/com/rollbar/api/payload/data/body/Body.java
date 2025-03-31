@@ -6,8 +6,8 @@ import com.rollbar.api.truncation.StringTruncatable;
 import com.rollbar.api.truncation.TruncationHelper;
 
 import java.util.HashMap;
-import java.util.Objects;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * A container for the actual error(s), message, or crash report that caused this error.
