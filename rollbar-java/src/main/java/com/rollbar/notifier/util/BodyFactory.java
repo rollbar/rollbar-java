@@ -184,7 +184,7 @@ public class BodyFactory {
 
     ArrayList<Frame> result = new ArrayList<>();
     for (int i = stackTraceElements.length - 1; i >= 0; i--) {
-      result.add(frame(stackTraceElements[i], Collections.emptyMap()));
+      result.add(frame(stackTraceElements[i], null));
     }
 
     return result;
