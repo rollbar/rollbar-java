@@ -53,11 +53,11 @@ public class RollbarThrowableWrapper implements ThrowableWrapper {
       throwable.getCause() != null ? new RollbarThrowableWrapper(throwable.getCause()) : null,
       throwable,
       thread,
-      getAllStackTraces(thread)
+      captureAllStackTraces(thread)
     );
   }
 
-  private static Map<Thread, StackTraceElement[]> getAllStackTraces(Thread thread) {
+  private static Map<Thread, StackTraceElement[]> captureAllStackTraces(Thread thread) {
     if (thread == null) {
       return null;
     }
@@ -65,7 +65,10 @@ public class RollbarThrowableWrapper implements ThrowableWrapper {
     return filter(thread, Thread.getAllStackTraces());
   }
 
-  private static Map<Thread, StackTraceElement[]> filter(Thread thread, Map<Thread, StackTraceElement[]> allStackTraces) {
+  private static Map<Thread, StackTraceElement[]> filter(
+      Thread thread, Map<Thread,
+      StackTraceElement[]> allStackTraces
+  ) {
     HashMap<Thread, StackTraceElement[]> filteredStackTraces = new HashMap<>();
 
     for (Map.Entry<Thread, StackTraceElement[]> entry : allStackTraces.entrySet()) {
@@ -88,22 +91,22 @@ public class RollbarThrowableWrapper implements ThrowableWrapper {
    * @param cause              the cause.
    */
   public RollbarThrowableWrapper(
-    String className,
-    String message,
-    StackTraceElement[] stackTraceElements,
-    ThrowableWrapper cause
+      String className,
+      String message,
+      StackTraceElement[] stackTraceElements,
+      ThrowableWrapper cause
   ) {
     this(className, message, stackTraceElements, cause, null, null, null);
   }
 
   private RollbarThrowableWrapper(
-    String className,
-    String message,
-    StackTraceElement[] stackTraceElements,
-    ThrowableWrapper cause,
-    Throwable throwable,
-    Thread thread,
-    Map<Thread, StackTraceElement[]> allStackTraces
+      String className,
+      String message,
+      StackTraceElement[] stackTraceElements,
+      ThrowableWrapper cause,
+      Throwable throwable,
+      Thread thread,
+      Map<Thread, StackTraceElement[]> allStackTraces
   ) {
     this.className = className;
     this.message = message;

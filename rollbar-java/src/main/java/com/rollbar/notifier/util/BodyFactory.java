@@ -1,14 +1,21 @@
 package com.rollbar.notifier.util;
 
 import com.rollbar.api.payload.data.TelemetryEvent;
-import com.rollbar.api.payload.data.body.*;
+import com.rollbar.api.payload.data.body.Body;
+import com.rollbar.api.payload.data.body.BodyContent;
+import com.rollbar.api.payload.data.body.ExceptionInfo;
+import com.rollbar.api.payload.data.body.Frame;
+import com.rollbar.api.payload.data.body.Group;
+import com.rollbar.api.payload.data.body.Message;
+import com.rollbar.api.payload.data.body.RollbarThread;
+import com.rollbar.api.payload.data.body.Trace;
+import com.rollbar.api.payload.data.body.TraceChain;
 import com.rollbar.jvmti.CacheFrame;
 import com.rollbar.jvmti.ThrowableCache;
 import com.rollbar.notifier.wrapper.RollbarThrowableWrapper;
 import com.rollbar.notifier.wrapper.ThrowableWrapper;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -56,18 +63,18 @@ public class BodyFactory {
    * @return the body.
    */
   public Body from(
-    ThrowableWrapper throwableWrapper,
-    String description,
-    List<TelemetryEvent> telemetryEvents
+      ThrowableWrapper throwableWrapper,
+      String description,
+      List<TelemetryEvent> telemetryEvents
   ) {
     Body.Builder builder = new Body.Builder().telemetryEvents(telemetryEvents);
     return from(throwableWrapper, description, builder);
   }
 
   private Body from(
-    ThrowableWrapper throwableWrapper,
-    String description,
-    Body.Builder builder
+      ThrowableWrapper throwableWrapper,
+      String description,
+      Body.Builder builder
   ) {
     return builder
       .bodyContent(makeBodyContent(throwableWrapper, description))
@@ -76,8 +83,8 @@ public class BodyFactory {
   }
 
   private List<RollbarThread> makeRollbarThreads(
-    ThrowableWrapper throwableWrapper,
-    String description
+      ThrowableWrapper throwableWrapper,
+      String description
   ) {
     if (throwableWrapper == null) {
       return null;
@@ -92,14 +99,17 @@ public class BodyFactory {
     return addOtherThreads(rollbarThreads, allStackTraces);
   }
 
-  private RollbarThread makeInitialRollbarThread(ThrowableWrapper throwableWrapper, String description) {
+  private RollbarThread makeInitialRollbarThread(
+      ThrowableWrapper throwableWrapper,
+      String description
+  ) {
     TraceChain traceChain = traceChain(throwableWrapper, description);
     return new RollbarThread(throwableWrapper.getThread(), new Group(traceChain));
   }
 
   private ArrayList<RollbarThread> addOtherThreads(
-    ArrayList<RollbarThread> rollbarThreads,
-    Map<Thread, StackTraceElement[]> allStackTraces
+      ArrayList<RollbarThread> rollbarThreads,
+      Map<Thread, StackTraceElement[]> allStackTraces
   ) {
     for (Map.Entry<Thread, StackTraceElement[]> entry : allStackTraces.entrySet()) {
       TraceChain traceChain = traceChain(entry.getValue());

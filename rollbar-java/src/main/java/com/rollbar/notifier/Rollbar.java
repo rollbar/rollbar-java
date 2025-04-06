@@ -601,12 +601,12 @@ public class Rollbar extends RollbarBase<Void, Config> {
    * @param isUncaught whether this data comes from an uncaught exception.
    */
   public void log(
-    Throwable error,
-    Thread thread,
-    Map<String, Object> custom,
-    String description,
-    Level level,
-    boolean isUncaught
+      Throwable error,
+      Thread thread,
+      Map<String, Object> custom,
+      String description,
+      Level level,
+      boolean isUncaught
   ) {
     this.log(wrapThrowable(error, thread), custom, description, level, isUncaught);
   }
