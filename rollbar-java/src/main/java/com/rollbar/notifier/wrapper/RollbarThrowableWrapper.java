@@ -33,7 +33,7 @@ public class RollbarThrowableWrapper implements ThrowableWrapper {
       throwable.getClass().getName(),
       throwable.getMessage(),
       throwable.getStackTrace(),
-      throwable.getCause() != null ? new RollbarThrowableWrapper(throwable.getCause(), false) : null,
+      getInnerThrowableWrapper(throwable),
       throwable,
       Thread.currentThread(),
        captureAllStackTraces(Thread.currentThread())
@@ -50,7 +50,7 @@ public class RollbarThrowableWrapper implements ThrowableWrapper {
       throwable.getClass().getName(),
       throwable.getMessage(),
       throwable.getStackTrace(),
-      throwable.getCause() != null ? new RollbarThrowableWrapper(throwable.getCause(), false) : null,
+      getInnerThrowableWrapper(throwable),
       throwable,
       thread,
       captureAllStackTraces(thread)
@@ -69,11 +69,18 @@ public class RollbarThrowableWrapper implements ThrowableWrapper {
         throwable.getClass().getName(),
         throwable.getMessage(),
         throwable.getStackTrace(),
-        throwable.getCause() != null ? new RollbarThrowableWrapper(throwable.getCause(), false) : null,
+        getInnerThrowableWrapper(throwable),
         throwable,
         null,
         null
     );
+  }
+
+  private static ThrowableWrapper getInnerThrowableWrapper(Throwable throwable) {
+    if (throwable.getCause() == null) {
+      return null;
+    }
+    return new RollbarThrowableWrapper(throwable.getCause(), false);
   }
 
   private static Map<Thread, StackTraceElement[]> captureAllStackTraces(Thread thread) {
