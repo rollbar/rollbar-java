@@ -29,8 +29,8 @@ public class RollbarThrowableWrapperTest {
     assertThat(sut.getStackTrace(), is(throwable.getStackTrace()));
     assertThat(sut.getCause(), is(nested));
     assertThat(sut.getThrowable(), is(throwable));
-    assertNull(sut.getAllStackTraces());
-    assertNull(sut.getThread());
+    assertNotNull(sut.getAllStackTraces());
+    assertNotNull(sut.getThread());
   }
 
   @Test
