@@ -33,10 +33,10 @@ public class RollbarThrowableWrapper implements ThrowableWrapper {
       throwable.getClass().getName(),
       throwable.getMessage(),
       throwable.getStackTrace(),
-      throwable.getCause() != null ? new RollbarThrowableWrapper(throwable.getCause()) : null,
+      throwable.getCause() != null ? new RollbarThrowableWrapper(throwable.getCause(), false) : null,
       throwable,
-      null,
-      null
+      Thread.currentThread(),
+       captureAllStackTraces(Thread.currentThread())
     );
   }
 
@@ -50,10 +50,29 @@ public class RollbarThrowableWrapper implements ThrowableWrapper {
       throwable.getClass().getName(),
       throwable.getMessage(),
       throwable.getStackTrace(),
-      throwable.getCause() != null ? new RollbarThrowableWrapper(throwable.getCause()) : null,
+      throwable.getCause() != null ? new RollbarThrowableWrapper(throwable.getCause(), false) : null,
       throwable,
       thread,
       captureAllStackTraces(thread)
+    );
+  }
+
+  /**
+   * Private constructor used to not capture all stack traces in a trace chain
+   * The unused parameter is used to have a method overload.
+   *
+   * @param throwable the throwable.
+   * @param unusedParameter used to differentiate signatures.
+   */
+  private RollbarThrowableWrapper(Throwable throwable, boolean unusedParameter) {
+    this(
+        throwable.getClass().getName(),
+        throwable.getMessage(),
+        throwable.getStackTrace(),
+        throwable.getCause() != null ? new RollbarThrowableWrapper(throwable.getCause(), false) : null,
+        throwable,
+        null,
+        null
     );
   }
 
