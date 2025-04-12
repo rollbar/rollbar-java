@@ -154,7 +154,8 @@ public class RollbarThread implements JsonSerializable, StringTruncatable<Rollba
     /**
      * Constructor.
      *
-     * @param rollbarThread the {@link RollbarThread rollbarThread} to initialize a new builder instance.
+     * @param rollbarThread the {@link RollbarThread rollbarThread} to initialize
+     *                      a new builder instance.
      */
     public Builder(RollbarThread rollbarThread) {
       name = rollbarThread.name;
