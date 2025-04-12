@@ -13,10 +13,19 @@ import java.util.Objects;
  * JS (AggregatorError), it may be more TraceChains per group.
  */
 public class Group implements JsonSerializable, StringTruncatable<Group> {
-  private final BodyContent traceChain;
+  private final TraceChain traceChain;
 
-  public Group(BodyContent traceChain) {
+  public Group(TraceChain traceChain) {
     this.traceChain = traceChain;
+  }
+
+  /**
+   * Getter.
+   *
+   * @return the trace chain.
+   */
+  public TraceChain getTraceChain() {
+    return traceChain;
   }
 
   @Override
