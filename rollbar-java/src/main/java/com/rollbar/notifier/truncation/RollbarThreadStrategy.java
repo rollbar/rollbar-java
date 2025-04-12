@@ -40,10 +40,12 @@ public class RollbarThreadStrategy implements TruncationStrategy {
     return TruncationResult.truncated(newPayload);
   }
 
-  private TruncationResult<List<RollbarThread>> truncateRollbarThreads(List<RollbarThread> rollbarThreads) {
+  private TruncationResult<List<RollbarThread>> truncateRollbarThreads(
+      List<RollbarThread> rollbarThreads
+  ) {
     boolean truncated = false;
     ArrayList<RollbarThread> truncatedThreads = new ArrayList<>();
-    for(RollbarThread rollbarThread: rollbarThreads) {
+    for (RollbarThread rollbarThread: rollbarThreads) {
       TraceChain traceChain = rollbarThread.getGroup().getTraceChain();
 
       TruncationResult<TraceChain> result = FRAMES_STRATEGY.truncateTraceChain(traceChain);
@@ -52,7 +54,9 @@ public class RollbarThreadStrategy implements TruncationStrategy {
         traceChain = result.value;
       }
 
-      RollbarThread truncatedThread = new RollbarThread.Builder(rollbarThread).group(new Group(traceChain)).build();
+      RollbarThread truncatedThread = new RollbarThread
+          .Builder(rollbarThread)
+          .group(new Group(traceChain)).build();
       truncatedThreads.add(truncatedThread);
     }
 
