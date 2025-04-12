@@ -37,6 +37,15 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
     return bodyContent;
   }
 
+  /**
+   * Getter.
+   *
+   * @return the rollbar threads.
+   */
+  public List<RollbarThread> getRollbarThreads() {
+    return rollbarThreads;
+  }
+
   @Override
   public Object asJson() {
     HashMap<String, Object> values = new HashMap<>();
@@ -81,12 +90,13 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
 
     Body body = (Body) o;
     return Objects.equals(bodyContent, body.bodyContent)
-      && Objects.equals(telemetryEvents, body.telemetryEvents);
+      && Objects.equals(telemetryEvents, body.telemetryEvents)
+      && Objects.equals(rollbarThreads, body.rollbarThreads);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(bodyContent, telemetryEvents);
+    return Objects.hash(bodyContent, telemetryEvents, rollbarThreads);
   }
 
   @Override

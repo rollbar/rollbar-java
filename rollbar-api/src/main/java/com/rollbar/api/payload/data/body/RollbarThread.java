@@ -44,6 +44,51 @@ public class RollbarThread implements JsonSerializable, StringTruncatable<Rollba
     this.group = group;
   }
 
+  /**
+   * Getter
+   *
+   * @return the group for this Thread
+   */
+  public Group getGroup() {
+    return group;
+  }
+
+  /**
+   * Getter
+   *
+   * @return the state of this Thread
+   */
+  public String getState() {
+    return state;
+  }
+
+  /**
+   * Getter
+   *
+   * @return the priority of this Thread
+   */
+  public String getPriority() {
+    return priority;
+  }
+
+  /**
+   * Getter
+   *
+   * @return the id of this Thread
+   */
+  public String getId() {
+    return id;
+  }
+
+  /**
+   * Getter
+   *
+   * @return the name of this Thread
+   */
+  public String getName() {
+    return name;
+  }
+
   @Override
   public Object asJson() {
     Map<String, Object> values = new HashMap<>();
@@ -94,5 +139,50 @@ public class RollbarThread implements JsonSerializable, StringTruncatable<Rollba
   @Override
   public int hashCode() {
     return Objects.hash(name, id, priority, state, group);
+  }
+
+  /**
+   * Builder class for {@link RollbarThread RollbarThread}.
+   */
+  public static final class Builder {
+    private String name;
+    private String id;
+    private String priority;
+    private String state;
+    private Group group;
+
+    public Builder(RollbarThread rollbarThread) {
+      name = rollbarThread.name;
+      id = rollbarThread.id;
+      priority = rollbarThread.priority;
+      state = rollbarThread.state;
+      group = rollbarThread.group;
+    }
+
+    /**
+     * The group for this thread.
+     *
+     * @param group an updated version of group;
+     * @return the builder instance.
+     */
+    public Builder group(Group group) {
+      this.group = group;
+      return this;
+    }
+
+    /**
+     * Builds the {@link RollbarThread RollbarThread}.
+     *
+     * @return the RollbarThread.
+     */
+    public RollbarThread build() {
+      return new RollbarThread(
+        name,
+        id,
+        priority,
+        state,
+        group
+      );
+    }
   }
 }
