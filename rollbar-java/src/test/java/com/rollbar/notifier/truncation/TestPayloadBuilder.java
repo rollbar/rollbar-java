@@ -33,7 +33,17 @@ public class TestPayloadBuilder {
   }
 
   public Payload createTestPayloadSingleTraceWithRollbarThreads(int frameCount) {
-    return createTestPayload(Collections.singletonList(createFrames(frameCount)), true);
+    return createTestPayload(Collections.singletonList(createFrames(frameCount)), true, null);
+  }
+
+  public Payload createTestPayloadSingleTraceWithTelemetryEvents(
+      int frameCount,
+      List<TelemetryEvent> telemetryEvents
+  ) {
+    return createTestPayload(
+        Collections.singletonList(createFrames(frameCount)),
+        true,
+        telemetryEvents);
   }
 
   public Payload createTestPayloadSingleTrace(Trace trace) {
@@ -45,10 +55,14 @@ public class TestPayloadBuilder {
   }
 
   public Payload createTestPayload(List<List<Frame>> frameLists) {
-    return createTestPayload(frameLists, false);
+    return createTestPayload(frameLists, false, null);
   }
 
-  public Payload createTestPayload(List<List<Frame>> frameLists, boolean addRollbarThreads) {
+  public Payload createTestPayload(
+      List<List<Frame>> frameLists,
+      boolean addRollbarThreads,
+      List<TelemetryEvent> telemetryEvents
+  ) {
     List<Trace> traces = frameLists.stream().map(frameList -> new Trace.Builder()
       .exception(
         new ExceptionInfo.Builder()
@@ -76,7 +90,14 @@ public class TestPayloadBuilder {
       rollbarThreads.add(rollbarThread);
     }
 
-    return createTestPayload(new Body.Builder().bodyContent(bodyContent).rollbarThreads(rollbarThreads).build());
+    return createTestPayload(
+        new Body
+            .Builder()
+            .bodyContent(bodyContent)
+            .rollbarThreads(rollbarThreads)
+            .telemetryEvents(telemetryEvents)
+            .build()
+    );
   }
 
   public Payload createTestPayload(Body body) {

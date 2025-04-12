@@ -13,6 +13,7 @@ public class PayloadTruncator {
   private static final TruncationStrategy[] STRATEGIES = {
       new RollbarThreadStrategy(),
       new FramesStrategy(),
+      new TelemetryEventsStrategy(),
       new StringsStrategy(1024),
       new StringsStrategy(512),
       new StringsStrategy(256),

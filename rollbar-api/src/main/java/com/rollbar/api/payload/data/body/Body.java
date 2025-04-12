@@ -46,6 +46,15 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
     return rollbarThreads;
   }
 
+  /**
+   * Getter.
+   *
+   * @return the list of Telemetry events.
+   */
+  public List<TelemetryEvent> getTelemetryEvents() {
+    return telemetryEvents;
+  }
+
   @Override
   public Object asJson() {
     HashMap<String, Object> values = new HashMap<>();
