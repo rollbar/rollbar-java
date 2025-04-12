@@ -45,45 +45,45 @@ public class RollbarThread implements JsonSerializable, StringTruncatable<Rollba
   }
 
   /**
-   * Getter
+   * Getter.
    *
-   * @return the group for this Thread
+   * @return the group for this Thread.
    */
   public Group getGroup() {
     return group;
   }
 
   /**
-   * Getter
+   * Getter.
    *
-   * @return the state of this Thread
+   * @return the state of this Thread.
    */
   public String getState() {
     return state;
   }
 
   /**
-   * Getter
+   * Getter.
    *
-   * @return the priority of this Thread
+   * @return the priority of this Thread.
    */
   public String getPriority() {
     return priority;
   }
 
   /**
-   * Getter
+   * Getter.
    *
-   * @return the id of this Thread
+   * @return the id of this Thread.
    */
   public String getId() {
     return id;
   }
 
   /**
-   * Getter
+   * Getter.
    *
-   * @return the name of this Thread
+   * @return the name of this Thread.
    */
   public String getName() {
     return name;
