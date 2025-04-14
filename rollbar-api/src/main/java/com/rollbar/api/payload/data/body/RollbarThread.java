@@ -15,6 +15,7 @@ public class RollbarThread implements JsonSerializable, StringTruncatable<Rollba
   private final String id;
   private final String priority;
   private final String state;
+  private final boolean isMain;
   private final Group group;
 
   /**
@@ -27,6 +28,7 @@ public class RollbarThread implements JsonSerializable, StringTruncatable<Rollba
     id = String.valueOf(thread.getId());
     priority = String.valueOf(thread.getPriority());
     state = thread.getState().toString();
+    isMain = isMain(thread.getName());
     this.group = group;
   }
 
@@ -37,6 +39,7 @@ public class RollbarThread implements JsonSerializable, StringTruncatable<Rollba
       String state,
       Group group
   ) {
+    isMain = isMain(name);
     this.name = name;
     this.id = id;
     this.priority = priority;
@@ -96,6 +99,7 @@ public class RollbarThread implements JsonSerializable, StringTruncatable<Rollba
     values.put("id", id);
     values.put("priority", priority);
     values.put("state", state);
+    values.put("is_main", isMain);
     values.put("group", group);
     return values;
   }
@@ -118,6 +122,7 @@ public class RollbarThread implements JsonSerializable, StringTruncatable<Rollba
         + ", id='" + id + '\''
         + ", priority='" + priority + '\''
         + ", state='" + state + '\''
+        + ", isMain='" + isMain + '\''
         + ", group='" + group
         + '}';
   }
@@ -133,22 +138,27 @@ public class RollbarThread implements JsonSerializable, StringTruncatable<Rollba
         && Objects.equals(id, that.id)
         && Objects.equals(priority, that.priority)
         && Objects.equals(state, that.state)
+        && Objects.equals(isMain, that.isMain)
         && Objects.equals(group, that.group);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, id, priority, state, group);
+    return Objects.hash(name, id, priority, state, isMain, group);
+  }
+
+  private boolean isMain(String string) {
+    return "main".equals(string);
   }
 
   /**
    * Builder class for {@link RollbarThread RollbarThread}.
    */
   public static final class Builder {
-    private String name;
-    private String id;
-    private String priority;
-    private String state;
+    private final String name;
+    private final String id;
+    private final String priority;
+    private final String state;
     private Group group;
 
     /**
