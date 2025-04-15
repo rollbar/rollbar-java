@@ -34,7 +34,7 @@ public class RollbarUncaughtExceptionHandlerTest {
 
     sut.uncaughtException(thread, throwable);
 
-    verify(rollbar).log(throwable, null, null, null, true);
+    verify(rollbar).log(throwable, thread, null, null, null, true);
     verify(uncaughtExceptionHandler, never()).uncaughtException(thread, throwable);
   }
 
@@ -45,7 +45,7 @@ public class RollbarUncaughtExceptionHandlerTest {
 
     sut.uncaughtException(thread, throwable);
 
-    verify(rollbar).log(throwable, null, null, null, true);
+    verify(rollbar).log(throwable, thread, null, null, null, true);
     verify(uncaughtExceptionHandler).uncaughtException(thread, throwable);
   }
 

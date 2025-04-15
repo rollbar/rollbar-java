@@ -56,17 +56,12 @@ public class TelemetryEvent implements JsonSerializable, StringTruncatable<Telem
 
   @Override
   public TelemetryEvent truncateStrings(int maxLength) {
-    Map<String, String> truncatedMap = new HashMap<>();
-    for (Map.Entry<String, String> entry : body.entrySet()) {
-      String truncatedValue = TruncationHelper.truncateString(entry.getValue(), maxLength);
-      truncatedMap.put(entry.getKey(), truncatedValue);
-    }
     return new TelemetryEvent(
         this.type,
         this.level,
         this.timestamp,
         this.source,
-        truncatedMap
+        TruncationHelper.truncateStringsInStringMap(body, maxLength)
     );
   }
 

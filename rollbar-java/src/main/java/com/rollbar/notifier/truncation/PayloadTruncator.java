@@ -11,7 +11,9 @@ public class PayloadTruncator {
   private static final Charset TRANSPORT_CHARSET = Charset.forName("UTF-8");
 
   private static final TruncationStrategy[] STRATEGIES = {
+      new RollbarThreadStrategy(),
       new FramesStrategy(),
+      new TelemetryEventsStrategy(),
       new StringsStrategy(1024),
       new StringsStrategy(512),
       new StringsStrategy(256),
