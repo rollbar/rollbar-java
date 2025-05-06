@@ -3,6 +3,7 @@ package com.rollbar.api.payload.data.body;
 import com.rollbar.api.json.JsonSerializable;
 import com.rollbar.api.payload.data.TelemetryEvent;
 import com.rollbar.api.truncation.StringTruncatable;
+import com.rollbar.api.truncation.TruncationHelper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,17 +20,39 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
 
   private final List<TelemetryEvent> telemetryEvents;
 
+  private final List<RollbarThread> rollbarThreads;
+
   private Body(Builder builder) {
     this.bodyContent = builder.bodyContent;
     this.telemetryEvents = builder.telemetryEvents;
+    this.rollbarThreads = builder.rollbarThreads;
   }
 
   /**
    * Getter.
+   *
    * @return the contents.
    */
   public BodyContent getContents() {
     return bodyContent;
+  }
+
+  /**
+   * Getter.
+   *
+   * @return the rollbar threads.
+   */
+  public List<RollbarThread> getRollbarThreads() {
+    return rollbarThreads;
+  }
+
+  /**
+   * Getter.
+   *
+   * @return the list of Telemetry events.
+   */
+  public List<TelemetryEvent> getTelemetryEvents() {
+    return telemetryEvents;
   }
 
   @Override
@@ -44,6 +67,10 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
       values.put("telemetry", telemetryEvents);
     }
 
+    if (rollbarThreads != null) {
+      values.put("threads", rollbarThreads);
+    }
+
     return values;
   }
 
@@ -51,8 +78,10 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
   public Body truncateStrings(int maxSize) {
     if (bodyContent != null) {
       return new Body.Builder(this)
-          .bodyContent(bodyContent.truncateStrings(maxSize))
-          .build();
+        .bodyContent(bodyContent.truncateStrings(maxSize))
+        .telemetryEvents(TruncationHelper.truncate(telemetryEvents, maxSize))
+        .rollbarThreads(TruncationHelper.truncate(rollbarThreads, maxSize))
+        .build();
     } else {
       return this;
     }
@@ -70,20 +99,22 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
 
     Body body = (Body) o;
     return Objects.equals(bodyContent, body.bodyContent)
-        && Objects.equals(telemetryEvents, body.telemetryEvents);
+      && Objects.equals(telemetryEvents, body.telemetryEvents)
+      && Objects.equals(rollbarThreads, body.rollbarThreads);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(bodyContent, telemetryEvents);
+    return Objects.hash(bodyContent, telemetryEvents, rollbarThreads);
   }
 
   @Override
   public String toString() {
     return "Body{"
-        + "bodyContent=" + bodyContent
-        + ", telemetry=" + telemetryEvents
-        + '}';
+      + "bodyContent=" + bodyContent
+      + ", telemetry=" + telemetryEvents
+      + ", threads=" + rollbarThreads
+      + '}';
   }
 
   /**
@@ -94,6 +125,8 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
     private BodyContent bodyContent;
 
     private List<TelemetryEvent> telemetryEvents;
+
+    private List<RollbarThread> rollbarThreads;
 
     /**
      * Constructor.
@@ -108,8 +141,9 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
      * @param body the {@link Body body} to initialize a new builder instance.
      */
     public Builder(Body body) {
-      this.bodyContent = body.bodyContent;
-      this.telemetryEvents = body.telemetryEvents;
+      bodyContent = body.bodyContent;
+      telemetryEvents = body.telemetryEvents;
+      rollbarThreads = body.rollbarThreads;
     }
 
     /**
@@ -132,6 +166,17 @@ public class Body implements JsonSerializable, StringTruncatable<Body> {
      */
     public Builder telemetryEvents(List<TelemetryEvent> telemetryEvents) {
       this.telemetryEvents = telemetryEvents;
+      return this;
+    }
+
+    /**
+     * Information from threads.
+     *
+     * @param rollbarThreads a list of threads;
+     * @return the builder instance.
+     */
+    public Builder rollbarThreads(List<RollbarThread> rollbarThreads) {
+      this.rollbarThreads = rollbarThreads;
       return this;
     }
 
