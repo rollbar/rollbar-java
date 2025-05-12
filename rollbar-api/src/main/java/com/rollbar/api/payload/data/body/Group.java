@@ -55,4 +55,11 @@ public class Group implements JsonSerializable, StringTruncatable<Group> {
   public int hashCode() {
     return Objects.hashCode(traceChain);
   }
+
+  @Override
+  public String toString() {
+    return "Group{" +
+        "traceChain=" + traceChain +
+        '}';
+  }
 }

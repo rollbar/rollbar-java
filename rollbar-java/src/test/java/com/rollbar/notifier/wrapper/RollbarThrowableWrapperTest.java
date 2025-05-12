@@ -13,7 +13,7 @@ public class RollbarThrowableWrapperTest {
     RollbarThrowableWrapper sut = new RollbarThrowableWrapper(new Exception("Any"), Thread.currentThread());
 
     assertNotNull(sut.getAllStackTraces());
-    assertNotNull(sut.getThread());
+    assertNotNull(sut.getRollbarThread());
   }
 
   @Test
@@ -30,7 +30,7 @@ public class RollbarThrowableWrapperTest {
     assertThat(sut.getCause(), is(nested));
     assertThat(sut.getThrowable(), is(throwable));
     assertNotNull(sut.getAllStackTraces());
-    assertNotNull(sut.getThread());
+    assertNotNull(sut.getRollbarThread());
   }
 
   @Test
@@ -50,7 +50,7 @@ public class RollbarThrowableWrapperTest {
     assertThat(sut.getCause(), is(cause));
     assertThat(sut.getThrowable(), is(nullValue()));
     assertNull(sut.getAllStackTraces());
-    assertNull(sut.getThread());
+    assertNull(sut.getRollbarThread());
   }
 
   @Test

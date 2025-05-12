@@ -1,5 +1,8 @@
 package com.rollbar.notifier.wrapper;
 
+import com.rollbar.api.payload.data.body.RollbarThread;
+import com.rollbar.notifier.util.BodyFactory;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +22,7 @@ public class RollbarThrowableWrapper implements ThrowableWrapper {
 
   private final Throwable throwable;
 
-  private final Thread thread;
+  private final RollbarThread rollbarThread;
 
   private final Map<Thread, StackTraceElement[]> allStackTraces;
 
@@ -36,7 +39,7 @@ public class RollbarThrowableWrapper implements ThrowableWrapper {
       getInnerThrowableWrapper(throwable),
       throwable,
       Thread.currentThread(),
-       captureAllStackTraces(Thread.currentThread())
+      captureAllStackTraces(Thread.currentThread())
     );
   }
 
@@ -139,7 +142,7 @@ public class RollbarThrowableWrapper implements ThrowableWrapper {
     this.stackTraceElements = stackTraceElements;
     this.cause = cause;
     this.throwable = throwable;
-    this.thread = thread;
+    this.rollbarThread = new BodyFactory().from(thread);
     this.allStackTraces = allStackTraces;
   }
 
@@ -169,8 +172,8 @@ public class RollbarThrowableWrapper implements ThrowableWrapper {
   }
 
   @Override
-  public Thread getThread() {
-    return thread;
+  public RollbarThread getRollbarThread() {
+    return rollbarThread;
   }
 
   @Override
@@ -186,8 +189,7 @@ public class RollbarThrowableWrapper implements ThrowableWrapper {
       + ", stackTraceElements=" + Arrays.toString(stackTraceElements)
       + ", cause=" + cause
       + ", throwable=" + throwable
-      + ", thread=" + thread
-      + ", threads=" + allStackTraces
+      + ", rollbarThread=" + rollbarThread
       + '}';
   }
 

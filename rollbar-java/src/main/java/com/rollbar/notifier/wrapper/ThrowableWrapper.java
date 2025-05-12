@@ -1,5 +1,7 @@
 package com.rollbar.notifier.wrapper;
 
+import com.rollbar.api.payload.data.body.RollbarThread;
+
 import java.util.Map;
 
 /**
@@ -42,7 +44,17 @@ public interface ThrowableWrapper {
    */
   Throwable getThrowable();
 
-  Thread getThread();
+  /**
+   * Get the RollbarThread {@link RollbarThread rollbarThread}.
+   *
+   * @return the rollbarThread.
+   */
+  RollbarThread getRollbarThread();
 
+  /**
+   * Get a map of stack traces for all live threads in the moment of the Exception.
+   *
+   * @return the map.
+   */
   Map<Thread, StackTraceElement[]> getAllStackTraces();
 }

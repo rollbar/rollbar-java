@@ -71,6 +71,22 @@ public class BodyFactory {
     return from(throwableWrapper, description, builder);
   }
 
+  /**
+   * Builds a RollbarThread from a Thread.
+   *
+   * @param thread the thread.
+   * @return the RollbarThread.
+   */
+  public RollbarThread from(
+      Thread thread
+  ) {
+    if (thread == null) {
+      return null;
+    }
+    TraceChain traceChain = traceChain(thread.getStackTrace());
+    return new RollbarThread(thread, new Group(traceChain));
+  }
+
   private Body from(
       ThrowableWrapper throwableWrapper,
       String description,
@@ -94,17 +110,23 @@ public class BodyFactory {
       return null;
     }
 
+    RollbarThread rollbarThread = throwableWrapper.getRollbarThread();
+    if (rollbarThread == null) {
+      return null;
+    }
+
     ArrayList<RollbarThread> rollbarThreads = new ArrayList<>();
-    rollbarThreads.add(makeInitialRollbarThread(throwableWrapper, description));
+    rollbarThreads.add(updateInitialRollbarThread(rollbarThread, throwableWrapper, description));
     return addOtherThreads(rollbarThreads, allStackTraces);
   }
 
-  private RollbarThread makeInitialRollbarThread(
+  private RollbarThread updateInitialRollbarThread(
+      RollbarThread rollbarThread,
       ThrowableWrapper throwableWrapper,
       String description
   ) {
     TraceChain traceChain = traceChain(throwableWrapper, description);
-    return new RollbarThread(throwableWrapper.getThread(), new Group(traceChain));
+    return new RollbarThread.Builder(rollbarThread).group(new Group(traceChain)).build();
   }
 
   private ArrayList<RollbarThread> addOtherThreads(
