@@ -58,8 +58,6 @@ public class Group implements JsonSerializable, StringTruncatable<Group> {
 
   @Override
   public String toString() {
-    return "Group{" +
-        "traceChain=" + traceChain +
-        '}';
+    return "Group{traceChain=" + traceChain + '}';
   }
 }
