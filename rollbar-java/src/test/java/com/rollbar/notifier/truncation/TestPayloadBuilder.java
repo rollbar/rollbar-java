@@ -32,6 +32,20 @@ public class TestPayloadBuilder {
     return createTestPayloadSingleTrace(createFrames(frameCount));
   }
 
+  public Payload createTestPayloadSingleTraceWithRollbarThreads(int frameCount) {
+    return createTestPayload(Collections.singletonList(createFrames(frameCount)), true, null);
+  }
+
+  public Payload createTestPayloadSingleTraceWithTelemetryEvents(
+      int frameCount,
+      List<TelemetryEvent> telemetryEvents
+  ) {
+    return createTestPayload(
+        Collections.singletonList(createFrames(frameCount)),
+        true,
+        telemetryEvents);
+  }
+
   public Payload createTestPayloadSingleTrace(Trace trace) {
     return createTestPayload(new Body.Builder().bodyContent(trace).build());
   }
@@ -41,16 +55,24 @@ public class TestPayloadBuilder {
   }
 
   public Payload createTestPayload(List<List<Frame>> frameLists) {
+    return createTestPayload(frameLists, false, null);
+  }
+
+  public Payload createTestPayload(
+      List<List<Frame>> frameLists,
+      boolean addRollbarThreads,
+      List<TelemetryEvent> telemetryEvents
+  ) {
     List<Trace> traces = frameLists.stream().map(frameList -> new Trace.Builder()
-        .exception(
-            new ExceptionInfo.Builder()
-                .message(makeString("Error"))
-                .description(makeString("some error"))
-                .className(makeString("com.example.TestException"))
-                .build()
-        )
-        .frames(frameList)
-        .build()).collect(Collectors.toList());
+      .exception(
+        new ExceptionInfo.Builder()
+          .message(makeString("Error"))
+          .description(makeString("some error"))
+          .className(makeString("com.example.TestException"))
+          .build()
+      )
+      .frames(frameList)
+      .build()).collect(Collectors.toList());
 
     BodyContent bodyContent;
     if (traces.size() == 1) {
@@ -59,7 +81,23 @@ public class TestPayloadBuilder {
       bodyContent = new TraceChain.Builder().traces(traces).build();
     }
 
-    return createTestPayload(new Body.Builder().bodyContent(bodyContent).build());
+    ArrayList<RollbarThread> rollbarThreads = null;
+    if (addRollbarThreads) {
+      rollbarThreads = new ArrayList<>();
+      TraceChain traceChain = new TraceChain.Builder().traces(traces).build();
+      Group group = new Group(traceChain);
+      RollbarThread rollbarThread = new RollbarThread(Thread.currentThread(), group);
+      rollbarThreads.add(rollbarThread);
+    }
+
+    return createTestPayload(
+        new Body
+            .Builder()
+            .bodyContent(bodyContent)
+            .rollbarThreads(rollbarThreads)
+            .telemetryEvents(telemetryEvents)
+            .build()
+    );
   }
 
   public Payload createTestPayload(Body body) {

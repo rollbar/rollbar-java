@@ -33,3 +33,15 @@ acceptedBreaks:
     - code: "java.method.addedToInterface"
       new: "method int com.rollbar.notifier.config.CommonConfig::maximumTelemetryData()"
       justification: "This is going to be added in a major version"
+  "2.1.0":
+    com.rollbar:rollbar-java:
+      - code: "java.method.addedToInterface"
+        new: "method java.util.Map<java.lang.Thread, java.lang.StackTraceElement[]> com.rollbar.notifier.wrapper.ThrowableWrapper::getAllStackTraces()"
+        justification: "This is a binary compatible change, which could only break custom\
+        \ implementations of our config interfaces, but those interfaces are not meant\
+        \ to be implemented by users"
+      - code: "java.method.addedToInterface"
+        new: "method com.rollbar.api.payload.data.body.RollbarThread com.rollbar.notifier.wrapper.ThrowableWrapper::getRollbarThread()"
+        justification: "This is a binary compatible change, which could only break custom\
+        \ implementations of our config interfaces, but those interfaces are not meant\
+        \ to be implemented by users"

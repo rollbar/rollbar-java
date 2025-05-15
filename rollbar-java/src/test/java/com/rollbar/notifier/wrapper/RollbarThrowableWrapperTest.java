@@ -2,12 +2,19 @@ package com.rollbar.notifier.wrapper;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.junit.Test;
 
 public class RollbarThrowableWrapperTest {
+
+  @Test
+  public void shouldCollectThreads() {
+    RollbarThrowableWrapper sut = new RollbarThrowableWrapper(new Exception("Any"), Thread.currentThread());
+
+    assertNotNull(sut.getAllStackTraces());
+    assertNotNull(sut.getRollbarThread());
+  }
 
   @Test
   public void shouldBeCreatedByThrowable() {
@@ -22,6 +29,8 @@ public class RollbarThrowableWrapperTest {
     assertThat(sut.getStackTrace(), is(throwable.getStackTrace()));
     assertThat(sut.getCause(), is(nested));
     assertThat(sut.getThrowable(), is(throwable));
+    assertNotNull(sut.getAllStackTraces());
+    assertNotNull(sut.getRollbarThread());
   }
 
   @Test
@@ -40,6 +49,8 @@ public class RollbarThrowableWrapperTest {
     assertThat(sut.getStackTrace(), is(elements));
     assertThat(sut.getCause(), is(cause));
     assertThat(sut.getThrowable(), is(nullValue()));
+    assertNull(sut.getAllStackTraces());
+    assertNull(sut.getRollbarThread());
   }
 
   @Test
@@ -49,6 +60,6 @@ public class RollbarThrowableWrapperTest {
     RollbarThrowableWrapper sut1 = new RollbarThrowableWrapper(throwable);
     RollbarThrowableWrapper sut2 = new RollbarThrowableWrapper(throwable);
 
-    assertTrue(sut1.equals(sut2));
+    assertEquals(sut1, sut2);
   }
 }

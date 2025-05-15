@@ -1,5 +1,9 @@
 package com.rollbar.notifier.wrapper;
 
+import com.rollbar.api.payload.data.body.RollbarThread;
+
+import java.util.Map;
+
 /**
  * Throwable wrapper to wrap a {@link Throwable thowable} or to represent a not available one.
  */
@@ -39,4 +43,18 @@ public interface ThrowableWrapper {
    * @return the throwable.
    */
   Throwable getThrowable();
+
+  /**
+   * Get the RollbarThread {@link RollbarThread rollbarThread}.
+   *
+   * @return the rollbarThread.
+   */
+  RollbarThread getRollbarThread();
+
+  /**
+   * Get a map of stack traces for all live threads in the moment of the Exception.
+   *
+   * @return the map.
+   */
+  Map<Thread, StackTraceElement[]> getAllStackTraces();
 }

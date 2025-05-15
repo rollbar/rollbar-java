@@ -553,7 +553,7 @@ public class Rollbar extends RollbarBase<Void, Config> {
   }
 
   /**
-   * Record an error or message with extra data at the level specified. At least ene of `error` or
+   * Record an error or message with extra data at the level specified. At least one of `error` or
    * `description` must be non-null. If error is null, `description` will be sent as a message. If
    * error is non-null, description will be sent as the description of the error. Custom data will
    * be attached to message if the error is null. Custom data will extend whatever {@link
@@ -569,7 +569,7 @@ public class Rollbar extends RollbarBase<Void, Config> {
   }
 
   /**
-   * Record an error or message with extra data at the level specified. At least ene of `error` or
+   * Record an error or message with extra data at the level specified. At least one of `error` or
    * `description` must be non-null. If error is null, `description` will be sent as a message. If
    * error is non-null, description will be sent as the description of the error. Custom data will
    * be attached to message if the error is null. Custom data will extend whatever {@link
@@ -579,7 +579,7 @@ public class Rollbar extends RollbarBase<Void, Config> {
    * @param custom the custom data (if any).
    * @param description the description of the error, or the message to send.
    * @param level the level to send it at.
-   * @param isUncaught whether or not this data comes from an uncaught exception.
+   * @param isUncaught whether this data comes from an uncaught exception.
    */
   public void log(Throwable error, Map<String, Object> custom, String description, Level level,
       boolean isUncaught) {
@@ -587,7 +587,32 @@ public class Rollbar extends RollbarBase<Void, Config> {
   }
 
   /**
-   * Record an error or message with extra data at the level specified. At least ene of `error` or
+   * Record an error or message with extra data at the level specified. At least one of `error` or
+   * `description` must be non-null. If error is null, `description` will be sent as a message. If
+   * error is non-null, description will be sent as the description of the error. Custom data will
+   * be attached to message if the error is null. Custom data will extend whatever {@link
+   * Config#custom} returns.
+   *
+   * @param error the error (if any).
+   * @param thread the thread where the error happened (if any).
+   * @param custom the custom data (if any).
+   * @param description the description of the error, or the message to send.
+   * @param level the level to send it at.
+   * @param isUncaught whether this data comes from an uncaught exception.
+   */
+  public void log(
+      Throwable error,
+      Thread thread,
+      Map<String, Object> custom,
+      String description,
+      Level level,
+      boolean isUncaught
+  ) {
+    this.log(wrapThrowable(error, thread), custom, description, level, isUncaught);
+  }
+
+  /**
+   * Record an error or message with extra data at the level specified. At least one of `error` or
    * `description` must be non-null. If error is null, `description` will be sent as a message. If
    * error is non-null, description will be sent as the description of the error. Custom data will
    * be attached to message if the error is null. Custom data will extend whatever {@link
@@ -597,7 +622,7 @@ public class Rollbar extends RollbarBase<Void, Config> {
    * @param custom the custom data (if any).
    * @param description the description of the error, or the message to send.
    * @param level the level to send it at.
-   * @param isUncaught whether or not this data comes from an uncaught exception.
+   * @param isUncaught whether this data comes from an uncaught exception.
    */
   public void log(ThrowableWrapper error, Map<String, Object> custom, String description,
                   Level level, boolean isUncaught) {
