@@ -29,6 +29,25 @@ public class TruncationHelper {
   }
 
   /**
+   * Truncates all the StringTruncatable in the list to the specified maximum length.
+   * @param values The StringTruncatables to be truncated.
+   * @param maxLength Maximum length of each string.
+   * @return A list containing the truncated StringTruncatables.
+   */
+  public static <T extends StringTruncatable<T>> List<T> truncate(List<T> values, int maxLength) {
+    if (values == null) {
+      return null;
+    }
+
+    List<T> result = new ArrayList<>(values.size());
+    for (T value : values) {
+      result.add(value.truncateStrings(maxLength));
+    }
+
+    return result;
+  }
+
+  /**
    * Truncates any strings in the list to the specified maximum length.
    * @param values The list of objects which might contain strings to be truncated.
    * @param maxLength Maximum length of each string.

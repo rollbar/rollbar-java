@@ -42,7 +42,7 @@ class FramesStrategy implements TruncationStrategy {
     return TruncationResult.none();
   }
 
-  private TruncationResult<TraceChain> truncateTraceChain(TraceChain chain) {
+  TruncationResult<TraceChain> truncateTraceChain(TraceChain chain) {
     boolean truncated = false;
 
     ArrayList<Trace> updated = new ArrayList<>();

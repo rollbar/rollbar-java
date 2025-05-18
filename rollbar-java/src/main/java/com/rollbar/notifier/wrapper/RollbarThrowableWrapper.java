@@ -1,6 +1,11 @@
 package com.rollbar.notifier.wrapper;
 
+import com.rollbar.api.payload.data.body.RollbarThread;
+import com.rollbar.notifier.util.BodyFactory;
+
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Implementation of the {@link ThrowableWrapper throwable wrapper}.
@@ -17,38 +22,128 @@ public class RollbarThrowableWrapper implements ThrowableWrapper {
 
   private final Throwable throwable;
 
+  private final RollbarThread rollbarThread;
+
+  private final Map<Thread, StackTraceElement[]> allStackTraces;
+
   /**
    * Constructor.
    *
    * @param throwable the throwable.
    */
   public RollbarThrowableWrapper(Throwable throwable) {
-    this(throwable.getClass().getName(), throwable.getMessage(), throwable.getStackTrace(),
-        throwable.getCause() != null ? new RollbarThrowableWrapper(throwable.getCause()) : null,
-        throwable);
+    this(
+      throwable.getClass().getName(),
+      throwable.getMessage(),
+      throwable.getStackTrace(),
+      getInnerThrowableWrapper(throwable),
+      throwable,
+      Thread.currentThread(),
+      captureAllStackTraces(Thread.currentThread())
+    );
   }
 
   /**
    * Constructor.
    *
-   * @param className the class name.
-   * @param message the message.
-   * @param stackTraceElements the stack trace elements.
-   * @param cause the cause.
+   * @param throwable the throwable.
    */
-  public RollbarThrowableWrapper(String className, String message,
-      StackTraceElement[] stackTraceElements,
-      ThrowableWrapper cause) {
-    this(className, message, stackTraceElements, cause, null);
+  public RollbarThrowableWrapper(Throwable throwable, Thread thread) {
+    this(
+      throwable.getClass().getName(),
+      throwable.getMessage(),
+      throwable.getStackTrace(),
+      getInnerThrowableWrapper(throwable),
+      throwable,
+      thread,
+      captureAllStackTraces(thread)
+    );
   }
 
-  private RollbarThrowableWrapper(String className, String message,
-      StackTraceElement[] stackTraceElements, ThrowableWrapper cause, Throwable throwable) {
+  /**
+   * Private constructor used to not capture all stack traces in a trace chain
+   * The unused parameter is used to have a method overload.
+   *
+   * @param throwable the throwable.
+   * @param unusedParameter used to differentiate signatures.
+   */
+  private RollbarThrowableWrapper(Throwable throwable, boolean unusedParameter) {
+    this(
+        throwable.getClass().getName(),
+        throwable.getMessage(),
+        throwable.getStackTrace(),
+        getInnerThrowableWrapper(throwable),
+        throwable,
+        null,
+        null
+    );
+  }
+
+  private static ThrowableWrapper getInnerThrowableWrapper(Throwable throwable) {
+    if (throwable.getCause() == null) {
+      return null;
+    }
+    return new RollbarThrowableWrapper(throwable.getCause(), false);
+  }
+
+  private static Map<Thread, StackTraceElement[]> captureAllStackTraces(Thread thread) {
+    if (thread == null) {
+      return null;
+    }
+
+    return filter(thread, Thread.getAllStackTraces());
+  }
+
+  private static Map<Thread, StackTraceElement[]> filter(
+      Thread thread, Map<Thread,
+      StackTraceElement[]> allStackTraces
+  ) {
+    HashMap<Thread, StackTraceElement[]> filteredStackTraces = new HashMap<>();
+
+    for (Map.Entry<Thread, StackTraceElement[]> entry : allStackTraces.entrySet()) {
+      Thread entryThread = entry.getKey();
+
+      if (!thread.equals(entryThread)) {
+        filteredStackTraces.put(entryThread, entry.getValue());
+      }
+    }
+
+    return filteredStackTraces;
+  }
+
+  /**
+   * Constructor.
+   *
+   * @param className          the class name.
+   * @param message            the message.
+   * @param stackTraceElements the stack trace elements.
+   * @param cause              the cause.
+   */
+  public RollbarThrowableWrapper(
+      String className,
+      String message,
+      StackTraceElement[] stackTraceElements,
+      ThrowableWrapper cause
+  ) {
+    this(className, message, stackTraceElements, cause, null, null, null);
+  }
+
+  private RollbarThrowableWrapper(
+      String className,
+      String message,
+      StackTraceElement[] stackTraceElements,
+      ThrowableWrapper cause,
+      Throwable throwable,
+      Thread thread,
+      Map<Thread, StackTraceElement[]> allStackTraces
+  ) {
     this.className = className;
     this.message = message;
     this.stackTraceElements = stackTraceElements;
     this.cause = cause;
     this.throwable = throwable;
+    this.rollbarThread = new BodyFactory().from(thread);
+    this.allStackTraces = allStackTraces;
   }
 
   @Override
@@ -77,14 +172,25 @@ public class RollbarThrowableWrapper implements ThrowableWrapper {
   }
 
   @Override
+  public RollbarThread getRollbarThread() {
+    return rollbarThread;
+  }
+
+  @Override
+  public Map<Thread, StackTraceElement[]> getAllStackTraces() {
+    return allStackTraces;
+  }
+
+  @Override
   public String toString() {
     return "RollbarThrowableWrapper{"
-        + "className='" + className + '\''
-        + ", message='" + message + '\''
-        + ", stackTraceElements=" + Arrays.toString(stackTraceElements)
-        + ", cause=" + cause
-        + ", throwable=" + throwable
-        + '}';
+      + "className='" + className + '\''
+      + ", message='" + message + '\''
+      + ", stackTraceElements=" + Arrays.toString(stackTraceElements)
+      + ", cause=" + cause
+      + ", throwable=" + throwable
+      + ", rollbarThread=" + rollbarThread
+      + '}';
   }
 
   @Override

@@ -2,9 +2,12 @@ package com.rollbar.notifier.util;
 
 import com.rollbar.api.payload.data.TelemetryEvent;
 import com.rollbar.api.payload.data.body.Body;
+import com.rollbar.api.payload.data.body.BodyContent;
 import com.rollbar.api.payload.data.body.ExceptionInfo;
 import com.rollbar.api.payload.data.body.Frame;
+import com.rollbar.api.payload.data.body.Group;
 import com.rollbar.api.payload.data.body.Message;
+import com.rollbar.api.payload.data.body.RollbarThread;
 import com.rollbar.api.payload.data.body.Trace;
 import com.rollbar.api.payload.data.body.TraceChain;
 import com.rollbar.jvmti.CacheFrame;
@@ -68,14 +71,86 @@ public class BodyFactory {
     return from(throwableWrapper, description, builder);
   }
 
-  private Body from(ThrowableWrapper throwableWrapper, String description, Body.Builder builder) {
+  /**
+   * Builds a RollbarThread from a Thread.
+   *
+   * @param thread the thread.
+   * @return the RollbarThread.
+   */
+  public RollbarThread from(
+      Thread thread
+  ) {
+    if (thread == null) {
+      return null;
+    }
+    TraceChain traceChain = traceChain(thread.getStackTrace());
+    return new RollbarThread(thread, new Group(traceChain));
+  }
+
+  private Body from(
+      ThrowableWrapper throwableWrapper,
+      String description,
+      Body.Builder builder
+  ) {
+    return builder
+      .bodyContent(makeBodyContent(throwableWrapper, description))
+      .rollbarThreads(makeRollbarThreads(throwableWrapper, description))
+      .build();
+  }
+
+  private List<RollbarThread> makeRollbarThreads(
+      ThrowableWrapper throwableWrapper,
+      String description
+  ) {
     if (throwableWrapper == null) {
-      return builder.bodyContent(message(description)).build();
+      return null;
     }
+    Map<Thread, StackTraceElement[]> allStackTraces = throwableWrapper.getAllStackTraces();
+    if (allStackTraces == null) {
+      return null;
+    }
+
+    RollbarThread rollbarThread = throwableWrapper.getRollbarThread();
+    if (rollbarThread == null) {
+      return null;
+    }
+
+    ArrayList<RollbarThread> rollbarThreads = new ArrayList<>();
+    rollbarThreads.add(updateInitialRollbarThread(rollbarThread, throwableWrapper, description));
+    return addOtherThreads(rollbarThreads, allStackTraces);
+  }
+
+  private RollbarThread updateInitialRollbarThread(
+      RollbarThread rollbarThread,
+      ThrowableWrapper throwableWrapper,
+      String description
+  ) {
+    TraceChain traceChain = traceChain(throwableWrapper, description);
+    return new RollbarThread.Builder(rollbarThread).group(new Group(traceChain)).build();
+  }
+
+  private ArrayList<RollbarThread> addOtherThreads(
+      ArrayList<RollbarThread> rollbarThreads,
+      Map<Thread, StackTraceElement[]> allStackTraces
+  ) {
+    for (Map.Entry<Thread, StackTraceElement[]> entry : allStackTraces.entrySet()) {
+      TraceChain traceChain = traceChain(entry.getValue());
+      RollbarThread rollbarThread = new RollbarThread(entry.getKey(), new Group(traceChain));
+      rollbarThreads.add(rollbarThread);
+    }
+    return rollbarThreads;
+  }
+
+  private BodyContent makeBodyContent(ThrowableWrapper throwableWrapper, String description) {
+    if (throwableWrapper == null) {
+      return message(description);
+    }
+
     if (throwableWrapper.getCause() == null) {
-      return builder.bodyContent(trace(throwableWrapper, description)).build();
+      return trace(throwableWrapper, description);
     }
-    return builder.bodyContent(traceChain(throwableWrapper, description)).build();
+
+    return traceChain(throwableWrapper, description);
   }
 
   private static Message message(String description) {
@@ -91,6 +166,14 @@ public class BodyFactory {
       .build();
   }
 
+  private TraceChain traceChain(StackTraceElement[] stackTraceElements) {
+    List<Frame> frames = frames(stackTraceElements);
+    Trace trace = new Trace.Builder().frames(frames).build();
+    ArrayList<Trace> chain = new ArrayList<>();
+    chain.add(trace);
+    return new TraceChain.Builder().traces(chain).build();
+  }
+
   private static TraceChain traceChain(ThrowableWrapper throwableWrapper, String description) {
     ArrayList<Trace> chain = new ArrayList<>();
     do {
@@ -99,8 +182,8 @@ public class BodyFactory {
       throwableWrapper = throwableWrapper.getCause();
     } while (throwableWrapper != null);
     return new TraceChain.Builder()
-        .traces(chain)
-        .build();
+      .traces(chain)
+      .build();
   }
 
   private static List<Frame> frames(ThrowableWrapper throwableWrapper) {
@@ -129,14 +212,24 @@ public class BodyFactory {
     return result;
   }
 
+  private static List<Frame> frames(StackTraceElement[] stackTraceElements) {
+
+    ArrayList<Frame> result = new ArrayList<>();
+    for (int i = stackTraceElements.length - 1; i >= 0; i--) {
+      result.add(frame(stackTraceElements[i], null));
+    }
+
+    return result;
+  }
+
   private static ExceptionInfo info(ThrowableWrapper throwableWrapper, String description) {
     String className = throwableWrapper.getClassName();
     String message = throwableWrapper.getMessage();
     return new ExceptionInfo.Builder()
-        .className(className)
-        .message(message)
-        .description(description)
-        .build();
+      .className(className)
+      .message(message)
+      .description(description)
+      .build();
   }
 
   private static Frame frame(StackTraceElement element, Map<String, Object> locals) {
@@ -146,11 +239,11 @@ public class BodyFactory {
     String className = element.getClassName();
 
     return new Frame.Builder()
-        .filename(filename)
-        .lineNumber(lineNumber)
-        .method(method)
-        .className(className)
-        .locals(locals)
-        .build();
+      .filename(filename)
+      .lineNumber(lineNumber)
+      .method(method)
+      .className(className)
+      .locals(locals)
+      .build();
   }
 }

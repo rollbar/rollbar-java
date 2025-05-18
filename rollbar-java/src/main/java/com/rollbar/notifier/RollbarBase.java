@@ -326,14 +326,20 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
     return payload;
   }
 
-  protected RollbarThrowableWrapper wrapThrowable(Throwable error) {
-    RollbarThrowableWrapper rollbarThrowableWrapper = null;
+  protected RollbarThrowableWrapper wrapThrowable(Throwable error, Thread thread) {
+    if (error != null && thread != null) {
+      return new RollbarThrowableWrapper(error, thread);
+    } else {
+      return wrapThrowable(error);
+    }
+  }
 
-    if (error != null) {
-      rollbarThrowableWrapper = new RollbarThrowableWrapper(error);
+  protected RollbarThrowableWrapper wrapThrowable(Throwable error) {
+    if (error == null) {
+      return null;
     }
 
-    return rollbarThrowableWrapper;
+    return new RollbarThrowableWrapper(error);
   }
 
   protected abstract RESULT sendPayload(C config, Payload payload);
