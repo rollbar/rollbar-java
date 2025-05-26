@@ -32,7 +32,7 @@ public class RollbarThread implements JsonSerializable, StringTruncatable<Rollba
     this.group = group;
   }
 
-  private RollbarThread(
+  public RollbarThread(
       String name,
       String id,
       String priority,
@@ -90,6 +90,15 @@ public class RollbarThread implements JsonSerializable, StringTruncatable<Rollba
    */
   public String getName() {
     return name;
+  }
+
+  /**
+   * Getter.
+   *
+   * @return true if this represents the main thread.
+   */
+  public boolean isMain() {
+    return isMain;
   }
 
   @Override

@@ -2,6 +2,7 @@ package com.rollbar.notifier.wrapper;
 
 import com.rollbar.api.payload.data.body.RollbarThread;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -57,4 +58,11 @@ public interface ThrowableWrapper {
    * @return the map.
    */
   Map<Thread, StackTraceElement[]> getAllStackTraces();
+
+  /**
+   * Get a list of the RollbarThreads for this error.
+   *
+   * @return the RollbarThreads.
+   */
+  List<RollbarThread> getRollbarThreads();
 }

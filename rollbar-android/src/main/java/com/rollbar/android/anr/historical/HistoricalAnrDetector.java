@@ -9,8 +9,8 @@ import com.rollbar.android.anr.AnrDetector;
 import com.rollbar.android.anr.AnrException;
 import com.rollbar.android.anr.AnrListener;
 import com.rollbar.android.anr.historical.stacktrace.Lines;
-import com.rollbar.android.anr.historical.stacktrace.RollbarThread;
 import com.rollbar.android.anr.historical.stacktrace.ThreadParser;
+import com.rollbar.api.payload.data.body.RollbarThread;
 
 import org.slf4j.Logger;
 
@@ -20,7 +20,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -79,11 +78,10 @@ public class HistoricalAnrDetector implements AnrDetector {
           continue;
         }
 
-        AnrException anrException = createAnrException(threads);
-        if (anrException == null) {
-          logger.error("Main thread not found, skipping ANR");
+        if (containsMainThread(threads)) {
+          anrListener.onAppNotResponding(new AnrException(threads));
         } else {
-          anrListener.onAppNotResponding(anrException);
+          logger.error("Main thread not found, skipping ANR");
         }
       } catch (Throwable e) {
         logger.error("Can't parse ANR", e);
@@ -95,21 +93,13 @@ public class HistoricalAnrDetector implements AnrDetector {
     return applicationExitInfo.getReason() != ApplicationExitInfo.REASON_ANR;
   }
 
-  private AnrException createAnrException(List<RollbarThread> threads) {
-    List<RollbarThread> rollbarThreads = new ArrayList<>();
-    RollbarThread mainThread = null;
+  private boolean containsMainThread(List<RollbarThread> threads) {
     for (RollbarThread thread: threads) {
       if (thread.isMain()) {
-        mainThread = thread;
-      } else {
-        rollbarThreads.add(thread);
+        return true;
       }
     }
-
-    if (mainThread == null) {
-      return null;
-    }
-    return new AnrException(mainThread.toStackTraceElement(), rollbarThreads);
+    return false;
   }
 
   private List<ApplicationExitInfo> getApplicationExitInformation() {
@@ -120,12 +110,8 @@ public class HistoricalAnrDetector implements AnrDetector {
 
   private List<RollbarThread> getThreads(ApplicationExitInfo applicationExitInfo) throws IOException {
     Lines lines = getLines(applicationExitInfo);
-    ThreadParser threadParser = new ThreadParser(isBackground(applicationExitInfo));
+    ThreadParser threadParser = new ThreadParser();
     return threadParser.parse(lines);
-  }
-
-  private boolean isBackground(ApplicationExitInfo applicationExitInfo) {
-    return applicationExitInfo.getImportance() != ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
   }
 
   private Lines getLines(ApplicationExitInfo applicationExitInfo) throws IOException {
