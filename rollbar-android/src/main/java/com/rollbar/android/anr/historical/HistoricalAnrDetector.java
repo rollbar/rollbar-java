@@ -17,14 +17,21 @@ import org.slf4j.Logger;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Objects;
 
 @SuppressLint("NewApi") // Validated in the Factory
 public class HistoricalAnrDetector implements AnrDetector {
+  private static final String TIMESTAMP_FILE = "rollbar-anr-timestamp";
   private final Logger logger;
   private final Context context;
   private final AnrListener anrListener;
@@ -45,20 +52,80 @@ public class HistoricalAnrDetector implements AnrDetector {
       logger.error("AnrListener is null");
       return;
     }
+
+    Long lastAnrTimestamp = getLastAnrTimestamp();
+    if (lastAnrTimestamp == null) {
+      return;
+    }
+
     Thread thread = new Thread("HistoricalAnrDetectorThread") {
       @Override
       public void run() {
         super.run();
-        evaluateLastExitReasons();
+        evaluateLastExitReasons(lastAnrTimestamp);
       }
     };
     thread.setDaemon(true);
     thread.start();
   }
 
+  private Long getLastAnrTimestamp() {
+    File file = new File(context.getCacheDir().getAbsolutePath(), TIMESTAMP_FILE);
+    if (isNotValid(file)) {
+      logger.error("Can't retrieve last ANR timestamp");
+      return null;
+    }
 
-  private void evaluateLastExitReasons() {
+    try {
+      return getLastAnrTimestamp(file);
+    } catch (IOException e) {
+      logger.error("Error reading last ANR timestamp");
+      return null;
+    }
+  }
+
+  private boolean isNotValid(File file) {
+
+    if (file != null && !file.exists()) {
+      createFile(file);
+    }
+
+    return file == null || !file.exists() || !file.isFile() || !file.canRead();
+  }
+
+  private void createFile(File file) {
+    try {
+      file.createNewFile();
+    } catch (IOException e) {
+      logger.error("can't create file");
+    }
+  }
+
+  private Long getLastAnrTimestamp(File file) throws IOException {
+    StringBuilder stringBuilder = new StringBuilder();
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      String line;
+      if ((line = br.readLine()) != null) {
+        stringBuilder.append(line);
+      }
+      while ((line = br.readLine()) != null) {
+        stringBuilder.append("\n").append(line);
+      }
+    } catch (FileNotFoundException ignored) {
+      return null;
+    }
+    String content = stringBuilder.toString();
+
+    try {
+      return (content.equals("null") || content.isBlank()) ? 0L : Long.parseLong(content.trim());
+    } catch (NumberFormatException ignored) {
+      return null;
+    }
+  }
+
+  private void evaluateLastExitReasons(Long lastAnrReportedTimestamp) {
     List<ApplicationExitInfo> applicationExitInfoList = getApplicationExitInformation();
+    Long newestAnrTimestamp = lastAnrReportedTimestamp;
 
     if (applicationExitInfoList.isEmpty()) {
       logger.debug("Empty ApplicationExitInfo List");
@@ -70,6 +137,11 @@ public class HistoricalAnrDetector implements AnrDetector {
         continue;
       }
 
+      long anrTimestamp = applicationExitInfo.getTimestamp();
+      if (anrTimestamp <= lastAnrReportedTimestamp) {
+        logger.warn("ANR already sent");
+        continue;
+      }
       try {
         List<RollbarThread> threads = getThreads(applicationExitInfo);
 
@@ -80,12 +152,31 @@ public class HistoricalAnrDetector implements AnrDetector {
 
         if (containsMainThread(threads)) {
           anrListener.onAppNotResponding(new AnrException(threads));
+          if (anrTimestamp > newestAnrTimestamp) {
+            newestAnrTimestamp = anrTimestamp;
+            saveAnrTimestamp(anrTimestamp);
+          }
         } else {
           logger.error("Main thread not found, skipping ANR");
         }
       } catch (Throwable e) {
         logger.error("Can't parse ANR", e);
       }
+    }
+  }
+
+  private void saveAnrTimestamp(long timestamp) {
+    File file = new File(context.getCacheDir(), TIMESTAMP_FILE);
+    if (isNotValid(file)) {
+      logger.error("Can't save last ANR timestamp");
+      return;
+    }
+
+    try (final OutputStream outputStream = Files.newOutputStream(file.toPath())) {
+      outputStream.write(String.valueOf(timestamp).getBytes(StandardCharsets.UTF_8));
+      outputStream.flush();
+    } catch (Throwable e) {
+      logger.error("Error writing the ANR marker to the disk", e);
     }
   }
 
