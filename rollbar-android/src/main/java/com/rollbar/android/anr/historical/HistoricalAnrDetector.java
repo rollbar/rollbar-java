@@ -117,7 +117,7 @@ public class HistoricalAnrDetector implements AnrDetector {
     String content = stringBuilder.toString();
 
     try {
-      return (content.equals("null") || content.isBlank()) ? 0L : Long.parseLong(content.trim());
+      return (content.equals("null") || content.trim().isEmpty()) ? 0L : Long.parseLong(content.trim());
     } catch (NumberFormatException ignored) {
       return null;
     }
