@@ -71,18 +71,18 @@ public class RollbarThrowableWrapper implements ThrowableWrapper {
    * @param throwable the throwable.
    */
   public RollbarThrowableWrapper(
-      Throwable throwable,
-      List<RollbarThread> rollbarThreads
-      ) {
+    Throwable throwable,
+    List<RollbarThread> rollbarThreads
+  ) {
     this(
-        throwable.getClass().getName(),
-        throwable.getMessage(),
-        throwable.getStackTrace(),
-        getInnerThrowableWrapper(throwable),
-        throwable,
-        null,
-        null,
-        rollbarThreads
+      throwable.getClass().getName(),
+      throwable.getMessage(),
+      throwable.getStackTrace(),
+      getInnerThrowableWrapper(throwable),
+      throwable,
+      null,
+      null,
+      rollbarThreads
     );
   }
 
