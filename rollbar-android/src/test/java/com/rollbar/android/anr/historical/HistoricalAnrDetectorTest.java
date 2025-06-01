@@ -60,7 +60,34 @@ public class HistoricalAnrDetectorTest {
     thenErrorLogMustSay("AnrListener is null");
   }
 
+  @Test
+  public void shouldNotDetectAnrWhenApplicationExitInfoIsEmpty() throws InterruptedException {
+    givenAnActivityManagerWithoutExitInfo();
 
+    whenDetectorIsExecuted();
+
+    thenTheListenerIsNeverCalled();
+    thenDebugLogMustSay("Empty ApplicationExitInfo List");
+  }
+
+  @Test
+  public void shouldNotDetectAnrWhenMainThreadIsNotParsed() throws InterruptedException, IOException {
+    givenAnActivityManagerWithAnAnr(anrWithoutMainThread());
+
+    whenDetectorIsExecuted();
+
+    thenTheListenerIsNeverCalled();
+    thenErrorLogMustSay("Main thread not found, skipping ANR");
+  }
+
+  @Test
+  public void shouldDetectAnr() throws InterruptedException, IOException {
+    givenAnActivityManagerWithAnAnr(anr());
+
+    whenDetectorIsExecuted();
+
+    thenTheListenerIsCalled();
+  }
 
   private void whenDetectorIsExecuted() throws InterruptedException {
     historicalAnrDetector.init();
