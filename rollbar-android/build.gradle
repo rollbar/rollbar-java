@@ -18,14 +18,14 @@ apply from: "$rootDir/gradle/release.gradle"
 apply from: "$rootDir/gradle/android.quality.gradle"
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 31
     buildToolsVersion '30.0.3' // Going above here requires bumping the AGP to version 4+
 
     defaultConfig {
         minSdkVersion 21
         // FIXME: Pending further discussion
         //noinspection ExpiredTargetSdkVersion
-        targetSdkVersion 32
+        targetSdkVersion 31
         consumerProguardFiles 'proguard-rules.pro'
         manifestPlaceholders = [notifierVersion: VERSION_NAME]
     }
