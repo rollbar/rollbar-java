@@ -20,7 +20,10 @@ import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +34,8 @@ public class HistoricalAnrDetectorTest {
 
   @Mock
   private Context context;
+
+  private File file;
 
   @Mock
   private AnrListener anrListener;
@@ -43,16 +48,19 @@ public class HistoricalAnrDetectorTest {
 
   private HistoricalAnrDetector historicalAnrDetector;
 
+  private final static long ANR_TIMESTAMP = 10L;
+
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-    historicalAnrDetector = new HistoricalAnrDetector(context, anrListener, logger);
+    createTemporalFile();
+    historicalAnrDetector = new HistoricalAnrDetector(context, anrListener, file, logger);
   }
 
   @Test
   public void shouldNotDetectAnrWhenAnrListenerIsNull() throws InterruptedException {
     givenAnActivityManagerWithoutExitInfo();
-    historicalAnrDetector = new HistoricalAnrDetector(context, null, logger);
+    historicalAnrDetector = new HistoricalAnrDetector(context, null, file, logger);
 
     whenDetectorIsExecuted();
 
@@ -78,6 +86,27 @@ public class HistoricalAnrDetectorTest {
 
     thenTheListenerIsNeverCalled();
     thenErrorLogMustSay("Main thread not found, skipping ANR");
+  }
+
+  @Test
+  public void shouldDoNothingIfFileForAnrTimeStampsIsNull() throws InterruptedException, IOException {
+    givenAnActivityManagerWithAnAnr(anrWithoutMainThread());
+    historicalAnrDetector = new HistoricalAnrDetector(context, anrListener, null, logger);
+
+    whenDetectorIsExecuted();
+
+    thenTheListenerIsNeverCalled();
+    thenErrorLogMustSay("Can't retrieve last ANR timestamp");
+  }
+
+  @Test
+  public void shouldNotSendAnrIfItHasAlreadyBeenSent() throws InterruptedException, IOException {
+    givenAnActivityManagerWithAnAnr(anr());
+    givenAnAlreadySentAnr();
+
+    whenDetectorIsExecuted();
+
+    thenWarningLogMustSay("ANR already sent");
   }
 
   @Test
@@ -113,8 +142,17 @@ public class HistoricalAnrDetectorTest {
   }
 
   private void setAnr(ByteArrayInputStream anr) throws IOException {
+    givenAnAnrNotSent();
     when(applicationExitInfo.getReason()).thenReturn(ApplicationExitInfo.REASON_ANR);
     when(applicationExitInfo.getTraceInputStream()).thenReturn(anr);
+  }
+
+  private void givenAnAnrNotSent() {
+    when(applicationExitInfo.getTimestamp()).thenReturn(ANR_TIMESTAMP + 1);
+  }
+
+  private void givenAnAlreadySentAnr() {
+    when(applicationExitInfo.getTimestamp()).thenReturn(ANR_TIMESTAMP);
   }
 
   private void setExitReason(List<ApplicationExitInfo> applicationExitInfos) {
@@ -182,6 +220,16 @@ public class HistoricalAnrDetectorTest {
     return new ByteArrayInputStream(string.getBytes());
   }
 
+  private void createTemporalFile() {
+    try {
+      Path tempPath = Files.createTempFile("rollbar-anr-timestamp", ".txt");
+      Files.write(tempPath, ("" + ANR_TIMESTAMP).getBytes());
+      file = tempPath.toFile();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   private void waitForDetectorToRun() throws InterruptedException {
     for(int i = 0; i<3 ; i++) {
       Thread.sleep(50);
@@ -198,6 +246,10 @@ public class HistoricalAnrDetectorTest {
 
   private void thenDebugLogMustSay(String logMessage) {
     verify(logger, times(1)).debug(logMessage);
+  }
+
+  private void thenWarningLogMustSay(String logMessage) {
+    verify(logger, times(1)).warn(logMessage);
   }
 
   private void thenErrorLogMustSay(String logMessage) {

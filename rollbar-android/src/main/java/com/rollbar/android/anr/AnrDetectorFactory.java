@@ -9,6 +9,8 @@ import com.rollbar.android.anr.watchdog.WatchdogAnrDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+
 public class AnrDetectorFactory {
 
   public static AnrDetector create(
@@ -33,7 +35,12 @@ public class AnrDetectorFactory {
       }
 
       logger.debug("Creating HistoricalAnrDetector");
-      return new HistoricalAnrDetector(context, anrListener, createHistoricalAnrDetectorLogger());
+      return new HistoricalAnrDetector(
+        context,
+        anrListener,
+        createAnrTimeStampFile(context),
+        createHistoricalAnrDetectorLogger()
+      );
     } else {
       if (anrConfiguration.watchdogConfiguration == null) {
         logger.warn("No Watchdog configuration");
@@ -47,6 +54,10 @@ public class AnrDetectorFactory {
           anrListener
       );
     }
+  }
+
+  private static File createAnrTimeStampFile(Context context) {
+    return new File(context.getCacheDir(), "rollbar-anr-timestamp");
   }
 
   private static Logger createHistoricalAnrDetectorLogger() {

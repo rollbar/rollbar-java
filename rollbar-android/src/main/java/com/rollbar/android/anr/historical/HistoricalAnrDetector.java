@@ -31,18 +31,20 @@ import java.util.Objects;
 
 @SuppressLint("NewApi") // Validated in the Factory
 public class HistoricalAnrDetector implements AnrDetector {
-  private static final String TIMESTAMP_FILE = "rollbar-anr-timestamp";
   private final Logger logger;
   private final Context context;
   private final AnrListener anrListener;
+  private final File file;
 
   public HistoricalAnrDetector(
       Context context,
       AnrListener anrListener,
+      File file,
       Logger logger
   ) {
     this.context = context;
     this.anrListener = anrListener;
+    this.file = file;
     this.logger = logger;
   }
 
@@ -53,7 +55,7 @@ public class HistoricalAnrDetector implements AnrDetector {
       return;
     }
 
-    Long lastAnrTimestamp = getLastAnrTimestamp();
+    Long lastAnrTimestamp = getLastAnrTimestamp(file);
     if (lastAnrTimestamp == null) {
       return;
     }
@@ -62,22 +64,21 @@ public class HistoricalAnrDetector implements AnrDetector {
       @Override
       public void run() {
         super.run();
-        evaluateLastExitReasons(lastAnrTimestamp);
+        evaluateLastExitReasons(file, lastAnrTimestamp);
       }
     };
     thread.setDaemon(true);
     thread.start();
   }
 
-  private Long getLastAnrTimestamp() {
-    File file = new File(context.getCacheDir().getAbsolutePath(), TIMESTAMP_FILE);
+  private Long getLastAnrTimestamp(File file) {
     if (isNotValid(file)) {
       logger.error("Can't retrieve last ANR timestamp");
       return null;
     }
 
     try {
-      return getLastAnrTimestamp(file);
+      return readLastAnrTimestamp(file);
     } catch (IOException e) {
       logger.error("Error reading last ANR timestamp");
       return null;
@@ -85,7 +86,6 @@ public class HistoricalAnrDetector implements AnrDetector {
   }
 
   private boolean isNotValid(File file) {
-
     if (file != null && !file.exists()) {
       createFile(file);
     }
@@ -101,7 +101,7 @@ public class HistoricalAnrDetector implements AnrDetector {
     }
   }
 
-  private Long getLastAnrTimestamp(File file) throws IOException {
+  private Long readLastAnrTimestamp(File file) throws IOException {
     StringBuilder stringBuilder = new StringBuilder();
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       String line;
@@ -123,7 +123,7 @@ public class HistoricalAnrDetector implements AnrDetector {
     }
   }
 
-  private void evaluateLastExitReasons(Long lastAnrReportedTimestamp) {
+  private void evaluateLastExitReasons(File file, Long lastAnrReportedTimestamp) {
     List<ApplicationExitInfo> applicationExitInfoList = getApplicationExitInformation();
     Long newestAnrTimestamp = lastAnrReportedTimestamp;
 
@@ -154,7 +154,7 @@ public class HistoricalAnrDetector implements AnrDetector {
           anrListener.onAppNotResponding(new AnrException(threads));
           if (anrTimestamp > newestAnrTimestamp) {
             newestAnrTimestamp = anrTimestamp;
-            saveAnrTimestamp(anrTimestamp);
+            saveAnrTimestamp(file, anrTimestamp);
           }
         } else {
           logger.error("Main thread not found, skipping ANR");
@@ -165,8 +165,7 @@ public class HistoricalAnrDetector implements AnrDetector {
     }
   }
 
-  private void saveAnrTimestamp(long timestamp) {
-    File file = new File(context.getCacheDir(), TIMESTAMP_FILE);
+  private void saveAnrTimestamp(File file, long timestamp) {
     if (isNotValid(file)) {
       logger.error("Can't save last ANR timestamp");
       return;
