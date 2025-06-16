@@ -6,6 +6,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class StackFrame implements JsonSerializable {
+  private static final String MODULE_KEY = "module";
+  private static final String PACKAGE_KEY = "package";
+  private static final String FILENAME_KEY = "filename";
+  private static final String FUNCTION_KEY = "function";
+  private static final String LINE_NUMBER_KEY = "lineno";
 
   private String filename = "";
   private String function = "";
@@ -45,28 +50,20 @@ public class StackFrame implements JsonSerializable {
   public Object asJson() {
     Map<String, Object> values = new HashMap<>();
     if (filename != null) {
-      values.put(JsonKeys.FILENAME, filename);
+      values.put(FILENAME_KEY, filename);
     }
     if (function != null) {
-      values.put(JsonKeys.FUNCTION, function);
+      values.put(FUNCTION_KEY, function);
     }
     if (module != null) {
-      values.put(JsonKeys.MODULE, module);
+      values.put(MODULE_KEY, module);
     }
     if (lineno != null) {
-      values.put(JsonKeys.LINENO, lineno);
+      values.put(LINE_NUMBER_KEY, lineno);
     }
     if (_package != null) {
-      values.put(JsonKeys.PACKAGE, _package);
+      values.put(PACKAGE_KEY, _package);
     }
     return values;
-  }
-
-  public static final class JsonKeys {
-    public static final String FILENAME = "filename";
-    public static final String FUNCTION = "function";
-    public static final String MODULE = "module";
-    public static final String LINENO = "lineno";
-    public static final String PACKAGE = "package";
   }
 }

@@ -7,11 +7,13 @@ import java.util.List;
 import java.util.Map;
 
 public final class StackTrace implements JsonSerializable {
+  private static final String FRAMES_KEY = "frames";
+  private static final String SNAPSHOT_KEY = "snapshot";
 
   private final List<StackFrame> frames;
   private  Boolean snapshot;
 
-  public StackTrace(final  List<StackFrame> frames) {
+  public StackTrace(final List<StackFrame> frames) {
     this.frames = frames;
   }
 
@@ -23,7 +25,7 @@ public final class StackTrace implements JsonSerializable {
     return stackTraceElements;
   }
 
-  public void setSnapshot(final  Boolean snapshot) {
+  public void setSnapshot(final Boolean snapshot) {
     this.snapshot = snapshot;
   }
 
@@ -32,16 +34,12 @@ public final class StackTrace implements JsonSerializable {
     Map<String, Object> values = new HashMap<>();
 
     if (frames != null) {
-      values.put(JsonKeys.FRAMES, frames);
+      values.put(FRAMES_KEY, frames);
     }
     if (snapshot != null) {
-      values.put(JsonKeys.SNAPSHOT, snapshot);
+      values.put(SNAPSHOT_KEY, snapshot);
     }
     return values;
   }
 
-  public static final class JsonKeys {
-    public static final String FRAMES = "frames";
-    public static final String SNAPSHOT = "snapshot";
-  }
 }

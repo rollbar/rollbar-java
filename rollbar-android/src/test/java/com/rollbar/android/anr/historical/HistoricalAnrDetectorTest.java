@@ -211,6 +211,9 @@ public class HistoricalAnrDetectorTest {
         "| stack=0x76fd7fe000-0x76fd800000 stackSize=1039KB\n" +
         "| held mutexes=\n" +
         "at java.lang.Object.wait(Native method)\n" +
+        "native: #5 com.example.library 7fa123456789 libsomething (libfoo.so+1234) (funcName+56)\n"+
+        "#9 my.module.name 7f1234abcde0   libbar.so (doStuff)\n"+
+        "       \n"+
         "- waiting on <0x06842b17> (a com.android.okhttp.ConnectionPool)\n" +
         "at com.android.okhttp.ConnectionPool$1.run(ConnectionPool.java:106)\n" +
         "- locked <0x06842b17> (a com.android.okhttp.ConnectionPool)\n" +
