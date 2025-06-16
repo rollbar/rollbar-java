@@ -8,7 +8,6 @@ import android.content.Context;
 import com.rollbar.android.anr.AnrDetector;
 import com.rollbar.android.anr.AnrException;
 import com.rollbar.android.anr.AnrListener;
-import com.rollbar.android.anr.historical.stacktrace.Lines;
 import com.rollbar.android.anr.historical.stacktrace.ThreadParser;
 import com.rollbar.api.payload.data.body.RollbarThread;
 
@@ -26,6 +25,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -199,18 +199,25 @@ public class HistoricalAnrDetector implements AnrDetector {
   }
 
   private List<RollbarThread> getThreads(ApplicationExitInfo applicationExitInfo) throws IOException {
-    Lines lines = getLines(applicationExitInfo);
+    List<String> lines = getLines(applicationExitInfo);
     ThreadParser threadParser = new ThreadParser();
     return threadParser.parse(lines);
   }
 
-  private Lines getLines(ApplicationExitInfo applicationExitInfo) throws IOException {
+  private List<String> getLines(ApplicationExitInfo applicationExitInfo) throws IOException {
     byte[] dump = getDumpBytes(Objects.requireNonNull(applicationExitInfo.getTraceInputStream()));
     return getLines(dump);
   }
 
-  private Lines getLines(byte[] dump) throws IOException {
-    return Lines.readLines(toBufferReader(dump));
+  private List<String> getLines(byte[] dump) throws IOException {
+    List<String> list = new ArrayList<>();
+    try (BufferedReader bufferedReader = toBufferReader(dump)) {
+      String text;
+      while ((text = bufferedReader.readLine()) != null) {
+        list.add(text);
+      }
+    }
+    return list;
   }
 
   private BufferedReader toBufferReader(byte[] dump) {

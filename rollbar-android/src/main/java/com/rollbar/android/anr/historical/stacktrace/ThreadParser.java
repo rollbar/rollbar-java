@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,23 +51,24 @@ public class ThreadParser {
       Pattern.compile(" *- waiting to lock an unknown object");
   private static final Pattern BLANK_RE = Pattern.compile("\\s+");
 
-  public List<RollbarThread> parse(final  Lines lines) {
+  public List<RollbarThread> parse(List<String> lines) {
+    ListIterator<String> iterator = lines.listIterator();
+
     Deque<RollbarThread> rollbarThreads = new ArrayDeque<>();
     final Matcher beginManagedThreadRe = BEGIN_MANAGED_THREAD_RE.matcher("");
     final Matcher beginUnmanagedNativeThreadRe = BEGIN_UNMANAGED_NATIVE_THREAD_RE.matcher("");
 
-    while (lines.hasNext()) {
-      Line line = lines.next();
+    while (iterator.hasNext()) {
+      String line = iterator.next();
       if (line == null) {
         LOGGER.warn("No line: Internal error while parsing thread dump");
         return new ArrayList<>(rollbarThreads);
       }
-      final String text = line.getText();
 
-      if (matches(beginManagedThreadRe, text) || matches(beginUnmanagedNativeThreadRe, text)) {
-        lines.rewind();
+      if (matches(beginManagedThreadRe, line) || matches(beginUnmanagedNativeThreadRe, line)) {
+        iterator.previous();
 
-        RollbarThread rollbarThread = parseThread(lines);
+        RollbarThread rollbarThread = parseThread(iterator);
         if (rollbarThread != null) {
           if (rollbarThread.isMain()) {
             rollbarThreads.addFirst(rollbarThread);
@@ -79,7 +81,7 @@ public class ThreadParser {
     return new ArrayList<>(rollbarThreads);
   }
 
-  private RollbarThread parseThread(final Lines lines) {
+  private RollbarThread parseThread(ListIterator<String> lines) {
     String id = "";
     String name = "";
     String state = "";
@@ -90,12 +92,12 @@ public class ThreadParser {
     if (!lines.hasNext()) {
       return null;
     }
-    final Line line = lines.next();
-    if (line == null) {
+    String text = lines.next();
+    if (text == null) {
       LOGGER.warn("Internal error while parsing thread dump");
       return null;
     }
-    if (matches(beginManagedThreadRe, line.getText())) {
+    if (matches(beginManagedThreadRe, text)) {
       Long threadId = getLong(beginManagedThreadRe, 4, null);
       if (threadId == null) {
         LOGGER.debug("No thread id in the dump, skipping thread");
@@ -108,7 +110,7 @@ public class ThreadParser {
       if (state != null && state.contains(" ")) {
         state = state.substring(0, state.indexOf(' '));
       }
-    } else if (matches(beginUnmanagedNativeThreadRe, line.getText())) {
+    } else if (matches(beginUnmanagedNativeThreadRe, text)) {
       Long systemThreadId = getLong(beginUnmanagedNativeThreadRe, 3, null);
       if (systemThreadId == null) {
         LOGGER.debug("No system thread id in the dump, skipping thread");
@@ -129,7 +131,7 @@ public class ThreadParser {
   }
 
 
-  private StackTrace parseStacktrace(Lines lines) {
+  private StackTrace parseStacktrace(ListIterator<String> lines) {
     final List<StackFrame> frames = new ArrayList<>();
 
     final Matcher nativeRe = NATIVE_RE.matcher("");
@@ -139,12 +141,11 @@ public class ThreadParser {
     final Matcher blankRe = BLANK_RE.matcher("");
 
     while (lines.hasNext()) {
-      final Line line = lines.next();
-      if (line == null) {
+      String text = lines.next();
+      if (text == null) {
         LOGGER.warn("Internal error while parsing thread dump, no line");
         break;
       }
-      final String text = line.getText();
       if (matches(nativeRe, text)) {
         final StackFrame frame = new StackFrame();
         frame.setPackage(nativeRe.group(1));
