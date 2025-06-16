@@ -17,8 +17,6 @@ public class StackFrame implements JsonSerializable {
     return new StackTraceElement(module, function, filename, lineno);
   }
 
-  private LockReason lock;
-
   public void setFilename(final  String filename) {
     this.filename = filename;
   }
@@ -43,10 +41,6 @@ public class StackFrame implements JsonSerializable {
     this._package = _package;
   }
 
-  public void setLock(final  LockReason lock) {
-    this.lock = lock;
-  }
-
   @Override
   public Object asJson() {
     Map<String, Object> values = new HashMap<>();
@@ -65,9 +59,6 @@ public class StackFrame implements JsonSerializable {
     if (_package != null) {
       values.put(JsonKeys.PACKAGE, _package);
     }
-    if (lock != null) {
-      values.put(JsonKeys.LOCK, lock);
-    }
     return values;
   }
 
@@ -77,6 +68,5 @@ public class StackFrame implements JsonSerializable {
     public static final String MODULE = "module";
     public static final String LINENO = "lineno";
     public static final String PACKAGE = "package";
-    public static final String LOCK = "lock";
   }
 }
