@@ -34,21 +34,6 @@ public class ThreadParser {
       Pattern.compile(" *at (?:(.+)\\.)?([^.]+)\\.([^.]+)\\((.*):([\\d-]+)\\)");
   private static final Pattern JNI_RE =
       Pattern.compile(" *at (?:(.+)\\.)?([^.]+)\\.([^.]+)\\(Native method\\)");
-  private static final Pattern LOCKED_RE =
-      Pattern.compile(" *- locked \\<([0x0-9a-fA-F]{1,16})\\> \\(a (?:(.+)\\.)?([^.]+)\\)");
-  private static final Pattern SLEEPING_ON_RE =
-      Pattern.compile(" *- sleeping on \\<([0x0-9a-fA-F]{1,16})\\> \\(a (?:(.+)\\.)?([^.]+)\\)");
-  private static final Pattern WAITING_ON_RE =
-      Pattern.compile(" *- waiting on \\<([0x0-9a-fA-F]{1,16})\\> \\(a (?:(.+)\\.)?([^.]+)\\)");
-  private static final Pattern WAITING_TO_LOCK_RE =
-      Pattern.compile(
-          " *- waiting to lock \\<([0x0-9a-fA-F]{1,16})\\> \\(a (?:(.+)\\.)?([^.]+)\\)");
-  private static final Pattern WAITING_TO_LOCK_HELD_RE =
-      Pattern.compile(
-          " *- waiting to lock \\<([0x0-9a-fA-F]{1,16})\\> \\(a (?:(.+)\\.)?([^.]+)\\)"
-              + "(?: held by thread (\\d+))");
-  private static final Pattern WAITING_TO_LOCK_UNKNOWN_RE =
-      Pattern.compile(" *- waiting to lock an unknown object");
   private static final Pattern BLANK_RE = Pattern.compile("\\s+");
 
   public List<RollbarThread> parse(List<String> lines) {
