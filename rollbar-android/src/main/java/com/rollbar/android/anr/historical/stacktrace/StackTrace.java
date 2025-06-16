@@ -17,10 +17,8 @@ public final class StackTrace implements JsonSerializable {
 
   public StackTraceElement[] getStackTraceElements() {
     StackTraceElement[] stackTraceElements = new StackTraceElement[frames.size()];
-    int element = 0;
-    for (StackFrame frame : frames) {
-      stackTraceElements[element] = frame.toStackTraceElement();
-      element++;
+    for (int i = 0; i < frames.size(); i++) {
+      stackTraceElements[i] = frames.get(i).toStackTraceElement();
     }
     return stackTraceElements;
   }
