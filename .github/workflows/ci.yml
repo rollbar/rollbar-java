@@ -62,7 +62,7 @@ jobs:
       - name: Build
         run: |
           if [ "${{ matrix.java }}" == "8" ]; then
-            ./gradlew clean build -x :rollbar-android:build
+            ./gradlew clean build -p . -x :rollbar-android:build -x :rollbar-android:compileDebugJavaWithJavac -x :rollbar-android:compileReleaseJavaWithJavac
           else
             ./gradlew clean build
           fi
