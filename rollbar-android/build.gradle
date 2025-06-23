@@ -25,7 +25,7 @@ android {
         minSdkVersion 21
         // FIXME: Pending further discussion
         //noinspection ExpiredTargetSdkVersion
-        targetSdkVersion 30
+        targetSdkVersion 33
         consumerProguardFiles 'proguard-rules.pro'
         manifestPlaceholders = [notifierVersion: VERSION_NAME]
     }
