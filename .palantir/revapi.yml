@@ -45,3 +45,8 @@ acceptedBreaks:
         justification: "This is a binary compatible change, which could only break custom\
         \ implementations of our config interfaces, but those interfaces are not meant\
         \ to be implemented by users"
+      - code: "java.method.addedToInterface"
+        new: "method java.util.List<com.rollbar.api.payload.data.body.RollbarThread> com.rollbar.notifier.wrapper.ThrowableWrapper::getRollbarThreads()"
+        justification: "This is a binary compatible change, which could only break custom\
+      \ implementations of our config interfaces, but those interfaces are not meant\
+      \ to be implemented by users"

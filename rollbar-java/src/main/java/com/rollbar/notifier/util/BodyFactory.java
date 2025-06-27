@@ -87,6 +87,22 @@ public class BodyFactory {
     return new RollbarThread(thread, new Group(traceChain));
   }
 
+  /**
+   * Builds a Group from an Array of StackTraceElement.
+   *
+   * @param stackTraceElements the stack trace elements.
+   * @return the Group.
+   */
+  public Group from(
+      StackTraceElement[] stackTraceElements
+  ) {
+    if (stackTraceElements == null) {
+      return null;
+    }
+    TraceChain traceChain = traceChain(stackTraceElements);
+    return new Group(traceChain);
+  }
+
   private Body from(
       ThrowableWrapper throwableWrapper,
       String description,
@@ -105,6 +121,12 @@ public class BodyFactory {
     if (throwableWrapper == null) {
       return null;
     }
+
+    List<RollbarThread> wrapperRollbarThreads = throwableWrapper.getRollbarThreads();
+    if (wrapperRollbarThreads != null && !wrapperRollbarThreads.isEmpty()) {
+      return wrapperRollbarThreads;
+    }
+
     Map<Thread, StackTraceElement[]> allStackTraces = throwableWrapper.getAllStackTraces();
     if (allStackTraces == null) {
       return null;

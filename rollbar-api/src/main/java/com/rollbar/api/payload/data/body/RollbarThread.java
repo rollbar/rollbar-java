@@ -32,7 +32,15 @@ public class RollbarThread implements JsonSerializable, StringTruncatable<Rollba
     this.group = group;
   }
 
-  private RollbarThread(
+  /**
+   * Constructor.
+   * @param name the name of the thread.
+   * @param id the id of the thread.
+   * @param priority the priority of the thread.
+   * @param state the state of the thread.
+   * @param group the Group of trace chains.
+   */
+  public RollbarThread(
       String name,
       String id,
       String priority,
@@ -92,6 +100,19 @@ public class RollbarThread implements JsonSerializable, StringTruncatable<Rollba
     return name;
   }
 
+  /**
+   * Getter.
+   *
+   * @return true if this represents the main thread.
+   */
+  public boolean isMain() {
+    return isMain;
+  }
+
+  private boolean isMain(String string) {
+    return "main".equals(string);
+  }
+
   @Override
   public Object asJson() {
     Map<String, Object> values = new HashMap<>();
@@ -145,10 +166,6 @@ public class RollbarThread implements JsonSerializable, StringTruncatable<Rollba
   @Override
   public int hashCode() {
     return Objects.hash(name, id, priority, state, isMain, group);
-  }
-
-  private boolean isMain(String string) {
-    return "main".equals(string);
   }
 
   /**

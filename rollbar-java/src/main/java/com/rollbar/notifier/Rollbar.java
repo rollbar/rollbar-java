@@ -10,6 +10,7 @@ import com.rollbar.notifier.util.BodyFactory;
 import com.rollbar.notifier.util.ObjectsUtils;
 import com.rollbar.notifier.wrapper.ThrowableWrapper;
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -609,6 +610,23 @@ public class Rollbar extends RollbarBase<Void, Config> {
       boolean isUncaught
   ) {
     this.log(wrapThrowable(error, thread), custom, description, level, isUncaught);
+  }
+
+  /**
+   * Record an error or message with extra data at the level specified. At least one of `error` or
+   * `description` must be non-null. If error is null, `description` will be sent as a message. If
+   * error is non-null, description will be sent as the description of the error. Custom data will
+   * be attached to message if the error is null. Custom data will extend whatever {@link
+   * Config#custom} returns.
+   *
+   * @param error the error (if any).
+   */
+  public void log(ThrowableWrapper error) {
+    try {
+      process(error, new HashMap<>(), null, Level.CRITICAL, false);
+    } catch (Exception e) {
+      LOGGER.error("Error while processing payload to send to Rollbar: {}", e);
+    }
   }
 
   /**

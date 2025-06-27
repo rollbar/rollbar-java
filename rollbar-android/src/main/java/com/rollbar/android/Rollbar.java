@@ -10,9 +10,14 @@ import android.content.pm.PackageInfo;
 import android.os.Bundle;
 
 import android.util.Log;
+
+import com.rollbar.android.anr.AnrDetector;
+import com.rollbar.android.anr.AnrDetectorFactory;
+import com.rollbar.android.anr.AnrException;
 import com.rollbar.android.notifier.sender.ConnectionAwareSenderFailureStrategy;
 import com.rollbar.android.provider.ClientProvider;
 import com.rollbar.api.payload.data.TelemetryType;
+import com.rollbar.api.payload.data.body.RollbarThread;
 import com.rollbar.notifier.config.ConfigProvider;
 import com.rollbar.notifier.uncaughtexception.RollbarUncaughtExceptionHandler;
 import com.rollbar.android.provider.NotifierProvider;
@@ -24,12 +29,18 @@ import com.rollbar.notifier.sender.BufferedSender;
 import com.rollbar.notifier.sender.SyncSender;
 import com.rollbar.notifier.sender.queue.DiskQueue;
 import com.rollbar.notifier.util.ObjectsUtils;
+import com.rollbar.notifier.wrapper.RollbarThrowableWrapper;
+import com.rollbar.notifier.wrapper.ThrowableWrapper;
+
+import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -69,6 +80,28 @@ public class Rollbar implements Closeable {
    */
   public static Rollbar init(Context context) {
     return init(context, null, null);
+  }
+
+  /**
+   * Initialize the singleton instance of Rollbar.
+   * Defaults to reading the access token from the manifest, handling uncaught exceptions, and setting
+   * the environment to production.
+   *
+   * @param context Android context to use.
+   * @param androidConfiguration configuration for Android features.
+   * @return the managed instance of Rollbar.
+   */
+  public static Rollbar init(Context context, AndroidConfiguration androidConfiguration) {
+    return init(
+        context,
+        null,
+        DEFAULT_ENVIRONMENT,
+        DEFAULT_REGISTER_EXCEPTION_HANDLER,
+        DEFAULT_INCLUDE_LOGCAT,
+        DEFAULT_CONFIG_PROVIDER,
+        DEFAULT_SUSPEND_WHEN_NETWORK_IS_UNAVAILABLE,
+        androidConfiguration
+        );
   }
 
   /**
@@ -155,16 +188,69 @@ public class Rollbar implements Closeable {
   public static Rollbar init(Context context, String accessToken, String environment,
                              boolean registerExceptionHandler, boolean includeLogcat,
                              ConfigProvider provider, boolean suspendWhenNetworkIsUnavailable) {
+    return init(
+        context,
+        accessToken,
+        environment,
+        registerExceptionHandler,
+        includeLogcat,
+        provider,
+        suspendWhenNetworkIsUnavailable,
+        makeDefaultAndroidConfiguration()
+    );
+  }
+
+  /**
+   * Initialize the singleton instance of Rollbar.
+   *
+   * @param context     Android context to use.
+   * @param accessToken a Rollbar access token with at least post_client_item scope
+   * @param environment the environment to set for items
+   * @param registerExceptionHandler whether or not to handle uncaught exceptions.
+   * @param includeLogcat whether or not to include logcat output with items
+   * @param provider a configuration provider that can be used to customize the configuration further.
+   * @param suspendWhenNetworkIsUnavailable if true, sending occurrences will be suspended while the network is unavailable
+   * @param androidConfiguration configuration for Android features
+   * @return the managed instance of Rollbar.
+   */
+  public static Rollbar init(
+      Context context,
+      String accessToken,
+      String environment,
+      boolean registerExceptionHandler,
+      boolean includeLogcat,
+      ConfigProvider provider,
+      boolean suspendWhenNetworkIsUnavailable,
+      AndroidConfiguration androidConfiguration
+      ) {
     if (isInit()) {
       Log.w(TAG, "Rollbar.init() called when it was already initialized.");
       // This is likely an activity that was destroyed and recreated, so we need to update it
       notifier.updateContext(context);
     } else {
       notifier = new Rollbar(context, accessToken, environment, registerExceptionHandler,
-              includeLogcat, provider, DEFAULT_CAPTURE_IP, DEFAULT_MAX_LOGCAT_SIZE,
-              suspendWhenNetworkIsUnavailable);
+          includeLogcat, provider, DEFAULT_CAPTURE_IP, DEFAULT_MAX_LOGCAT_SIZE,
+          suspendWhenNetworkIsUnavailable);
+      if (androidConfiguration != null) {
+        initAnrDetector(context, androidConfiguration);
+      }
     }
+
     return notifier;
+  }
+
+  private static void initAnrDetector(
+      Context context,
+      AndroidConfiguration androidConfiguration
+  ) {
+    AnrDetector anrDetector = AnrDetectorFactory.create(
+        context,
+        LoggerFactory.getLogger(AnrDetectorFactory.class),
+        androidConfiguration.getAnrConfiguration(),
+        error -> reportANR(error));
+    if (anrDetector != null) {
+      anrDetector.init();
+    }
   }
 
   private void updateContext(Context context) {
@@ -837,6 +923,24 @@ public class Rollbar implements Closeable {
   }
 
   /**
+   * Record an error or message with extra data at the level specified. At least one of `error` or
+   * `description` must be non-null. If error is null, `description` will be sent as a message. If
+   * error is non-null, description will be sent as the description of the error. Custom data will
+   * be attached to message if the error is null. Custom data will extend whatever {@link
+   * Config#custom} returns.
+   *
+   * @param error the error (if any).
+   * @param custom the custom data (if any).
+   * @param description the description of the error, or the message to send.
+   * @param level the level to send it at.
+   * @param isUncaught whether this data comes from an uncaught exception.
+   */
+  public void log(ThrowableWrapper error, Map<String, Object> custom, String description,
+                  Level level, boolean isUncaught) {
+    rollbar.log(error, custom, description, level, isUncaught);
+  }
+
+  /**
    * Log an error at level specified.
    *
    * @param error the error.
@@ -1084,6 +1188,24 @@ public class Rollbar implements Closeable {
     } else {
       Log.e(TAG, "Rollbar not initialized with an access token!");
     }
+  }
+
+  private static void reportANR(AnrException error){
+    List<RollbarThread> rollbarThreads = error.getThreads();
+
+    ThrowableWrapper throwableWrapper;
+
+    if (rollbarThreads == null) {
+      throwableWrapper = new RollbarThrowableWrapper(error);
+    } else {
+      throwableWrapper = new RollbarThrowableWrapper(error, rollbarThreads);
+    }
+
+    notifier.log(throwableWrapper, new HashMap<>(), "ANR", Level.CRITICAL, false);
+  }
+
+  private static AndroidConfiguration makeDefaultAndroidConfiguration() {
+    return new AndroidConfiguration.Builder().build();
   }
 
 }
