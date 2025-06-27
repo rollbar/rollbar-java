@@ -7,6 +7,9 @@ buildscript {
     dependencies {
         classpath "com.netflix.nebula:nebula-project-plugin:3.4.0"
     }
+    configurations.classpath {
+        resolutionStrategy.force 'com.netflix.nebula:nebula-gradle-interop:2.3.0'
+    }
 }
 
 apply plugin: "nebula.integtest"
