@@ -2,7 +2,6 @@ rootProject.name="rollbar-java-sdk"
 
 include ":rollbar-api",
         ":rollbar-java",
-        ":rollbar-android",
         ":rollbar-web",
         ":rollbar-jakarta-web",
         ":rollbar-log4j2",
@@ -16,7 +15,6 @@ include ":rollbar-api",
         ":rollbar-reactive-streams-reactor",
         ":examples:rollbar-java",
         ":examples:rollbar-web",
-        ":examples:rollbar-android",
         ":examples:rollbar-scala",
         ":examples:rollbar-log4j2",
         ":examples:rollbar-logback",
@@ -25,3 +23,13 @@ include ":rollbar-api",
         ":examples:rollbar-struts2",
         ":examples:rollbar-struts2-spring",
         ":examples:rollbar-reactive-streams-reactor"
+
+def isJava8 = JavaVersion.current() == JavaVersion.VERSION_1_8
+
+if (isJava8) {
+    println "Java 8 detected: excluding :rollbar-android and :examples:rollbar-android"
+} else {
+    println "Java ${JavaVersion.current()} detected: including Android modules"
+    include ":rollbar-android",
+            ":examples:rollbar-android"
+}
