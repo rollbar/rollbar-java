@@ -16,7 +16,7 @@ dependencies {
 
     implementation 'javax.servlet:javax.servlet-api:3.1.0'
 
-    def tomcatVersion = '7.0.57'
+    def tomcatVersion = '8.5.2'
 
     tomcat "org.apache.tomcat.embed:tomcat-embed-core:${tomcatVersion}",
             "org.apache.tomcat.embed:tomcat-embed-logging-juli:${tomcatVersion}"
