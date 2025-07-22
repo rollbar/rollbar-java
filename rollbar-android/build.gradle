@@ -4,7 +4,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.2.2'
+        classpath 'com.android.tools.build:gradle:7.4.2'
     }
 }
 
@@ -18,8 +18,7 @@ apply from: "$rootDir/gradle/release.gradle"
 apply from: "$rootDir/gradle/android.quality.gradle"
 
 android {
-    compileSdkVersion 33
-    buildToolsVersion '30.0.3' // Going above here requires bumping the AGP to version 4+
+    compileSdkVersion = 33
 
     defaultConfig {
         minSdkVersion 21
