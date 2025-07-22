@@ -5,32 +5,35 @@ buildscript {
         }
     }
     dependencies {
-        classpath "com.netflix.nebula:nebula-project-plugin:3.4.0"
-    }
-    configurations.classpath {
-        resolutionStrategy.force 'com.netflix.nebula:nebula-gradle-interop:2.3.0'
+        classpath "com.netflix.nebula:nebula-project-plugin:10.0.1"
     }
 }
 
-apply plugin: "nebula.integtest"
+apply plugin: 'com.netflix.nebula.integtest'
 
 configurations {
     integTestArtifacts
+    integTestRuntime {
+        extendsFrom configurations.integTestImplementation
+        canBeConsumed = true
+        canBeResolved = true
+    }
 }
 
 dependencies {
   api project(':rollbar-api')
 
-  api group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
+  api 'org.slf4j:slf4j-api:1.7.25'
 
   compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
-  testImplementation group: 'com.google.code.gson', name: 'gson', version: '2.8.6'
+  testImplementation 'com.google.code.gson:gson:2.8.6'
 
-  integTestImplementation group: 'com.github.tomakehurst', name: 'wiremock', version: '2.27.0'
-  integTestImplementation group: 'com.google.code.gson', name: 'gson', version: '2.8.2'
+  integTestImplementation 'com.github.tomakehurst:wiremock:2.27.0'
+  integTestImplementation 'com.google.code.gson:gson:2.8.2'
 }
 
+def VERSION_NAME = project.version ?: 'unspecified'
 /**
  * This task will create a version property that is statically referenced when populating the
  * `notifier` section of the payload. It helps when users shade and / or relocate the
@@ -38,17 +41,16 @@ dependencies {
  * The task creates a Java class instead of a text resource, since dynamically loaded resources
  * are not as reliable under relocation as a strongly typed bytecode reference to a compiled class.
  */
-task createVersionClass() {
-  ext.set("OUTPUT_DIR", [buildDir.getAbsolutePath(), 'src', 'generated', 'main'].join(File.separator))
+task createVersionClass {
+    ext.OUTPUT_DIR = new File(buildDir, "src/generated/main")
 
-  outputs.dir(ext.OUTPUT_DIR)
+    outputs.dir(ext.OUTPUT_DIR)
 
   doLast {
-    def pkg = ["com", "rollbar", "notifier", "provider", "notifier"];
-
-    def pkgName = pkg.join(".");
-    def pkgPath = "${ext.OUTPUT_DIR}${File.separator}${pkg.join(File.separator)}"
-    def escapedVersion = VERSION_NAME.replace('\\', '\\\\').replace('"', '\\"');
+    def pkg = ['com', 'rollbar', 'notifier', 'provider', 'notifier']
+    def pkgName = pkg.join('.')
+    def pkgPath = new File(ext.OUTPUT_DIR.absolutePath + File.separator + pkg.join(File.separator))
+    def escapedVersion = VERSION_NAME.replace('\\', '\\\\').replace('"', '\\"')
 
     def classText = """package ${pkgName};
 
@@ -59,24 +61,24 @@ class VersionHelperResources {
 }
 """
 
-    new File(pkgPath).mkdirs()
-    def classFile = new File(pkgPath, 'VersionHelperResources.java').newWriter()
-    try {
-      classFile << classText
-    } finally {
-      classFile.close()
+    pkgPath.mkdirs()
+    def classFile = new File(pkgPath, 'VersionHelperResources.java')
+    classFile.withWriter { writer ->
+      writer << classText
     }
   }
 }
 
 sourceSets {
   main {
-    java.srcDirs += project.tasks.createVersionClass.ext.OUTPUT_DIR
+      java {
+          srcDir createVersionClass.ext.OUTPUT_DIR
+      }
   }
 }
 
-project.tasks.compileJava.dependsOn(project.tasks.createVersionClass);
-project.tasks.checkstyleMain.dependsOn(project.tasks.createVersionClass);
+tasks.compileJava.dependsOn(createVersionClass)
+tasks.checkstyleMain.dependsOn(createVersionClass)
 
 test {
   // This helps us test the VersionHelper class since there's no jar manifest available when
@@ -85,9 +87,10 @@ test {
 }
 
 // The 'java-test-fixtures' plugin is not getting along with 'nebula.integtest', so we'll use this instead
-task integTestJar(type: Jar, dependsOn: project.tasks.integTestClasses) {
+task integTestJar(type: Jar) {
     archiveClassifier.set('integtest')
     from sourceSets.integTest.output
+    dependsOn tasks.integTestClasses
 }
 
 artifacts {
