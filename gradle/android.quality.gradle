@@ -1,3 +1,5 @@
+import com.github.spotbugs.snom.SpotBugsTask
+
 buildscript {
     repositories {
         maven {
@@ -14,11 +16,11 @@ apply plugin: "com.github.spotbugs-base"
 apply plugin: 'jacoco'
 
 checkstyle {
-    toolVersion "8.2"
-    configFile file("$rootDir/tools/checkstyle/google_checks.xml")
+    toolVersion = "8.2"
+    configFile = file("$rootDir/tools/checkstyle/google_checks.xml")
 }
 
-task checkstyleMain(type: Checkstyle) {
+tasks.register("checkstyleMain", Checkstyle) {
     source 'src'
     include '**/*.java'
     exclude '**/gen/**'
@@ -26,11 +28,11 @@ task checkstyleMain(type: Checkstyle) {
     exclude '**/annotation/*.java'
     classpath = files()
     reports {
-        xml.enabled false
-        html.enabled true
+        xml.required.set(false)
+        html.required.set(true)
     }
     // Set this to true until we fix our current errors.
-    ignoreFailures true
+    ignoreFailures = true
 }
 
 spotbugs {
@@ -38,54 +40,43 @@ spotbugs {
     includeFilter = file("$rootDir/tools/findbugs/findbugs.xml")
 }
 
-task spotbugsMain(type: com.github.spotbugs.snom.SpotBugsTask) {
-    dependsOn 'assemble'
+tasks.register("spotbugsMain", SpotBugsTask) {
+    dependsOn tasks.matching { it.name.startsWith("assemble") }
 
     // Set this to true until we fix our current errors.
     ignoreFailures = true
     effort = "max"
     reportLevel = "medium"
 
-    classes = fileTree("$project.buildDir/intermediates/javac/debug/classes/")
-    sourceDirs = fileTree('src/main/java')
-    auxClassPaths = files()
+    classes.setFrom(fileTree("build/intermediates/javac/debug/classes/"))
+    source.setFrom(fileTree("src/main/java"))
+    classpath.setFrom(files())
 
     projectName = project.name
     release = VERSION_NAME
-    reports {
-        html {
-            enabled = true
-            destination = file("$buildDir/reports/spotbugs/main/spotbugs.html")
-            stylesheet = 'fancy-hist.xsl'
-        }
-    }
+    reports.html.required = true
+    reports.html.outputLocation = project.layout.buildDirectory.file("reports/spotbugs/main/spotbugs.html").get().asFile
+    reports.html.stylesheet = 'fancy-hist.xsl'
 }
 
 jacoco {
     toolVersion = '0.8.6'
 }
 
-android.testOptions {
-    unitTests.all {
-        jacoco {
-            destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
-            classDumpDir = file("$buildDir/jacoco/classpathdumps")
-        }
-    }
-}
+tasks.register("jacocoTestReport", JacocoReport) {
+    dependsOn "test"
 
-task jacocoTestReport(type: JacocoReport, dependsOn: 'test') {
     reports {
-        xml.enabled false
-        csv.enabled false
-        html.enabled true
-        html.destination file("${buildDir}/jacocoHtml")
+        xml.required.set(false)
+        csv.required.set(false)
+        html.required.set(true)
+        html.outputLocation.set(project.layout.buildDirectory.dir("jacocoHtml"))
     }
 }
 // adds checkstyle task to existing check task
 afterEvaluate {
-    if (project.tasks.getByName("check")) {
-        check.dependsOn('checkstyleMain')
-        check.dependsOn('spotbugsMain')
+    if (tasks.named("check")) {
+        check.dependsOn("checkstyleMain")
+        check.dependsOn("spotbugsMain")
     }
 }
