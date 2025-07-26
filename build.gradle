@@ -5,20 +5,10 @@ buildscript {
         }
     }
     dependencies {
-        classpath "de.marcphilipp.gradle:nexus-publish-plugin:0.4.0"
-        classpath "io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.21.2"
+        classpath "com.vanniktech:gradle-maven-publish-plugin:0.33.0"
         classpath "com.github.spotbugs.snom:spotbugs-gradle-plugin:4.8.0"
         classpath "com.palantir.gradle.revapi:gradle-revapi:1.8.0"
     }
-}
-
-apply plugin: 'io.codearte.nexus-staging'
-nexusStaging {
-    packageGroup = GROUP
-    username = System.getenv('NEXUS_USERNAME')
-    password = System.getenv('NEXUS_PASSWORD')
-    numberOfRetries = 180
-    delayBetweenRetriesInMillis = 3000
 }
 
 allprojects {
