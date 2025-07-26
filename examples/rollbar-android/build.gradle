@@ -4,13 +4,14 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.4.2'
+        classpath 'com.android.tools.build:gradle:8.6.0'
     }
 }
 
 apply plugin: 'com.android.application'
 
 android {
+    namespace 'com.rollbar.examples.android'
     compileSdkVersion = 33
     defaultConfig {
         applicationId "com.rollbar.example.android"
