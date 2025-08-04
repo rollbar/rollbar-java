@@ -33,7 +33,7 @@ jobs:
       matrix:
         # Must upgrade Gradle before we can go past Java 15 here.
         # https://docs.gradle.org/current/userguide/compatibility.html
-        java: [ 8, 11 ]
+        java: [ 11, 17 ]
     steps:
       - uses: actions/checkout@v4
 
@@ -60,13 +60,44 @@ jobs:
           echo ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT}
 
       - name: Build
-        run: ./gradlew clean build
+        run: ./gradlew clean build --no-daemon
 
       - name: Upload build reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: java-${{ matrix.java }}-build-reports
+          path: |
+            **/build/reports/*
+
+  build-android:
+    runs-on: ubuntu-22.04
+    name: Build Android module with Java 17
+    needs: [ validation ]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch git tags
+        run: ./.github/scripts/fetch_to_tag.sh
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'zulu'
+          cache: 'gradle'
+
+      - name: Install Android SDK
+        run: |
+          ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" "build-tools;34.0.0"
+
+      - name: Build Android module
+        run: ./gradlew :rollbar-android:build
+
+      - name: Upload Android build reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-java17-build-reports
           path: |
             **/build/reports/*
 
@@ -77,26 +108,20 @@ jobs:
     # faster and have less duplicated Yaml, it would not be possible to check
     # for all matrix results before publishing if this were just another step
     # in that job.
-    needs: [ build ]
+    needs: [ build, build-android ]
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Java 11 for the Android SDK Manager
-        uses: actions/setup-java@v1
+      - name: Set up Java 17 for Android
+        uses: actions/setup-java@v4
         with:
-          java-version: 11
+          java-version: 17
+          distribution: 'zulu'
+          cache: 'gradle'
 
       - name: Install Android SDK
         run: |
-          echo "Android SDK Manager version: `${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --version`"
-          ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "platforms;android-27" "build-tools;28.0.3"
-
-      - name: Set up Java 8 for the build
-        uses: actions/setup-java@v4
-        with:
-          java-version: 8
-          distribution: 'zulu'
-          cache: 'gradle'
+          ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" "build-tools;34.0.0"
 
       - name: Release
         env:

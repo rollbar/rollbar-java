@@ -58,9 +58,10 @@ include(
 )
 
 val isJava8 = JavaVersion.current() == JavaVersion.VERSION_1_8
+val isJava11 = JavaVersion.current() == JavaVersion.VERSION_11
 
-if (isJava8) {
-    println("Java 8 detected: excluding :rollbar-android and :examples:rollbar-android")
+if (isJava8 || isJava11) {
+    println("Java 8 or 11 detected: excluding :rollbar-android and :examples:rollbar-android")
 } else {
     println("Java ${JavaVersion.current()} detected: including Android modules")
     include(":rollbar-android", ":examples:rollbar-android")
