@@ -3,7 +3,7 @@ plugins {
     //id("com.rollbar.conventions.release") //TODO: AGP not applied, don't know why
 }
 
-apply(from = "$rootDir/gradle/android.quality.gradle") //TODO: Update as convention plugin
+//apply(from = "$rootDir/gradle/android.quality.gradle") //TODO: Update as convention plugin
 
 android {
     namespace = "com.rollbar.android"
