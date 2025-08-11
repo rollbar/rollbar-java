@@ -6,51 +6,56 @@ class RollbarPublishPlugin : Plugin<Project> {
     override fun apply(project: Project) {
 
         project.pluginManager.withPlugin("com.android.library") {
-            //TODO apply vanniktech plugin
+            applyPlugin(project)
         }
 
         project.plugins.withId("java-library") {
-            project.plugins.apply("com.vanniktech.maven.publish")
+            applyPlugin(project)
+        }
 
-            project.extensions.configure(MavenPublishBaseExtension::class.java) {
-                pom {
-                    name.set(project.findProperty("POM_NAME") as String)
-                    description.set(project.findProperty("POM_DESCRIPTION") as String)
-                    url.set(project.findProperty("POM_URL") as String)
+    }
 
-                    licenses {
-                        license {
-                            name.set(project.findProperty("POM_LICENCE_NAME") as String)
-                            url.set(project.findProperty("POM_LICENCE_URL") as String)
-                            distribution.set(project.findProperty("POM_LICENCE_DIST") as String)
-                        }
-                    }
+    private fun applyPlugin(project: Project) {
+        project.plugins.apply("com.vanniktech.maven.publish")
 
-                    developers {
-                        developer {
-                            id.set("rokob")
-                            name.set("Andrew Weiss")
-                        }
-                        developer {
-                            id.set("basoko")
-                            name.set("David Basoco")
-                        }
-                        developer {
-                            id.set("diegov")
-                            name.set("Diego Veralli")
-                        }
-                    }
+        project.extensions.configure(MavenPublishBaseExtension::class.java) {
+            pom {
+                name.set(project.findProperty("POM_NAME") as String)
+                description.set(project.findProperty("POM_DESCRIPTION") as String)
+                url.set(project.findProperty("POM_URL") as String)
 
-                    scm {
-                        url.set(project.findProperty("POM_SCM_URL") as String)
-                        connection.set(project.findProperty("POM_SCM_CONNECTION") as String)
-                        developerConnection.set(project.findProperty("POM_SCM_DEV_CONNECTION") as String)
+                licenses {
+                    license {
+                        name.set(project.findProperty("POM_LICENCE_NAME") as String)
+                        url.set(project.findProperty("POM_LICENCE_URL") as String)
+                        distribution.set(project.findProperty("POM_LICENCE_DIST") as String)
                     }
                 }
 
-                publishToMavenCentral()
-                signAllPublications()
+                developers {
+                    developer {
+                        id.set("rokob")
+                        name.set("Andrew Weiss")
+                    }
+                    developer {
+                        id.set("basoko")
+                        name.set("David Basoco")
+                    }
+                    developer {
+                        id.set("diegov")
+                        name.set("Diego Veralli")
+                    }
+                }
+
+                scm {
+                    url.set(project.findProperty("POM_SCM_URL") as String)
+                    connection.set(project.findProperty("POM_SCM_CONNECTION") as String)
+                    developerConnection.set(project.findProperty("POM_SCM_DEV_CONNECTION") as String)
+                }
             }
+
+            publishToMavenCentral()
+            signAllPublications()
         }
     }
 }

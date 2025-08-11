@@ -6,12 +6,12 @@ spotbugs = "4.8.0"
 revapi = "1.8.0"
 
 [plugins]
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 vanniktech = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech" }
 spotbugs = { id = "com.github.spotbugs", version.ref = "spotbugs" }
 revapi = { id = "com.palantir.revapi", version.ref = "revapi" }
-android-library = { id = "com.android.library", version.ref = "agp" }
-java-library = { id = "java-library" }
+androidLibrary = { id = "com.android.library", version.ref = "agp" }
+javaLibrary = { id = "java-library" }
 
 [libraries]
 junit = { group = "junit", name = "junit", version = "4.13.2" }

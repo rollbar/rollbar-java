@@ -1,6 +1,6 @@
 plugins {
-    id("com.android.library") version "8.6.0"
-    //id("com.rollbar.conventions.release") //TODO: AGP not applied, don't know why
+    id("com.android.library")
+    id("com.rollbar.conventions.release")
 }
 
 //apply(from = "$rootDir/gradle/android.quality.gradle") //TODO: Update as convention plugin
