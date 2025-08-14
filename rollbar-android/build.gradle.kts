@@ -36,8 +36,8 @@ android {
 dependencies {
     api(project(":rollbar-java"))
 
-    testImplementation("junit:junit:4.12")
+    testImplementation("junit:junit:4.13.1")
     testImplementation("org.hamcrest:hamcrest-all:1.3")
-    testImplementation("org.mockito:mockito-core:2.28.2")
-    androidTestImplementation("org.mockito:mockito-android:+")
+    testImplementation("org.mockito:mockito-core:5.18.0")
+    androidTestImplementation("org.mockito:mockito-android:5.18.0")
 }

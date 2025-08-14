@@ -48,7 +48,7 @@ subprojects {
     dependencies {
         add("testImplementation", "junit:junit:4.13.2")
         add("testImplementation", "org.hamcrest:hamcrest-all:1.3")
-        add("testImplementation", "org.mockito:mockito-core:3.8.0")
+        add("testImplementation", "org.mockito:mockito-core:5.18.0")
     }
 
     tasks.withType<JavaCompile>().configureEach {
