@@ -33,7 +33,7 @@ val versionName = project.version.toString().ifEmpty { "unspecified" }
  * are not as reliable under relocation as a strongly typed bytecode reference to a compiled class.
  */
 val createVersionClass by tasks.registering {
-    val outputDir = layout.buildDirectory.dir("src/generated/main")
+    val outputDir = layout.buildDirectory.dir("generated/sources/version/java/main")
     outputs.dir(outputDir)
 
     doLast {
@@ -63,7 +63,7 @@ sourceSets {
     }
 }
 
-tasks.named("compileJava") {
+tasks.withType<JavaCompile>().configureEach {
     dependsOn(createVersionClass)
 }
 
@@ -71,7 +71,7 @@ tasks.named("checkstyleMain") {
     dependsOn(createVersionClass)
 }
 
-//Ensure sourcesJar runs after version class is created
+// Ensure sourcesJar runs after version class is created
 tasks.withType<Jar>().configureEach {
     if (name == "sourcesJar") {
         dependsOn(createVersionClass)
@@ -79,6 +79,7 @@ tasks.withType<Jar>().configureEach {
 }
 
 tasks.test {
+    dependsOn(createVersionClass)
     // This helps us test the VersionHelper class since there's no jar manifest available when
     // running tests.
     systemProperty("ROLLBAR_IMPLEMENTATION_VERSION", versionName)
