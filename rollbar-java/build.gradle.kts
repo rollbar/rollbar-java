@@ -1,4 +1,5 @@
 import java.io.File
+import org.gradle.api.tasks.testing.Test
 
 plugins {
     id("com.netflix.nebula.integtest") version "10.0.1"
@@ -36,6 +37,8 @@ val createVersionClass by tasks.registering {
     val outputDir = layout.buildDirectory.dir("generated/sources/version/java/main")
     outputs.dir(outputDir)
 
+    inputs.property("versionName", versionName)
+
     doLast {
         val pkg = listOf("com", "rollbar", "notifier", "provider", "notifier")
         val pkgName = pkg.joinToString(".")
@@ -63,7 +66,7 @@ sourceSets {
     }
 }
 
-tasks.withType<JavaCompile>().configureEach {
+tasks.named("compileJava") {
     dependsOn(createVersionClass)
 }
 
@@ -71,14 +74,13 @@ tasks.named("checkstyleMain") {
     dependsOn(createVersionClass)
 }
 
-// Ensure sourcesJar runs after version class is created
 tasks.withType<Jar>().configureEach {
     if (name == "sourcesJar") {
         dependsOn(createVersionClass)
     }
 }
 
-tasks.test {
+tasks.named<Test>("test") {
     dependsOn(createVersionClass)
     // This helps us test the VersionHelper class since there's no jar manifest available when
     // running tests.
