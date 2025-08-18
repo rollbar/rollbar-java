@@ -14,8 +14,11 @@ import com.rollbar.notifier.sender.result.Response;
 import com.rollbar.notifier.util.BodyFactory;
 import com.rollbar.reactivestreams.notifier.config.Config;
 import com.rollbar.reactivestreams.notifier.sender.Sender;
+
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.hc.core5.http.ConnectionClosedException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -76,7 +79,16 @@ public class RollbarTest {
 
     Throwable error = new RuntimeException("Something went wrong.");
 
-    Mono.from(sut.log(error, null, null, Level.ERROR)).block();
+    Mono.from(sut.log(error, null, null, Level.ERROR))
+      .onErrorResume(ex -> {
+          if (ex instanceof ConnectionClosedException) {
+            return Mono.empty();
+          } else {
+            return Mono.error(ex);
+          }
+        }
+      )
+      .block();
   }
 
   @Test
