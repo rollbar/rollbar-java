@@ -11,7 +11,7 @@ buildscript {
 apply plugin: 'com.android.application'
 
 android {
-    namespace 'com.rollbar.examples.android'
+    namespace 'com.rollbar.example.android'
     compileSdkVersion = 33
     defaultConfig {
         applicationId "com.rollbar.example.android"
