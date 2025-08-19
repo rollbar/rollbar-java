@@ -38,13 +38,9 @@ elif [[ -z $VERSION ]]; then
 elif ! [[ $VERSION =~ $SEMVER_REGEX ]]; then
   echo "Skipping release. Bad version used."
 else
-
-  if [[ ${BASH_REMATCH[5]} == 'SNAPSHOT' ]]; then
-    echo "Doing SNAPSHOT release..."
-    ./gradlew -Dorg.gradle.internal.http.socketTimeout=300000 -Dorg.gradle.internal.http.connectionTimeout=300000 publishToSonatype
-  else
-    echo "Doing release..."
-    ./gradlew -Dorg.gradle.internal.http.socketTimeout=300000 -Dorg.gradle.internal.http.connectionTimeout=300000 publishToSonatype closeAndReleaseRepository
-  fi
+  echo "Doing release with Vanniktech Maven Publish plugin..."
+  ./gradlew -Dorg.gradle.internal.http.socketTimeout=300000 \
+            -Dorg.gradle.internal.http.connectionTimeout=300000 \
+            publish
   echo "Release done!"
 fi

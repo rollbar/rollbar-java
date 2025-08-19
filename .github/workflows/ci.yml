@@ -6,9 +6,9 @@ on:
         required: true
       RELEASE_GPG_PRIVATE_KEY_PASSPHRASE:
         required: true
-      NEXUS_USERNAME:
+      MAVENCENTRAL_USERNAME:
         required: true
-      NEXUS_PASSWORD:
+      MAVENCENTRAL_PASSWORD:
         required: true
   push:
     branches: [ master ]
@@ -123,11 +123,16 @@ jobs:
         run: |
           ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" "build-tools;34.0.0"
 
+      - name: Configure Gradle properties
+        run: |
+          mkdir -p ~/.gradle
+          cat <<EOF >> ~/.gradle/gradle.properties
+          mavenCentralUsername=${{ secrets.MAVENCENTRAL_USERNAME }}
+          mavenCentralPassword=${{ secrets.MAVENCENTRAL_PASSWORD }}
+          signing.password=${{ secrets.RELEASE_GPG_PRIVATE_KEY_PASSPHRASE }}
+          signing.key=${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
+          EOF
+
       - name: Release
-        env:
-          RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
-          RELEASE_GPG_PRIVATE_KEY_PASSPHRASE: ${{ secrets.RELEASE_GPG_PRIVATE_KEY_PASSPHRASE }}
-          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
-          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
         run: |
           ./.github/scripts/release.sh
