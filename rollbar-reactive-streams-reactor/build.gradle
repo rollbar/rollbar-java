@@ -75,4 +75,9 @@ interleave {
     }
 }
 
+test {
+    useJUnitPlatform()
+    jvmArgs '-XX:+AllowRedefinitionToAddDeleteMethods'
+}
+
 project.tasks.check.dependsOn(interleave)
