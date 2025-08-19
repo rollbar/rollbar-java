@@ -5,9 +5,7 @@ import static com.rollbar.reactivestreams.notifier.config.ConfigBuilder.withConf
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import com.rollbar.api.payload.data.Level;
 import com.rollbar.notifier.sender.result.Response;
@@ -18,7 +16,6 @@ import com.rollbar.reactivestreams.notifier.sender.Sender;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.hc.core5.http.ConnectionClosedException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -73,22 +70,15 @@ public class RollbarTest {
 
   @Test
   public void shouldNotThrowExceptionWithEmptyConfig() {
-    Config config = withAccessToken("access_token").build();
+    Sender mockSender = mock(Sender.class);
+    when(mockSender.send(any())).thenReturn(Mono.empty());
+    Config config = withAccessToken("access_token").sender(mockSender).build();
 
     Rollbar sut = new Rollbar(config);
 
     Throwable error = new RuntimeException("Something went wrong.");
 
-    Mono.from(sut.log(error, null, null, Level.ERROR))
-      .onErrorResume(ex -> {
-          if (ex instanceof ConnectionClosedException) {
-            return Mono.empty();
-          } else {
-            return Mono.error(ex);
-          }
-        }
-      )
-      .block();
+    Mono.from(sut.log(error, null, null, Level.ERROR)).block();
   }
 
   @Test
