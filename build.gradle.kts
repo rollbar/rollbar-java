@@ -21,12 +21,16 @@ subprojects {
     val isExample = name.contains("examples") || parent?.name == "examples"
     val isAndroid = name.contains("android")
 
-    if (isExample || isAndroid) {
+    if (isExample) {
+        return@subprojects
+    }
+
+    apply(plugin = "com.rollbar.conventions.release")
+    if (isAndroid) {
         return@subprojects
     }
 
     apply(plugin = "java-library")
-    apply(plugin = "com.rollbar.conventions.release")
     apply(from = "$rootDir/gradle/quality.gradle")
     apply(from = "$rootDir/gradle/compatibility.gradle")
 

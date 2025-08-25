@@ -1,9 +1,8 @@
 plugins {
     id("com.android.library")
-    id("com.rollbar.conventions.release")
 }
 
-//apply(from = "$rootDir/gradle/android.quality.gradle") //TODO: Update as convention plugin
+apply(from = "$rootDir/gradle/android.quality.gradle")
 
 android {
     namespace = "com.rollbar.android"

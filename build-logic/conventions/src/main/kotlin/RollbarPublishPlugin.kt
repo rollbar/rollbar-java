@@ -19,6 +19,12 @@ class RollbarPublishPlugin : Plugin<Project> {
         project.plugins.apply("com.vanniktech.maven.publish")
 
         project.extensions.configure(MavenPublishBaseExtension::class.java) {
+            coordinates(
+                groupId = project.findProperty("GROUP") as String,
+                artifactId = project.name,
+                version = project.findProperty("VERSION_NAME") as String,
+            )
+
             pom {
                 name.set(project.findProperty("POM_NAME") as String)
                 description.set(project.findProperty("POM_DESCRIPTION") as String)
@@ -55,7 +61,6 @@ class RollbarPublishPlugin : Plugin<Project> {
             }
 
             publishToMavenCentral()
-            signAllPublications()
         }
     }
 }
