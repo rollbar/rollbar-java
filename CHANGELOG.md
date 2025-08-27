@@ -1,5 +1,15 @@
 # Change Log
 
+# 2.1.0-alpha.1
+
+### Build
+- Solve security issues in native agent [#328](https://github.com/rollbar/rollbar-java/pull/328)
+- Bump android target sdk to 33 [#339](https://github.com/rollbar/rollbar-java/pull/339)
+
+### Feat
+- Add threads information to payload [#327](https://github.com/rollbar/rollbar-java/pull/327)
+- Add ANR report [#323](https://github.com/rollbar/rollbar-java/pull/323)
+
 # 2.0.0
 
 - Switching to full release
