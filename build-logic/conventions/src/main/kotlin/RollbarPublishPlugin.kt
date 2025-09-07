@@ -61,6 +61,7 @@ class RollbarPublishPlugin : Plugin<Project> {
             }
 
             publishToMavenCentral()
+            signAllPublications()
         }
     }
 }
