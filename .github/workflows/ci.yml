@@ -123,14 +123,19 @@ jobs:
         run: |
           ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" "build-tools;34.0.0"
 
-      - name: Configure Gradle properties
+      - name: Import GPG key file
         run: |
           mkdir -p ~/.gradle
+          echo "${{ secrets.RELEASE_GPG_SECRING_BASE_64 }}" | base64 --decode > ~/.gradle/secring.gpg
+
+      - name: Configure Gradle properties
+        run: |
           cat <<EOF >> ~/.gradle/gradle.properties
           mavenCentralUsername=${{ secrets.MAVENCENTRAL_USERNAME }}
           mavenCentralPassword=${{ secrets.MAVENCENTRAL_PASSWORD }}
           signing.password=${{ secrets.RELEASE_GPG_PRIVATE_KEY_PASSPHRASE }}
-          signing.key=${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
+          signing.keyId=${{ secrets.RELEASE_GPG_KEY_ID }}
+          signing.secretKeyRingFile=/home/runner/.gradle/secring.gpg
           EOF
 
       - name: Release
