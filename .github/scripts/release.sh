@@ -39,8 +39,6 @@ elif ! [[ $VERSION =~ $SEMVER_REGEX ]]; then
   echo "Skipping release. Bad version used."
 else
   echo "Doing release with Vanniktech Maven Publish plugin..."
-  ./gradlew -Dorg.gradle.internal.http.socketTimeout=300000 \
-            -Dorg.gradle.internal.http.connectionTimeout=300000 \
-            publish
+  ./gradlew publishAndReleaseToMavenCentral --no-daemon --stacktrace
   echo "Release done!"
 fi
