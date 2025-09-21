@@ -14,28 +14,27 @@ spotbugs {
     includeFilter = file("$rootDir/tools/findbugs/findbugs.xml")
 }
 
-tasks.withType(Checkstyle) {
+tasks.withType(Checkstyle).configureEach {
     reports {
-        xml.enabled false
-        html.enabled true
+        xml.required.set(false)
+        html.required.set(true)
     }
-}
-
-spotbugsMain {
-    reports {
-        html {
-            enabled = true
-            destination = file("$buildDir/reports/spotbugs/main/spotbugs.html")
-            stylesheet = 'fancy-hist.xsl'
-        }
-    }
-}
-spotbugsTest {
-    enabled = false
 }
 
 afterEvaluate {
-    if (project.tasks.findByPath("spotbugsIntegTest") != null) {
+    tasks.matching { it.class.name == "com.github.spotbugs.snom.SpotBugsTask" }.configureEach {
+        reports {
+            html.required.set(true)
+            html.stylesheet = 'fancy-hist.xsl'
+            html.outputLocation.set(file("$buildDir/reports/spotbugs/${name}/spotbugs.html"))
+        }
+    }
+
+    spotbugsTest{
+        enabled = false
+    }
+
+    if (tasks.findByName("spotbugsIntegTest") != null) {
         spotbugsIntegTest {
             enabled = false
         }

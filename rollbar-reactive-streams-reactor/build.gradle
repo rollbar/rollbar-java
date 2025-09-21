@@ -75,4 +75,11 @@ interleave {
     }
 }
 
+test {
+    useJUnitPlatform()
+    if (JavaVersion.current() == JavaVersion.VERSION_17) {
+        jvmArgs("-XX:+AllowRedefinitionToAddDeleteMethods")
+    }
+}
+
 project.tasks.check.dependsOn(interleave)

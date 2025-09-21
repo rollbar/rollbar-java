@@ -22,7 +22,7 @@ import org.mockito.junit.MockitoRule;
 public class FilterPipelineTest {
 
   @Rule
-  public MockitoRule rule = new MockitoJUnit().rule();
+  public MockitoRule rule = MockitoJUnit.rule();
 
   @Test
   public void shouldCallFiltersInOrderForPreProcess() {

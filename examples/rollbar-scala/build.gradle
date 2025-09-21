@@ -20,5 +20,5 @@ applicationDefaultJvmArgs = [
 dependencies {
     implementation project(":rollbar-java")
 
-    implementation "org.scala-lang:scala-library:2.12.4"
+    implementation "org.scala-lang:scala-library:2.13.14"
 }

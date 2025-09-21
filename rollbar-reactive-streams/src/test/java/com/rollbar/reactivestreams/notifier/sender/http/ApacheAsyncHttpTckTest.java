@@ -4,10 +4,11 @@ import org.apache.hc.client5.http.async.HttpAsyncClient;
 import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
 import org.apache.hc.core5.concurrent.FutureCallback;
 import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
-import org.mockito.testng.MockitoSettings;
-import org.mockito.testng.MockitoTestNGListener;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.tck.PublisherVerification;
 import org.reactivestreams.tck.TestEnvironment;
@@ -24,19 +25,16 @@ import java.util.function.Function;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 
-// The reactivestreams TCK tests use TestNG but its class scanning doesn't work if the annotations are only
-// present in the base class, we need at least one TestNG annotation on the derived class.
 @Test
-@Listeners(MockitoTestNGListener.class)
 // The structure of the suite is that we just provide the publisher, and the TCK tests control the entire flow,
 // so we don't really care if they call our stubbed methods or not.
-@MockitoSettings(strictness = Strictness.LENIENT)
 public class ApacheAsyncHttpTckTest extends PublisherVerification<SimpleHttpResponse> {
   @Mock
   private HttpAsyncClient client;
   private ScheduledExecutorService executor;
 
   private final String url = "ignored";
+  private MockitoSession mockitoSession;
 
   public ApacheAsyncHttpTckTest() {
     super(new TestEnvironment(1000, 1000));
@@ -45,12 +43,21 @@ public class ApacheAsyncHttpTckTest extends PublisherVerification<SimpleHttpResp
   @BeforeMethod
   public void setUp() throws Exception {
     super.setUp();
+
+    mockitoSession = Mockito.mockitoSession()
+    .initMocks(this)
+    .strictness(Strictness.LENIENT)
+    .startMocking();
+
     executor = Executors.newSingleThreadScheduledExecutor();
   }
 
   @AfterMethod
   public void tearDown() {
     executor.shutdown();
+    if (mockitoSession != null) {
+      mockitoSession.finishMocking();
+    }
   }
 
   @Override
