@@ -271,6 +271,8 @@ public class Rollbar implements Closeable {
       Log.w(TAG, "Rollbar.init() called when it was already initialized.");
     } else {
       notifier = new Rollbar(context, null, null, true, false, provider);
+      AndroidConfiguration androidConfiguration = makeDefaultAndroidConfiguration();
+      initAnrDetector(context, androidConfiguration);
     }
     return notifier;
   }
