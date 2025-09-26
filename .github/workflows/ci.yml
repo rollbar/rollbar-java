@@ -15,7 +15,6 @@ on:
   pull_request:
     branches: [ master ]
 
-
 jobs:
   validation:
     name: Gradle wrapper validation
@@ -31,8 +30,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Must upgrade Gradle before we can go past Java 15 here.
-        # https://docs.gradle.org/current/userguide/compatibility.html
         java: [ 11, 17 ]
     steps:
       - uses: actions/checkout@v4
@@ -102,6 +99,7 @@ jobs:
             **/build/reports/*
 
   release:
+    if: github.event_name == 'release'
     runs-on: ubuntu-22.04
     name: Release
     # It would be nice to run this as part of the build job, since it would be
