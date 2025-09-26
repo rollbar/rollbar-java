@@ -2,7 +2,7 @@ plugins {
     id("com.android.library")
 }
 
-//apply(from = "$rootDir/gradle/android.quality.gradle") TODO: use the plugin
+apply(from = "$rootDir/gradle/android.quality.gradle")
 
 android {
     namespace = "com.rollbar.android"
