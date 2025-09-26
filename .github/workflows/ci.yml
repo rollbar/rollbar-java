@@ -14,7 +14,8 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-
+  release:
+    types: [published]
 
 jobs:
   validation:
@@ -31,8 +32,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Must upgrade Gradle before we can go past Java 15 here.
-        # https://docs.gradle.org/current/userguide/compatibility.html
         java: [ 11, 17 ]
     steps:
       - uses: actions/checkout@v4
