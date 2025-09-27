@@ -1,10 +1,12 @@
 import com.github.spotbugs.snom.Confidence
 import com.github.spotbugs.snom.Effort
+import com.github.spotbugs.snom.SpotBugsExtension
 import com.github.spotbugs.snom.SpotBugsTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.quality.Checkstyle
 import org.gradle.api.plugins.quality.CheckstyleExtension
+import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
 import org.gradle.testing.jacoco.tasks.JacocoReport
 
 class AndroidQualityPlugin : Plugin<Project> {
@@ -16,11 +18,12 @@ class AndroidQualityPlugin : Plugin<Project> {
             pluginManager.apply("jacoco")
 
             extensions.configure(CheckstyleExtension::class.java) {
+                toolVersion = "8.2"
                 configFile = rootProject.file("tools/checkstyle/google_checks.xml")
             }
 
             tasks.register("checkstyleMain", Checkstyle::class.java) {
-                source("src")
+                source = fileTree("src/main/java")
                 include("**/*.java")
                 exclude("**/gen/**", "**/*Test.java", "**/annotation/*.java")
                 classpath = files()
@@ -31,7 +34,8 @@ class AndroidQualityPlugin : Plugin<Project> {
                 isIgnoreFailures = true
             }
 
-            extensions.configure<com.github.spotbugs.snom.SpotBugsExtension>("spotbugs") {
+            extensions.configure(SpotBugsExtension::class.java) {
+                toolVersion.set("6.3.0")
                 includeFilter.set(rootProject.file("tools/findbugs/findbugs.xml"))
             }
 
@@ -51,12 +55,12 @@ class AndroidQualityPlugin : Plugin<Project> {
 
                 reports.create("html") {
                     required.set(true)
-                    outputLocation.set(layout.buildDirectory.file("reports/spotbugs/main/spotbugs.html").get().asFile)
+                    outputLocation.set(layout.buildDirectory.file("reports/spotbugs/main/spotbugs.html"))
                     setStylesheet("fancy-hist.xsl")
                 }
             }
 
-            extensions.configure<org.gradle.testing.jacoco.plugins.JacocoPluginExtension>("jacoco") {
+            extensions.configure(JacocoPluginExtension::class.java) {
                 toolVersion = "0.8.6"
             }
 
