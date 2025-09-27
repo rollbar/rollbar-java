@@ -1,8 +1,7 @@
 plugins {
     id("com.android.library")
+    id("com.rollbar.android.quality")
 }
-
-//apply(from = "$rootDir/gradle/android.quality.gradle") TODO: use the plugin
 
 android {
     namespace = "com.rollbar.android"
@@ -22,7 +21,7 @@ android {
         }
         getByName("debug") {
             enableUnitTestCoverage = true
-            enableAndroidTestCoverage = true
+            enableAndroidTestCoverage = false
         }
     }
 
