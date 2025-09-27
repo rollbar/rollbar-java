@@ -1,8 +1,7 @@
 plugins {
     id("com.android.library")
+    id("com.rollbar.android.quality")
 }
-
-apply(from = "$rootDir/gradle/android.quality.gradle")
 
 android {
     namespace = "com.rollbar.android"
