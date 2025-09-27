@@ -21,7 +21,7 @@ android {
         }
         getByName("debug") {
             enableUnitTestCoverage = true
-            enableAndroidTestCoverage = true
+            enableAndroidTestCoverage = false
         }
     }
 
