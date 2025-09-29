@@ -10,12 +10,12 @@ repositories {
 dependencies {
     api(project(":rollbar-java"))
     api("org.reactivestreams:reactive-streams:1.0.3")
-    compileOnly("org.apache.httpcomponents.client5:httpclient5:5.0.3")
+    compileOnly("org.apache.httpcomponents.client5:httpclient5:5.5.1")
 
     testImplementation("org.reactivestreams:reactive-streams-tck:1.0.4")
     testImplementation("org.mockito:mockito-core:5.13.0")
     testImplementation("org.testng:testng:7.10.2")
-    testImplementation("org.apache.httpcomponents.client5:httpclient5:5.0.3")
+    testImplementation("org.apache.httpcomponents.client5:httpclient5:5.5.1")
     testImplementation("org.apache.commons:commons-lang3:3.12.0")
     testImplementation("com.google.code.gson:gson:2.8.2")
 
