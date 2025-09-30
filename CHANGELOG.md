@@ -1,5 +1,14 @@
 # Change Log
 
+# 2.1.0-alpha.2
+
+### Build
+- Update release flow [#348](https://github.com/rollbar/rollbar-java/pull/348)
+- Update Android quality plugin [#349](https://github.com/rollbar/rollbar-java/pull/349)
+
+### Fix
+- Add ANR detector missing initialization [#346](https://github.com/rollbar/rollbar-java/pull/346)
+
 # 2.1.0-alpha.1
 
 ### Build
