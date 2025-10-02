@@ -26,13 +26,14 @@ if [[ "$GITHUB_BASE_REF" != "" ]]; then
 fi
 
 EXPECTED_REF="refs/heads/${BRANCH}"
+EXPECTED_TAG_REF_REGEX="^refs/tags/v.*$"
 
 if [[ "$GITHUB_REPOSITORY" != "$REPO" ]]; then
   echo "Skipping release: wrong repository. Expected '$REPO' but was '$GITHUB_REPOSITORY'."
 elif [[ "$IS_PULL_REQUEST" != "false" ]]; then
   echo "Skipping release. It was pull request."
-elif [[ "$GITHUB_REF" != "$EXPECTED_REF" ]]; then
-  echo "Skipping release. Expected '$EXPECTED_REF' but was '$GITHUB_REF'."
+elif [[ "$GITHUB_REF" != "$EXPECTED_REF" && ! "$GITHUB_REF" =~ $EXPECTED_TAG_REF_REGEX ]]; then
+  echo "Skipping release. Expected '$EXPECTED_REF' or a version tag, but was '$GITHUB_REF'."
 elif [[ -z $VERSION ]]; then
   echo "Skipping release. Version value not found."
 elif ! [[ $VERSION =~ $SEMVER_REGEX ]]; then
