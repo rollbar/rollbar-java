@@ -17,7 +17,7 @@ public class AndroidConfiguration {
   public static final class Builder {
     private AnrConfiguration anrConfiguration;
 
-    Builder() {
+    public Builder() {
       anrConfiguration = new AnrConfiguration.Builder().build();
     }
 
