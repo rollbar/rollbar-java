@@ -1,5 +1,10 @@
 # Change Log
 
+# 2.1.0-alpha.3
+
+### Fix
+- Set AndroidConfiguration Builder visibility as public [#354](https://github.com/rollbar/rollbar-java/pull/354)
+
 # 2.1.0-alpha.2
 
 ### Build
