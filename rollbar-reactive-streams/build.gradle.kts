@@ -17,7 +17,7 @@ dependencies {
     testImplementation("org.testng:testng:7.10.2")
     testImplementation("org.apache.httpcomponents.client5:httpclient5:5.5.1")
     testImplementation("org.apache.commons:commons-lang3:3.12.0")
-    testImplementation("com.google.code.gson:gson:2.8.2")
+    testImplementation("com.google.code.gson:gson:2.13.2")
 
     testImplementation(platform("io.projectreactor:reactor-bom:2020.0.6"))
     testImplementation("io.projectreactor:reactor-core")
@@ -27,7 +27,7 @@ dependencies {
     testImplementation(project(path = ":rollbar-java", configuration = "integTestArtifacts"))
 
     integTestImplementation("com.github.tomakehurst:wiremock-jre8:2.27.2")
-    integTestImplementation("com.google.code.gson:gson:2.8.2")
+    integTestImplementation("com.google.code.gson:gson:2.13.2")
 }
 
 // The reactive streams TCK tests use TestNG
