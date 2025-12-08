@@ -36,6 +36,6 @@ dependencies {
 
     testImplementation("junit:junit:4.13.1")
     testImplementation("org.hamcrest:hamcrest-all:1.3")
-    testImplementation("org.mockito:mockito-core:5.18.0")
-    androidTestImplementation("org.mockito:mockito-android:5.18.0")
+    testImplementation("org.mockito:mockito-core:5.20.0")
+    androidTestImplementation("org.mockito:mockito-android:5.20.0")
 }
