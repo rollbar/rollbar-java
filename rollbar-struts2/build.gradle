@@ -1,8 +1,5 @@
-ext {
-    struts2Version = '2.5.25'
-}
-
 dependencies {
     api project(":rollbar-web")
-    implementation 'org.apache.struts:struts2-core:' + struts2Version
+    //We can't update struts to version 7+ because it uses caffeine version 3+ which remove Java 8
+    implementation 'org.apache.struts:struts2-core:6.8.0'
 }
