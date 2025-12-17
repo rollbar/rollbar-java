@@ -1,5 +1,12 @@
 # Change Log
 
+# 2.1.0
+
+### Fix
+- Switching to full release
+- Bump org.mockito:mockito-android from 5.18.0 to 5.20.0 [#347](https://github.com/rollbar/rollbar-java/pull/347)
+- Bump org.apache.httpcomponents.client5:httpclient5 from 5.0.3 to 5.5.1 [#350](https://github.com/rollbar/rollbar-java/pull/350)
+
 # 2.1.0-alpha.3
 
 ### Fix
