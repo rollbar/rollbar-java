@@ -18,10 +18,10 @@ dependencies {
 
     compileOnly("com.google.code.findbugs:jsr305:3.0.2")
 
-    testImplementation("com.google.code.gson:gson:2.8.6")
+    testImplementation("com.google.code.gson:gson:2.13.2")
 
     "integTestImplementation"("com.github.tomakehurst:wiremock:2.27.0")
-    "integTestImplementation"("com.google.code.gson:gson:2.8.2")
+    "integTestImplementation"("com.google.code.gson:gson:2.13.2")
 }
 
 val versionName = project.version.toString().ifEmpty { "unspecified" }
