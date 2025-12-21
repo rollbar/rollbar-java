@@ -2,6 +2,7 @@ package com.rollbar.android;
 
 import static com.rollbar.android.util.Constants.ROLLBAR_NAMESPACE;
 
+import android.app.Application;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -19,6 +20,7 @@ import com.rollbar.android.provider.ClientProvider;
 import com.rollbar.api.payload.data.TelemetryType;
 import com.rollbar.api.payload.data.body.RollbarThread;
 import com.rollbar.notifier.config.ConfigProvider;
+import com.rollbar.notifier.telemetry.TelemetryEventTracker;
 import com.rollbar.notifier.uncaughtexception.RollbarUncaughtExceptionHandler;
 import com.rollbar.android.provider.NotifierProvider;
 import com.rollbar.android.provider.PersonProvider;
@@ -233,6 +235,7 @@ public class Rollbar implements Closeable {
           suspendWhenNetworkIsUnavailable);
       if (androidConfiguration != null) {
         initAnrDetector(context, androidConfiguration);
+        initAutomaticCaptureOfNavigationTelemetryEvents(context, androidConfiguration);
       }
     }
 
@@ -273,6 +276,7 @@ public class Rollbar implements Closeable {
       notifier = new Rollbar(context, null, null, true, false, provider);
       AndroidConfiguration androidConfiguration = makeDefaultAndroidConfiguration();
       initAnrDetector(context, androidConfiguration);
+      initAutomaticCaptureOfNavigationTelemetryEvents(context, androidConfiguration);
     }
     return notifier;
   }
@@ -1171,6 +1175,31 @@ public class Rollbar implements Closeable {
         notifier.log(message, params != null ? Collections.<String, Object>unmodifiableMap(params) : null, Level.lookupByName(level));
       }
     });
+  }
+
+  private static void initAutomaticCaptureOfNavigationTelemetryEvents(
+      Context context,
+      AndroidConfiguration androidConfiguration
+  ) {
+    if (!androidConfiguration.mustCaptureNavigationEvents()) {
+      return;
+    }
+
+    com.rollbar.notifier.Rollbar rollbarNotifier = notifier.rollbar;
+    if (rollbarNotifier == null) {
+      return;
+    }
+
+    TelemetryEventTracker telemetryEventTracker = rollbarNotifier.getTelemetryEventTracker();
+    if (telemetryEventTracker == null) {
+      return;
+    }
+
+    Context appContext = context.getApplicationContext();
+    if (appContext instanceof Application) {
+      Application application = (Application) appContext;
+      application.registerActivityLifecycleCallbacks(new TelemetryNavigationCallbacks(telemetryEventTracker));
+    }
   }
 
   private String loadAccessTokenFromManifest(Context context) throws NameNotFoundException {
