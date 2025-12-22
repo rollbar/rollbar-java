@@ -52,7 +52,7 @@ public class RollbarTelemetryEventTracker implements TelemetryEventTracker {
 
   @Override
   public List<TelemetryEvent> getAll() {
-      return new ArrayList<>(telemetryEvents);
+    return new ArrayList<>(telemetryEvents);
   }
 
   @Override
