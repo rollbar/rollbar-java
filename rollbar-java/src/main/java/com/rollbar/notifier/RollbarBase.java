@@ -345,7 +345,7 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
   protected abstract RESULT sendPayload(C config, Payload payload);
 
   private Body makeBody(ThrowableWrapper error, String description) {
-    List<TelemetryEvent> telemetryEvents = telemetryEventTracker.dump();
+    List<TelemetryEvent> telemetryEvents = telemetryEventTracker.getAll();
     if (telemetryEvents.isEmpty()) {
       return bodyFactory.from(error, description);
     }

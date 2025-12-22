@@ -51,10 +51,8 @@ public class RollbarTelemetryEventTracker implements TelemetryEventTracker {
   }
 
   @Override
-  public List<TelemetryEvent> dump() {
-    List<TelemetryEvent> events = new ArrayList<>(telemetryEvents);
-    telemetryEvents.clear();
-    return events;
+  public List<TelemetryEvent> getAll() {
+    return new ArrayList<>(telemetryEvents);
   }
 
   @Override
