@@ -104,6 +104,14 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
   }
 
   /**
+   * Gives the current TelemetryEventTracker.
+   * @return the {@link TelemetryEventTracker}.
+   */
+  public TelemetryEventTracker getTelemetryEventTracker() {
+    return telemetryEventTracker;
+  }
+
+  /**
    * Replace the configuration of this instance directly.
    *
    * @param config the new configuration.

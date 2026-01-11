@@ -7,6 +7,12 @@ import com.rollbar.api.payload.data.TelemetryType;
 
 import java.util.List;
 
+/**
+ * Collects and manages telemetry events that provide additional runtime
+ * context for error and message payloads.
+ * Telemetry events are typically buffered and cleared after they are
+ * {@link #dump() dumped}.
+ */
 public interface TelemetryEventTracker {
 
   /**
