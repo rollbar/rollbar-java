@@ -50,3 +50,17 @@ acceptedBreaks:
         justification: "This is a binary compatible change, which could only break custom\
       \ implementations of our config interfaces, but those interfaces are not meant\
       \ to be implemented by users"
+  "2.2.0":
+    com.rollbar:rollbar-java:
+      - code: "java.method.removed"
+        new: "method java.util.List<com.rollbar.api.payload.data.TelemetryEvent> com.rollbar.notifier.telemetry.RollbarTelemetryEventTracker::dump()"
+        justification: "This method is replaced by getAll(), the interface is not meant to be\
+          \ implemented by users"
+      - code: "java.method.removed"
+        new: "method java.util.List<com.rollbar.api.payload.data.TelemetryEvent> com.rollbar.notifier.telemetry.TelemetryEventTracker::dump()"
+        justification: "This method is replaced by getAll(), the interface is not meant to be\
+          \ implemented by users"
+      - code: "java.method.addedToInterface"
+        new: "method java.util.List<com.rollbar.api.payload.data.TelemetryEvent> com.rollbar.notifier.telemetry.TelemetryEventTracker::getAll()"
+        justification: "This method replaces dump(), the interface is not meant to be implemented\
+          \ by users"
