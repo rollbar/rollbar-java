@@ -14,9 +14,10 @@ apply plugin: 'com.bmuschko.tomcat'
 dependencies {
     implementation project(":rollbar-struts2")
 
-    implementation 'javax.servlet:javax.servlet-api:3.1.0'
-    implementation 'org.apache.struts:struts2-core:2.5.25'
-    implementation 'org.apache.struts:struts2-spring-plugin:2.5.25'
+    implementation 'javax.servlet:javax.servlet-api:4.0.1'
+    //We can't update struts to version 7+ because it uses caffeine version 3+ which remove Java 8
+    implementation 'org.apache.struts:struts2-core:6.8.0'
+    implementation 'org.apache.struts:struts2-spring-plugin:6.8.0'
 
     def tomcatVersion = '7.0.57'
 
