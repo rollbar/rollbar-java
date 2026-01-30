@@ -1,5 +1,13 @@
 # Change Log
 
+# 2.2.0-alpha.1
+### rollbar-android
+- Automatic capture of navigation telemetry events [#361](https://github.com/rollbar/rollbar-java/pull/361)
+### rollbar-java
+- Fix: Keep telemetry events during session [#362](https://github.com/rollbar/rollbar-java/pull/362)
+### Maintenance
+- Update dependencies [#359](https://github.com/rollbar/rollbar-java/pull/359)
+
 # 2.1.0
 
 ### Fix
