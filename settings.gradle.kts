@@ -66,3 +66,5 @@ if (isJava8 || isJava11) {
     println("Java ${JavaVersion.current()} detected: including Android modules")
     include(":rollbar-android", ":examples:rollbar-android")
 }
+
+include("network-agent")

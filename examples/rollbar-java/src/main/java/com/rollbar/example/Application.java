@@ -3,6 +3,9 @@ package com.rollbar.example;
 import com.rollbar.notifier.Rollbar;
 import com.rollbar.notifier.config.Config;
 import com.rollbar.notifier.config.ConfigBuilder;
+
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -38,6 +41,13 @@ public class Application {
         .build();
     LOGGER.info("Initializing Rollbar");
     this.rollbar = Rollbar.init(config);
+    try {
+      new java.net.URL("https://google.com").openConnection().getInputStream().close();
+
+      new URL("https://google.com").openConnection().connect();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /**
@@ -65,7 +75,7 @@ public class Application {
     ExecutorService executor = Executors.newFixedThreadPool(3);
     List<Callable<Void>> callableTasks = new ArrayList<>();
 
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 2; i++) {
       callableTasks.add(new GreetingTask(i + 1, rollbar, greeting));
     }
 
