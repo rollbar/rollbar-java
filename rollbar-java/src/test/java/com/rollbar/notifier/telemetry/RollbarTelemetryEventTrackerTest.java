@@ -33,12 +33,22 @@ public class RollbarTelemetryEventTrackerTest {
   private static final int MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 100;
 
   @Test
+  public void shouldKeepAllTheEventsDuringSessionIfGetAllIsInvoked() {
+    telemetryEventTracker.recordManualEventFor(LEVEL, SOURCE, MESSAGE);
+
+    List<TelemetryEvent> telemetryEventsFirstCall = telemetryEventTracker.getAll();
+    List<TelemetryEvent> telemetryEventsSecondCall = telemetryEventTracker.getAll();
+
+    assertThat(telemetryEventsFirstCall, is(telemetryEventsSecondCall));
+  }
+
+  @Test
   public void shouldDiscardOldestEventsWhenMaxCapacityIsReached() {
     telemetryEventTracker.recordManualEventFor(LEVEL, SOURCE, MESSAGE);
     telemetryEventTracker.recordLogEventFor(LEVEL, SOURCE, MESSAGE);
     telemetryEventTracker.recordLogEventFor(LEVEL, SOURCE, MESSAGE);
 
-    List<TelemetryEvent> telemetryEvents = telemetryEventTracker.dump();
+    List<TelemetryEvent> telemetryEvents = telemetryEventTracker.getAll();
 
     assertThat(telemetryEvents.size(), is(MAXIMUM_TELEMETRY_DATA));
     verifyContainsOnlyLogEvents(telemetryEvents);
@@ -84,7 +94,7 @@ public class RollbarTelemetryEventTrackerTest {
   public void shouldSetTheMaximumTelemetryDataLimitedToItsLowerLimit() {
     TelemetryEventTracker telemetryEventTracker = newEventTracker(MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS - 1);
 
-    List<TelemetryEvent> telemetryEvents = record70EventsAndDump(telemetryEventTracker);
+    List<TelemetryEvent> telemetryEvents = record101EventsAndDump(telemetryEventTracker);
 
     assertThat(telemetryEvents.size(), is(MINIMUM_CAPACITY_FOR_TELEMETRY_EVENTS));
   }
@@ -93,7 +103,7 @@ public class RollbarTelemetryEventTrackerTest {
   public void shouldSetTheMaximumTelemetryDataLimitedToItsUpperLimit() {
     TelemetryEventTracker telemetryEventTracker = newEventTracker(MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS + 1);
 
-    List<TelemetryEvent> telemetryEvents = record70EventsAndDump(telemetryEventTracker);
+    List<TelemetryEvent> telemetryEvents = record101EventsAndDump(telemetryEventTracker);
 
     assertThat(telemetryEvents.size(), is(MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS));
   }
@@ -103,7 +113,7 @@ public class RollbarTelemetryEventTrackerTest {
     int maximumTelemetryEvents = 20;
     TelemetryEventTracker telemetryEventTracker = newEventTracker(maximumTelemetryEvents);
 
-    List<TelemetryEvent> telemetryEvents = record70EventsAndDump(telemetryEventTracker);
+    List<TelemetryEvent> telemetryEvents = record101EventsAndDump(telemetryEventTracker);
 
     assertThat(telemetryEvents.size(), is(maximumTelemetryEvents));
   }
@@ -115,11 +125,11 @@ public class RollbarTelemetryEventTrackerTest {
     );
   }
 
-  private List<TelemetryEvent> record70EventsAndDump(TelemetryEventTracker telemetryEventTracker) {
-    for (int i = 0; i < 120; i++) {
+  private List<TelemetryEvent> record101EventsAndDump(TelemetryEventTracker telemetryEventTracker) {
+    for (int i = 0; i < 101; i++) {
       telemetryEventTracker.recordManualEventFor(LEVEL, SOURCE, MESSAGE);
     }
-    return telemetryEventTracker.dump();
+    return telemetryEventTracker.getAll();
   }
 
   private Map<String, Object> getTrackedEventAsJson() {
@@ -127,7 +137,7 @@ public class RollbarTelemetryEventTrackerTest {
   }
 
   private TelemetryEvent getFirstEvent() {
-    return telemetryEventTracker.dump().get(0);
+    return telemetryEventTracker.getAll().get(0);
   }
 
   private Map<String, Object> getExpectedJsonForALogTelemetryEvent() {

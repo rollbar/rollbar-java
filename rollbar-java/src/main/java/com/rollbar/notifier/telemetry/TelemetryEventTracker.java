@@ -16,9 +16,9 @@ import java.util.List;
 public interface TelemetryEventTracker {
 
   /**
-   * Dump all the events recorded.
+   * Get all the events recorded.
    */
-  List<TelemetryEvent> dump();
+  List<TelemetryEvent> getAll();
 
   /**
    * Record log telemetry event. ({@link TelemetryType#LOG}).
