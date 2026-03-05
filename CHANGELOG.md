@@ -1,6 +1,10 @@
 # Change Log
 
 # 2.2.0-alpha.1
+
+- Switching to beta release
+
+# 2.2.0-alpha.1
 ### rollbar-android
 - Automatic capture of navigation telemetry events [#361](https://github.com/rollbar/rollbar-java/pull/361)
 ### rollbar-java
