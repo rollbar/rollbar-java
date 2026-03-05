@@ -26,7 +26,7 @@ dependencies {
     testImplementation(project(path = ":rollbar-java", configuration = "integTestRuntime"))
     testImplementation(project(path = ":rollbar-java", configuration = "integTestArtifacts"))
 
-    integTestImplementation("com.github.tomakehurst:wiremock-jre8:2.27.2")
+    integTestImplementation("com.github.tomakehurst:wiremock-jre8:3.0.1")
     integTestImplementation("com.google.code.gson:gson:2.8.2")
 }
 
