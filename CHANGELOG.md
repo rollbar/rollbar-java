@@ -1,6 +1,10 @@
 # Change Log
 
-# 2.2.0-alpha.1
+# 2.2.0
+
+- Switching to stable release
+
+# 2.2.0-beta.1
 
 - Switching to beta release
 
