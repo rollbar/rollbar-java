@@ -38,6 +38,7 @@ include(
     ":rollbar-jakarta-web",
     ":rollbar-log4j2",
     ":rollbar-logback",
+    "rollbar-okhttp",
     ":rollbar-spring-webmvc",
     ":rollbar-spring6-webmvc",
     ":rollbar-spring-boot-webmvc",
