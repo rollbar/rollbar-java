@@ -1,12 +1,4 @@
-plugins {
-    id("java")
-}
-
 group = "com.rollbar.okhttp"
-
-repositories {
-    mavenCentral()
-}
 
 dependencies {
     testImplementation(platform("org.junit:junit-bom:5.14.3"))
