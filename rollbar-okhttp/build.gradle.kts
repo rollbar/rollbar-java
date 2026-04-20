@@ -3,7 +3,6 @@ plugins {
 }
 
 group = "com.rollbar.okhttp"
-version = "2.2.0"
 
 repositories {
     mavenCentral()
