@@ -67,6 +67,7 @@ public class Rollbar implements Closeable {
   private final ConnectionAwareSenderFailureStrategy senderFailureStrategy;
 
   private com.rollbar.notifier.Rollbar rollbar;
+  private LogcatTelemetryCapture logcatTelemetryCapture;
   private static Rollbar notifier;
 
   private final int versionCode;
@@ -236,6 +237,7 @@ public class Rollbar implements Closeable {
       if (androidConfiguration != null) {
         initAnrDetector(context, androidConfiguration);
         initAutomaticCaptureOfNavigationTelemetryEvents(context, androidConfiguration);
+        initAutomaticCaptureOfLogTelemetryEvents(androidConfiguration);
       }
     }
 
@@ -277,12 +279,21 @@ public class Rollbar implements Closeable {
       AndroidConfiguration androidConfiguration = makeDefaultAndroidConfiguration();
       initAnrDetector(context, androidConfiguration);
       initAutomaticCaptureOfNavigationTelemetryEvents(context, androidConfiguration);
+      initAutomaticCaptureOfLogTelemetryEvents(androidConfiguration);
     }
     return notifier;
   }
 
   @Override
   public void close() throws IOException {
+    if (logcatTelemetryCapture != null) {
+      try {
+        logcatTelemetryCapture.stop();
+      } catch (Exception e) {
+        Log.w(TAG, "Error stopping logcat telemetry capture", e);
+      }
+      logcatTelemetryCapture = null;
+    }
     if (rollbar != null) {
       try {
         rollbar.close(false);
@@ -1200,6 +1211,31 @@ public class Rollbar implements Closeable {
       Application application = (Application) appContext;
       application.registerActivityLifecycleCallbacks(new TelemetryNavigationCallbacks(telemetryEventTracker));
     }
+  }
+
+  private static void initAutomaticCaptureOfLogTelemetryEvents(
+      AndroidConfiguration androidConfiguration
+  ) {
+    if (!androidConfiguration.mustCaptureLogsAsTelemetry()) {
+      return;
+    }
+
+    com.rollbar.notifier.Rollbar rollbarNotifier = notifier.rollbar;
+    if (rollbarNotifier == null) {
+      return;
+    }
+
+    TelemetryEventTracker telemetryEventTracker = rollbarNotifier.getTelemetryEventTracker();
+    if (telemetryEventTracker == null) {
+      return;
+    }
+
+    LogcatTelemetryCapture logcatTelemetryCapture = new LogcatTelemetryCapture(
+        telemetryEventTracker,
+        androidConfiguration.getMinimumLogCaptureLevel(),
+        TAG);
+    logcatTelemetryCapture.start();
+    notifier.logcatTelemetryCapture = logcatTelemetryCapture;
   }
 
   private String loadAccessTokenFromManifest(Context context) throws NameNotFoundException {
