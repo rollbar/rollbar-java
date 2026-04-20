@@ -145,4 +145,33 @@ class RollbarOkHttpInterceptorTest {
 
         assertThrows(IOException.class, () -> nullRecorderClient.newCall(request).execute());
     }
+
+    @Test
+    void recorderThrowsOnErrorResponse_responseStillReturned() throws IOException {
+        server.enqueue(new MockResponse().setResponseCode(500));
+
+        doThrow(new RuntimeException("recorder boom"))
+                .when(recorder)
+                .recordNetworkEvent(any(), any(), any(), any());
+
+        Request request = new Request.Builder().url(server.url("/error")).build();
+        Response response = client.newCall(request).execute();
+        response.close();
+
+        assertEquals(500, response.code());
+    }
+
+    @Test
+    void recorderThrowsOnConnectionFailure_originalIOExceptionPropagates() {
+        server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+
+        doThrow(new RuntimeException("recorder boom"))
+                .when(recorder)
+                .recordErrorEvent(any());
+
+        Request request = new Request.Builder().url(server.url("/fail")).build();
+
+        assertThrows(IOException.class, () -> client.newCall(request).execute());
+        verify(recorder).recordErrorEvent(any(IOException.class));
+    }
 }
