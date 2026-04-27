@@ -206,6 +206,7 @@ class RollbarOkHttpInterceptorTest {
         Response response = customClient.newCall(request).execute();
         response.close();
 
-        verify(recorder).recordNetworkEvent(eq(Level.CRITICAL), eq("GET"), eq("Updated String"), eq("500"));
+        verify(recorder).recordNetworkEvent(
+                eq(Level.CRITICAL), eq("GET"), eq("Updated String"), eq("500"));
     }
 }
