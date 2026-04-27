@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 class RollbarOkHttpInterceptorTest {
@@ -173,5 +174,38 @@ class RollbarOkHttpInterceptorTest {
 
         assertThrows(IOException.class, () -> client.newCall(request).execute());
         verify(recorder).recordErrorEvent(any(IOException.class));
+    }
+
+    @Test
+    void defaultSanitizer_stripsQueryParamsFromUrl() throws IOException {
+        server.enqueue(new MockResponse().setResponseCode(500));
+
+        Request request = new Request.Builder()
+                .url(server.url("/sensitive?token=sk_live_secret&email=user@example.com"))
+                .build();
+        Response response = client.newCall(request).execute();
+        response.close();
+
+        verify(recorder).recordNetworkEvent(
+                eq(Level.CRITICAL), eq("GET"),
+                argThat(url -> url.contains("/sensitive") && !url.contains("secret") && !url.contains("email")),
+                eq("500"));
+    }
+
+    @Test
+    void customSanitizer_isAppliedToUrl() throws IOException {
+        server.enqueue(new MockResponse().setResponseCode(500));
+
+        OkHttpClient customClient = new OkHttpClient.Builder()
+                .addInterceptor(new RollbarOkHttpInterceptor(recorder, url -> "Updated String"))
+                .build();
+
+        Request request = new Request.Builder()
+                .url(server.url("/path?secret=abc"))
+                .build();
+        Response response = customClient.newCall(request).execute();
+        response.close();
+
+        verify(recorder).recordNetworkEvent(eq(Level.CRITICAL), eq("GET"), eq("Updated String"), eq("500"));
     }
 }

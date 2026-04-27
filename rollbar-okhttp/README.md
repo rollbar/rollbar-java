@@ -35,6 +35,7 @@ dependencies {
 NetworkTelemetryRecorder recorder = new NetworkTelemetryRecorder() {
     @Override
     public void recordNetworkEvent(Level level, String method, String url, String statusCode) {
+        // url has query parameters stripped by default (see Security section below)
         rollbar.recordNetworkEventFor(level, method, url, statusCode);
     }
 
@@ -73,3 +74,19 @@ The interceptor will automatically record telemetry events to Rollbar without in
 | Response status `< 400`           | No telemetry recorded, response returned normally       |
 | Response status `>= 400`          | Records a network telemetry event with `Level.CRITICAL` |
 | Connection failure / timeout      | Records an error event, then rethrows the `IOException` |
+
+## Security
+
+URL query parameters often carry sensitive data such as API keys (`?api_key=...`), OAuth tokens (`?access_token=...`), or PII. To prevent accidental leakage to Rollbar, the interceptor **strips query parameters by default** before passing the URL to `NetworkTelemetryRecorder`.
+
+For example, a request to `https://api.example.com/charge?token=sk_live_secret` will be recorded as `https://api.example.com/charge`.
+
+If your URLs do not contain sensitive query parameters and you need them for debugging, you can opt in to the full URL by supplying a custom sanitizer:
+
+```java
+OkHttpClient client = new OkHttpClient.Builder()
+    .addInterceptor(new RollbarOkHttpInterceptor(recorder, HttpUrl::toString))
+    .build();
+```
+
+When using a custom sanitizer, you are responsible for ensuring that sensitive query parameters are removed before the URL reaches Rollbar.
