@@ -26,7 +26,9 @@ public class RollbarOkHttpInterceptor implements Interceptor {
     this(recorder, DEFAULT_URL_SANITIZER);
   }
 
-  public RollbarOkHttpInterceptor(NetworkTelemetryRecorder recorder, Function<HttpUrl, String> urlSanitizer) {
+  public RollbarOkHttpInterceptor(
+          NetworkTelemetryRecorder recorder,
+          Function<HttpUrl, String> urlSanitizer) {
     this.recorder = recorder;
     this.urlSanitizer = Objects.requireNonNull(urlSanitizer, "urlSanitizer must not be null");
   }
