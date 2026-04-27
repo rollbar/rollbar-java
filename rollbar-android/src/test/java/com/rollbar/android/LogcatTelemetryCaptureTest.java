@@ -45,7 +45,7 @@ public class LogcatTelemetryCaptureTest {
 
   @Test
   public void logcatPriorityFor_levels() {
-    assertEquals("D", LogcatTelemetryCapture.logcatPriorityFor(Level.DEBUG));
+    assertEquals("V", LogcatTelemetryCapture.logcatPriorityFor(Level.DEBUG));
     assertEquals("I", LogcatTelemetryCapture.logcatPriorityFor(Level.INFO));
     assertEquals("W", LogcatTelemetryCapture.logcatPriorityFor(Level.WARNING));
     assertEquals("E", LogcatTelemetryCapture.logcatPriorityFor(Level.ERROR));

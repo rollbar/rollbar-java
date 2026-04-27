@@ -166,7 +166,7 @@ class LogcatTelemetryCapture {
     }
     switch (level) {
       case DEBUG:
-        return "D";
+        return "V";
       case INFO:
         return "I";
       case WARNING:
