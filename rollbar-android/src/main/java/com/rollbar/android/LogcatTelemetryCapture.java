@@ -193,7 +193,7 @@ class LogcatTelemetryCapture {
       @Override
       public Process start(String priorityFilter) throws IOException {
         return new ProcessBuilder(
-            "logcat", "-v", "threadtime", "*:" + priorityFilter)
+            "logcat", "-v", "threadtime", "-T", "1", "*:" + priorityFilter)
             .redirectErrorStream(true)
             .start();
       }
