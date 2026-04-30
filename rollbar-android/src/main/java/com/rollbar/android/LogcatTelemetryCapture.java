@@ -104,6 +104,10 @@ class LogcatTelemetryCapture {
         reader.close();
       } catch (IOException ignored) {
       }
+      if (running) {
+        Log.w(Rollbar.TAG, "logcat process exited unexpectedly; resetting capture state");
+        stop();
+      }
     }
   }
 

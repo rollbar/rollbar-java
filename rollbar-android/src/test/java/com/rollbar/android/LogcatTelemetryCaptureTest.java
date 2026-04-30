@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import com.rollbar.api.payload.data.Level;
 import com.rollbar.api.payload.data.Source;
@@ -16,6 +17,9 @@ import com.rollbar.notifier.telemetry.TelemetryEventTracker;
 
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.ByteArrayInputStream;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class LogcatTelemetryCaptureTest {
 
@@ -139,6 +143,28 @@ public class LogcatTelemetryCaptureTest {
 
     capture.processLine("04-20 12:34:56.789  1234  5678 W MyTag: warn");
     verify(tracker).recordManualEventFor(eq(Level.WARNING), eq(Source.CLIENT), eq("warn"));
+  }
+
+  @Test
+  public void start_afterUnexpectedProcessDeath_allowsRestartWithNewProcess() throws Exception {
+    Process dyingProcess = mock(Process.class);
+    when(dyingProcess.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
+
+    AtomicInteger factoryCallCount = new AtomicInteger(0);
+    LogcatTelemetryCapture.ProcessFactory factory = priority -> {
+      factoryCallCount.incrementAndGet();
+      return dyingProcess;
+    };
+
+    LogcatTelemetryCapture capture = new LogcatTelemetryCapture(tracker, Level.WARNING, "Rollbar", factory);
+    capture.start();
+
+    // Allow the reader thread to detect EOF and reset running=false via stop()
+    Thread.sleep(200);
+
+    capture.start();
+
+    assertEquals(2, factoryCallCount.get());
   }
 
   private LogcatTelemetryCapture newCapture(Level minLevel) {
