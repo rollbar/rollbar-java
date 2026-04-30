@@ -137,7 +137,7 @@ class LogcatTelemetryCapture {
     }
 
     try {
-      tracker.recordManualEventFor(level, Source.CLIENT, message);
+      tracker.recordLogEventFor(level, Source.CLIENT, message);
     } catch (Exception e) {
       // Never let a broken tracker kill the reader thread.
     }

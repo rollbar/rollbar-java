@@ -63,7 +63,7 @@ public class LogcatTelemetryCaptureTest {
 
     capture.processLine("04-20 12:34:56.789  1234  5678 W MyTag: warn message");
 
-    verify(tracker).recordManualEventFor(eq(Level.WARNING), eq(Source.CLIENT), eq("warn message"));
+    verify(tracker).recordLogEventFor(eq(Level.WARNING), eq(Source.CLIENT), eq("warn message"));
   }
 
   @Test
@@ -72,7 +72,7 @@ public class LogcatTelemetryCaptureTest {
 
     capture.processLine("04-20 12:34:56.789  1234  5678 E MyTag: boom");
 
-    verify(tracker).recordManualEventFor(eq(Level.ERROR), eq(Source.CLIENT), eq("boom"));
+    verify(tracker).recordLogEventFor(eq(Level.ERROR), eq(Source.CLIENT), eq("boom"));
   }
 
   @Test
@@ -111,18 +111,18 @@ public class LogcatTelemetryCaptureTest {
 
     capture.processLine("04-20 12:34:56.789  1234  5678 W   MyTag  : message");
 
-    verify(tracker).recordManualEventFor(eq(Level.WARNING), eq(Source.CLIENT), eq("message"));
+    verify(tracker).recordLogEventFor(eq(Level.WARNING), eq(Source.CLIENT), eq("message"));
   }
 
   @Test
   public void processLine_trackerThrow_doesNotPropagate() {
     doThrow(new RuntimeException("tracker boom"))
-        .when(tracker).recordManualEventFor(any(), any(), any());
+        .when(tracker).recordLogEventFor(any(), any(), any());
     LogcatTelemetryCapture capture = newCapture(Level.WARNING);
 
     capture.processLine("04-20 12:34:56.789  1234  5678 W MyTag: message");
 
-    verify(tracker).recordManualEventFor(eq(Level.WARNING), eq(Source.CLIENT), eq("message"));
+    verify(tracker).recordLogEventFor(eq(Level.WARNING), eq(Source.CLIENT), eq("message"));
   }
 
   @Test
@@ -131,7 +131,7 @@ public class LogcatTelemetryCaptureTest {
 
     capture.processLine("04-20 12:34:56.789  1234  5678 W MyTag: key: value");
 
-    verify(tracker).recordManualEventFor(eq(Level.WARNING), eq(Source.CLIENT), eq("key: value"));
+    verify(tracker).recordLogEventFor(eq(Level.WARNING), eq(Source.CLIENT), eq("key: value"));
   }
 
   @Test
@@ -139,10 +139,10 @@ public class LogcatTelemetryCaptureTest {
     LogcatTelemetryCapture capture = newCapture(null);
 
     capture.processLine("04-20 12:34:56.789  1234  5678 I MyTag: info");
-    verify(tracker, never()).recordManualEventFor(any(), any(), any());
+    verify(tracker, never()).recordLogEventFor(any(), any(), any());
 
     capture.processLine("04-20 12:34:56.789  1234  5678 W MyTag: warn");
-    verify(tracker).recordManualEventFor(eq(Level.WARNING), eq(Source.CLIENT), eq("warn"));
+    verify(tracker).recordLogEventFor(eq(Level.WARNING), eq(Source.CLIENT), eq("warn"));
   }
 
   @Test
