@@ -159,10 +159,12 @@ public class LogcatTelemetryCaptureTest {
     LogcatTelemetryCapture capture = new LogcatTelemetryCapture(tracker, Level.WARNING, "Rollbar", factory);
     capture.start();
 
-    // Allow the reader thread to detect EOF and reset running=false via stop()
-    Thread.sleep(200);
-
-    capture.start();
+    // Poll start() until the reader thread detects EOF and resets running=false
+    long deadline = System.currentTimeMillis() + 2000;
+    while (factoryCallCount.get() < 2 && System.currentTimeMillis() < deadline) {
+      Thread.sleep(10);
+      capture.start();
+    }
 
     assertEquals(2, factoryCallCount.get());
   }
