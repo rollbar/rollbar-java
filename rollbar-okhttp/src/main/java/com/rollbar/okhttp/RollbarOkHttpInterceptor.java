@@ -41,11 +41,21 @@ public class RollbarOkHttpInterceptor implements Interceptor {
       Response response = chain.proceed(request);
 
       if (response.code() >= 400 && recorder != null) {
+        String sanitizedUrl;
+        try {
+          sanitizedUrl = urlSanitizer.apply(request.url());
+        } catch (Exception sanitizerException) {
+          LOGGER.log(java.util.logging.Level.WARNING,
+              "urlSanitizer threw an exception; "
+                  + "suppressing to preserve the interceptor contract.",
+              sanitizerException);
+          return response;
+        }
         try {
           recorder.recordNetworkEvent(
               Level.CRITICAL,
               request.method(),
-              urlSanitizer.apply(request.url()),
+              sanitizedUrl,
               String.valueOf(response.code()));
         } catch (Exception recorderException) {
           LOGGER.log(java.util.logging.Level.WARNING,

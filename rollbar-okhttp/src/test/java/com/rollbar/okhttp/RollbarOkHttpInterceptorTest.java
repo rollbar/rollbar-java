@@ -193,6 +193,23 @@ class RollbarOkHttpInterceptorTest {
     }
 
     @Test
+    void customSanitizerThrows_responseStillReturnedAndRecorderNotCalled() throws IOException {
+        server.enqueue(new MockResponse().setResponseCode(500));
+
+        OkHttpClient throwingClient = new OkHttpClient.Builder()
+                .addInterceptor(new RollbarOkHttpInterceptor(recorder,
+                        url -> { throw new IllegalStateException("bad url"); }))
+                .build();
+
+        Request request = new Request.Builder().url(server.url("/error")).build();
+        Response response = throwingClient.newCall(request).execute();
+        response.close();
+
+        assertEquals(500, response.code());
+        verify(recorder, never()).recordNetworkEvent(any(), any(), any(), any());
+    }
+
+    @Test
     void customSanitizer_isAppliedToUrl() throws IOException {
         server.enqueue(new MockResponse().setResponseCode(500));
 
