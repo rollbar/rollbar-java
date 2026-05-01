@@ -18,7 +18,14 @@ public class RollbarOkHttpInterceptor implements Interceptor {
   private static final Logger LOGGER = LoggerFactory.getLogger(RollbarOkHttpInterceptor.class);
 
   private static final Function<HttpUrl, String> DEFAULT_URL_SANITIZER =
-      url -> url.newBuilder().username("").password("").query(null).fragment(null).build().toString();
+      url -> url
+              .newBuilder()
+              .username("")
+              .password("")
+              .query(null)
+              .fragment(null)
+              .build()
+              .toString();
 
   private final NetworkTelemetryRecorder recorder;
   private final Function<HttpUrl, String> urlSanitizer;
