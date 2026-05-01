@@ -68,7 +68,7 @@ public class AndroidConfiguration {
      * Enable or disable automatic capture of Android log output as telemetry events.
      * When enabled, logs emitted via {@code android.util.Log} (and any other source written to
      * logcat from this app's UID, including third-party libraries) at or above the configured
-     * minimum level are recorded as manual telemetry events with
+     * minimum level are recorded as log telemetry events with
      * {@link com.rollbar.api.payload.data.Source#CLIENT}.
      * Default is disabled.
      * @param mustCaptureLogsAsTelemetry if automatic capture must be enabled or disabled.
