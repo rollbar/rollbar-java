@@ -1,6 +1,7 @@
 package com.rollbar.okhttp;
 
 import com.rollbar.api.payload.data.Level;
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -189,6 +190,32 @@ class RollbarOkHttpInterceptorTest {
         verify(recorder).recordNetworkEvent(
                 eq(Level.CRITICAL), eq("GET"),
                 argThat(url -> url.contains("/sensitive") && !url.contains("secret") && !url.contains("email")),
+                eq("500"));
+    }
+
+    @Test
+    void defaultSanitizer_stripsCredentialsAndFragment() throws IOException {
+        server.enqueue(new MockResponse().setResponseCode(500));
+
+        HttpUrl urlWithCredentials = server.url("/charge")
+                .newBuilder()
+                .username("anyUser")
+                .password("anyPassword")
+                .addQueryParameter("token", "abc")
+                .fragment("section")
+                .build();
+
+        Request request = new Request.Builder().url(urlWithCredentials).build();
+        Response response = client.newCall(request).execute();
+        response.close();
+
+        verify(recorder).recordNetworkEvent(
+                eq(Level.CRITICAL), eq("GET"),
+                argThat(url -> url.contains("/charge")
+                        && !url.contains("anyUser")
+                        && !url.contains("anyPassword")
+                        && !url.contains("token")
+                        && !url.contains("section")),
                 eq("500"));
     }
 
