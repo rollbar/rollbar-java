@@ -5,16 +5,17 @@ import com.rollbar.api.payload.data.Level;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.function.Function;
-import java.util.logging.Logger;
 
 import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RollbarOkHttpInterceptor implements Interceptor {
 
-  private static final Logger LOGGER = Logger.getLogger(RollbarOkHttpInterceptor.class.getName());
+  private static final Logger LOGGER = LoggerFactory.getLogger(RollbarOkHttpInterceptor.class);
 
   private static final Function<HttpUrl, String> DEFAULT_URL_SANITIZER =
       url -> url.newBuilder().username("").password("").query(null).fragment(null).build().toString();
@@ -45,10 +46,8 @@ public class RollbarOkHttpInterceptor implements Interceptor {
         try {
           sanitizedUrl = urlSanitizer.apply(request.url());
         } catch (Exception sanitizerException) {
-          LOGGER.log(java.util.logging.Level.WARNING,
-              "urlSanitizer threw an exception; "
-                  + "suppressing to preserve the interceptor contract.",
-              sanitizerException);
+          LOGGER.warn("urlSanitizer threw an exception; "
+              + "suppressing to preserve the interceptor contract.", sanitizerException);
           return response;
         }
         try {
@@ -58,10 +57,8 @@ public class RollbarOkHttpInterceptor implements Interceptor {
               sanitizedUrl,
               String.valueOf(response.code()));
         } catch (Exception recorderException) {
-          LOGGER.log(java.util.logging.Level.WARNING,
-              "NetworkTelemetryRecorder.recordNetworkEvent threw an exception; "
-                  + "suppressing to preserve the interceptor contract.",
-              recorderException);
+          LOGGER.warn("NetworkTelemetryRecorder.recordNetworkEvent threw an exception; "
+              + "suppressing to preserve the interceptor contract.", recorderException);
         }
       }
 
@@ -72,10 +69,8 @@ public class RollbarOkHttpInterceptor implements Interceptor {
         try {
           recorder.recordErrorEvent(e);
         } catch (Exception recorderException) {
-          LOGGER.log(java.util.logging.Level.WARNING,
-              "NetworkTelemetryRecorder.recordErrorEvent threw an exception; "
-                  + "suppressing to preserve the original IOException.",
-              recorderException);
+          LOGGER.warn("NetworkTelemetryRecorder.recordErrorEvent threw an exception; "
+              + "suppressing to preserve the original IOException.", recorderException);
         }
       }
 

@@ -8,6 +8,7 @@ dependencies {
     testImplementation("org.mockito:mockito-core:5.23.0")
     implementation("com.squareup.okhttp3:okhttp:5.3.2")
     api(project(":rollbar-api"))
+    api("org.slf4j:slf4j-api:1.7.25")
 }
 
 tasks.test {
