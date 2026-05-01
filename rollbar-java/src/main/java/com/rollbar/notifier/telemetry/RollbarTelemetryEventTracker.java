@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * buffer. When the configured maximum capacity is reached, the oldest events
  * are discarded to make room for new ones.
  *
- * <p>Recorded events are returned and cleared when {@link #dump()} is called.
+ * <p>Recorded events are returned when {@link #getAll()} is called.
  */
 public class RollbarTelemetryEventTracker implements TelemetryEventTracker {
   public static final int MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS = 100;
