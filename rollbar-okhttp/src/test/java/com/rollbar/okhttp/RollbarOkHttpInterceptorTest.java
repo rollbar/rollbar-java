@@ -18,239 +18,239 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
-class RollbarOkHttpInterceptorTest {
+public class RollbarOkHttpInterceptorTest {
 
-    private MockWebServer server;
-    private NetworkTelemetryRecorder recorder;
-    private OkHttpClient client;
+  private MockWebServer server;
+  private NetworkTelemetryRecorder recorder;
+  private OkHttpClient client;
 
-    @BeforeEach
-    void setUp() throws IOException {
-        server = new MockWebServer();
-        server.start();
+  @BeforeEach
+  public void setUp() throws IOException {
+    server = new MockWebServer();
+    server.start();
 
-        recorder = mock(NetworkTelemetryRecorder.class);
+    recorder = mock(NetworkTelemetryRecorder.class);
 
-        client = new OkHttpClient.Builder()
-                .addInterceptor(new RollbarOkHttpInterceptor(recorder))
-                .build();
-    }
+    client = new OkHttpClient.Builder()
+        .addInterceptor(new RollbarOkHttpInterceptor(recorder))
+        .build();
+  }
 
-    @AfterEach
-    void tearDown() throws IOException {
-        server.shutdown();
-    }
+  @AfterEach
+  public void tearDown() throws IOException {
+    server.shutdown();
+  }
 
-    @Test
-    void successfulResponse_doesNotRecordEvent() throws IOException {
-        server.enqueue(new MockResponse().setResponseCode(200));
+  @Test
+  public void successfulResponse_doesNotRecordEvent() throws IOException {
+    server.enqueue(new MockResponse().setResponseCode(200));
 
-        Request request = new Request.Builder().url(server.url("/ok")).build();
-        Response response = client.newCall(request).execute();
-        response.close();
+    Request request = new Request.Builder().url(server.url("/ok")).build();
+    Response response = client.newCall(request).execute();
+    response.close();
 
-        assertEquals(200, response.code());
-        verifyNoInteractions(recorder);
-    }
+    assertEquals(200, response.code());
+    verifyNoInteractions(recorder);
+  }
 
-    @Test
-    void redirectResponse_doesNotRecordEvent() throws IOException {
-        server.enqueue(new MockResponse().setResponseCode(301).addHeader("Location", "/other"));
+  @Test
+  public void redirectResponse_doesNotRecordEvent() throws IOException {
+    server.enqueue(new MockResponse().setResponseCode(301).addHeader("Location", "/other"));
 
-        OkHttpClient noFollowClient = client.newBuilder().followRedirects(false).build();
-        Request request = new Request.Builder().url(server.url("/redirect")).build();
-        Response response = noFollowClient.newCall(request).execute();
-        response.close();
+    OkHttpClient noFollowClient = client.newBuilder().followRedirects(false).build();
+    Request request = new Request.Builder().url(server.url("/redirect")).build();
+    Response response = noFollowClient.newCall(request).execute();
+    response.close();
 
-        assertEquals(301, response.code());
-        verifyNoInteractions(recorder);
-    }
+    assertEquals(301, response.code());
+    verifyNoInteractions(recorder);
+  }
 
-    @Test
-    void clientErrorResponse_recordsNetworkEvent() throws IOException {
-        server.enqueue(new MockResponse().setResponseCode(404));
+  @Test
+  public void clientErrorResponse_recordsNetworkEvent() throws IOException {
+    server.enqueue(new MockResponse().setResponseCode(404));
 
-        Request request = new Request.Builder().url(server.url("/not-found")).build();
-        Response response = client.newCall(request).execute();
-        response.close();
+    Request request = new Request.Builder().url(server.url("/not-found")).build();
+    Response response = client.newCall(request).execute();
+    response.close();
 
-        assertEquals(404, response.code());
-        verify(recorder).recordNetworkEvent(
-                eq(Level.CRITICAL), eq("GET"), contains("/not-found"), eq("404"));
-        verify(recorder, never()).recordErrorEvent(any());
-    }
+    assertEquals(404, response.code());
+    verify(recorder).recordNetworkEvent(
+        eq(Level.CRITICAL), eq("GET"), contains("/not-found"), eq("404"));
+    verify(recorder, never()).recordErrorEvent(any());
+  }
 
-    @Test
-    void serverErrorResponse_recordsNetworkEvent() throws IOException {
-        server.enqueue(new MockResponse().setResponseCode(500));
+  @Test
+  public void serverErrorResponse_recordsNetworkEvent() throws IOException {
+    server.enqueue(new MockResponse().setResponseCode(500));
 
-        Request request = new Request.Builder().url(server.url("/error")).build();
-        Response response = client.newCall(request).execute();
-        response.close();
+    Request request = new Request.Builder().url(server.url("/error")).build();
+    Response response = client.newCall(request).execute();
+    response.close();
 
-        assertEquals(500, response.code());
-        verify(recorder).recordNetworkEvent(
-                eq(Level.CRITICAL), eq("GET"), contains("/error"), eq("500"));
-        verify(recorder, never()).recordErrorEvent(any());
-    }
+    assertEquals(500, response.code());
+    verify(recorder).recordNetworkEvent(
+        eq(Level.CRITICAL), eq("GET"), contains("/error"), eq("500"));
+    verify(recorder, never()).recordErrorEvent(any());
+  }
 
-    @Test
-    void connectionFailure_recordsErrorEvent() {
-        server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+  @Test
+  public void connectionFailure_recordsErrorEvent() {
+    server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
 
-        Request request = new Request.Builder().url(server.url("/fail")).build();
+    Request request = new Request.Builder().url(server.url("/fail")).build();
 
-        assertThrows(IOException.class, () -> client.newCall(request).execute());
+    assertThrows(IOException.class, () -> client.newCall(request).execute());
 
-        verify(recorder).recordErrorEvent(any(IOException.class));
-        verify(recorder, never()).recordNetworkEvent(any(), any(), any(), any());
-    }
+    verify(recorder).recordErrorEvent(any(IOException.class));
+    verify(recorder, never()).recordNetworkEvent(any(), any(), any(), any());
+  }
 
-    @Test
-    void postRequest_recordsCorrectMethod() throws IOException {
-        server.enqueue(new MockResponse().setResponseCode(500));
+  @Test
+  public void postRequest_recordsCorrectMethod() throws IOException {
+    server.enqueue(new MockResponse().setResponseCode(500));
 
-        Request request = new Request.Builder()
-                .url(server.url("/post"))
-                .post(okhttp3.RequestBody.create("body", okhttp3.MediaType.parse("text/plain")))
-                .build();
-        Response response = client.newCall(request).execute();
-        response.close();
+    Request request = new Request.Builder()
+        .url(server.url("/post"))
+        .post(okhttp3.RequestBody.create("body", okhttp3.MediaType.parse("text/plain")))
+        .build();
+    Response response = client.newCall(request).execute();
+    response.close();
 
-        verify(recorder).recordNetworkEvent(eq(Level.CRITICAL), eq("POST"), any(), eq("500"));
-    }
+    verify(recorder).recordNetworkEvent(eq(Level.CRITICAL), eq("POST"), any(), eq("500"));
+  }
 
-    @Test
-    void nullRecorder_errorResponse_doesNotThrowNPE() throws IOException {
-        server.enqueue(new MockResponse().setResponseCode(500));
+  @Test
+  public void nullRecorder_errorResponse_doesNotThrowNPE() throws IOException {
+    server.enqueue(new MockResponse().setResponseCode(500));
 
-        OkHttpClient nullRecorderClient = new OkHttpClient.Builder()
-                .addInterceptor(new RollbarOkHttpInterceptor(null))
-                .build();
+    OkHttpClient nullRecorderClient = new OkHttpClient.Builder()
+        .addInterceptor(new RollbarOkHttpInterceptor(null))
+        .build();
 
-        Request request = new Request.Builder().url(server.url("/error")).build();
-        Response response = nullRecorderClient.newCall(request).execute();
-        response.close();
+    Request request = new Request.Builder().url(server.url("/error")).build();
+    Response response = nullRecorderClient.newCall(request).execute();
+    response.close();
 
-        assertEquals(500, response.code());
-    }
+    assertEquals(500, response.code());
+  }
 
-    @Test
-    void nullRecorder_connectionFailure_doesNotThrow() {
-        server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+  @Test
+  public void nullRecorder_connectionFailure_doesNotThrow() {
+    server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
 
-        OkHttpClient nullRecorderClient = new OkHttpClient.Builder()
-                .addInterceptor(new RollbarOkHttpInterceptor(null))
-                .build();
+    OkHttpClient nullRecorderClient = new OkHttpClient.Builder()
+        .addInterceptor(new RollbarOkHttpInterceptor(null))
+        .build();
 
-        Request request = new Request.Builder().url(server.url("/fail")).build();
+    Request request = new Request.Builder().url(server.url("/fail")).build();
 
-        assertThrows(IOException.class, () -> nullRecorderClient.newCall(request).execute());
-    }
+    assertThrows(IOException.class, () -> nullRecorderClient.newCall(request).execute());
+  }
 
-    @Test
-    void recorderThrowsOnErrorResponse_responseStillReturned() throws IOException {
-        server.enqueue(new MockResponse().setResponseCode(500));
+  @Test
+  public void recorderThrowsOnErrorResponse_responseStillReturned() throws IOException {
+    server.enqueue(new MockResponse().setResponseCode(500));
 
-        doThrow(new RuntimeException("recorder boom"))
-                .when(recorder)
-                .recordNetworkEvent(any(), any(), any(), any());
+    doThrow(new RuntimeException("recorder boom"))
+        .when(recorder)
+        .recordNetworkEvent(any(), any(), any(), any());
 
-        Request request = new Request.Builder().url(server.url("/error")).build();
-        Response response = client.newCall(request).execute();
-        response.close();
+    Request request = new Request.Builder().url(server.url("/error")).build();
+    Response response = client.newCall(request).execute();
+    response.close();
 
-        assertEquals(500, response.code());
-    }
+    assertEquals(500, response.code());
+  }
 
-    @Test
-    void recorderThrowsOnConnectionFailure_originalIOExceptionPropagates() {
-        server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+  @Test
+  public void recorderThrowsOnConnectionFailure_originalIOExceptionPropagates() {
+    server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
 
-        doThrow(new RuntimeException("recorder boom"))
-                .when(recorder)
-                .recordErrorEvent(any());
+    doThrow(new RuntimeException("recorder boom"))
+        .when(recorder)
+        .recordErrorEvent(any());
 
-        Request request = new Request.Builder().url(server.url("/fail")).build();
+    Request request = new Request.Builder().url(server.url("/fail")).build();
 
-        assertThrows(IOException.class, () -> client.newCall(request).execute());
-        verify(recorder).recordErrorEvent(any(IOException.class));
-    }
+    assertThrows(IOException.class, () -> client.newCall(request).execute());
+    verify(recorder).recordErrorEvent(any(IOException.class));
+  }
 
-    @Test
-    void defaultSanitizer_stripsQueryParamsFromUrl() throws IOException {
-        server.enqueue(new MockResponse().setResponseCode(500));
+  @Test
+  public void defaultSanitizer_stripsQueryParamsFromUrl() throws IOException {
+    server.enqueue(new MockResponse().setResponseCode(500));
 
-        Request request = new Request.Builder()
-                .url(server.url("/sensitive?token=sk_live_secret&email=user@example.com"))
-                .build();
-        Response response = client.newCall(request).execute();
-        response.close();
+    Request request = new Request.Builder()
+        .url(server.url("/sensitive?token=sk_live_secret&email=user@example.com"))
+        .build();
+    Response response = client.newCall(request).execute();
+    response.close();
 
-        verify(recorder).recordNetworkEvent(
-                eq(Level.CRITICAL), eq("GET"),
-                argThat(url -> url.contains("/sensitive") && !url.contains("secret") && !url.contains("email")),
-                eq("500"));
-    }
+    verify(recorder).recordNetworkEvent(
+        eq(Level.CRITICAL), eq("GET"),
+        argThat(url -> url.contains("/sensitive") && !url.contains("secret") && !url.contains("email")),
+        eq("500"));
+  }
 
-    @Test
-    void defaultSanitizer_stripsCredentialsAndFragment() throws IOException {
-        server.enqueue(new MockResponse().setResponseCode(500));
+  @Test
+  public void defaultSanitizer_stripsCredentialsAndFragment() throws IOException {
+    server.enqueue(new MockResponse().setResponseCode(500));
 
-        HttpUrl urlWithCredentials = server.url("/charge")
-                .newBuilder()
-                .username("anyUser")
-                .password("anyPassword")
-                .addQueryParameter("token", "abc")
-                .fragment("section")
-                .build();
+    HttpUrl urlWithCredentials = server.url("/charge")
+        .newBuilder()
+        .username("anyUser")
+        .password("anyPassword")
+        .addQueryParameter("token", "abc")
+        .fragment("section")
+        .build();
 
-        Request request = new Request.Builder().url(urlWithCredentials).build();
-        Response response = client.newCall(request).execute();
-        response.close();
+    Request request = new Request.Builder().url(urlWithCredentials).build();
+    Response response = client.newCall(request).execute();
+    response.close();
 
-        verify(recorder).recordNetworkEvent(
-                eq(Level.CRITICAL), eq("GET"),
-                argThat(url -> url.contains("/charge")
-                        && !url.contains("anyUser")
-                        && !url.contains("anyPassword")
-                        && !url.contains("token")
-                        && !url.contains("section")),
-                eq("500"));
-    }
+    verify(recorder).recordNetworkEvent(
+        eq(Level.CRITICAL), eq("GET"),
+        argThat(url -> url.contains("/charge")
+            && !url.contains("anyUser")
+            && !url.contains("anyPassword")
+            && !url.contains("token")
+            && !url.contains("section")),
+        eq("500"));
+  }
 
-    @Test
-    void customSanitizerThrows_responseStillReturnedAndRecorderNotCalled() throws IOException {
-        server.enqueue(new MockResponse().setResponseCode(500));
+  @Test
+  public void customSanitizerThrows_responseStillReturnedAndRecorderNotCalled() throws IOException {
+    server.enqueue(new MockResponse().setResponseCode(500));
 
-        OkHttpClient throwingClient = new OkHttpClient.Builder()
-                .addInterceptor(new RollbarOkHttpInterceptor(recorder,
-                        url -> { throw new IllegalStateException("bad url"); }))
-                .build();
+    OkHttpClient throwingClient = new OkHttpClient.Builder()
+        .addInterceptor(new RollbarOkHttpInterceptor(recorder,
+            url -> { throw new IllegalStateException("bad url"); }))
+        .build();
 
-        Request request = new Request.Builder().url(server.url("/error")).build();
-        Response response = throwingClient.newCall(request).execute();
-        response.close();
+    Request request = new Request.Builder().url(server.url("/error")).build();
+    Response response = throwingClient.newCall(request).execute();
+    response.close();
 
-        assertEquals(500, response.code());
-        verify(recorder, never()).recordNetworkEvent(any(), any(), any(), any());
-    }
+    assertEquals(500, response.code());
+    verify(recorder, never()).recordNetworkEvent(any(), any(), any(), any());
+  }
 
-    @Test
-    void customSanitizer_isAppliedToUrl() throws IOException {
-        server.enqueue(new MockResponse().setResponseCode(500));
+  @Test
+  public void customSanitizer_isAppliedToUrl() throws IOException {
+    server.enqueue(new MockResponse().setResponseCode(500));
 
-        OkHttpClient customClient = new OkHttpClient.Builder()
-                .addInterceptor(new RollbarOkHttpInterceptor(recorder, url -> "Updated String"))
-                .build();
+    OkHttpClient customClient = new OkHttpClient.Builder()
+        .addInterceptor(new RollbarOkHttpInterceptor(recorder, url -> "Updated String"))
+        .build();
 
-        Request request = new Request.Builder()
-                .url(server.url("/path?secret=abc"))
-                .build();
-        Response response = customClient.newCall(request).execute();
-        response.close();
+    Request request = new Request.Builder()
+        .url(server.url("/path?secret=abc"))
+        .build();
+    Response response = customClient.newCall(request).execute();
+    response.close();
 
-        verify(recorder).recordNetworkEvent(
-                eq(Level.CRITICAL), eq("GET"), eq("Updated String"), eq("500"));
-    }
+    verify(recorder).recordNetworkEvent(
+        eq(Level.CRITICAL), eq("GET"), eq("Updated String"), eq("500"));
+  }
 }
