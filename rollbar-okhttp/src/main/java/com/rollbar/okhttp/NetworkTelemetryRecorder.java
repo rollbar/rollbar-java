@@ -11,8 +11,9 @@ public interface NetworkTelemetryRecorder {
    *
    * @param level      the severity level to attach to the telemetry event
    * @param method     the HTTP method (e.g. GET, POST)
-   * @param url        the request URL with query parameters stripped by default; supply a custom
-   *                   sanitizer to {@link RollbarOkHttpInterceptor} to change this behavior
+   * @param url        the request URL with userinfo (basic-auth credentials), query parameters,
+   *                   and fragment stripped by default; supply a custom sanitizer to
+   *                   {@link RollbarOkHttpInterceptor} to change this behavior
    * @param statusCode the HTTP response status code as a string (e.g. "200", "404")
    */
   void recordNetworkEvent(Level level, String method, String url, String statusCode);
