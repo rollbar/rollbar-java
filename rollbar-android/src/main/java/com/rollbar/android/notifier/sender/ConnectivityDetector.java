@@ -13,6 +13,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
+import com.rollbar.android.Rollbar;
 import com.rollbar.notifier.util.ObjectsUtils;
 
 import java.io.Closeable;
@@ -46,7 +47,7 @@ class ConnectivityDetector implements Closeable {
       String message = "This application is missing the " +
               "android.permission.ACCESS_NETWORK_STATE permission. The Rollbar notifier " +
               "will *not* be able to detect when the network is unavailable.";
-      Log.w(ConnectivityDetector.class.getCanonicalName(), message);
+      Log.w(Rollbar.TAG, message);
     }
   }
 
