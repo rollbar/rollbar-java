@@ -13,6 +13,7 @@ It records:
 
 ```kotlin
 dependencies {
+    implementation("com.rollbar:rollbar-java:<version>")
     implementation("com.rollbar:rollbar-okhttp:<version>")
     implementation("com.squareup.okhttp3:okhttp:<okhttp-version>")
 }
@@ -22,6 +23,7 @@ dependencies {
 
 ```groovy
 dependencies {
+    implementation 'com.rollbar:rollbar-java:<version>'
     implementation 'com.rollbar:rollbar-okhttp:<version>'
     implementation 'com.squareup.okhttp3:okhttp:<okhttp-version>'
 }
