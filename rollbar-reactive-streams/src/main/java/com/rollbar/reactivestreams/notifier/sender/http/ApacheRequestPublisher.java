@@ -102,7 +102,11 @@ class ApacheRequestPublisher implements Publisher<SimpleHttpResponse> {
         req.setHeader(header.getKey(), header.getValue());
       }
 
-      req.setBody(request.getBody(), ContentType.APPLICATION_JSON);
+      if (request.getBodyBytes() != null) {
+        req.setBody(request.getBodyBytes(), ContentType.APPLICATION_JSON);
+      } else {
+        req.setBody(request.getBody(), ContentType.APPLICATION_JSON);
+      }
 
       return SimpleRequestProducer.create(req);
     }

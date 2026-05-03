@@ -10,9 +10,12 @@ import com.rollbar.reactivestreams.Utils;
 import com.rollbar.reactivestreams.notifier.sender.http.AsyncHttpClient;
 import com.rollbar.reactivestreams.notifier.sender.http.AsyncHttpRequest;
 import com.rollbar.reactivestreams.notifier.sender.http.AsyncHttpResponse;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.LinkedHashMap;
+import java.util.zip.GZIPOutputStream;
 import org.reactivestreams.Publisher;
 
 /**
@@ -23,12 +26,14 @@ public class AsyncSender implements Sender {
   private final String url;
   private final JsonSerializer jsonSerializer;
   private final String accessToken;
+  private final boolean compressPayload;
 
   AsyncSender(Builder builder) {
     this.httpClient = builder.httpClient;
     this.url = builder.url.toExternalForm();
     this.jsonSerializer = builder.jsonSerializer;
     this.accessToken = builder.accessToken;
+    this.compressPayload = builder.compressPayload;
   }
 
   /**
@@ -49,10 +54,15 @@ public class AsyncSender implements Sender {
     headers.put("Content-Type", "application/json; charset=" + SyncSender.UTF_8);
     headers.put("Accept", "application/json");
 
-    String reqBody = jsonSerializer.toJson(payload);
+    String json = jsonSerializer.toJson(payload);
 
-    AsyncHttpRequest request =
-        AsyncHttpRequest.Builder.build(this.url, headers.entrySet(), reqBody);
+    AsyncHttpRequest request;
+    if (compressPayload) {
+      headers.put("Content-Encoding", "gzip");
+      request = AsyncHttpRequest.Builder.build(this.url, headers.entrySet(), compress(json));
+    } else {
+      request = AsyncHttpRequest.Builder.build(this.url, headers.entrySet(), json);
+    }
 
     return Utils.map(httpClient.send(request),
         new Utils.Converter<AsyncHttpResponse, Response>() {
@@ -62,6 +72,18 @@ public class AsyncSender implements Sender {
             return new Response.Builder().result(result).status(from.getStatusCode()).build();
           }
         });
+  }
+
+  private static byte[] compress(String json) {
+    try {
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      GZIPOutputStream gzip = new GZIPOutputStream(baos);
+      gzip.write(json.getBytes(SyncSender.UTF_8));
+      gzip.close();
+      return baos.toByteArray();
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to gzip-compress payload", e);
+    }
   }
 
   @Override
@@ -82,6 +104,7 @@ public class AsyncSender implements Sender {
     private URL url;
     private JsonSerializer jsonSerializer;
     private String accessToken;
+    private boolean compressPayload = true;
 
     /**
      * Constructor.
@@ -145,6 +168,17 @@ public class AsyncSender implements Sender {
      */
     public Builder accessToken(String accessToken) {
       this.accessToken = accessToken;
+      return this;
+    }
+
+    /**
+     * Whether to gzip-compress payloads before sending. Default: true.
+     *
+     * @param compress true to enable compression.
+     * @return the builder instance.
+     */
+    public Builder compressPayload(boolean compress) {
+      this.compressPayload = compress;
       return this;
     }
 

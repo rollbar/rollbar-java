@@ -47,7 +47,11 @@ public class ReactorAsyncHttpClient implements AsyncHttpClient {
   public Publisher<AsyncHttpResponse> send(AsyncHttpRequest httpRequest) {
 
     ByteBuf buffer = ByteBufAllocator.DEFAULT.buffer();
-    buffer.writeCharSequence(httpRequest.getBody(), StandardCharsets.UTF_8);
+    if (httpRequest.getBodyBytes() != null) {
+      buffer.writeBytes(httpRequest.getBodyBytes());
+    } else {
+      buffer.writeCharSequence(httpRequest.getBody(), StandardCharsets.UTF_8);
+    }
     Mono<ByteBuf> buf = Mono.just(buffer);
 
     return httpClient

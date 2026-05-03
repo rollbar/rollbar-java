@@ -13,10 +13,19 @@ public interface AsyncHttpRequest {
 
   String getBody();
 
+  default byte[] getBodyBytes() {
+    return null;
+  }
+
   class Builder {
     public static AsyncHttpRequest build(String url, Set<Map.Entry<String, String>> headers,
                                          String reqBody) {
       return new AsyncHttpRequestImpl(url, headers, reqBody);
+    }
+
+    public static AsyncHttpRequest build(String url, Set<Map.Entry<String, String>> headers,
+                                         byte[] body) {
+      return new AsyncHttpRequestImpl(url, headers, body);
     }
   }
 }

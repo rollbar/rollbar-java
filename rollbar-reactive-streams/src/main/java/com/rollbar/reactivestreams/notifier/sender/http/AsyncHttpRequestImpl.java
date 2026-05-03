@@ -9,19 +9,22 @@ class AsyncHttpRequestImpl implements AsyncHttpRequest {
   private final String url;
   private final Iterable<Map.Entry<String, String>> headers;
   private final String body;
+  private final byte[] bodyBytes;
 
-  /**
-   * Constructor.
-   *
-   * @param url The URL to connect to.
-   * @param headers Request headers.
-   * @param body Request body.
-   */
   public AsyncHttpRequestImpl(String url, Iterable<Map.Entry<String, String>> headers,
                               String body) {
     this.url = url;
     this.headers = headers;
     this.body = body;
+    this.bodyBytes = null;
+  }
+
+  public AsyncHttpRequestImpl(String url, Iterable<Map.Entry<String, String>> headers,
+                              byte[] bodyBytes) {
+    this.url = url;
+    this.headers = headers;
+    this.body = null;
+    this.bodyBytes = bodyBytes;
   }
 
   @Override
@@ -37,5 +40,10 @@ class AsyncHttpRequestImpl implements AsyncHttpRequest {
   @Override
   public String getBody() {
     return body;
+  }
+
+  @Override
+  public byte[] getBodyBytes() {
+    return bodyBytes;
   }
 }
