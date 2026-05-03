@@ -219,7 +219,9 @@ public interface CommonConfig {
    * </p>
    * @return true to compress payloads, false otherwise.
    */
-  boolean compressPayload();
+  default boolean compressPayload() {
+    return true;
+  }
 
   int maximumTelemetryData();
 
