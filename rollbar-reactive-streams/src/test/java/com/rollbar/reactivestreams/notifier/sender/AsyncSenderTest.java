@@ -52,6 +52,7 @@ public class AsyncSenderTest {
 
     sender = new AsyncSender.Builder(httpClient)
             .accessToken(ACCESS_TOKEN)
+            .compressPayload(false)
             .build();
   }
   
