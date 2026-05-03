@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.util.zip.GZIPOutputStream;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
@@ -33,11 +34,14 @@ public class SyncSender extends AbstractSender {
 
   private final Proxy proxy;
 
+  private final boolean compressPayload;
+
   SyncSender(Builder builder) {
     this.url = builder.url;
     this.jsonSerializer = builder.jsonSerializer;
     this.accessToken = builder.accessToken;
     this.proxy = builder.proxy != null ? builder.proxy : Proxy.NO_PROXY;
+    this.compressPayload = builder.compressPayload;
   }
 
   @Override
@@ -69,6 +73,9 @@ public class SyncSender extends AbstractSender {
     connection.setRequestProperty("Accept-Charset", UTF_8);
     connection.setRequestProperty("Content-Type", "application/json; charset=" + UTF_8);
     connection.setRequestProperty("Accept", "application/json");
+    if (compressPayload) {
+      connection.setRequestProperty("Content-Encoding", "gzip");
+    }
     connection.setDoOutput(true);
     connection.setRequestMethod("POST");
 
@@ -78,7 +85,9 @@ public class SyncSender extends AbstractSender {
   private void sendJson(HttpURLConnection connection, byte[] bytes) throws IOException {
     OutputStream out = null;
     try {
-      out = connection.getOutputStream();
+      out = compressPayload
+          ? new GZIPOutputStream(connection.getOutputStream())
+          : connection.getOutputStream();
       out.write(bytes, 0, bytes.length);
     } catch (IOException e) {
       throw e;
@@ -130,6 +139,8 @@ public class SyncSender extends AbstractSender {
     private String accessToken;
 
     private Proxy proxy;
+
+    private boolean compressPayload = true;
 
     public Builder() {
       this(DEFAULT_API_ENDPOINT);
@@ -192,6 +203,16 @@ public class SyncSender extends AbstractSender {
      */
     public Builder proxy(Proxy proxy) {
       this.proxy = proxy;
+      return this;
+    }
+
+    /**
+     * Whether to gzip-compress payloads before sending. Default: true.
+     * @param compress true to enable compression.
+     * @return the builder instance.
+     */
+    public Builder compressPayload(boolean compress) {
+      this.compressPayload = compress;
       return this;
     }
 

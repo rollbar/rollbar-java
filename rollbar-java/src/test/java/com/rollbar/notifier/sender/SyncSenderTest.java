@@ -17,9 +17,11 @@ import com.rollbar.notifier.sender.listener.SenderListener;
 import com.rollbar.notifier.sender.result.Response;
 import com.rollbar.notifier.sender.result.Result;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.zip.GZIPInputStream;
 import java.net.HttpURLConnection;
 import java.net.Proxy;
 import java.net.URL;
@@ -76,6 +78,7 @@ public class SyncSenderTest {
     sut = new SyncSender.Builder()
         .url(url)
         .jsonSerializer(serializer)
+        .compressPayload(false)
         .build();
     sut.addListener(listener);
   }
@@ -196,6 +199,57 @@ public class SyncSenderTest {
     verifyHttp();
     verify(connection).getInputStream();
     verify(listener).onResponse(payload, expectedResponse);
+  }
+
+  @Test
+  public void shouldSendGzipEncodedPayloadWhenCompressionEnabled() throws Exception {
+    ByteArrayOutputStream capturedBytes = new ByteArrayOutputStream();
+    when(url.openConnection(eq(Proxy.NO_PROXY))).thenReturn(connection);
+    when(connection.getOutputStream()).thenReturn(capturedBytes);
+
+    int responseCode = 200;
+    String responseJson = "simulated_response_json";
+    when(connection.getResponseCode()).thenReturn(responseCode);
+    when(connection.getInputStream())
+        .thenReturn(new ByteArrayInputStream(responseJson.getBytes(UTF_8)));
+    when(serializer.resultFrom(responseJson)).thenReturn(result);
+
+    SyncSender compressingSut = new SyncSender.Builder()
+        .url(url)
+        .jsonSerializer(serializer)
+        .compressPayload(true)
+        .build();
+
+    compressingSut.send(payload);
+
+    verify(connection).setRequestProperty("Content-Encoding", "gzip");
+
+    GZIPInputStream gzipIn = new GZIPInputStream(
+        new ByteArrayInputStream(capturedBytes.toByteArray()));
+    ByteArrayOutputStream decompressedBytes = new ByteArrayOutputStream();
+    byte[] buf = new byte[1024];
+    int n;
+    while ((n = gzipIn.read(buf)) != -1) {
+      decompressedBytes.write(buf, 0, n);
+    }
+    String decompressed = decompressedBytes.toString(UTF_8);
+    assertThat(decompressed, is(PAYLOAD_JSON));
+  }
+
+  @Test
+  public void shouldNotSetContentEncodingWhenCompressionDisabled() throws Exception {
+    int responseCode = 200;
+    String responseJson = "simulated_response_json";
+    when(connection.getResponseCode()).thenReturn(responseCode);
+    when(connection.getInputStream())
+        .thenReturn(new ByteArrayInputStream(responseJson.getBytes(UTF_8)));
+    when(serializer.resultFrom(responseJson)).thenReturn(result);
+
+    sut.send(payload);
+
+    verify(connection, org.mockito.Mockito.never())
+        .setRequestProperty(org.mockito.ArgumentMatchers.eq("Content-Encoding"),
+            org.mockito.ArgumentMatchers.anyString());
   }
 
   private void verifyHttp() throws Exception {
