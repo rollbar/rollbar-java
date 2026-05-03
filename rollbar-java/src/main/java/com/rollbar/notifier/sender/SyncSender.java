@@ -12,10 +12,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.util.zip.GZIPOutputStream;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Synchronous implementation of the {@link Sender sender}.
