@@ -85,12 +85,14 @@ public class SyncSender extends AbstractSender {
   private void sendJson(HttpURLConnection connection, byte[] bytes) throws IOException {
     OutputStream out = null;
     try {
-      out = compressPayload
-          ? new GZIPOutputStream(connection.getOutputStream())
-          : connection.getOutputStream();
+      OutputStream raw = connection.getOutputStream();
+      try {
+        out = compressPayload ? new GZIPOutputStream(raw) : raw;
+      } catch (IOException e) {
+        ObjectsUtils.close(raw);
+        throw e;
+      }
       out.write(bytes, 0, bytes.length);
-    } catch (IOException e) {
-      throw e;
     } finally {
       ObjectsUtils.close(out);
     }
