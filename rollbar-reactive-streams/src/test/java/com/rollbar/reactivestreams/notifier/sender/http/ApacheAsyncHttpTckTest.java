@@ -74,7 +74,7 @@ public class ApacheAsyncHttpTckTest extends PublisherVerification<SimpleHttpResp
     });
 
     return new ApacheRequestPublisher(client, new AsyncHttpRequestImpl(url,
-        new LinkedHashMap<String, String>().entrySet(), ""));
+        new LinkedHashMap<String, String>().entrySet(), "", false));
   }
 
   @Override
@@ -85,7 +85,7 @@ public class ApacheAsyncHttpTckTest extends PublisherVerification<SimpleHttpResp
     });
 
     return new ApacheRequestPublisher(client, new AsyncHttpRequestImpl(url,
-        new LinkedHashMap<String, String>().entrySet(), ""));
+        new LinkedHashMap<String, String>().entrySet(), "", false));
   }
 
   @Override
