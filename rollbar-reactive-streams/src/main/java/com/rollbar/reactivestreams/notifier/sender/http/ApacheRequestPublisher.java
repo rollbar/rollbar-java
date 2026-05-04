@@ -129,9 +129,9 @@ class ApacheRequestPublisher implements Publisher<SimpleHttpResponse> {
   private static byte[] compress(String json) {
     try {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      GZIPOutputStream gzip = new GZIPOutputStream(baos);
-      gzip.write(json.getBytes(SyncSender.UTF_8));
-      gzip.close();
+      try (GZIPOutputStream gzip = new GZIPOutputStream(baos)) {
+        gzip.write(json.getBytes(SyncSender.UTF_8));
+      }
       return baos.toByteArray();
     } catch (IOException e) {
       throw new RuntimeException("Failed to gzip-compress payload", e);
