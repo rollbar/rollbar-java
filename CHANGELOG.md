@@ -1,5 +1,17 @@
 # Change Log
 
+# 2.3.0-beta.1
+
+### rollbar-android
+- Capture logcat output as telemetry events [#369](https://github.com/rollbar/rollbar-java/pull/369)
+- Fix: Update consumer rules [#372](https://github.com/rollbar/rollbar-java/pull/372)
+
+### rollbar-java
+- Compress payload and update payload max size to 1mb [#371](https://github.com/rollbar/rollbar-java/pull/371)
+
+### rollbar-okhttp
+- Add okhttp interceptor for telemetry events [#367](https://github.com/rollbar/rollbar-java/pull/367)
+
 # 2.2.0
 
 - Switching to stable release
