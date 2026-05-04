@@ -105,8 +105,8 @@ class LogcatTelemetryCapture {
       } catch (IOException ignored) {
       }
       if (running) {
-        Log.w(Rollbar.TAG, "logcat process exited unexpectedly; resetting capture state");
         stop();
+        Log.w(Rollbar.TAG, "logcat process exited unexpectedly; resetting capture state");
       }
     }
   }
