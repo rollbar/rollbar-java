@@ -22,10 +22,11 @@
     public static ** valueOf(java.lang.String);
 }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
+# Preserve the line number information for debugging stack traces.
 -keepattributes SourceFile,LineNumberTable
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
--renamesourcefileattribute SourceFile
+# NOTE: -renamesourcefileattribute is a global ProGuard/R8 option and must NOT
+# be placed in library consumer rules. If you want to hide original source file
+# names in your app's stack traces, add the following to your app's own
+# proguard-rules.pro instead:
+#   -renamesourcefileattribute SourceFile
