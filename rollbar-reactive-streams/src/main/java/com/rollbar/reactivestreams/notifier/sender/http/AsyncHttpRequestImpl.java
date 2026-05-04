@@ -9,19 +9,14 @@ class AsyncHttpRequestImpl implements AsyncHttpRequest {
   private final String url;
   private final Iterable<Map.Entry<String, String>> headers;
   private final String body;
+  private final boolean compressionRequested;
 
-  /**
-   * Constructor.
-   *
-   * @param url The URL to connect to.
-   * @param headers Request headers.
-   * @param body Request body.
-   */
   public AsyncHttpRequestImpl(String url, Iterable<Map.Entry<String, String>> headers,
-                              String body) {
+                              String body, boolean compressionRequested) {
     this.url = url;
     this.headers = headers;
     this.body = body;
+    this.compressionRequested = compressionRequested;
   }
 
   @Override
@@ -37,5 +32,10 @@ class AsyncHttpRequestImpl implements AsyncHttpRequest {
   @Override
   public String getBody() {
     return body;
+  }
+
+  @Override
+  public boolean isCompressionRequested() {
+    return compressionRequested;
   }
 }

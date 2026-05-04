@@ -1,10 +1,14 @@
 package com.rollbar.reactivestreams.notifier.sender.http;
 
+import com.rollbar.notifier.sender.SyncSender;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.zip.GZIPOutputStream;
 import org.apache.hc.client5.http.async.HttpAsyncClient;
 import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
 import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
@@ -102,7 +106,12 @@ class ApacheRequestPublisher implements Publisher<SimpleHttpResponse> {
         req.setHeader(header.getKey(), header.getValue());
       }
 
-      req.setBody(request.getBody(), ContentType.APPLICATION_JSON);
+      if (request.isCompressionRequested()) {
+        req.addHeader("Content-Encoding", "gzip");
+        req.setBody(compress(request.getBody()), ContentType.APPLICATION_JSON);
+      } else {
+        req.setBody(request.getBody(), ContentType.APPLICATION_JSON);
+      }
 
       return SimpleRequestProducer.create(req);
     }
@@ -114,6 +123,18 @@ class ApacheRequestPublisher implements Publisher<SimpleHttpResponse> {
       if (request != null) {
         request.cancel(false);
       }
+    }
+  }
+
+  private static byte[] compress(String json) {
+    try {
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      try (GZIPOutputStream gzip = new GZIPOutputStream(baos)) {
+        gzip.write(json.getBytes(SyncSender.UTF_8));
+      }
+      return baos.toByteArray();
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to gzip-compress payload", e);
     }
   }
 }

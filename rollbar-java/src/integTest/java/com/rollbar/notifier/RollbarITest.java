@@ -352,7 +352,7 @@ public class RollbarITest {
     assertThat(frames, hasSize(20));
 
     assertThat(PayloadTruncator.sizeInBytes(payloadJsonString),
-        lessThanOrEqualTo(512 * 1024));
+        lessThanOrEqualTo(1024 * 1024));
   }
 
   protected Sender buildSender(String url, String accessToken, Proxy proxy) {

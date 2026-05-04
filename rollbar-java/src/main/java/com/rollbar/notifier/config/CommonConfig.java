@@ -212,6 +212,17 @@ public interface CommonConfig {
    */
   boolean truncateLargePayloads();
 
+  /**
+   * <p>
+   * If set to true (the default), payloads are gzip-compressed before sending.
+   * Set to false to send uncompressed JSON.
+   * </p>
+   * @return true to compress payloads, false otherwise.
+   */
+  default boolean compressPayload() {
+    return true;
+  }
+
   int maximumTelemetryData();
 
   TelemetryEventTracker telemetryEventTracker();

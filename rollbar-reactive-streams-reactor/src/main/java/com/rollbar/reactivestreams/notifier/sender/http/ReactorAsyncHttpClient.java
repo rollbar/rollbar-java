@@ -1,12 +1,16 @@
 package com.rollbar.reactivestreams.notifier.sender.http;
 
+import com.rollbar.notifier.sender.SyncSender;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap;
 import java.util.Map;
+import java.util.zip.GZIPOutputStream;
 
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
@@ -47,13 +51,25 @@ public class ReactorAsyncHttpClient implements AsyncHttpClient {
   public Publisher<AsyncHttpResponse> send(AsyncHttpRequest httpRequest) {
 
     ByteBuf buffer = ByteBufAllocator.DEFAULT.buffer();
-    buffer.writeCharSequence(httpRequest.getBody(), StandardCharsets.UTF_8);
+    try {
+      if (httpRequest.isCompressionRequested()) {
+        buffer.writeBytes(compress(httpRequest.getBody()));
+      } else {
+        buffer.writeCharSequence(httpRequest.getBody(), StandardCharsets.UTF_8);
+      }
+    } catch (Throwable t) {
+      buffer.release();
+      throw t;
+    }
     Mono<ByteBuf> buf = Mono.just(buffer);
 
     return httpClient
         .headers(entries -> {
           for (Map.Entry<String, String> header : httpRequest.getHeaders()) {
             entries.add(header.getKey(), header.getValue());
+          }
+          if (httpRequest.isCompressionRequested()) {
+            entries.add("Content-Encoding", "gzip");
           }
         })
         .post()
@@ -137,6 +153,18 @@ public class ReactorAsyncHttpClient implements AsyncHttpClient {
         return ProxyProvider.Proxy.SOCKS5;
       default:
         throw new IllegalArgumentException("Unknown proxy type " + proxy.type());
+    }
+  }
+
+  private static byte[] compress(String json) {
+    try {
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      try (GZIPOutputStream gzip = new GZIPOutputStream(baos)) {
+        gzip.write(json.getBytes(SyncSender.UTF_8));
+      }
+      return baos.toByteArray();
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to gzip-compress payload", e);
     }
   }
 

@@ -61,6 +61,7 @@ public final class ConfigBuilder {
   private boolean enabled;
   private DefaultLevels defaultLevels;
   private boolean truncateLargePayloads;
+  private boolean compressPayload;
   private int maximumTelemetryData =
       RollbarTelemetryEventTracker.MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS;
   private TelemetryEventTracker telemetryEventTracker;
@@ -74,6 +75,7 @@ public final class ConfigBuilder {
     this.accessToken = accessToken;
     this.handleUncaughtErrors = true;
     this.enabled = true;
+    this.compressPayload = true;
     this.defaultLevels = new DefaultLevels();
   }
 
@@ -106,6 +108,7 @@ public final class ConfigBuilder {
     this.appPackages = config.appPackages();
     this.defaultLevels = new DefaultLevels(config);
     this.truncateLargePayloads = config.truncateLargePayloads();
+    this.compressPayload = config.compressPayload();
     this.maximumTelemetryData = config.maximumTelemetryData();
     this.telemetryEventTracker = config.telemetryEventTracker();
   }
@@ -471,6 +474,18 @@ public final class ConfigBuilder {
 
   /**
    * <p>
+   * If set to false, payloads will not be gzip-compressed before sending. Default: true.
+   * </p>
+   * @param compress true to gzip-compress payloads.
+   * @return the builder instance.
+   */
+  public ConfigBuilder compressPayload(boolean compress) {
+    this.compressPayload = compress;
+    return this;
+  }
+
+  /**
+   * <p>
    * Maximum Telemetry events sent in a payload, only for the default TelemetryEventTracker, if
    * a custom implementation is used this value will be ignored. Default is
    * {@value RollbarTelemetryEventTracker#MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS}.
@@ -517,7 +532,8 @@ public final class ConfigBuilder {
         httpClient = AsyncHttpClientFactory.defaultClient();
       }
       AsyncSender.Builder senderBuilder = new AsyncSender.Builder(httpClient, this.endpoint)
-              .accessToken(accessToken);
+              .accessToken(accessToken)
+              .compressPayload(this.compressPayload);
 
       if (this.jsonSerializer != null) {
         senderBuilder.jsonSerializer(this.jsonSerializer);
@@ -565,6 +581,7 @@ public final class ConfigBuilder {
     private final DefaultLevels defaultLevels;
     private final JsonSerializer jsonSerializer;
     private final boolean truncateLargePayloads;
+    private final boolean compressPayload;
     private final int maximumTelemetryData;
     private final TelemetryEventTracker telemetryEventTracker;
 
@@ -599,6 +616,7 @@ public final class ConfigBuilder {
       this.defaultLevels = builder.defaultLevels;
       this.jsonSerializer = builder.jsonSerializer;
       this.truncateLargePayloads = builder.truncateLargePayloads;
+      this.compressPayload = builder.compressPayload;
       this.maximumTelemetryData = builder.maximumTelemetryData;
       this.telemetryEventTracker = builder.telemetryEventTracker;
     }
@@ -741,6 +759,11 @@ public final class ConfigBuilder {
     @Override
     public boolean truncateLargePayloads() {
       return truncateLargePayloads;
+    }
+
+    @Override
+    public boolean compressPayload() {
+      return compressPayload;
     }
 
     @Override

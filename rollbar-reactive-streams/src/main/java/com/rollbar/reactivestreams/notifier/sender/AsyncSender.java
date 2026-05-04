@@ -23,12 +23,14 @@ public class AsyncSender implements Sender {
   private final String url;
   private final JsonSerializer jsonSerializer;
   private final String accessToken;
+  private final boolean compressPayload;
 
   AsyncSender(Builder builder) {
     this.httpClient = builder.httpClient;
     this.url = builder.url.toExternalForm();
     this.jsonSerializer = builder.jsonSerializer;
     this.accessToken = builder.accessToken;
+    this.compressPayload = builder.compressPayload;
   }
 
   /**
@@ -49,10 +51,10 @@ public class AsyncSender implements Sender {
     headers.put("Content-Type", "application/json; charset=" + SyncSender.UTF_8);
     headers.put("Accept", "application/json");
 
-    String reqBody = jsonSerializer.toJson(payload);
+    String json = jsonSerializer.toJson(payload);
 
     AsyncHttpRequest request =
-        AsyncHttpRequest.Builder.build(this.url, headers.entrySet(), reqBody);
+        AsyncHttpRequest.Builder.build(this.url, headers.entrySet(), json, compressPayload);
 
     return Utils.map(httpClient.send(request),
         new Utils.Converter<AsyncHttpResponse, Response>() {
@@ -82,6 +84,7 @@ public class AsyncSender implements Sender {
     private URL url;
     private JsonSerializer jsonSerializer;
     private String accessToken;
+    private boolean compressPayload = true;
 
     /**
      * Constructor.
@@ -145,6 +148,17 @@ public class AsyncSender implements Sender {
      */
     public Builder accessToken(String accessToken) {
       this.accessToken = accessToken;
+      return this;
+    }
+
+    /**
+     * Whether to gzip-compress payloads before sending. Default: true.
+     *
+     * @param compress true to enable compression.
+     * @return the builder instance.
+     */
+    public Builder compressPayload(boolean compress) {
+      this.compressPayload = compress;
       return this;
     }
 

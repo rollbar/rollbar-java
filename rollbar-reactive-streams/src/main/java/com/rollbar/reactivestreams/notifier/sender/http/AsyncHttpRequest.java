@@ -13,10 +13,19 @@ public interface AsyncHttpRequest {
 
   String getBody();
 
+  default boolean isCompressionRequested() {
+    return false;
+  }
+
   class Builder {
     public static AsyncHttpRequest build(String url, Set<Map.Entry<String, String>> headers,
                                          String reqBody) {
-      return new AsyncHttpRequestImpl(url, headers, reqBody);
+      return new AsyncHttpRequestImpl(url, headers, reqBody, false);
+    }
+
+    public static AsyncHttpRequest build(String url, Set<Map.Entry<String, String>> headers,
+                                         String reqBody, boolean compressionRequested) {
+      return new AsyncHttpRequestImpl(url, headers, reqBody, compressionRequested);
     }
   }
 }

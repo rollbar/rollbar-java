@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 public abstract class RollbarBase<RESULT, C extends CommonConfig> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(RollbarBase.class);
-  private static final int MAX_PAYLOAD_SIZE_BYTES = 512 * 1024; // 512kb
+  private static final int MAX_PAYLOAD_SIZE_BYTES = 1024 * 1024; // 1mb
 
   protected BodyFactory bodyFactory;
   protected PayloadTruncator payloadTruncator;
