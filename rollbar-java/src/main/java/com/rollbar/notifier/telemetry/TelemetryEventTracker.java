@@ -10,8 +10,8 @@ import java.util.List;
 /**
  * Collects and manages telemetry events that provide additional runtime
  * context for error and message payloads.
- * Telemetry events are typically buffered and cleared after they are
- * {@link #dump() dumped}.
+ * Telemetry events are typically buffered and retrieved via
+ * {@link #getAll()}.
  */
 public interface TelemetryEventTracker {
 
