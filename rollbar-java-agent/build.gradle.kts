@@ -52,4 +52,5 @@ tasks.test {
     // system classloader; mirrors production use where rollbar-java-agent is a Gradle/Maven dep
     classpath += files(agentJar)
     dependsOn(tasks.shadowJar)
+    dependsOn(tasks.jar)
 }
