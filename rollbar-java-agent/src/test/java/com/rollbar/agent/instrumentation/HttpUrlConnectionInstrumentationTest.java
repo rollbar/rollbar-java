@@ -18,7 +18,7 @@ import java.util.Map;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class HttpURLConnectionInstrumentationTest {
+public class HttpUrlConnectionInstrumentationTest {
 
   private WireMockServer server;
 

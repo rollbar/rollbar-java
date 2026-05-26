@@ -2,7 +2,7 @@ package com.rollbar.agent;
 
 import com.rollbar.agent.instrumentation.ApacheHttpClient4Instrumentation;
 import com.rollbar.agent.instrumentation.ApacheHttpClient5Instrumentation;
-import com.rollbar.agent.instrumentation.HttpURLConnectionInstrumentation;
+import com.rollbar.agent.instrumentation.HttpUrlConnectionInstrumentation;
 import com.rollbar.agent.instrumentation.JavaHttpClientInstrumentation;
 import com.rollbar.notifier.telemetry.TelemetryEventTracker;
 import java.lang.instrument.Instrumentation;
@@ -41,7 +41,7 @@ public class RollbarAgent {
         .with(AgentBuilder.InitializationStrategy.NoOp.INSTANCE)
         .with(AgentBuilder.TypeStrategy.Default.REDEFINE);
 
-    HttpURLConnectionInstrumentation.install(builder, inst);
+    HttpUrlConnectionInstrumentation.install(builder, inst);
     JavaHttpClientInstrumentation.installIfAvailable(builder, inst);
     ApacheHttpClient4Instrumentation.installIfAvailable(builder, inst);
     ApacheHttpClient5Instrumentation.installIfAvailable(builder, inst);

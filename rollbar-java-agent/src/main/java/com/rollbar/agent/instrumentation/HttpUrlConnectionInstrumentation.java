@@ -8,9 +8,9 @@ import net.bytebuddy.matcher.ElementMatchers;
 /**
  * Installs ByteBuddy advice on {@code java.net.HttpURLConnection} to capture network errors.
  */
-public final class HttpURLConnectionInstrumentation {
+public final class HttpUrlConnectionInstrumentation {
 
-  private HttpURLConnectionInstrumentation() {}
+  private HttpUrlConnectionInstrumentation() {}
 
   /**
    * Instruments {@code java.net.HttpURLConnection.getResponseCode()} to record 4xx/5xx responses.
