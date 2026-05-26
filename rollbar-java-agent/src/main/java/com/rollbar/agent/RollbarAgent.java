@@ -5,10 +5,9 @@ import com.rollbar.agent.instrumentation.ApacheHttpClient5Instrumentation;
 import com.rollbar.agent.instrumentation.HttpURLConnectionInstrumentation;
 import com.rollbar.agent.instrumentation.JavaHttpClientInstrumentation;
 import com.rollbar.notifier.telemetry.TelemetryEventTracker;
+import java.lang.instrument.Instrumentation;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.matcher.ElementMatchers;
-
-import java.lang.instrument.Instrumentation;
 
 /**
  * Java agent entry point. Attach with {@code -javaagent:/path/to/rollbar-java-agent.jar}.

@@ -1,15 +1,22 @@
 package com.rollbar.agent.instrumentation;
 
+import java.lang.instrument.Instrumentation;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.matcher.ElementMatchers;
 
-import java.lang.instrument.Instrumentation;
-
+/**
+ * Installs ByteBuddy advice on {@code java.net.HttpURLConnection} to capture network errors.
+ */
 public final class HttpURLConnectionInstrumentation {
 
   private HttpURLConnectionInstrumentation() {}
 
+  /**
+   * Instruments {@code java.net.HttpURLConnection.getResponseCode()} to record 4xx/5xx responses.
+   *
+   * <p>Targets the declaring class directly to capture the method regardless of concrete subtype.
+   */
   public static void install(AgentBuilder builder, Instrumentation inst) {
     builder
         .type(ElementMatchers.named("java.net.HttpURLConnection"))
@@ -29,6 +36,12 @@ public final class HttpURLConnectionInstrumentation {
    */
   public static class GetResponseCodeAdvice {
 
+    /**
+     * Fires after {@code getResponseCode()} returns or throws, recording 4xx/5xx as telemetry.
+     *
+     * <p>Uses the connection instance as a deduplication key since {@code getResponseCode()} is
+     * called re-entrantly up to 3 times per request internally.
+     */
     @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void onExit(
         @Advice.This Object connection,
@@ -46,7 +59,8 @@ public final class HttpURLConnectionInstrumentation {
           Boolean recorded = (Boolean) bridge
               .getMethod("markAsRecorded", Object.class).invoke(null, thrown);
           if (recorded) {
-            String msg = thrown.getMessage() != null ? thrown.getMessage() : thrown.getClass().getName();
+            String msg = thrown.getMessage() != null
+                ? thrown.getMessage() : thrown.getClass().getName();
             bridge.getMethod("recordError", String.class).invoke(null, msg);
           }
           return;
@@ -55,8 +69,8 @@ public final class HttpURLConnectionInstrumentation {
         if (statusCode >= 400) {
           Object url = connection.getClass().getMethod("getURL").invoke(connection);
           String urlStr = url != null ? url.toString() : "";
-          String method = (String) connection.getClass().getMethod("getRequestMethod").invoke(connection);
-          // connection instance as dedup key — same object across all re-entrant getResponseCode() calls
+          String method = (String) connection.getClass()
+              .getMethod("getRequestMethod").invoke(connection);
           bridge.getMethod("recordNetworkEvent",
                   Object.class, String.class, String.class, String.class)
               .invoke(null, connection, method, urlStr, String.valueOf(statusCode));

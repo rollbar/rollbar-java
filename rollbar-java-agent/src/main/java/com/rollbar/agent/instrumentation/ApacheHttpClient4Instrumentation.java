@@ -4,18 +4,25 @@ import com.rollbar.agent.AgentTelemetryStore;
 import com.rollbar.agent.UrlSanitizer;
 import com.rollbar.api.payload.data.Level;
 import com.rollbar.api.payload.data.Source;
+import java.lang.instrument.Instrumentation;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.matcher.ElementMatchers;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 
-import java.lang.instrument.Instrumentation;
-
+/**
+ * Installs ByteBuddy advice on Apache HttpClient 4.x to capture network errors.
+ */
 public final class ApacheHttpClient4Instrumentation {
 
   private ApacheHttpClient4Instrumentation() {}
 
+  /**
+   * Instruments Apache HttpClient 4.x if present on the classpath.
+   *
+   * <p>Does nothing if {@code org.apache.http.impl.client.CloseableHttpClient} is not available.
+   */
   public static void installIfAvailable(AgentBuilder builder, Instrumentation inst) {
     try {
       Class.forName("org.apache.http.impl.client.CloseableHttpClient");
@@ -41,6 +48,12 @@ public final class ApacheHttpClient4Instrumentation {
    */
   public static class ExecuteAdvice {
 
+    /**
+     * Fires after {@code execute()} returns or throws, recording 4xx/5xx responses as telemetry.
+     *
+     * <p>Apache HC 4.x runs in the application classloader, so Rollbar classes are referenced
+     * directly without the TCCL reflection bridge needed for JDK instrumentation.
+     */
     @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void onExit(
         @Advice.Argument(0) HttpUriRequest request,
@@ -49,10 +62,12 @@ public final class ApacheHttpClient4Instrumentation {
     ) {
       try {
         if (thrown != null) {
+          String message = thrown.getMessage() != null
+              ? thrown.getMessage() : thrown.getClass().getName();
           AgentTelemetryStore.getInstance().recordManualEventFor(
               Level.CRITICAL,
               Source.SERVER,
-              "Network error: " + (thrown.getMessage() != null ? thrown.getMessage() : thrown.getClass().getName())
+              "Network error: " + message
           );
           return;
         }

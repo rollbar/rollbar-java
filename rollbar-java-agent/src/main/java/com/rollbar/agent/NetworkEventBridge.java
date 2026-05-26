@@ -37,6 +37,11 @@ public final class NetworkEventBridge {
     return RECORDED.add(key);
   }
 
+  /**
+   * Records a network telemetry event for the given key if not already recorded.
+   *
+   * <p>Uses the key as a deduplication token — subsequent calls with the same key are ignored.
+   */
   public static void recordNetworkEvent(Object key, String method, String url, String statusCode) {
     if (!markAsRecorded(key)) {
       return; // deduplicate re-entrant calls for the same connection
@@ -50,6 +55,11 @@ public final class NetworkEventBridge {
     );
   }
 
+  /**
+   * Records a manual error telemetry event with the given message.
+   *
+   * <p>Called when an HTTP request fails with an I/O exception rather than a status code.
+   */
   public static void recordError(String message) {
     AgentTelemetryStore.getInstance().recordManualEventFor(
         Level.CRITICAL,
