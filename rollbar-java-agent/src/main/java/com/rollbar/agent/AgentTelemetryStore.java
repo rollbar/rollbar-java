@@ -1,6 +1,7 @@
 package com.rollbar.agent;
 
 import com.rollbar.api.payload.data.TelemetryEvent;
+import com.rollbar.notifier.provider.Provider;
 import com.rollbar.notifier.telemetry.RollbarTelemetryEventTracker;
 import com.rollbar.notifier.telemetry.TelemetryEventTracker;
 
@@ -21,7 +22,7 @@ public final class AgentTelemetryStore {
     return INSTANCE.getAll();
   }
 
-  public static void resetForTesting() {
-    INSTANCE = new RollbarTelemetryEventTracker(System::currentTimeMillis, 100);
+  public static void init(Provider<Long> timestampProvider) {
+    INSTANCE = new RollbarTelemetryEventTracker(timestampProvider, 100);
   }
 }
