@@ -15,7 +15,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.mockito:mockito-core:5.11.0")
-    testImplementation("com.github.tomakehurst:wiremock-jre8:2.35.2")
+    testImplementation("org.wiremock:wiremock:3.13.2")
     testImplementation("org.apache.httpcomponents:httpclient:4.5.14")
     testImplementation("org.apache.httpcomponents.client5:httpclient5:5.3.1")
 }
