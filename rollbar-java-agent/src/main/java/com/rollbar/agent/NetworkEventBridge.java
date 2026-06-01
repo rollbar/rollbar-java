@@ -56,6 +56,44 @@ public final class NetworkEventBridge {
   }
 
   /**
+   * Returns a {@link java.util.function.BiConsumer} that records telemetry when an async
+   * HTTP response completes. Intended to be chained via {@code CompletableFuture.whenComplete}.
+   *
+   * <p>The callback is created here (in the app classloader) so it can reference Rollbar types
+   * directly, avoiding the reflection overhead that advice code needs to cross the classloader gap.
+   */
+  public static java.util.function.BiConsumer<Object, Throwable> createAsyncCallback(
+      Object request) {
+    return (response, thrown) -> {
+      try {
+        if (thrown != null) {
+          if (markAsRecorded(thrown)) {
+            String message = thrown.getMessage() != null
+                ? thrown.getMessage() : thrown.getClass().getName();
+            recordError(message);
+          }
+          return;
+        }
+        if (response != null) {
+          // Look up methods via public interfaces, not the internal JDK implementation class.
+          // NetworkEventBridge runs in the app classloader (unnamed module) and cannot access
+          // jdk.internal.net.http.*; java.net.http.* is exported and accessible.
+          Class<?> httpResponseIface = Class.forName("java.net.http.HttpResponse");
+          Class<?> httpRequestIface = Class.forName("java.net.http.HttpRequest");
+          int statusCode = (Integer) httpResponseIface.getMethod("statusCode").invoke(response);
+          if (statusCode >= 400) {
+            Object uri = httpRequestIface.getMethod("uri").invoke(request);
+            String method = (String) httpRequestIface.getMethod("method").invoke(request);
+            recordNetworkEvent(response, method, uri.toString(), String.valueOf(statusCode));
+          }
+        }
+      } catch (Throwable ignored) {
+        // Callback must never throw — swallow all errors
+      }
+    };
+  }
+
+  /**
    * Records a manual error telemetry event with the given message.
    *
    * <p>Called when an HTTP request fails with an I/O exception rather than a status code.

@@ -28,10 +28,62 @@ public final class JavaHttpClientInstrumentation {
     builder
         .type(ElementMatchers.isSubTypeOf(HttpClient.class))
         .transform((b, typeDescription, classLoader, module, protectionDomain) ->
-            b.visit(Advice.to(SendAdvice.class)
-                .on(ElementMatchers.named("send")))
+            b.visit(Advice.to(SendAdvice.class).on(ElementMatchers.named("send")))
+             .visit(Advice.to(SendAsyncAdvice.class).on(ElementMatchers.named("sendAsync")))
         )
         .installOn(inst);
+  }
+
+  /**
+   * Advice inlined into JDK's HttpClient concrete implementation's sendAsync().
+   *
+   * <p>At method exit, chains a {@code whenComplete} callback onto the returned
+   * {@code CompletableFuture}. The callback is created via the bridge (in the app classloader)
+   * so it can reference Rollbar types without further reflection at completion time.
+   * Deduplication is handled by the bridge using the response object as the key, which works the
+   * same way as for sync send(): both HttpClientFacade and HttpClientImpl contribute a callback,
+   * but only the first one to run with a given response object records an event.
+   */
+  public static class SendAsyncAdvice {
+
+    /**
+     * Fires after {@code sendAsync()} returns, chaining a telemetry callback on the future.
+     */
+    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    public static void onExit(
+        @Advice.Argument(0) Object request,
+        @Advice.Return Object future,
+        @Advice.Thrown Throwable thrown
+    ) {
+      try {
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        if (cl == null) {
+          cl = ClassLoader.getSystemClassLoader();
+        }
+        Class<?> bridge = cl.loadClass("com.rollbar.agent.NetworkEventBridge");
+
+        if (thrown != null) {
+          Boolean recorded = (Boolean) bridge
+              .getMethod("markAsRecorded", Object.class).invoke(null, thrown);
+          if (recorded) {
+            String message = thrown.getMessage() != null
+                ? thrown.getMessage() : thrown.getClass().getName();
+            bridge.getMethod("recordError", String.class).invoke(null, message);
+          }
+          return;
+        }
+
+        if (future != null) {
+          Object callback = bridge
+              .getMethod("createAsyncCallback", Object.class).invoke(null, request);
+          future.getClass()
+              .getMethod("whenComplete", java.util.function.BiConsumer.class)
+              .invoke(future, callback);
+        }
+      } catch (Throwable ignored) {
+        // Advice must never throw — swallow all errors including Error subclasses
+      }
+    }
   }
 
   /**
