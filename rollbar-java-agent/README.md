@@ -9,11 +9,13 @@ It works by attaching to the JVM at startup via `-javaagent:` and using ByteBudd
 | Client | Condition |
 |--------|-----------|
 | `java.net.HttpURLConnection` | Always (JDK built-in) |
-| `java.net.http.HttpClient` | Java 11+ only |
+| `java.net.http.HttpClient` — `send()` and `sendAsync()` | Java 11+ only |
 | Apache HttpClient 4.x (`org.apache.http`) | If present on classpath |
 | Apache HttpClient 5.x (`org.apache.hc.client5`) | If present on classpath |
 
 Only 4xx and 5xx responses are recorded. Successful requests (< 400) produce no telemetry.
+
+> **Apache HC4/HC5 note:** `execute(request, responseHandler)` overloads route through a separate internal call chain and are not instrumented. Use the standard `execute(request)` / `execute(request, context)` overloads to get telemetry.
 
 ## Requirements
 
