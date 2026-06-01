@@ -51,9 +51,11 @@ public final class ApacheHttpClient5Instrumentation {
                     // HC5 has both 2-arg (arg1=handler) and 3-arg (arg1=context, arg2=handler)
                     // variants; both are excluded here.
                     .and(ElementMatchers.not(ElementMatchers.takesArgument(1,
-                        ElementMatchers.named("org.apache.hc.core5.http.io.HttpClientResponseHandler"))))
+                        ElementMatchers.named(
+                            "org.apache.hc.core5.http.io.HttpClientResponseHandler"))))
                     .and(ElementMatchers.not(ElementMatchers.takesArgument(2,
-                        ElementMatchers.named("org.apache.hc.core5.http.io.HttpClientResponseHandler"))))))
+                        ElementMatchers.named(
+                            "org.apache.hc.core5.http.io.HttpClientResponseHandler"))))))
         )
         .installOn(inst);
   }

@@ -42,7 +42,8 @@ public final class ApacheHttpClient4Instrumentation {
                     // Target only execute(HttpUriRequest, HttpContext) — the single concrete
                     // method that all other execute() overloads delegate to before calling
                     // doExecute(). This ensures exactly one advice invocation per HTTP request
-                    // regardless of which public overload the caller uses (including ResponseHandler
+                    // regardless of which public overload the caller uses (including
+                    // ResponseHandler
                     // variants). The bridge method for this overload is excluded to avoid a second
                     // firing; the 1 arg execute(HttpUriRequest) is excluded because it has no arg
                     // at index 1, and ResponseHandler overloads are excluded because their second
@@ -81,7 +82,8 @@ public final class ApacheHttpClient4Instrumentation {
         if (thrown != null) {
           String message = thrown.getMessage() != null
               ? thrown.getMessage() : thrown.getClass().getName();
-          // Use String.concat instead of + to avoid invokedynamic (unsupported in Java 6 class files)
+          // Use String.concat instead of + to avoid invokedynamic
+          // (unsupported in Java 6 class files)
           AgentTelemetryStore.getInstance().recordManualEventFor(
               Level.CRITICAL,
               Source.SERVER,
