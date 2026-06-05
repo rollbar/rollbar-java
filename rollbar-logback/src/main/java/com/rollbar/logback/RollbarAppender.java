@@ -108,12 +108,12 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
     super.start();
   }
 
-  @Override
-  protected void append(ILoggingEvent event) {
-    if (isRollbarLogger(event.getLoggerName())) {
-      addWarn("Recursive logging");
-      return;
-    }
+@Override
+protected void append(ILoggingEvent event) {
+  if (isRollbarLogger(event.getLoggerName())) {
+    addWarn("Recursive logging");
+    return;
+  }
 
     IThrowableProxy throwableProxy = event.getThrowableProxy();
     ThrowableWrapper rollbarThrowableWrapper = buildRollbarThrowableWrapper(throwableProxy);
@@ -124,10 +124,14 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
 
   }
 
-  private static boolean isRollbarLogger(String loggerName) {
-    if (loggerName == null) {
-      return false;
-    }
+ private static boolean isRollbarLogger(String loggerName) {
+  if (loggerName == null) {
+    return false;
+  }
+
+  return PACKAGE_NAME.equals(loggerName)
+      || loggerName.startsWith(PACKAGE_NAME + ".");
+}
 
     return PACKAGE_NAME.equals(loggerName)
         || loggerName.startsWith(PACKAGE_NAME + ".");
