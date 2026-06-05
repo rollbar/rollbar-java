@@ -37,6 +37,7 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
 
   private static final String CUSTOM_ARGUMENT_ARRAY_KEY = "argumentArray";
 
+
   private Rollbar rollbar;
 
   private String accessToken;
@@ -60,7 +61,7 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
   private String configProviderClassName;
 
   /**
-   * vonstructor for programmatic instantiation using an existing Rollbar instance.
+   * Constructor for programmatic instantiation using an existing Rollbar instance.
    *
    * @param rollbar the rollbar notifier.
    */
@@ -69,31 +70,32 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
   }
 
   public RollbarAppender() {
-    // empty constructor
+    //empty constructor
   }
 
   @Override
   public void start() {
     if (this.rollbar == null) {
       ConfigProvider configProvider = ConfigProviderHelper
-          .getConfigProvider(this.configProviderClassName);
+              .getConfigProvider(this.configProviderClassName);
       Config config;
 
       ConfigBuilder configBuilder = withAccessToken(this.accessToken)
-          .environment(this.environment)
-          .endpoint(this.endpoint)
-          .server(new ServerProvider())
-          .language(this.language)
-          .codeVersion(this.codeVersion)
-          .context(new Provider<String>() {
-            @Override
-            public String provide() {
-              return RollbarAppender.this.staticContext;
-            }
-          })
-          .enabled(this.enabled)
-          .framework(this.framework)
-          .platform(this.platform);
+              .environment(this.environment)
+              .endpoint(this.endpoint)
+              .server(new ServerProvider())
+              .language(this.language)
+              .codeVersion(this.codeVersion)
+              .context(new Provider<String>() {
+                @Override
+                public String provide() {
+                  return RollbarAppender.this.staticContext;
+                }
+              })
+              .enabled(this.enabled)
+              .framework(this.framework)
+              .platform(this.platform)
+          ;
 
       if (configProvider != null) {
         config = configProvider.provide(configBuilder);
@@ -103,7 +105,6 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
 
       this.rollbar = new Rollbar(config);
     }
-
     super.start();
   }
 
@@ -118,12 +119,9 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
     ThrowableWrapper rollbarThrowableWrapper = buildRollbarThrowableWrapper(throwableProxy);
     Map<String, Object> custom = this.buildCustom(event);
 
-    rollbar.log(
-        rollbarThrowableWrapper,
-        custom,
-        event.getFormattedMessage(),
-        Level.lookupByName(event.getLevel().levelStr),
-        false);
+    rollbar.log(rollbarThrowableWrapper, custom, event.getFormattedMessage(),
+        Level.lookupByName(event.getLevel().levelStr), false);
+
   }
 
   private static boolean isRollbarLogger(String loggerName) {
@@ -138,7 +136,6 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
   @Override
   public void stop() {
     super.stop();
-
     try {
       rollbar.close(true);
     } catch (Exception e) {
@@ -207,15 +204,11 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
     StackTraceElement[] stackTraceElements = buildStackTraceElements(
         throwableProxy.getStackTraceElementProxyArray());
 
-    return new RollbarThrowableWrapper(
-        className,
-        message,
-        stackTraceElements,
+    return new RollbarThrowableWrapper(className, message, stackTraceElements,
         causeThrowableWrapper);
   }
 
-  private StackTraceElement[] buildStackTraceElements(
-      StackTraceElementProxy[] stackTraceElements) {
+  private StackTraceElement[] buildStackTraceElements(StackTraceElementProxy[] stackTraceElements) {
     StackTraceElement[] elements = new StackTraceElement[stackTraceElements.length];
 
     for (int i = 0; i < stackTraceElements.length; i++) {
@@ -230,8 +223,10 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
 
     custom.put(CUSTOM_LOGGER_NAME_KEY, event.getLoggerName());
     custom.put(CUSTOM_THREAD_NAME_KEY, event.getThreadName());
+
     custom.put(CUSTOM_MDC_NAME_KEY, this.buildMdc(event));
     custom.put(CUSTOM_MAKER_NAME_KEY, this.getMarker(event));
+
     custom.put(CUSTOM_ARGUMENT_ARRAY_KEY, event.getArgumentArray());
 
     Map<String, Object> rootCustom = new HashMap<>();
@@ -244,7 +239,7 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
     if (event.getMDCPropertyMap() == null || event.getMDCPropertyMap().size() == 0) {
       return null;
     }
-
+    
     Map<String, Object> custom = new HashMap<>();
 
     for (Entry<String, String> mdcEntry : event.getMDCPropertyMap().entrySet()) {
