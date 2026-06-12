@@ -4,8 +4,12 @@ import com.rollbar.agent.instrumentation.ApacheHttpClient4Instrumentation;
 import com.rollbar.agent.instrumentation.ApacheHttpClient5Instrumentation;
 import com.rollbar.agent.instrumentation.HttpUrlConnectionInstrumentation;
 import com.rollbar.agent.instrumentation.JavaHttpClientInstrumentation;
+import com.rollbar.api.payload.data.Level;
+import com.rollbar.api.payload.data.Source;
+import com.rollbar.api.payload.data.TelemetryEvent;
 import com.rollbar.notifier.telemetry.TelemetryEventTracker;
 import java.lang.instrument.Instrumentation;
+import java.util.List;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.matcher.ElementMatchers;
 
@@ -48,6 +52,40 @@ public class RollbarAgent {
   }
 
   public static TelemetryEventTracker getTelemetryTracker() {
-    return AgentTelemetryStore.getInstance();
+    return DelegatingTracker.INSTANCE;
+  }
+
+  private static final class DelegatingTracker implements TelemetryEventTracker {
+
+    static final DelegatingTracker INSTANCE = new DelegatingTracker();
+
+    private DelegatingTracker() {}
+
+    @Override
+    public List<TelemetryEvent> getAll() {
+      return AgentTelemetryStore.getInstance().getAll();
+    }
+
+    @Override
+    public void recordLogEventFor(Level level, Source source, String message) {
+      AgentTelemetryStore.getInstance().recordLogEventFor(level, source, message);
+    }
+
+    @Override
+    public void recordManualEventFor(Level level, Source source, String message) {
+      AgentTelemetryStore.getInstance().recordManualEventFor(level, source, message);
+    }
+
+    @Override
+    public void recordNavigationEventFor(Level level, Source source, String from, String to) {
+      AgentTelemetryStore.getInstance().recordNavigationEventFor(level, source, from, to);
+    }
+
+    @Override
+    public void recordNetworkEventFor(
+        Level level, Source source, String method, String url, String statusCode) {
+      AgentTelemetryStore.getInstance().recordNetworkEventFor(
+          level, source, method, url, statusCode);
+    }
   }
 }
