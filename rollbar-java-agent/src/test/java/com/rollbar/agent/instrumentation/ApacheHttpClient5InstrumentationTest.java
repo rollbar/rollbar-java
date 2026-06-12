@@ -68,7 +68,10 @@ public class ApacheHttpClient5InstrumentationTest {
     Map<?, ?> body = (Map<?, ?>) json.get("body");
     assertEquals("404", body.get("status_code"));
     assertEquals("GET", body.get("method"));
-    assertTrue(body.get("url").toString().contains("/not-found"));
+    String url = body.get("url").toString();
+    assertTrue(url.startsWith("http://"), "URL should include scheme: " + url);
+    assertTrue(url.contains("localhost"), "URL should include host: " + url);
+    assertTrue(url.contains("/not-found"), "URL should include path: " + url);
   }
 
   @Test
@@ -116,7 +119,9 @@ public class ApacheHttpClient5InstrumentationTest {
     assertEquals(1, events.size());
     Map<?, ?> body = (Map<?, ?>) events.get(0).asJson().get("body");
     String url = body.get("url").toString();
-    assertTrue(url.contains("/path"));
-    assertFalse(url.contains("secret"));
+    assertTrue(url.startsWith("http://"), "URL should include scheme: " + url);
+    assertTrue(url.contains("localhost"), "URL should include host: " + url);
+    assertTrue(url.contains("/path"), "URL should include path: " + url);
+    assertFalse(url.contains("secret"), "URL should not contain query params: " + url);
   }
 }

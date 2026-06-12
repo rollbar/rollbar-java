@@ -5,6 +5,8 @@ import com.rollbar.agent.UrlSanitizer;
 import com.rollbar.api.payload.data.Level;
 import com.rollbar.api.payload.data.Source;
 import java.lang.instrument.Instrumentation;
+import java.net.URI;
+
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.matcher.ElementMatchers;
@@ -90,7 +92,13 @@ public final class ApacheHttpClient5Instrumentation {
         if (response != null) {
           int statusCode = response.getCode();
           if (statusCode >= 400) {
-            String url = request.getRequestUri() != null ? request.getRequestUri() : "";
+            String url;
+            try {
+              URI uri = request.getUri();
+              url = uri != null ? uri.toString() : "";
+            } catch (java.net.URISyntaxException ignored) {
+              url = request.getRequestUri() != null ? request.getRequestUri() : "";
+            }
             AgentTelemetryStore.getInstance().recordNetworkEventFor(
                 Level.CRITICAL,
                 Source.SERVER,
