@@ -14,7 +14,7 @@ public class RollbarAgentTest {
 
   @BeforeEach
   public void setUp() {
-    AgentTelemetryStore.init(System::currentTimeMillis);
+    AgentTelemetryStore.initForTesting(System::currentTimeMillis);
   }
 
   @Test
@@ -27,7 +27,7 @@ public class RollbarAgentTest {
   @Test
   public void init_withCustomTimestamp_usesProvidedTimestamp() {
     long fixedTime = 1_000_000L;
-    AgentTelemetryStore.init(() -> fixedTime);
+    AgentTelemetryStore.initForTesting(() -> fixedTime);
 
     AgentTelemetryStore.getInstance().recordManualEventFor(
         com.rollbar.api.payload.data.Level.WARNING,

@@ -22,7 +22,7 @@ public final class AgentTelemetryStore {
     return INSTANCE.getAll();
   }
 
-  public static void init(Provider<Long> timestampProvider) {
+  public static void initForTesting(Provider<Long> timestampProvider) {
     INSTANCE = new RollbarTelemetryEventTracker(timestampProvider, 100);
   }
 }

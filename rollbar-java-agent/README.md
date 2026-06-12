@@ -119,6 +119,10 @@ is recorded as:
 https://api.example.com/charge
 ```
 
+## Internal API
+
+`AgentTelemetryStore.initForTesting()` is intended for use in tests only (it replaces the internal tracker instance). Do not call it in production code — use `RollbarAgent.getTelemetryTracker()` as shown above.
+
 ## Testing
 
 ### Automated tests

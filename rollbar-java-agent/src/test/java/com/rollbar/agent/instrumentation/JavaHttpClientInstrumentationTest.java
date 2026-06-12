@@ -31,7 +31,7 @@ public class JavaHttpClientInstrumentationTest {
     server = new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort());
     server.start();
     client = HttpClient.newHttpClient();
-    AgentTelemetryStore.init(System::currentTimeMillis);
+    AgentTelemetryStore.initForTesting(System::currentTimeMillis);
     NetworkEventBridge.resetRecordedForTesting();
   }
 

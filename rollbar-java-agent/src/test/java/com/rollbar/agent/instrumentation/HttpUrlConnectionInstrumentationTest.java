@@ -26,7 +26,7 @@ public class HttpUrlConnectionInstrumentationTest {
   public void setUp() {
     server = new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort());
     server.start();
-    AgentTelemetryStore.init(System::currentTimeMillis);
+    AgentTelemetryStore.initForTesting(System::currentTimeMillis);
     NetworkEventBridge.resetRecordedForTesting();
   }
 
