@@ -110,7 +110,7 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
 
   @Override
   protected void append(ILoggingEvent event) {
-    if (event.getLoggerName() != null && event.getLoggerName().startsWith(PACKAGE_NAME)) {
+    if (isRollbarLogger(event.getLoggerName())) {
       addWarn("Recursive logging");
       return;
     }
@@ -122,6 +122,15 @@ public class RollbarAppender extends AppenderBase<ILoggingEvent> {
     rollbar.log(rollbarThrowableWrapper, custom, event.getFormattedMessage(),
         Level.lookupByName(event.getLevel().levelStr), false);
 
+  }
+
+  private static boolean isRollbarLogger(String loggerName) {
+    if (loggerName == null) {
+      return false;
+    }
+
+    return PACKAGE_NAME.equals(loggerName)
+        || loggerName.startsWith(PACKAGE_NAME + ".");
   }
 
   @Override
