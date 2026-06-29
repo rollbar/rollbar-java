@@ -21,6 +21,11 @@ dependencies {
 }
 
 tasks.jar {
+    enabled = false
+}
+
+tasks.shadowJar {
+    archiveClassifier.set("")
     manifest {
         attributes(
             "Premain-Class" to "com.rollbar.agent.RollbarAgent",
@@ -29,10 +34,6 @@ tasks.jar {
             "Can-Retransform-Classes" to "true"
         )
     }
-}
-
-tasks.shadowJar {
-    archiveClassifier.set("")
     relocate("net.bytebuddy", "com.rollbar.agent.shaded.bytebuddy")
     mergeServiceFiles()
 }
@@ -52,5 +53,4 @@ tasks.test {
     // system classloader; mirrors production use where rollbar-java-agent is a Gradle/Maven dep
     classpath += files(agentJar)
     dependsOn(tasks.shadowJar)
-    dependsOn(tasks.jar)
 }
