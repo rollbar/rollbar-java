@@ -21,21 +21,18 @@ public final class ApacheHttpClient5Instrumentation {
   private ApacheHttpClient5Instrumentation() {}
 
   /**
-   * Instruments Apache HttpClient 5.x if present on the classpath.
+   * Installs a ByteBuddy transformer for Apache HttpClient 5.x.
    *
-   * <p>Does nothing if {@code org.apache.hc.client5.http.impl.classic.CloseableHttpClient}
-   * is not available.
+   * <p>The transformer fires only if
+   * {@code org.apache.hc.client5.http.impl.classic.CloseableHttpClient} is loaded at runtime;
+   * if HC5 is absent the registered matcher simply never matches.
    */
   public static void installIfAvailable(AgentBuilder builder, Instrumentation inst) {
-    // Use a resource check rather than Class.forName: execute() overloads are concrete methods
-    // defined in CloseableHttpClient itself, so loading that class before the ByteBuddy transformer
-    // is installed prevents the methods from ever being instrumented (no RedefinitionStrategy is
-    // configured). getResource checks classpath availability without triggering class loading.
-    if (ClassLoader.getSystemClassLoader().getResource(
-        "org/apache/hc/client5/http/impl/classic/CloseableHttpClient.class") == null) {
-      return;
-    }
-
+    // Always install — ByteBuddy intercepts class loading at the JVM level regardless of which
+    // classloader (system, app, or child) eventually loads CloseableHttpClient. If HC5 is absent
+    // the transformer simply never fires. We must not use Class.forName here: loading
+    // CloseableHttpClient before the transformer is installed prevents instrumentation because no
+    // RedefinitionStrategy is configured.
     builder
         .type(ElementMatchers.named("org.apache.hc.client5.http.impl.classic.CloseableHttpClient"))
         .transform((b, typeDescription, classLoader, module, protectionDomain) ->
