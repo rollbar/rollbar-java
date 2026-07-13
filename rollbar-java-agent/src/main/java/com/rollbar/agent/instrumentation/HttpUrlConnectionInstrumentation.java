@@ -75,7 +75,24 @@ public final class HttpUrlConnectionInstrumentation {
         return;
       }
       try {
-        connection.getClass().getMethod("getResponseCode").invoke(connection);
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        if (classLoader == null) {
+          classLoader = ClassLoader.getSystemClassLoader();
+        }
+        Class<?> bridge = classLoader.loadClass("com.rollbar.agent.NetworkEventBridge");
+
+        // Re-entry guard: on connection-level failures (responseCode == -1) the JDK's
+        // getResponseCode() calls getInputStream() again, which re-fires this advice. Without the
+        // guard that recurses until a StackOverflowError, recording nothing.
+        Boolean entered = (Boolean) bridge.getMethod("enterResponseCodeTrigger").invoke(null);
+        if (entered == null || !entered) {
+          return;
+        }
+        try {
+          connection.getClass().getMethod("getResponseCode").invoke(connection);
+        } finally {
+          bridge.getMethod("exitResponseCodeTrigger").invoke(null);
+        }
       } catch (Throwable ignored) {
         // Advice must never throw
       }

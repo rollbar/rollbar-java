@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.ServerSocket;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
@@ -154,6 +155,38 @@ public class HttpUrlConnectionInstrumentationTest {
     conn.disconnect();
 
     assertEquals(1, AgentTelemetryStore.getInstance().getAll().size());
+  }
+
+  @Test
+  public void getInputStream_connectionRefused_recordsErrorWithoutRecursion() throws IOException {
+    // A connection-level failure leaves responseCode == -1, so the JDK's getResponseCode() calls
+    // getInputStream() again. Before the re-entry guard this recursed until a StackOverflowError
+    // that the advice swallowed, recording nothing. Now it must record a single error event and
+    // return promptly.
+    int closedPort;
+    try (ServerSocket socket = new ServerSocket(0)) {
+      closedPort = socket.getLocalPort();
+    } // socket closed here → connections to closedPort are refused
+
+    HttpURLConnection conn = (HttpURLConnection) new URL(
+        "http://127.0.0.1:" + closedPort + "/x").openConnection();
+    conn.setConnectTimeout(1000);
+    conn.setReadTimeout(1000);
+    try {
+      conn.getInputStream();
+      fail("expected connection to be refused");
+    } catch (IOException expected) {
+      // expected: nothing is listening on the port
+    }
+    conn.disconnect();
+
+    List<TelemetryEvent> events = AgentTelemetryStore.getInstance().getAll();
+    assertEquals(1, events.size(), "connection failure should record exactly one event");
+    Map<String, Object> json = events.get(0).asJson();
+    assertEquals("manual", json.get("type"));
+    Map<?, ?> body = (Map<?, ?>) json.get("body");
+    assertTrue(body.get("message").toString().contains("Network error"),
+        "error event should carry a network-error message");
   }
 
   private void makeRequest(String method, String path) throws IOException {

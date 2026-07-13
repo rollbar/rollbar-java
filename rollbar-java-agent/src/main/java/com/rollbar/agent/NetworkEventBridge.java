@@ -23,10 +23,38 @@ public final class NetworkEventBridge {
       Collections.synchronizedMap(new WeakHashMap<>())
   );
 
+  // Re-entry guard for the getInputStream/getErrorStream advice: invoking getResponseCode() to
+  // trigger recording can, on connection-level failures (responseCode stays -1), cause the JDK's
+  // getResponseCode() to call getInputStream() again — re-firing the advice and recursing until a
+  // StackOverflowError. This ThreadLocal breaks that loop.
+  private static final ThreadLocal<Boolean> TRIGGERING_RESPONSE_CODE =
+      ThreadLocal.withInitial(() -> Boolean.FALSE);
+
   private NetworkEventBridge() {}
 
   public static void resetRecordedForTesting() {
     RECORDED.clear();
+    TRIGGERING_RESPONSE_CODE.remove();
+  }
+
+  /**
+   * Returns {@code true} if the caller may proceed to trigger {@code getResponseCode()};
+   * {@code false} if a trigger is already in progress on this thread (re-entrant call).
+   *
+   * <p>The caller that receives {@code true} must call {@link #exitResponseCodeTrigger()} in a
+   * {@code finally} block. A re-entrant caller receives {@code false} and must not call exit.
+   */
+  public static boolean enterResponseCodeTrigger() {
+    if (TRIGGERING_RESPONSE_CODE.get()) {
+      return false;
+    }
+    TRIGGERING_RESPONSE_CODE.set(Boolean.TRUE);
+    return true;
+  }
+
+  /** Clears the re-entry guard set by {@link #enterResponseCodeTrigger()}. */
+  public static void exitResponseCodeTrigger() {
+    TRIGGERING_RESPONSE_CODE.remove();
   }
 
   /**
