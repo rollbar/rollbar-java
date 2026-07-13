@@ -27,7 +27,33 @@ public final class UrlSanitizer {
           null
       ).toString();
     } catch (URISyntaxException e) {
-      return rawUrl;
+      return fallbackSanitize(rawUrl);
     }
+  }
+
+  // URI rejected the URL (e.g. unescaped space, bad percent-escape). Strip query, fragment, and
+  // userinfo with plain string ops rather than failing open with the raw URL.
+  private static String fallbackSanitize(String rawUrl) {
+    // Drop query string and fragment — take everything before the first '?' or '#'.
+    int end = rawUrl.length();
+    int query = rawUrl.indexOf('?');
+    int header = rawUrl.indexOf('#');
+    if (query >= 0) {
+      end = query;
+    }
+    if (header >= 0) {
+      end = Math.min(end, header);
+    }
+    String result = rawUrl.substring(0, end);
+
+    // Drop userinfo: scheme://user:pass@host/path → scheme://host/path
+    int schemeEnd = result.indexOf("://");
+    if (schemeEnd >= 0) {
+      int atSign = result.indexOf('@', schemeEnd + 3);
+      if (atSign >= 0) {
+        result = result.substring(0, schemeEnd + 3) + result.substring(atSign + 1);
+      }
+    }
+    return result;
   }
 }
