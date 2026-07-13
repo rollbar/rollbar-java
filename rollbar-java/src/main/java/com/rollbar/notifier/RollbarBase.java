@@ -10,6 +10,7 @@ import com.rollbar.api.payload.data.TelemetryType;
 import com.rollbar.api.payload.data.body.Body;
 import com.rollbar.jvmti.ThrowableCache;
 import com.rollbar.notifier.config.CommonConfig;
+import com.rollbar.notifier.scrubbing.ScrubDataTransformer;
 import com.rollbar.notifier.telemetry.TelemetryEventTracker;
 import com.rollbar.notifier.truncation.PayloadTruncator;
 import com.rollbar.notifier.util.BodyFactory;
@@ -43,6 +44,8 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
 
   protected C config;
 
+  private volatile ScrubDataTransformer builtInScrubber;
+
   protected final ReadWriteLock configReadWriteLock = new ReentrantReadWriteLock();
   protected final Lock configReadLock = configReadWriteLock.readLock();
   protected final Lock configWriteLock = configReadWriteLock.writeLock();
@@ -55,6 +58,7 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
     this.bodyFactory = bodyFactory;
     this.emptyResult = emptyResult;
     this.telemetryEventTracker = config.telemetryEventTracker();
+    this.builtInScrubber = new ScrubDataTransformer(config.redactedKeys(), config.urlSanitizer());
   }
 
   /**
@@ -123,6 +127,7 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
       this.config = config;
       configureTruncation(config);
       processAppPackages(config);
+      this.builtInScrubber = new ScrubDataTransformer(config.redactedKeys(), config.urlSanitizer());
     } finally {
       this.configWriteLock.unlock();
     }
@@ -250,10 +255,12 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
   protected RESULT process(ThrowableWrapper error, Map<String, Object> custom, String description,
                            Level level, boolean isUncaught) {
     C config;
+    ScrubDataTransformer scrubber;
 
     this.configReadLock.lock();
     try {
       config = this.config;
+      scrubber = this.builtInScrubber;
     } finally {
       this.configReadLock.unlock();
     }
@@ -279,6 +286,10 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
       LOGGER.debug("Transforming the data.");
       data = config.transformer().transform(data);
     }
+
+    // Built-in scrubbing always runs after the user transformer
+    LOGGER.debug("Applying built-in scrubber.");
+    data = scrubber.transform(data);
 
     // Append if needed uuid or fingerprint data.
     if (config.uuidGenerator() != null || config.fingerPrintGenerator() != null) {
