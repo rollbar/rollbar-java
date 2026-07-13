@@ -24,6 +24,15 @@ tasks.jar {
     enabled = false
 }
 
+// java-library wires tasks.jar into apiElements/runtimeElements; replace it with shadowJar so
+// Gradle's variant system and vanniktech publishing both see the fat jar as the primary artifact.
+listOf(configurations.apiElements, configurations.runtimeElements).forEach { cfg ->
+    cfg.configure {
+        outgoing.artifacts.clear()
+        outgoing.artifact(tasks.shadowJar)
+    }
+}
+
 tasks.shadowJar {
     archiveClassifier.set("")
     manifest {
