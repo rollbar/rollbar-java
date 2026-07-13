@@ -124,6 +124,37 @@ public final class NetworkEventBridge {
   }
 
   /**
+   * Joins a base URI with a request URI, for clients that dispatch a target host separately from a
+   * request whose URI may be relative.
+   *
+   * <p>Apache HC's {@code doExecute(HttpHost, request, context)} receives the target host as its
+   * own argument, so a request issued through the host-based {@code execute(HttpHost, request)}
+   * overloads carries only a path (e.g. {@code /charge}). Rejoining the two is what keeps the host
+   * in the recorded URL. A request URI that is already absolute is returned untouched, and a null
+   * base (HC leaves the target null for a relative URI it could not resolve) degrades to the path
+   * alone.
+   *
+   * @param baseUri the target host as a URI (e.g. {@code https://api.example.com}), or null
+   * @param requestUri the request URI, absolute or relative, or null
+   * @return the joined URL — never null, so the caller always has something to sanitize
+   */
+  public static String composeUrl(String baseUri, String requestUri) {
+    if (requestUri == null || requestUri.isEmpty()) {
+      return baseUri != null ? baseUri : "";
+    }
+    if (requestUri.contains("://")) {
+      return requestUri;
+    }
+    if (baseUri == null) {
+      return requestUri;
+    }
+    if (requestUri.startsWith("/")) {
+      return baseUri.concat(requestUri);
+    }
+    return baseUri.concat("/").concat(requestUri);
+  }
+
+  /**
    * Records a manual error telemetry event with the given message.
    *
    * <p>Called when an HTTP request fails with an I/O exception rather than a status code.

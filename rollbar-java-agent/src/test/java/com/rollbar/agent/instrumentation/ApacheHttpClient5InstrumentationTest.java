@@ -8,8 +8,10 @@ import com.rollbar.api.payload.data.TelemetryEvent;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
+import org.apache.hc.core5.http.protocol.BasicHttpContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -91,11 +93,10 @@ public class ApacheHttpClient5InstrumentationTest {
   }
 
   @Test
-  public void responseHandlerOverload_doesNotBreakInstrumentation() throws Exception {
-    // execute(ClassicHttpRequest, HttpClientResponseHandler) routes through a separate call chain
-    // (HttpHost-based) that does not pass through the instrumented execute(ClassicHttpRequest)
-    // or execute(ClassicHttpRequest, HttpContext) overloads. No telemetry event is produced,
-    // but the call must succeed without error.
+  public void responseHandlerOverload_recordsNetworkEvent() throws Exception {
+    // execute(ClassicHttpRequest, HttpClientResponseHandler) routes through the HttpHost-based
+    // chain, bypassing the single-request overloads. Instrumenting doExecute() — which every
+    // dispatch path converges on — is what makes this path visible.
     server.stubFor(get(urlEqualTo("/handler")).willReturn(aResponse().withStatus(404)));
 
     HttpClientResponseHandler<Integer> handler = response -> response.getCode();
@@ -103,7 +104,44 @@ public class ApacheHttpClient5InstrumentationTest {
         new BasicClassicHttpRequest("GET", server.baseUrl() + "/handler"), handler);
 
     assertEquals(404, status);
-    assertTrue(AgentTelemetryStore.getInstance().getAll().isEmpty());
+    List<TelemetryEvent> events = AgentTelemetryStore.getInstance().getAll();
+    assertEquals(1, events.size());
+    Map<?, ?> body = (Map<?, ?>) events.get(0).asJson().get("body");
+    assertEquals("404", body.get("status_code").toString());
+    assertTrue(body.get("url").toString().endsWith("/handler"));
+  }
+
+  @Test
+  public void hostBasedOverload_recordsNetworkEventWithFullUrl() throws Exception {
+    // execute(HttpHost, ClassicHttpRequest) invokes doExecute() directly. The request carries only
+    // a path, so the host must be rejoined from the HttpHost argument for the URL to be usable.
+    server.stubFor(get(urlEqualTo("/charge")).willReturn(aResponse().withStatus(500)));
+
+    HttpHost target = new HttpHost("http", "localhost", server.port());
+    client.execute(target, new BasicClassicHttpRequest("GET", "/charge")).close();
+
+    List<TelemetryEvent> events = AgentTelemetryStore.getInstance().getAll();
+    assertEquals(1, events.size());
+    Map<?, ?> body = (Map<?, ?>) events.get(0).asJson().get("body");
+    assertEquals("500", body.get("status_code").toString());
+    assertEquals(server.baseUrl() + "/charge", body.get("url").toString());
+  }
+
+  @Test
+  public void hostBasedOverloadWithContext_recordsNetworkEvent() throws Exception {
+    server.stubFor(get(urlEqualTo("/charge")).willReturn(aResponse().withStatus(503)));
+
+    HttpHost target = new HttpHost("http", "localhost", server.port());
+    try (CloseableHttpResponse response = client.execute(
+        target, new BasicClassicHttpRequest("GET", "/charge"), new BasicHttpContext())) {
+      assertEquals(503, response.getCode());
+    }
+
+    List<TelemetryEvent> events = AgentTelemetryStore.getInstance().getAll();
+    assertEquals(1, events.size());
+    Map<?, ?> body = (Map<?, ?>) events.get(0).asJson().get("body");
+    assertEquals("503", body.get("status_code").toString());
+    assertEquals(server.baseUrl() + "/charge", body.get("url").toString());
   }
 
   @Test

@@ -15,7 +15,7 @@ It works by attaching to the JVM at startup via `-javaagent:` and using ByteBudd
 
 Only 4xx and 5xx responses are recorded, along with requests that fail before a response arrives (connection refused, DNS failure, timeout). Successful requests (< 400) produce no telemetry.
 
-> **Apache HC4/HC5 note:** `execute(request, responseHandler)` overloads route through a separate internal call chain and are not instrumented. Use the standard `execute(request)` / `execute(request, context)` overloads to get telemetry.
+**Apache HC4/HC5:** every `execute(...)` overload is covered — the request-only forms, the target-host forms (`execute(HttpHost, request)`), and the response-handler forms. The agent instruments the protected `doExecute(HttpHost, request, context)` method that all of them converge on, rather than any individual `execute()` overload, so no dispatch path is missed. Requests issued through a target-host overload carry only a path, so the agent rejoins the host from the `HttpHost` argument to record a complete URL.
 
 ### HttpURLConnection entry points
 
