@@ -208,6 +208,72 @@ public class ScrubDataTransformerTest {
     assertSame(qs, result.getRequest().getQueryString());
   }
 
+  @Test
+  public void percentEncodedQueryParamNameRedacted() {
+    // getQueryString() is raw, so "pass%77ord" is semantically the "password" param.
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    Request req = new Request.Builder()
+        .queryString("pass%77ord=hunter2&page=1")
+        .build();
+    Data result = t.transform(dataWithRequest(req));
+    String qs = result.getRequest().getQueryString();
+    assertFalse(qs.contains("hunter2"));
+    // The original encoding of the key is preserved; only the value is replaced.
+    assertTrue(qs.contains("pass%77ord=" + ScrubDataTransformer.SCRUBBED_VALUE));
+    assertTrue(qs.contains("page=1"));
+  }
+
+  @Test
+  public void fullyPercentEncodedQueryParamNameRedacted() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    Request req = new Request.Builder()
+        .queryString("%70%61%73%73%77%6F%72%64=hunter2")
+        .build();
+    Data result = t.transform(dataWithRequest(req));
+    assertFalse(result.getRequest().getQueryString().contains("hunter2"));
+  }
+
+  @Test
+  public void plusEncodedQueryParamNameRedacted() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("user password"), NO_OP_SANITIZER);
+    Request req = new Request.Builder()
+        .queryString("user+password=hunter2")
+        .build();
+    Data result = t.transform(dataWithRequest(req));
+    assertFalse(result.getRequest().getQueryString().contains("hunter2"));
+  }
+
+  @Test
+  public void malformedEscapeInQueryParamNameFallsBackToRawMatch() {
+    // %zz is not a valid escape; decoding fails and the raw name is matched instead.
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("token"), NO_OP_SANITIZER);
+    Request req = new Request.Builder()
+        .queryString("token%zz=secret&page=1")
+        .build();
+    Data result = t.transform(dataWithRequest(req));
+    String qs = result.getRequest().getQueryString();
+    assertFalse(qs.contains("secret"));
+    assertTrue(qs.contains("page=1"));
+  }
+
+  @Test
+  public void malformedEscapeInNonMatchingQueryParamPassedThrough() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    String qs = "page%zz=1";
+    Request req = new Request.Builder().queryString(qs).build();
+    Data result = t.transform(dataWithRequest(req));
+    assertSame(qs, result.getRequest().getQueryString());
+  }
+
+  @Test
+  public void encodedValueLessQueryParamScrubbed() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("token"), NO_OP_SANITIZER);
+    Request req = new Request.Builder().queryString("t%6Fken").build();
+    Data result = t.transform(dataWithRequest(req));
+    assertEquals("t%6Fken=" + ScrubDataTransformer.SCRUBBED_VALUE,
+        result.getRequest().getQueryString());
+  }
+
   // --- Frame.locals ---
 
   @Test

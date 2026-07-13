@@ -13,6 +13,8 @@ import com.rollbar.api.scrubbing.DefaultUrlSanitizer;
 import com.rollbar.api.scrubbing.StringUrlSanitizer;
 import com.rollbar.notifier.transformer.Transformer;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -343,7 +345,7 @@ public final class ScrubDataTransformer implements Transformer {
       int eq = pair.indexOf('=');
       // A value-less param (e.g. "?token") is treated as key-only and scrubbed the same way.
       String key = eq >= 0 ? pair.substring(0, eq) : pair;
-      if (matchesAny(key, patterns)) {
+      if (matchesAny(key, patterns) || matchesAny(decodeParamName(key), patterns)) {
         output[i] = key + "=" + SCRUBBED_VALUE;
         changed = true;
       } else {
@@ -361,6 +363,21 @@ public final class ScrubDataTransformer implements Transformer {
       sb.append(output[i]);
     }
     return sb.toString();
+  }
+
+  /**
+   * Percent-decodes a query parameter name. Malformed escapes (e.g. {@code %zz}) are left as-is
+   * rather than failing the transform: the raw form is still matched by the caller.
+   */
+  private static String decodeParamName(String key) {
+    if (key.indexOf('%') < 0 && key.indexOf('+') < 0) {
+      return key;
+    }
+    try {
+      return URLDecoder.decode(key, "UTF-8");
+    } catch (UnsupportedEncodingException | IllegalArgumentException e) {
+      return key;
+    }
   }
 
   private static boolean matchesDefaultHeader(String key) {
