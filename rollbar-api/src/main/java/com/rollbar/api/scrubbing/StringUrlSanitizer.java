@@ -1,4 +1,4 @@
-package com.rollbar.notifier.scrubbing;
+package com.rollbar.api.scrubbing;
 
 /**
  * Sanitizes a URL string before it is included in a Rollbar payload.

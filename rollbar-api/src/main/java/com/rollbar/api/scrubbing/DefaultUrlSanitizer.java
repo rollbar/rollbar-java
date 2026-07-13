@@ -1,4 +1,4 @@
-package com.rollbar.notifier.scrubbing;
+package com.rollbar.api.scrubbing;
 
 /**
  * Default {@link StringUrlSanitizer} that strips userinfo, query string, and fragment from URLs.

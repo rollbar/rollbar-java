@@ -1,4 +1,4 @@
-package com.rollbar.notifier.scrubbing;
+package com.rollbar.api.scrubbing;
 
 import org.junit.Test;
 
