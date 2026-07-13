@@ -9,10 +9,13 @@ import com.rollbar.api.payload.data.Server;
 import com.rollbar.notifier.filter.Filter;
 import com.rollbar.notifier.fingerprint.FingerprintGenerator;
 import com.rollbar.notifier.provider.Provider;
+import com.rollbar.notifier.scrubbing.DefaultUrlSanitizer;
+import com.rollbar.notifier.scrubbing.StringUrlSanitizer;
 import com.rollbar.notifier.sender.json.JsonSerializer;
 import com.rollbar.notifier.telemetry.TelemetryEventTracker;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -221,6 +224,29 @@ public interface CommonConfig {
    */
   default boolean compressPayload() {
     return true;
+  }
+
+  /**
+   * Keys (matched as case-insensitive regex) whose values should be redacted in headers,
+   * query/POST parameters, custom data, and {@code Frame.locals} before sending to Rollbar.
+   * The default header deny-list (Authorization, Cookie, etc.) is always applied regardless
+   * of this list.
+   *
+   * @return list of regex patterns; empty list by default.
+   */
+  default List<String> redactedKeys() {
+    return Collections.emptyList();
+  }
+
+  /**
+   * URL sanitizer applied to {@link com.rollbar.api.payload.data.Request#getUrl()} before the
+   * payload is sent. Defaults to {@link DefaultUrlSanitizer#INSTANCE} which strips userinfo,
+   * query string, and fragment.
+   *
+   * @return the URL sanitizer; never {@code null}.
+   */
+  default StringUrlSanitizer urlSanitizer() {
+    return DefaultUrlSanitizer.INSTANCE;
   }
 
   int maximumTelemetryData();

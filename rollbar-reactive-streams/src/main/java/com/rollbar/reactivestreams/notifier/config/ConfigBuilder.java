@@ -17,6 +17,8 @@ import com.rollbar.notifier.sender.SyncSender;
 import com.rollbar.notifier.sender.json.JsonSerializer;
 import com.rollbar.notifier.telemetry.RollbarTelemetryEventTracker;
 import com.rollbar.notifier.telemetry.TelemetryEventTracker;
+import com.rollbar.notifier.scrubbing.DefaultUrlSanitizer;
+import com.rollbar.notifier.scrubbing.StringUrlSanitizer;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
 import com.rollbar.reactivestreams.notifier.sender.AsyncSender;
@@ -62,6 +64,8 @@ public final class ConfigBuilder {
   private DefaultLevels defaultLevels;
   private boolean truncateLargePayloads;
   private boolean compressPayload;
+  private List<String> redactedKeys;
+  private StringUrlSanitizer urlSanitizer;
   private int maximumTelemetryData =
       RollbarTelemetryEventTracker.MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS;
   private TelemetryEventTracker telemetryEventTracker;
@@ -111,6 +115,8 @@ public final class ConfigBuilder {
     this.compressPayload = config.compressPayload();
     this.maximumTelemetryData = config.maximumTelemetryData();
     this.telemetryEventTracker = config.telemetryEventTracker();
+    this.redactedKeys = config.redactedKeys();
+    this.urlSanitizer = config.urlSanitizer();
   }
 
   private ConfigBuilder(Sender sender) {
@@ -512,6 +518,31 @@ public final class ConfigBuilder {
   }
 
   /**
+   * Keys (matched as case-insensitive regex) whose values will be redacted in request headers,
+   * query/POST parameters, custom data, and {@code Frame.locals}. These are additive to the
+   * built-in header deny-list (Authorization, Cookie, etc.).
+   *
+   * @param redactedKeys list of regex patterns.
+   * @return the builder instance.
+   */
+  public ConfigBuilder redactedKeys(List<String> redactedKeys) {
+    this.redactedKeys = redactedKeys;
+    return this;
+  }
+
+  /**
+   * URL sanitizer applied to the request URL before the payload is sent.
+   * Defaults to {@link DefaultUrlSanitizer#INSTANCE}.
+   *
+   * @param urlSanitizer the sanitizer.
+   * @return the builder instance.
+   */
+  public ConfigBuilder urlSanitizer(StringUrlSanitizer urlSanitizer) {
+    this.urlSanitizer = urlSanitizer;
+    return this;
+  }
+
+  /**
    * Builds the {@link Config config}.
    *
    * @return the config.
@@ -584,6 +615,8 @@ public final class ConfigBuilder {
     private final boolean compressPayload;
     private final int maximumTelemetryData;
     private final TelemetryEventTracker telemetryEventTracker;
+    private final List<String> redactedKeys;
+    private final StringUrlSanitizer urlSanitizer;
 
     ConfigImpl(ConfigBuilder builder) {
       this.accessToken = builder.accessToken;
@@ -619,6 +652,10 @@ public final class ConfigBuilder {
       this.compressPayload = builder.compressPayload;
       this.maximumTelemetryData = builder.maximumTelemetryData;
       this.telemetryEventTracker = builder.telemetryEventTracker;
+      this.redactedKeys = builder.redactedKeys != null
+          ? builder.redactedKeys : Collections.emptyList();
+      this.urlSanitizer = builder.urlSanitizer != null
+          ? builder.urlSanitizer : DefaultUrlSanitizer.INSTANCE;
     }
 
     @Override
@@ -774,6 +811,16 @@ public final class ConfigBuilder {
     @Override
     public TelemetryEventTracker telemetryEventTracker() {
       return this.telemetryEventTracker;
+    }
+
+    @Override
+    public List<String> redactedKeys() {
+      return redactedKeys;
+    }
+
+    @Override
+    public StringUrlSanitizer urlSanitizer() {
+      return urlSanitizer;
     }
   }
 }
