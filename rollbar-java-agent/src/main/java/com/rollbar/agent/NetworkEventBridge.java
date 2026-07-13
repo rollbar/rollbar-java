@@ -52,7 +52,9 @@ public final class NetworkEventBridge {
     return true;
   }
 
-  /** Clears the re-entry guard set by {@link #enterResponseCodeTrigger()}. */
+  /**
+   * Clears the re-entry guard set by {@link #enterResponseCodeTrigger()}.
+   */
   public static void exitResponseCodeTrigger() {
     TRIGGERING_RESPONSE_CODE.remove();
   }

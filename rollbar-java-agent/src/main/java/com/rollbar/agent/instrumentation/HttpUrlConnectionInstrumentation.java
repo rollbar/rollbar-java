@@ -65,7 +65,9 @@ public final class HttpUrlConnectionInstrumentation {
    */
   public static class GetInputStreamAdvice {
 
-    /** Fires when {@code getInputStream()} throws, ensuring the failed request is recorded. */
+    /**
+     * Fires when {@code getInputStream()} throws, ensuring the failed request is recorded.
+     */
     @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void onExit(
         @Advice.This Object connection,
@@ -108,7 +110,9 @@ public final class HttpUrlConnectionInstrumentation {
    */
   public static class GetErrorStreamAdvice {
 
-    /** Fires when {@code getErrorStream()} returns a non-null stream. */
+    /**
+     * Fires when {@code getErrorStream()} returns a non-null stream.
+     */
     @Advice.OnMethodExit
     public static void onExit(
         @Advice.This Object connection,
