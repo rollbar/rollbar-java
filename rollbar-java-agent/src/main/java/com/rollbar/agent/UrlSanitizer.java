@@ -17,15 +17,18 @@ public final class UrlSanitizer {
     }
     try {
       URI uri = new URI(rawUrl);
-      return new URI(
-          uri.getScheme(),
-          null,
-          uri.getHost(),
-          uri.getPort(),
-          uri.getPath(),
-          null,
-          null
-      ).toString();
+      // Use getAuthority() rather than getHost(): URI parses authorities that fail RFC 2396
+      // server-based grammar (e.g. underscores in Kubernetes/AD internal DNS) in registry-based
+      // mode, where getHost() returns null and the host would be silently dropped. Strip userinfo
+      // from the authority manually.
+      String authority = uri.getAuthority();
+      if (authority != null) {
+        int at = authority.indexOf('@');
+        if (at >= 0) {
+          authority = authority.substring(at + 1);
+        }
+      }
+      return new URI(uri.getScheme(), authority, uri.getPath(), null, null).toString();
     } catch (URISyntaxException e) {
       return fallbackSanitize(rawUrl);
     }
@@ -46,12 +49,24 @@ public final class UrlSanitizer {
     }
     String result = rawUrl.substring(0, end);
 
-    // Drop userinfo: scheme://user:pass@host/path → scheme://host/path
+    // Drop userinfo: scheme://user:pass@host/path → scheme://host/path. Bound the '@' search to
+    // the authority component (before the first '/', '?', or '#') so an '@' inside the path — e.g.
+    // /@handle or /@scope/pkg — is not mistaken for the userinfo separator, which would delete the
+    // real host and promote a path segment to host.
     int schemeEnd = result.indexOf("://");
     if (schemeEnd >= 0) {
-      int atSign = result.indexOf('@', schemeEnd + 3);
-      if (atSign >= 0) {
-        result = result.substring(0, schemeEnd + 3) + result.substring(atSign + 1);
+      int authorityStart = schemeEnd + 3;
+      int authorityEnd = result.length();
+      for (int i = authorityStart; i < result.length(); i++) {
+        char c = result.charAt(i);
+        if (c == '/' || c == '?' || c == '#') {
+          authorityEnd = i;
+          break;
+        }
+      }
+      int atSign = result.indexOf('@', authorityStart);
+      if (atSign >= 0 && atSign < authorityEnd) {
+        result = result.substring(0, authorityStart) + result.substring(atSign + 1);
       }
     }
     return result;

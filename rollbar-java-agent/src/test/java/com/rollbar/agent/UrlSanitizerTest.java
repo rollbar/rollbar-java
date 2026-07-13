@@ -53,6 +53,32 @@ public class UrlSanitizerTest {
   }
 
   @Test
+  public void underscoreHostname_preservesHost() {
+    // Underscore hostnames (Kubernetes service DNS, Windows/AD internal DNS) parse in URI's
+    // registry-based mode, where getHost() returns null. The host must not be dropped.
+    assertEquals(
+        "http://s3_bucket.example.com/path",
+        UrlSanitizer.sanitize("http://s3_bucket.example.com/path?token=secret")
+    );
+  }
+
+  @Test
+  public void underscoreHostname_withUserinfoAndPort_stripsUserinfoKeepsHost() {
+    assertEquals(
+        "http://my_svc.internal:8080/v1",
+        UrlSanitizer.sanitize("http://user:pass@my_svc.internal:8080/v1?x=1")
+    );
+  }
+
+  @Test
+  public void atSignInPath_fallback_doesNotPromotePathToHost() {
+    // Unescaped space forces the fallback; the '@' inside the path must not be mistaken for the
+    // userinfo separator (which would delete the host and promote 'johndoe' to host).
+    String result = UrlSanitizer.sanitize("http://example.com/@johndoe/messages?bad space");
+    assertEquals("http://example.com/@johndoe/messages", result);
+  }
+
+  @Test
   public void nullUrl_returnsNull() {
     assertNull(UrlSanitizer.sanitize(null));
   }
