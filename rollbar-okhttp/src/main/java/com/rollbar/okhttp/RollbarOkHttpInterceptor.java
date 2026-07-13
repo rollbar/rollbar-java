@@ -1,6 +1,8 @@
 package com.rollbar.okhttp;
 
 import com.rollbar.api.payload.data.Level;
+import com.rollbar.notifier.scrubbing.DefaultUrlSanitizer;
+import com.rollbar.notifier.scrubbing.StringUrlSanitizer;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -18,20 +20,20 @@ public class RollbarOkHttpInterceptor implements Interceptor {
   private static final Logger LOGGER = LoggerFactory.getLogger(RollbarOkHttpInterceptor.class);
 
   private static final UrlSanitizer DEFAULT_URL_SANITIZER =
-      url -> url
-              .newBuilder()
-              .username("")
-              .password("")
-              .query(null)
-              .fragment(null)
-              .build()
-              .toString();
+      url -> DefaultUrlSanitizer.INSTANCE.sanitize(url.toString());
 
   private final NetworkTelemetryRecorder recorder;
   private final UrlSanitizer urlSanitizer;
 
   public RollbarOkHttpInterceptor(NetworkTelemetryRecorder recorder) {
     this(recorder, DEFAULT_URL_SANITIZER);
+  }
+
+  public RollbarOkHttpInterceptor(NetworkTelemetryRecorder recorder,
+      StringUrlSanitizer sharedSanitizer) {
+    this(recorder, (UrlSanitizer) url ->
+        Objects.requireNonNull(sharedSanitizer, "sharedSanitizer must not be null")
+            .sanitize(url.toString()));
   }
 
   public RollbarOkHttpInterceptor(

@@ -225,7 +225,7 @@ public class RollbarOkHttpInterceptorTest {
 
     OkHttpClient throwingClient = new OkHttpClient.Builder()
         .addInterceptor(new RollbarOkHttpInterceptor(recorder,
-            url -> { throw new IllegalStateException("bad url"); }))
+            (UrlSanitizer) url -> { throw new IllegalStateException("bad url"); }))
         .build();
 
     Request request = new Request.Builder().url(server.url("/error")).build();
@@ -241,7 +241,7 @@ public class RollbarOkHttpInterceptorTest {
     server.enqueue(new MockResponse().setResponseCode(500));
 
     OkHttpClient customClient = new OkHttpClient.Builder()
-        .addInterceptor(new RollbarOkHttpInterceptor(recorder, url -> "Updated String"))
+        .addInterceptor(new RollbarOkHttpInterceptor(recorder, (UrlSanitizer) url -> "Updated String"))
         .build();
 
     Request request = new Request.Builder()
