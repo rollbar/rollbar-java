@@ -159,6 +159,63 @@ public class ScrubDataTransformerTest {
   }
 
   @Test
+  public void userKeyRedactsRoutingParams() {
+    // e.g. a /reset/:token route populating Request.params.
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("token"), NO_OP_SANITIZER);
+    Request req = new Request.Builder()
+        .params(headers("token", "reset-token-abc", "userId", "42"))
+        .build();
+    Data result = t.transform(dataWithRequest(req));
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, result.getRequest().getParams().get("token"));
+    assertEquals("42", result.getRequest().getParams().get("userId"));
+  }
+
+  @Test
+  public void routingParamsNotMatchedByHeaderDenyList() {
+    // The built-in deny-list names HTTP headers; a routing param called "cookie" is not one.
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.emptyList(), NO_OP_SANITIZER);
+    Request req = new Request.Builder()
+        .params(headers("cookie", "chocolate-chip"))
+        .build();
+    Data result = t.transform(dataWithRequest(req));
+    assertEquals("chocolate-chip", result.getRequest().getParams().get("cookie"));
+  }
+
+  @Test
+  public void userKeyRedactsMetadata() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("apiKey"), NO_OP_SANITIZER);
+    Request req = new Request.Builder()
+        .metadata(objectMap("apiKey", "key-12345", "region", "us-east-1"))
+        .build();
+    Data result = t.transform(dataWithRequest(req));
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, result.getRequest().getMetadata().get("apiKey"));
+    assertEquals("us-east-1", result.getRequest().getMetadata().get("region"));
+  }
+
+  @Test
+  public void nestedMetadataKeysScrubbed() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    Map<String, Object> inner = objectMap("password", "hunter2", "user", "alice");
+    Map<String, Object> metadata = new HashMap<>();
+    metadata.put("auth", inner);
+    Request req = new Request.Builder().metadata(metadata).build();
+    Data result = t.transform(dataWithRequest(req));
+    @SuppressWarnings("unchecked")
+    Map<String, Object> scrubbed = (Map<String, Object>) result.getRequest().getMetadata().get("auth");
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, scrubbed.get("password"));
+    assertEquals("alice", scrubbed.get("user"));
+  }
+
+  @Test
+  public void nullParamsAndMetadataNoNpe() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    Request req = new Request.Builder().url("https://example.com").build();
+    Data result = t.transform(dataWithRequest(req));
+    assertNull(result.getRequest().getParams());
+    assertNull(result.getRequest().getMetadata());
+  }
+
+  @Test
   public void userKeyRegexMatchesMultipleKeys() {
     ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList(".*[Pp]assword.*"), NO_OP_SANITIZER);
     Map<String, Object> custom = objectMap(

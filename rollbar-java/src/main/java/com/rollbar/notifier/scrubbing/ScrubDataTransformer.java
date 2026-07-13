@@ -35,10 +35,15 @@ import java.util.regex.Pattern;
  * {@code X-Auth-Token}, {@code X-Access-Token}, {@code X-Secret},
  * {@code Proxy-Authorization}, {@code WWW-Authenticate}.
  *
- * <p>Additional keys (matched as case-insensitive regex against header names, query/POST
- * parameter keys, custom data keys, and {@code Frame.locals} keys) can be configured via
- * {@code ConfigBuilder.redactedKeys(List)}. {@code Frame.locals} are scrubbed both in the
- * top-level body content and in the trace chains carried by {@code Body.rollbarThreads}.
+ * <p>Additional keys can be configured via {@code ConfigBuilder.redactedKeys(List)}. They are
+ * matched as case-insensitive regexes against header names, routing parameter keys
+ * ({@code Request.params}), query and POST parameter keys, request metadata keys
+ * ({@code Request.metadata}), custom data keys, and {@code Frame.locals} keys.
+ * {@code Frame.locals} are scrubbed both in the top-level body content and in the trace chains
+ * carried by {@code Body.rollbarThreads}.
+ *
+ * <p>The built-in header deny-list above applies to {@code Request.headers} only; every other
+ * slot matches on the configured keys alone.
  */
 public final class ScrubDataTransformer implements Transformer {
 
@@ -121,20 +126,26 @@ public final class ScrubDataTransformer implements Transformer {
 
     String originalUrl = req.getUrl();
     Map<String, String> originalHeaders = req.getHeaders();
+    Map<String, String> originalParams = req.getParams();
     Map<String, List<String>> originalGet = req.getGet();
     Map<String, Object> originalPost = req.getPost();
+    Map<String, Object> originalMetadata = req.getMetadata();
     String originalQueryString = req.getQueryString();
 
     String scrubbedUrl = originalUrl != null ? urlSanitizer.sanitize(originalUrl) : null;
-    Map<String, String> scrubbedHeaders = scrubStringMap(originalHeaders);
+    Map<String, String> scrubbedHeaders = scrubHeaders(originalHeaders);
+    Map<String, String> scrubbedParams = scrubStringMap(originalParams, fieldPatterns);
     Map<String, List<String>> scrubbedGet = scrubMultiMap(originalGet, fieldPatterns);
     Map<String, Object> scrubbedPost = scrubObjectMap(originalPost, fieldPatterns, 0);
+    Map<String, Object> scrubbedMetadata = scrubObjectMap(originalMetadata, fieldPatterns, 0);
     String scrubbedQueryString = scrubQueryString(originalQueryString, fieldPatterns);
 
     boolean changed = !equal(originalUrl, scrubbedUrl)
         || scrubbedHeaders != originalHeaders
+        || scrubbedParams != originalParams
         || scrubbedGet != originalGet
         || scrubbedPost != originalPost
+        || scrubbedMetadata != originalMetadata
         || !equal(originalQueryString, scrubbedQueryString);
 
     if (!changed) {
@@ -144,8 +155,10 @@ public final class ScrubDataTransformer implements Transformer {
     return new Request.Builder(req)
         .url(scrubbedUrl)
         .headers(scrubbedHeaders)
+        .params(scrubbedParams)
         .get(scrubbedGet)
         .post(scrubbedPost)
+        .metadata(scrubbedMetadata)
         .queryString(scrubbedQueryString)
         .build();
   }
@@ -270,7 +283,7 @@ public final class ScrubDataTransformer implements Transformer {
     return new Frame.Builder(frame).locals(scrubbedLocals).build();
   }
 
-  private Map<String, String> scrubStringMap(Map<String, String> map) {
+  private Map<String, String> scrubHeaders(Map<String, String> map) {
     if (map == null) {
       return null;
     }
@@ -278,6 +291,29 @@ public final class ScrubDataTransformer implements Transformer {
     for (Map.Entry<String, String> entry : map.entrySet()) {
       String key = entry.getKey();
       if (matchesDefaultHeader(key) || matchesAny(key, fieldPatterns)) {
+        if (result == null) {
+          result = new HashMap<>(map);
+        }
+        result.put(key, SCRUBBED_VALUE);
+      }
+    }
+    return result != null ? result : map;
+  }
+
+  /**
+   * Scrubs a flat string map against the configured keys only. The built-in header deny-list is
+   * deliberately not applied here: it names HTTP headers, and a routing parameter such as
+   * {@code /cookie/:id} is not one. This keeps routing params consistent with the GET/POST
+   * parameter maps, which also match on {@code redactedKeys} alone.
+   */
+  private Map<String, String> scrubStringMap(Map<String, String> map, List<Pattern> patterns) {
+    if (map == null || patterns.isEmpty()) {
+      return map;
+    }
+    Map<String, String> result = null;
+    for (Map.Entry<String, String> entry : map.entrySet()) {
+      String key = entry.getKey();
+      if (matchesAny(key, patterns)) {
         if (result == null) {
           result = new HashMap<>(map);
         }
