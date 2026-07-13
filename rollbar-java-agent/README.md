@@ -13,9 +13,21 @@ It works by attaching to the JVM at startup via `-javaagent:` and using ByteBudd
 | Apache HttpClient 4.x (`org.apache.http`) | If present on classpath |
 | Apache HttpClient 5.x (`org.apache.hc.client5`) | If present on classpath |
 
-Only 4xx and 5xx responses are recorded. Successful requests (< 400) produce no telemetry.
+Only 4xx and 5xx responses are recorded, along with requests that fail before a response arrives (connection refused, DNS failure, timeout). Successful requests (< 400) produce no telemetry.
 
 > **Apache HC4/HC5 note:** `execute(request, responseHandler)` overloads route through a separate internal call chain and are not instrumented. Use the standard `execute(request)` / `execute(request, context)` overloads to get telemetry.
+
+### HttpURLConnection entry points
+
+`HttpURLConnection` is captured through three entry points, so a failed request is recorded regardless of how your code consumes the response:
+
+| Entry point | Why it is covered |
+|-------------|-------------------|
+| `getResponseCode()` | The caller checks the status code explicitly. |
+| `getInputStream()` | The caller reads the body directly and only ever sees the `IOException` that a 4xx/5xx throws. |
+| `getErrorStream()` | The caller inspects the error stream after `connect()`, or after catching the `IOException` from `getInputStream()`. |
+
+Exactly one event is recorded per connection, even when your code hits several of these entry points (for example `getInputStream()` throwing and then `getErrorStream()` being read) — the agent deduplicates on the connection instance.
 
 ## Requirements
 
@@ -35,6 +47,8 @@ The fat JAR (with ByteBuddy bundled and relocated) is written to:
 ```
 rollbar-java-agent/build/libs/rollbar-java-agent-<version>.jar
 ```
+
+This fat JAR is the module's only artifact — the thin `jar` task is disabled, and the shaded JAR is what Gradle consumers and the published Maven artifact resolve to. So the JAR you pass to `-javaagent:` and the JAR you put on the classpath (steps 2 and 3) are always the same file.
 
 ### 2. Add the agent JVM flag
 
@@ -103,8 +117,11 @@ That's it. All HTTP calls your application makes from that point on will automat
 |----------|--------|
 | Response status `< 400` | No telemetry recorded |
 | Response status `>= 400` | Records a network telemetry event with `Level.CRITICAL` |
-| Connection failure / I/O error | Records an error telemetry event |
+| Connection failure / I/O error (connection refused, DNS failure, timeout) | Records a `Network error: <message>` telemetry event with `Level.CRITICAL` |
+| The same request seen through several entry points | Deduplicated — one event per request |
 | No Rollbar config wired | Events accumulate in the agent store (capacity 100); nothing is sent |
+
+The agent never throws into your application: every advice body swallows all errors, so a failure inside the instrumentation cannot break an HTTP call.
 
 ## Security
 
@@ -121,7 +138,10 @@ https://api.example.com/charge
 
 ## Internal API
 
-`AgentTelemetryStore.initForTesting()` is intended for use in tests only (it replaces the internal tracker instance). Do not call it in production code — use `RollbarAgent.getTelemetryTracker()` as shown above.
+Two methods exist for tests only. Do not call them in production code — use `RollbarAgent.getTelemetryTracker()` as shown above.
+
+- `AgentTelemetryStore.initForTesting(Provider<Long> timestampProvider)` — replaces the internal tracker with one backed by the given timestamp provider, so tests can assert on event timestamps.
+- `NetworkEventBridge.resetRecordedForTesting()` — clears the deduplication state, so events from a previous test do not suppress recording in the next one.
 
 ## Testing
 
