@@ -5,6 +5,8 @@ import com.rollbar.api.payload.data.Request;
 import com.rollbar.api.payload.data.body.Body;
 import com.rollbar.api.payload.data.body.BodyContent;
 import com.rollbar.api.payload.data.body.Frame;
+import com.rollbar.api.payload.data.body.Group;
+import com.rollbar.api.payload.data.body.RollbarThread;
 import com.rollbar.api.payload.data.body.Trace;
 import com.rollbar.api.payload.data.body.TraceChain;
 import com.rollbar.api.scrubbing.DefaultUrlSanitizer;
@@ -33,7 +35,8 @@ import java.util.regex.Pattern;
  *
  * <p>Additional keys (matched as case-insensitive regex against header names, query/POST
  * parameter keys, custom data keys, and {@code Frame.locals} keys) can be configured via
- * {@code ConfigBuilder.redactedKeys(List)}.
+ * {@code ConfigBuilder.redactedKeys(List)}. {@code Frame.locals} are scrubbed both in the
+ * top-level body content and in the trace chains carried by {@code Body.rollbarThreads}.
  */
 public final class ScrubDataTransformer implements Transformer {
 
@@ -149,33 +152,85 @@ public final class ScrubDataTransformer implements Transformer {
     if (body == null || fieldPatterns.isEmpty()) {
       return body;
     }
-    BodyContent content = body.getContents();
+
+    BodyContent originalContent = body.getContents();
+    List<RollbarThread> originalThreads = body.getRollbarThreads();
+
+    BodyContent scrubbedContent = scrubBodyContent(originalContent);
+    List<RollbarThread> scrubbedThreads = scrubThreads(originalThreads);
+
+    if (scrubbedContent == originalContent && scrubbedThreads == originalThreads) {
+      return body;
+    }
+
+    return new Body.Builder(body)
+        .bodyContent(scrubbedContent)
+        .rollbarThreads(scrubbedThreads)
+        .build();
+  }
+
+  private BodyContent scrubBodyContent(BodyContent content) {
     if (content instanceof Trace) {
-      Trace scrubbed = scrubTrace((Trace) content);
-      if (scrubbed != content) {
-        return new Body.Builder(body).bodyContent(scrubbed).build();
-      }
+      return scrubTrace((Trace) content);
     } else if (content instanceof TraceChain) {
-      TraceChain chain = (TraceChain) content;
-      List<Trace> traces = chain.getTraces();
-      if (traces != null) {
-        List<Trace> scrubbed = new ArrayList<>(traces.size());
-        boolean anyChanged = false;
-        for (Trace trace : traces) {
-          Trace st = scrubTrace(trace);
-          scrubbed.add(st);
-          if (st != trace) {
-            anyChanged = true;
-          }
-        }
-        if (anyChanged) {
-          return new Body.Builder(body)
-              .bodyContent(new TraceChain.Builder(chain).traces(scrubbed).build())
-              .build();
-        }
+      return scrubTraceChain((TraceChain) content);
+    }
+    return content;
+  }
+
+  /**
+   * The initial thread carries the same frames as the top-level body content, so its locals must
+   * be scrubbed too, otherwise the {@code threads} entry leaks what {@code trace} redacted.
+   */
+  private List<RollbarThread> scrubThreads(List<RollbarThread> threads) {
+    if (threads == null || threads.isEmpty()) {
+      return threads;
+    }
+    List<RollbarThread> scrubbed = new ArrayList<>(threads.size());
+    boolean anyChanged = false;
+    for (RollbarThread thread : threads) {
+      RollbarThread st = scrubThread(thread);
+      scrubbed.add(st);
+      if (st != thread) {
+        anyChanged = true;
       }
     }
-    return body;
+    return anyChanged ? scrubbed : threads;
+  }
+
+  private RollbarThread scrubThread(RollbarThread thread) {
+    if (thread == null || thread.getGroup() == null) {
+      return thread;
+    }
+    TraceChain chain = thread.getGroup().getTraceChain();
+    TraceChain scrubbedChain = scrubTraceChain(chain);
+    if (scrubbedChain == chain) {
+      return thread;
+    }
+    return new RollbarThread.Builder(thread).group(new Group(scrubbedChain)).build();
+  }
+
+  private TraceChain scrubTraceChain(TraceChain chain) {
+    if (chain == null) {
+      return null;
+    }
+    List<Trace> traces = chain.getTraces();
+    if (traces == null || traces.isEmpty()) {
+      return chain;
+    }
+    List<Trace> scrubbed = new ArrayList<>(traces.size());
+    boolean anyChanged = false;
+    for (Trace trace : traces) {
+      Trace st = scrubTrace(trace);
+      scrubbed.add(st);
+      if (st != trace) {
+        anyChanged = true;
+      }
+    }
+    if (!anyChanged) {
+      return chain;
+    }
+    return new TraceChain.Builder(chain).traces(scrubbed).build();
   }
 
   private Trace scrubTrace(Trace trace) {

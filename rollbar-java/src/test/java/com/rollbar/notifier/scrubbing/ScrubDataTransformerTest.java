@@ -4,7 +4,10 @@ import com.rollbar.api.payload.data.Data;
 import com.rollbar.api.payload.data.Request;
 import com.rollbar.api.payload.data.body.Body;
 import com.rollbar.api.payload.data.body.Frame;
+import com.rollbar.api.payload.data.body.Group;
+import com.rollbar.api.payload.data.body.RollbarThread;
 import com.rollbar.api.payload.data.body.Trace;
+import com.rollbar.api.payload.data.body.TraceChain;
 import com.rollbar.api.scrubbing.StringUrlSanitizer;
 import org.junit.Test;
 
@@ -62,7 +65,7 @@ public class ScrubDataTransformerTest {
 
   @Test
   public void authorizationHeaderRedacted() {
-    ScrubDataTransformer t = new ScrubDataTransformer(Collections.<String>emptyList(), NO_OP_SANITIZER);
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.emptyList(), NO_OP_SANITIZER);
     Request req = new Request.Builder()
         .headers(headers("Authorization", "Bearer secret-token", "Content-Type", "application/json"))
         .build();
@@ -116,7 +119,7 @@ public class ScrubDataTransformerTest {
 
   @Test
   public void userKeyRedactsHeaders() {
-    ScrubDataTransformer t = new ScrubDataTransformer(Arrays.asList("X-My-Secret"), NO_OP_SANITIZER);
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("X-My-Secret"), NO_OP_SANITIZER);
     Request req = new Request.Builder()
         .headers(headers("X-My-Secret", "sensitive", "Content-Type", "text/plain"))
         .build();
@@ -127,7 +130,7 @@ public class ScrubDataTransformerTest {
 
   @Test
   public void userKeyRedactsGetParams() {
-    ScrubDataTransformer t = new ScrubDataTransformer(Arrays.asList("apiToken"), NO_OP_SANITIZER);
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("apiToken"), NO_OP_SANITIZER);
     Request req = new Request.Builder()
         .get(getParams("apiToken", "secret-value"))
         .build();
@@ -138,7 +141,7 @@ public class ScrubDataTransformerTest {
 
   @Test
   public void userKeyRedactsPostParams() {
-    ScrubDataTransformer t = new ScrubDataTransformer(Arrays.asList("password"), NO_OP_SANITIZER);
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
     Map<String, Object> post = objectMap("password", "hunter2", "username", "alice");
     Request req = new Request.Builder().post(post).build();
     Data result = t.transform(dataWithRequest(req));
@@ -148,7 +151,7 @@ public class ScrubDataTransformerTest {
 
   @Test
   public void userKeyRedactsCustomMap() {
-    ScrubDataTransformer t = new ScrubDataTransformer(Arrays.asList("mySecret"), NO_OP_SANITIZER);
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("mySecret"), NO_OP_SANITIZER);
     Map<String, Object> custom = objectMap("mySecret", "hidden", "other", "visible");
     Data result = t.transform(dataWithCustom(custom));
     assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, result.getCustom().get("mySecret"));
@@ -157,7 +160,7 @@ public class ScrubDataTransformerTest {
 
   @Test
   public void userKeyRegexMatchesMultipleKeys() {
-    ScrubDataTransformer t = new ScrubDataTransformer(Arrays.asList(".*[Pp]assword.*"), NO_OP_SANITIZER);
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList(".*[Pp]assword.*"), NO_OP_SANITIZER);
     Map<String, Object> custom = objectMap(
         "passwordHash", "xxx",
         "oldPassword", "yyy",
@@ -174,7 +177,7 @@ public class ScrubDataTransformerTest {
   @Test
   public void urlSanitizedViaProvidedSanitizer() {
     StringUrlSanitizer strip = url -> "https://example.com/clean";
-    ScrubDataTransformer t = new ScrubDataTransformer(Collections.<String>emptyList(), strip);
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.emptyList(), strip);
     Request req = new Request.Builder()
         .url("https://example.com/api?secret=xyz")
         .build();
@@ -186,7 +189,7 @@ public class ScrubDataTransformerTest {
 
   @Test
   public void queryStringValueRedacted() {
-    ScrubDataTransformer t = new ScrubDataTransformer(Arrays.asList("token"), NO_OP_SANITIZER);
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("token"), NO_OP_SANITIZER);
     Request req = new Request.Builder()
         .queryString("token=secret&page=1")
         .build();
@@ -198,7 +201,7 @@ public class ScrubDataTransformerTest {
 
   @Test
   public void queryStringUnchangedWhenNoMatch() {
-    ScrubDataTransformer t = new ScrubDataTransformer(Collections.<String>emptyList(), NO_OP_SANITIZER);
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.emptyList(), NO_OP_SANITIZER);
     String qs = "page=1&sort=asc";
     Request req = new Request.Builder().queryString(qs).build();
     Data result = t.transform(dataWithRequest(req));
@@ -209,7 +212,7 @@ public class ScrubDataTransformerTest {
 
   @Test
   public void frameLocalsMatchingKeysScrubbed() {
-    ScrubDataTransformer t = new ScrubDataTransformer(Arrays.asList("password"), NO_OP_SANITIZER);
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
     Map<String, Object> locals = objectMap("password", "secret", "userId", "42");
     Frame frame = new Frame.Builder().locals(locals).build();
     Trace trace = new Trace.Builder().frames(Collections.singletonList(frame)).build();
@@ -227,14 +230,14 @@ public class ScrubDataTransformerTest {
 
   @Test
   public void nullRequestReturnsDataUnchanged() {
-    ScrubDataTransformer t = new ScrubDataTransformer(Collections.<String>emptyList(), NO_OP_SANITIZER);
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.emptyList(), NO_OP_SANITIZER);
     Data data = new Data.Builder().environment("test").build();
     assertSame(data, t.transform(data));
   }
 
   @Test
   public void nullHeadersMapNoNpe() {
-    ScrubDataTransformer t = new ScrubDataTransformer(Collections.<String>emptyList(), NO_OP_SANITIZER);
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.emptyList(), NO_OP_SANITIZER);
     Request req = new Request.Builder().url("https://example.com").build(); // headers null
     Data result = t.transform(dataWithRequest(req));
     assertNotNull(result);
@@ -242,7 +245,7 @@ public class ScrubDataTransformerTest {
 
   @Test
   public void nullCustomMapNoNpe() {
-    ScrubDataTransformer t = new ScrubDataTransformer(Arrays.asList("secret"), NO_OP_SANITIZER);
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("secret"), NO_OP_SANITIZER);
     Data data = new Data.Builder().environment("test").build(); // custom null
     Data result = t.transform(data);
     assertNotNull(result);
@@ -250,7 +253,7 @@ public class ScrubDataTransformerTest {
 
   @Test
   public void noMatchReturnsSameDataInstance() {
-    ScrubDataTransformer t = new ScrubDataTransformer(Collections.<String>emptyList(), NO_OP_SANITIZER);
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.emptyList(), NO_OP_SANITIZER);
     Request req = new Request.Builder()
         .url("https://example.com")
         .headers(headers("Content-Type", "application/json"))
@@ -261,7 +264,7 @@ public class ScrubDataTransformerTest {
 
   @Test
   public void emptyRedactedKeysOnlyScrubsDefaultHeaders() {
-    ScrubDataTransformer t = new ScrubDataTransformer(Collections.<String>emptyList(), NO_OP_SANITIZER);
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.emptyList(), NO_OP_SANITIZER);
     Map<String, Object> custom = objectMap("myApiKey", "visible");
     Map<String, String> hdrs = headers("Authorization", "Bearer xyz", "Content-Type", "text/html");
     Request req = new Request.Builder().headers(hdrs).build();
@@ -284,7 +287,7 @@ public class ScrubDataTransformerTest {
 
   @Test
   public void valueLessQueryParamScrubbed() {
-    ScrubDataTransformer t = new ScrubDataTransformer(Arrays.asList("token"), NO_OP_SANITIZER);
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("token"), NO_OP_SANITIZER);
     Request req = new Request.Builder().queryString("token&page=1").build();
     Data result = t.transform(dataWithRequest(req));
     String qs = result.getRequest().getQueryString();
@@ -294,7 +297,7 @@ public class ScrubDataTransformerTest {
 
   @Test
   public void valueLessQueryParamNoMatchPassedThrough() {
-    ScrubDataTransformer t = new ScrubDataTransformer(Arrays.asList("token"), NO_OP_SANITIZER);
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("token"), NO_OP_SANITIZER);
     Request req = new Request.Builder().queryString("debug&page=1").build();
     Data result = t.transform(dataWithRequest(req));
     assertSame(req.getQueryString(), result.getRequest().getQueryString());
@@ -304,7 +307,7 @@ public class ScrubDataTransformerTest {
 
   @Test
   public void nestedCustomMapKeysScrubbed() {
-    ScrubDataTransformer t = new ScrubDataTransformer(Arrays.asList("password"), NO_OP_SANITIZER);
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
     Map<String, Object> inner = objectMap("password", "hunter2", "user", "alice");
     Map<String, Object> custom = new HashMap<>();
     custom.put("auth", inner);
@@ -319,7 +322,7 @@ public class ScrubDataTransformerTest {
 
   @Test
   public void nestedFrameLocalsKeysScrubbed() {
-    ScrubDataTransformer t = new ScrubDataTransformer(Arrays.asList("token"), NO_OP_SANITIZER);
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("token"), NO_OP_SANITIZER);
     Map<String, Object> inner = objectMap("token", "secret-token", "count", "5");
     Map<String, Object> locals = new HashMap<>();
     locals.put("credentials", inner);
@@ -342,11 +345,93 @@ public class ScrubDataTransformerTest {
   @Test
   public void nestedMapParentKeyMatchScrubsEntireValue() {
     // When the top-level key itself matches, the whole nested map is replaced, not recursed.
-    ScrubDataTransformer t = new ScrubDataTransformer(Arrays.asList("credentials"), NO_OP_SANITIZER);
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("credentials"), NO_OP_SANITIZER);
     Map<String, Object> inner = objectMap("password", "hunter2");
     Map<String, Object> custom = new HashMap<>();
     custom.put("credentials", inner);
     Data result = t.transform(dataWithCustom(custom));
     assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, result.getCustom().get("credentials"));
+  }
+
+  @Test
+  public void threadFrameLocalsScrubbed() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    Body body = new Body.Builder()
+        .bodyContent(traceWithLocals(objectMap("password", "hunter2", "userId", "42")))
+        .rollbarThreads(Collections.singletonList(
+            threadWithLocals(objectMap("password", "hunter2", "userId", "42"))))
+        .build();
+    Data data = new Data.Builder().environment("test").body(body).build();
+
+    Data result = t.transform(data);
+
+    Map<String, Object> locals = threadLocals(result.getBody(), 0);
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, locals.get("password"));
+    assertEquals("42", locals.get("userId"));
+    // The top-level trace is still scrubbed.
+    List<Frame> frames = ((Trace) result.getBody().getContents()).getFrames();
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, frames.get(0).getLocals().get("password"));
+  }
+
+  @Test
+  public void threadFrameLocalsScrubbedWhenBodyContentHasNoMatch() {
+    // Regression: the threads entry must be scrubbed even when the body content needs no change.
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("token"), NO_OP_SANITIZER);
+    Body body = new Body.Builder()
+        .bodyContent(traceWithLocals(objectMap("userId", "42")))
+        .rollbarThreads(Collections.singletonList(
+            threadWithLocals(objectMap("token", "secret-token"))))
+        .build();
+    Data data = new Data.Builder().environment("test").body(body).build();
+
+    Data result = t.transform(data);
+
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE,
+        threadLocals(result.getBody(), 0).get("token"));
+  }
+
+  @Test
+  public void threadsWithNoMatchReturnSameBodyInstance() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    Body body = new Body.Builder()
+        .bodyContent(traceWithLocals(objectMap("userId", "42")))
+        .rollbarThreads(Collections.singletonList(threadWithLocals(objectMap("userId", "42"))))
+        .build();
+    Data data = new Data.Builder().environment("test").body(body).build();
+
+    assertSame(data, t.transform(data));
+  }
+
+  @Test
+  public void nullThreadsNoNpe() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    Body body = new Body.Builder()
+        .bodyContent(traceWithLocals(objectMap("password", "hunter2")))
+        .build(); // rollbarThreads null
+    Data data = new Data.Builder().environment("test").body(body).build();
+
+    Data result = t.transform(data);
+
+    List<Frame> frames = ((Trace) result.getBody().getContents()).getFrames();
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, frames.get(0).getLocals().get("password"));
+    assertNull(result.getBody().getRollbarThreads());
+  }
+
+  private static Trace traceWithLocals(Map<String, Object> locals) {
+    Frame frame = new Frame.Builder().locals(locals).build();
+    return new Trace.Builder().frames(Collections.singletonList(frame)).build();
+  }
+
+  private static RollbarThread threadWithLocals(Map<String, Object> locals) {
+    TraceChain chain = new TraceChain.Builder()
+        .traces(Collections.singletonList(traceWithLocals(locals)))
+        .build();
+    return new RollbarThread("main", "1", "5", "RUNNABLE", new Group(chain));
+  }
+
+  private static Map<String, Object> threadLocals(Body body, int threadIndex) {
+    return body.getRollbarThreads().get(threadIndex)
+        .getGroup().getTraceChain().getTraces().get(0)
+        .getFrames().get(0).getLocals();
   }
 }
