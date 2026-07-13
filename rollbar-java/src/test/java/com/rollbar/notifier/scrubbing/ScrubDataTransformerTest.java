@@ -5,6 +5,7 @@ import com.rollbar.api.payload.data.Request;
 import com.rollbar.api.payload.data.body.Body;
 import com.rollbar.api.payload.data.body.Frame;
 import com.rollbar.api.payload.data.body.Trace;
+import com.rollbar.api.scrubbing.StringUrlSanitizer;
 import org.junit.Test;
 
 import java.util.Arrays;

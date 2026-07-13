@@ -7,6 +7,8 @@ import com.rollbar.api.payload.data.body.BodyContent;
 import com.rollbar.api.payload.data.body.Frame;
 import com.rollbar.api.payload.data.body.Trace;
 import com.rollbar.api.payload.data.body.TraceChain;
+import com.rollbar.api.scrubbing.DefaultUrlSanitizer;
+import com.rollbar.api.scrubbing.StringUrlSanitizer;
 import com.rollbar.notifier.transformer.Transformer;
 
 import java.util.ArrayList;
@@ -51,6 +53,14 @@ public final class ScrubDataTransformer implements Transformer {
   private final List<Pattern> fieldPatterns;
   private final StringUrlSanitizer urlSanitizer;
 
+  /**
+   * Constructor.
+   *
+   * @param redactedKeys keys to redact, matched as case-insensitive regexes. May be {@code null}
+   *     or empty, in which case only the built-in header deny-list and the URL sanitizer apply.
+   * @param urlSanitizer sanitizer applied to the request URL. Falls back to
+   *     {@link DefaultUrlSanitizer#INSTANCE} when {@code null}.
+   */
   public ScrubDataTransformer(List<String> redactedKeys, StringUrlSanitizer urlSanitizer) {
     this.urlSanitizer = urlSanitizer != null ? urlSanitizer : DefaultUrlSanitizer.INSTANCE;
     if (redactedKeys == null || redactedKeys.isEmpty()) {
