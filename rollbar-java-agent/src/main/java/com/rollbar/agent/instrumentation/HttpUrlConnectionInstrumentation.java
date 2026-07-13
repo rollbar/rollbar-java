@@ -13,9 +13,22 @@ public final class HttpUrlConnectionInstrumentation {
   private HttpUrlConnectionInstrumentation() {}
 
   /**
-   * Instruments {@code java.net.HttpURLConnection.getResponseCode()} to record 4xx/5xx responses.
+   * Instruments {@code HttpURLConnection} to record 4xx/5xx responses and network errors.
    *
-   * <p>Targets the declaring class directly to capture the method regardless of concrete subtype.
+   * <p>Three entry points are covered:
+   * <ul>
+   *   <li>{@code getResponseCode()} on the base class — catches callers that check the code
+   *       explicitly.</li>
+   *   <li>{@code getInputStream()} on concrete subclasses — catches the common pattern where the
+   *       caller reads the body directly and only sees the IOException on 4xx.</li>
+   *   <li>{@code getErrorStream()} on concrete subclasses — catches callers that check for an error
+   *       stream after {@code connect()} or after catching the IOException from
+   *       {@code getInputStream()}.</li>
+   * </ul>
+   *
+   * <p>{@code getInputStream} and {@code getErrorStream} advice simply invoke
+   * {@code getResponseCode()} to trigger the base-class advice; deduplication in
+   * {@link com.rollbar.agent.NetworkEventBridge} ensures only one event is emitted per connection.
    */
   public static void install(AgentBuilder builder, Instrumentation inst) {
     builder
@@ -25,6 +38,74 @@ public final class HttpUrlConnectionInstrumentation {
                 .on(ElementMatchers.named("getResponseCode")))
         )
         .installOn(inst);
+
+    // getInputStream() and getErrorStream() are overridden in concrete subclasses, so we must
+    // target subtypes rather than java.net.HttpURLConnection itself.
+    builder
+        .type(ElementMatchers.isSubTypeOf(java.net.HttpURLConnection.class)
+            .and(ElementMatchers.not(ElementMatchers.named("java.net.HttpURLConnection"))))
+        .transform((b, typeDescription, classLoader, module, protectionDomain) ->
+            b.visit(Advice.to(GetInputStreamAdvice.class)
+                .on(ElementMatchers.named("getInputStream")
+                    .and(ElementMatchers.not(ElementMatchers.isAbstract()))))
+             .visit(Advice.to(GetErrorStreamAdvice.class)
+                .on(ElementMatchers.named("getErrorStream")
+                    .and(ElementMatchers.not(ElementMatchers.isAbstract()))))
+        )
+        .installOn(inst);
+  }
+
+  /**
+   * Advice inlined into concrete {@code HttpURLConnection.getInputStream()}.
+   *
+   * <p>When {@code getInputStream()} throws (4xx/5xx response), invokes {@code getResponseCode()}
+   * so that {@link GetResponseCodeAdvice} records the event. Deduplication in
+   * {@link com.rollbar.agent.NetworkEventBridge} prevents double-recording if the caller also calls
+   * {@code getResponseCode()} or {@code getErrorStream()} afterwards.
+   */
+  public static class GetInputStreamAdvice {
+
+    /** Fires when {@code getInputStream()} throws, ensuring the failed request is recorded. */
+    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    public static void onExit(
+        @Advice.This Object connection,
+        @Advice.Thrown Throwable thrown
+    ) {
+      if (thrown == null) {
+        return;
+      }
+      try {
+        connection.getClass().getMethod("getResponseCode").invoke(connection);
+      } catch (Throwable ignored) {
+        // Advice must never throw
+      }
+    }
+  }
+
+  /**
+   * Advice inlined into concrete {@code HttpURLConnection.getErrorStream()}.
+   *
+   * <p>A non-null return means the server sent a 4xx/5xx response. Invokes
+   * {@code getResponseCode()} so that {@link GetResponseCodeAdvice} records the event.
+   * Deduplication in {@link com.rollbar.agent.NetworkEventBridge} prevents double-recording.
+   */
+  public static class GetErrorStreamAdvice {
+
+    /** Fires when {@code getErrorStream()} returns a non-null stream. */
+    @Advice.OnMethodExit
+    public static void onExit(
+        @Advice.This Object connection,
+        @Advice.Return Object errorStream
+    ) {
+      if (errorStream == null) {
+        return;
+      }
+      try {
+        connection.getClass().getMethod("getResponseCode").invoke(connection);
+      } catch (Throwable ignored) {
+        // Advice must never throw
+      }
+    }
   }
 
   /**

@@ -104,6 +104,58 @@ public class HttpUrlConnectionInstrumentationTest {
     assertFalse(url.contains("token"));
   }
 
+  @Test
+  public void getInputStream_on4xx_recordsNetworkEvent() throws IOException {
+    server.stubFor(get(urlEqualTo("/not-found")).willReturn(aResponse().withStatus(404)));
+
+    HttpURLConnection conn = (HttpURLConnection) new URL(server.baseUrl() + "/not-found")
+        .openConnection();
+    conn.setRequestMethod("GET");
+    try {
+      conn.getInputStream();
+    } catch (IOException ignored) {
+      // expected for 4xx
+    }
+    conn.disconnect();
+
+    List<TelemetryEvent> events = AgentTelemetryStore.getInstance().getAll();
+    assertEquals(1, events.size());
+    Map<?, ?> body = (Map<?, ?>) events.get(0).asJson().get("body");
+    assertEquals("404", body.get("status_code"));
+    assertEquals("GET", body.get("method"));
+  }
+
+  @Test
+  public void getInputStream_on2xx_doesNotRecordEvent() throws IOException {
+    server.stubFor(get(urlEqualTo("/ok")).willReturn(aResponse().withStatus(200)));
+
+    HttpURLConnection conn = (HttpURLConnection) new URL(server.baseUrl() + "/ok")
+        .openConnection();
+    conn.setRequestMethod("GET");
+    conn.getInputStream().close();
+    conn.disconnect();
+
+    assertTrue(AgentTelemetryStore.getInstance().getAll().isEmpty());
+  }
+
+  @Test
+  public void getInputStream_thenGetErrorStream_doesNotDoubleRecord() throws IOException {
+    server.stubFor(get(urlEqualTo("/not-found")).willReturn(aResponse().withStatus(404)));
+
+    HttpURLConnection conn = (HttpURLConnection) new URL(server.baseUrl() + "/not-found")
+        .openConnection();
+    conn.setRequestMethod("GET");
+    try {
+      conn.getInputStream();
+    } catch (IOException ignored) {
+      // expected for 4xx
+    }
+    conn.getErrorStream();
+    conn.disconnect();
+
+    assertEquals(1, AgentTelemetryStore.getInstance().getAll().size());
+  }
+
   private void makeRequest(String method, String path) throws IOException {
     HttpURLConnection conn = (HttpURLConnection) new URL(server.baseUrl() + path).openConnection();
     conn.setRequestMethod(method);
