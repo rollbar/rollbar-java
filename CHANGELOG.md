@@ -1,5 +1,10 @@
 # Change Log
 
+# 2.3.1
+
+### rollbar-logback
+- Restrict recursive logger suppression to Rollbar package [#376](https://github.com/rollbar/rollbar-java/pull/376)
+
 # 2.3.0
 
 - Switching to stable release
