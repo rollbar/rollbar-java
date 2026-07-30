@@ -1,3 +1,5 @@
+use cache::{self, BoxType, Capture, Core};
+use filter;
 use env::JvmTiEnv;
 use errors::*;
 use jni::JniEnv;
@@ -11,6 +13,12 @@ use jvmti::{
     jvmtiFrameInfo, jvmtiLocalVariableEntry,
 };
 
+/// Upper bound on frames captured for a single throwable. Deep framework stacks
+/// otherwise walk a local variable table per frame plus a JVMTI call per slot.
+const MAX_FRAMES: jint = 64;
+
+const ACC_STATIC: jint = 0x0008;
+
 pub fn inner_callback(
     mut jvmti_env: JvmTiEnv,
     mut jni_env: JniEnv,
@@ -18,29 +26,46 @@ pub fn inner_callback(
     exception: jobject,
 ) -> Result<()> {
     trace!("on_exception called");
-    let class = jni_env.find_class("com/rollbar/jvmti/ThrowableCache")?;
-    let should_cache_method =
-        jni_env.get_static_method_id(class, "shouldCacheThrowable", "(Ljava/lang/Throwable;I)Z")?;
+
+    // Not armed yet: ThrowableCache has not been prepared, so there is nothing to
+    // call. The Exception event should not even be enabled in this state.
+    let core: &Core = match cache::CORE.get() {
+        Some(core) => core,
+        None => return Ok(()),
+    };
+
+    // Cheap native reject before GetFrameCount (a stack walk) and before the Java
+    // upcall, whose shouldCacheThrowable materializes a full StackTraceElement[].
+    match filter::decide(&mut jvmti_env, &mut jni_env, core, thread) {
+        filter::Decision::Skip | filter::Decision::NoAppFrame => return Ok(()),
+        filter::Decision::AskJava => {}
+    }
 
     let num_frames = jvmti_env.get_frame_count(thread)?;
 
-    let shouldCache =
-        jni_env.call_static_LI_Z_method(class, should_cache_method, exception, num_frames)?;
-
-    if !shouldCache {
+    let should_cache = jni_env.call_static_LI_Z_method(
+        core.throwable_cache,
+        core.should_cache,
+        exception,
+        num_frames,
+    )?;
+    if !should_cache {
         return Ok(());
     }
 
-    let cache_add_method = jni_env.get_static_method_id(
-        class,
-        "add",
-        "(Ljava/lang/Throwable;[Lcom/rollbar/jvmti/CacheFrame;)V",
-    )?;
+    let capture = cache::capture(&mut jni_env, core)?;
 
     let start_depth = 0;
-    let frames = build_stack_trace_frames(jvmti_env, jni_env, thread, start_depth, num_frames)?;
+    let frames = build_stack_trace_frames(
+        jvmti_env,
+        jni_env,
+        capture,
+        thread,
+        start_depth,
+        num_frames.min(MAX_FRAMES),
+    )?;
 
-    jni_env.call_static_LAL_V_method(class, cache_add_method, exception, frames)?;
+    jni_env.call_static_LAL_V_method(core.throwable_cache, core.add, exception, frames)?;
     trace!("on_exception exit");
     Ok(())
 }
@@ -48,11 +73,17 @@ pub fn inner_callback(
 fn build_stack_trace_frames(
     mut jvmti_env: JvmTiEnv,
     mut jni_env: JniEnv,
+    capture: &Capture,
     thread: jthread,
     start_depth: jint,
     num_frames: jint,
 ) -> Result<jobjectArray> {
-    let mut frames: Vec<jvmtiFrameInfo> = Vec::with_capacity(num_frames as usize);
+    if num_frames <= 0 {
+        return jni_env.new_object_array(0, capture.cache_frame, ptr::null_mut());
+    }
+
+    // GetStackTrace writes into this buffer; it is sized, not filled, up front.
+    let mut frames: Vec<jvmtiFrameInfo> = vec![jvmtiFrameInfo::default(); num_frames as usize];
     let mut num_frames_returned: jint = 0;
     jvmti_env.get_stack_trace(
         thread,
@@ -61,18 +92,20 @@ fn build_stack_trace_frames(
         frames.as_mut_ptr(),
         &mut num_frames_returned,
     )?;
-    if num_frames_returned >= 0 && num_frames_returned as usize > frames.len() {
-        debug_assert!(num_frames_returned as usize <= frames.capacity());
-        unsafe {
-            frames.set_len(num_frames_returned as usize);
-        }
+    if num_frames_returned < 0 {
+        num_frames_returned = 0;
     }
-    let class = jni_env.find_class("com/rollbar/jvmti/CacheFrame")?;
-    let result = jni_env.new_object_array(num_frames_returned, class, ptr::null_mut())?;
+    if num_frames_returned as usize > frames.len() {
+        num_frames_returned = frames.len() as jint;
+    }
+
+    let result =
+        jni_env.new_object_array(num_frames_returned, capture.cache_frame, ptr::null_mut())?;
     for i in 0..num_frames_returned {
         let frame = build_frame(
             &mut jvmti_env,
             &mut jni_env,
+            capture,
             thread,
             start_depth + i,
             frames[i as usize].method,
@@ -86,11 +119,21 @@ fn build_stack_trace_frames(
 fn build_frame(
     jvmti_env: &mut JvmTiEnv,
     jni_env: &mut JniEnv,
+    capture: &Capture,
     thread: jthread,
     depth: jint,
     method: jmethodID,
     location: jlocation,
 ) -> Result<jobject> {
+    // Locals are only useful for the user's own code. A framework stack is mostly
+    // library frames, and each one otherwise costs a GetLocalVariableTable plus a
+    // JVMTI call and a boxing allocation per slot. The frame object is still emitted
+    // so the array stays 1:1 with the stack -- BodyFactory.frames() indexes it
+    // positionally and dereferences every element.
+    if !filter::is_app_frame(jvmti_env, method) {
+        return make_frame_object(jvmti_env, jni_env, capture, method, ptr::null_mut());
+    }
+
     let mut num_entries: jint = 0;
     let mut local_var_table: *mut jvmtiLocalVariableEntry = ptr::null_mut();
 
@@ -102,11 +145,19 @@ fn build_frame(
                 if rc == jvmtiError_JVMTI_ERROR_ABSENT_INFORMATION as jint
                     || rc == jvmtiError_JVMTI_ERROR_NATIVE_METHOD as jint =>
             {
-                return make_frame_object(jvmti_env, jni_env, method, ptr::null_mut());
+                return make_frame_object(jvmti_env, jni_env, capture, method, ptr::null_mut());
             }
             _ => {}
         }
         return Err(e);
+    }
+
+    // from_raw_parts requires a non-null, aligned pointer even for a zero length.
+    if num_entries <= 0 || local_var_table.is_null() {
+        if !local_var_table.is_null() {
+            let _ = jvmti_env.dealloc(local_var_table);
+        }
+        return make_frame_object(jvmti_env, jni_env, capture, method, ptr::null_mut());
     }
 
     let local_entries;
@@ -117,11 +168,12 @@ fn build_frame(
     let result = gather_local_information(
         jvmti_env,
         jni_env,
+        capture,
         thread,
         depth,
         method,
         location,
-        &local_entries,
+        local_entries,
     );
     for entry in local_entries {
         let _ = jvmti_env.dealloc(entry.name);
@@ -134,60 +186,51 @@ fn build_frame(
     result
 }
 
+#[allow(clippy::too_many_arguments)]
 fn gather_local_information(
     jvmti_env: &mut JvmTiEnv,
     jni_env: &mut JniEnv,
+    capture: &Capture,
     thread: jthread,
     depth: jint,
     method: jmethodID,
     location: jlocation,
     local_entries: &[jvmtiLocalVariableEntry],
 ) -> Result<jobject> {
-    let local_class = jni_env.find_class("com/rollbar/jvmti/LocalVariable")?;
-    let ctor = jni_env.get_method_id(
-        local_class,
-        "<init>",
-        "(Ljava/lang/String;Ljava/lang/Object;)V",
+    let locals = jni_env.new_object_array(
+        local_entries.len() as jsize,
+        capture.local_variable,
+        ptr::null_mut(),
     )?;
-    let locals =
-        jni_env.new_object_array(local_entries.len() as jsize, local_class, ptr::null_mut())?;
 
     for (i, entry) in local_entries.iter().enumerate() {
         make_local_variable(
-            jvmti_env,
-            jni_env,
-            thread,
-            depth,
-            local_class,
-            ctor,
-            location,
-            locals,
-            entry,
-            i as jint,
+            jvmti_env, jni_env, capture, thread, depth, location, locals, entry, i as jint,
         )?;
     }
-    make_frame_object(jvmti_env, jni_env, method, locals)
+    make_frame_object(jvmti_env, jni_env, capture, method, locals)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn make_local_variable(
     jvmti_env: &mut JvmTiEnv,
     jni_env: &mut JniEnv,
+    capture: &Capture,
     thread: jthread,
     depth: jint,
-    local_class: jclass,
-    ctor: jmethodID,
     location: jlocation,
     locals: jobjectArray,
     entry: &jvmtiLocalVariableEntry,
     index: jint,
 ) -> Result<()> {
-    let name = jni_env.new_string_utf(entry.name)?;
+    let in_scope = location >= entry.start_location
+        && location <= entry.start_location + i64::from(entry.length);
 
-    let local = if location >= entry.start_location
-        && location <= entry.start_location + i64::from(entry.length)
-    {
-        let value = get_local_value(jvmti_env, jni_env, thread, depth, entry)?;
-        jni_env.new_object_StringL(local_class, ctor, name, value)?
+    // Building the name string only matters for slots we actually emit.
+    let local = if in_scope {
+        let name = jni_env.new_string_utf(entry.name)?;
+        let value = get_local_value(jvmti_env, jni_env, capture, thread, depth, entry)?;
+        jni_env.new_object_StringL(capture.local_variable, capture.local_variable_ctor, name, value)?
     } else {
         ptr::null_mut()
     };
@@ -198,24 +241,29 @@ fn make_local_variable(
 fn make_frame_object(
     jvmti_env: &mut JvmTiEnv,
     jni_env: &mut JniEnv,
+    capture: &Capture,
     method: jmethodID,
     locals: jobjectArray,
 ) -> Result<jobject> {
     let mut method_class: jclass = ptr::null_mut();
     jvmti_env.get_method_declaring_class(method, &mut method_class)?;
-    let frame_method = jni_env.get_reflected_method(method_class, method, true)?;
-    let frame_class = jni_env.find_class("com/rollbar/jvmti/CacheFrame")?;
-    let ctor = jni_env.get_method_id(
-        frame_class,
-        "<init>",
-        "(Ljava/lang/reflect/Method;[Lcom/rollbar/jvmti/LocalVariable;)V",
-    )?;
-    jni_env.new_object_LAL(frame_class, ctor, frame_method, locals)
+    let is_static = jvmti_env
+        .get_method_modifiers(method)
+        .map(|modifiers| modifiers & ACC_STATIC != 0)
+        .unwrap_or(false);
+    let frame_method = jni_env.get_reflected_method(method_class, method, is_static)?;
+    jni_env.new_object_LAL(
+        capture.cache_frame,
+        capture.cache_frame_ctor,
+        frame_method,
+        locals,
+    )
 }
 
 fn get_local_value(
     jvmti_env: &mut JvmTiEnv,
     jni_env: &mut JniEnv,
+    capture: &Capture,
     thread: jthread,
     depth: jint,
     entry: &jvmtiLocalVariableEntry,
@@ -238,46 +286,50 @@ fn get_local_value(
         b'J' => {
             let mut val: jlong = 0;
             jvmti_env.get_local_long(thread, depth, entry.slot, &mut val)?;
-            jni_env.value_of("java/lang/Long", "(J)Ljava/lang/Long;", val)
+            box_value(jni_env, &capture.long_box, val)
         }
         b'F' => {
             let mut val: jfloat = 0.0;
             jvmti_env.get_local_float(thread, depth, entry.slot, &mut val)?;
-            jni_env.value_of("java/lang/Float", "(F)Ljava/lang/Float;", val)
+            box_value(jni_env, &capture.float_box, val)
         }
         b'D' => {
             let mut val: jdouble = 0.0;
             jvmti_env.get_local_double(thread, depth, entry.slot, &mut val)?;
-            jni_env.value_of("java/lang/Double", "(D)Ljava/lang/Double;", val)
+            box_value(jni_env, &capture.double_box, val)
         }
         b'I' => {
             let mut val: jint = 0;
             jvmti_env.get_local_int(thread, depth, entry.slot, &mut val)?;
-            jni_env.value_of("java/lang/Integer", "(I)Ljava/lang/Integer;", val)
+            box_value(jni_env, &capture.int_box, val)
         }
         b'S' => {
             let mut val: jint = 0;
             jvmti_env.get_local_int(thread, depth, entry.slot, &mut val)?;
-            jni_env.value_of("java/lang/Short", "(S)Ljava/lang/Short;", val)
+            box_value(jni_env, &capture.short_box, val)
         }
         b'C' => {
             let mut val: jint = 0;
             jvmti_env.get_local_int(thread, depth, entry.slot, &mut val)?;
-            jni_env.value_of("java/lang/Character", "(C)Ljava/lang/Character;", val)
+            box_value(jni_env, &capture.char_box, val)
         }
         b'B' => {
             let mut val: jint = 0;
             jvmti_env.get_local_int(thread, depth, entry.slot, &mut val)?;
-            jni_env.value_of("java/lang/Byte", "(B)Ljava/lang/Byte;", val)
+            box_value(jni_env, &capture.byte_box, val)
         }
         b'Z' => {
             let mut val: jint = 0;
             jvmti_env.get_local_int(thread, depth, entry.slot, &mut val)?;
-            jni_env.value_of("java/lang/Boolean", "(Z)Ljava/lang/Boolean;", val)
+            box_value(jni_env, &capture.bool_box, val)
         }
         _ => {
             let message = "bad local variable signature".to_owned();
             bail!(ErrorKind::Jni(message))
         }
     }
+}
+
+fn box_value<T>(jni_env: &mut JniEnv, boxed: &BoxType, val: T) -> Result<jobject> {
+    jni_env.value_of_cached(boxed.class, boxed.value_of, val)
 }
