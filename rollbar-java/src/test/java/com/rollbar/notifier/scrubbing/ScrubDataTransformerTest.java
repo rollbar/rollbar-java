@@ -11,11 +11,14 @@ import com.rollbar.api.payload.data.body.TraceChain;
 import com.rollbar.api.scrubbing.StringUrlSanitizer;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -538,6 +541,209 @@ public class ScrubDataTransformerTest {
     List<Frame> frames = ((Trace) result.getBody().getContents()).getFrames();
     assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, frames.get(0).getLocals().get("password"));
     assertNull(result.getBody().getRollbarThreads());
+  }
+
+  // --- collections and arrays (P1 fix) ---
+
+  @Test
+  public void listOfMapsInCustomScrubbed() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    Map<String, Object> custom = new HashMap<>();
+    custom.put("users", Collections.singletonList(objectMap("password", "hunter2", "name", "alice")));
+    Data result = t.transform(dataWithCustom(custom));
+
+    List<?> users = (List<?>) result.getCustom().get("users");
+    Map<?, ?> user = (Map<?, ?>) users.get(0);
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, user.get("password"));
+    assertEquals("alice", user.get("name"));
+  }
+
+  @Test
+  public void arrayOfMapsInCustomScrubbed() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    Map<String, Object> custom = new HashMap<>();
+    custom.put("users", new Object[] {objectMap("password", "hunter2", "name", "alice")});
+    Data result = t.transform(dataWithCustom(custom));
+
+    Object[] users = (Object[]) result.getCustom().get("users");
+    Map<?, ?> user = (Map<?, ?>) users[0];
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, user.get("password"));
+    assertEquals("alice", user.get("name"));
+  }
+
+  @Test
+  public void nestedListScrubbedInRequestPost() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    Map<String, Object> post = new HashMap<>();
+    post.put("users", Collections.singletonList(objectMap("password", "hunter2")));
+    Request req = new Request.Builder().post(post).build();
+
+    Data result = t.transform(dataWithRequest(req));
+
+    List<?> users = (List<?>) result.getRequest().getPost().get("users");
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, ((Map<?, ?>) users.get(0)).get("password"));
+  }
+
+  @Test
+  public void nestedListScrubbedInRequestMetadata() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    Map<String, Object> metadata = new HashMap<>();
+    metadata.put("users", Collections.singletonList(objectMap("password", "hunter2")));
+    Request req = new Request.Builder().metadata(metadata).build();
+
+    Data result = t.transform(dataWithRequest(req));
+
+    List<?> users = (List<?>) result.getRequest().getMetadata().get("users");
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, ((Map<?, ?>) users.get(0)).get("password"));
+  }
+
+  @Test
+  public void nestedArrayScrubbedInFrameLocals() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("token"), NO_OP_SANITIZER);
+    Map<String, Object> locals = new HashMap<>();
+    locals.put("sessions", new Object[] {objectMap("token", "secret-token")});
+    Body body = new Body.Builder().bodyContent(traceWithLocals(locals)).build();
+    Data data = new Data.Builder().environment("test").body(body).build();
+
+    Data result = t.transform(data);
+
+    List<Frame> frames = ((Trace) result.getBody().getContents()).getFrames();
+    Object[] sessions = (Object[]) frames.get(0).getLocals().get("sessions");
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, ((Map<?, ?>) sessions[0]).get("token"));
+  }
+
+  @Test
+  public void listOrderAndSizePreservedWhenScrubbing() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    Map<String, Object> custom = new HashMap<>();
+    custom.put("rows", Arrays.asList(objectMap("password", "hunter2"), "plain", objectMap("name", "bob")));
+    Data result = t.transform(dataWithCustom(custom));
+
+    Object scrubbed = result.getCustom().get("rows");
+    assertTrue(scrubbed instanceof List);
+    List<?> rows = (List<?>) scrubbed;
+    assertEquals(3, rows.size());
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, ((Map<?, ?>) rows.get(0)).get("password"));
+    assertEquals("plain", rows.get(1));
+    assertEquals("bob", ((Map<?, ?>) rows.get(2)).get("name"));
+  }
+
+  @Test
+  public void setShapePreservedWhenScrubbing() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    Set<Object> rows = new LinkedHashSet<>();
+    rows.add(objectMap("password", "hunter2"));
+    rows.add("plain");
+    Map<String, Object> custom = new HashMap<>();
+    custom.put("rows", rows);
+    Data result = t.transform(dataWithCustom(custom));
+
+    Object scrubbed = result.getCustom().get("rows");
+    assertTrue(scrubbed instanceof Set);
+    Set<?> scrubbedRows = (Set<?>) scrubbed;
+    assertEquals(2, scrubbedRows.size());
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE,
+        ((Map<?, ?>) scrubbedRows.iterator().next()).get("password"));
+  }
+
+  @Test
+  public void typedArrayScrubbedWithoutArrayStoreException() {
+    // The rebuilt map may not fit the original component type, so the array is widened on copy.
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    HashMap<?, ?>[] rows = new HashMap<?, ?>[] {(HashMap<?, ?>) objectMap("password", "hunter2")};
+    Map<String, Object> custom = new HashMap<>();
+    custom.put("rows", rows);
+
+    Data result = t.transform(dataWithCustom(custom));
+
+    Object[] scrubbed = (Object[]) result.getCustom().get("rows");
+    assertEquals(1, scrubbed.length);
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, ((Map<?, ?>) scrubbed[0]).get("password"));
+  }
+
+  @Test
+  public void collectionWithNoMatchReturnsSameInstances() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    List<Object> users = Collections.singletonList(objectMap("name", "alice"));
+    Map<String, Object> custom = new HashMap<>();
+    custom.put("users", users);
+    Data data = dataWithCustom(custom);
+
+    Data result = t.transform(data);
+
+    assertSame(data, result);
+    assertSame(users, result.getCustom().get("users"));
+  }
+
+  @Test
+  public void collectionNestingWithinDepthCapScrubbed() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    Map<String, Object> custom = new HashMap<>();
+    custom.put("root", nestInLists(objectMap("password", "hunter2"), 7));
+
+    Data result = t.transform(dataWithCustom(custom));
+
+    Map<?, ?> leaf = (Map<?, ?>) unwrapLists(result.getCustom().get("root"), 7);
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, leaf.get("password"));
+  }
+
+  @Test
+  public void collectionNestingBeyondDepthCapNotScrubbed() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    Map<String, Object> custom = new HashMap<>();
+    custom.put("root", nestInLists(objectMap("password", "hunter2"), 8));
+
+    Data result = t.transform(dataWithCustom(custom));
+
+    Map<?, ?> leaf = (Map<?, ?>) unwrapLists(result.getCustom().get("root"), 8);
+    assertEquals("hunter2", leaf.get("password"));
+  }
+
+  @Test
+  public void selfReferencingCollectionTerminates() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    List<Object> cycle = new ArrayList<>();
+    cycle.add(objectMap("password", "hunter2"));
+    cycle.add(cycle);
+    Map<String, Object> custom = new HashMap<>();
+    custom.put("cycle", cycle);
+
+    Data result = t.transform(dataWithCustom(custom));
+
+    List<?> scrubbed = (List<?>) result.getCustom().get("cycle");
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE,
+        ((Map<?, ?>) scrubbed.get(0)).get("password"));
+  }
+
+  @Test
+  public void nonStringMapKeysInsideCollectionDoNotThrow() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    Map<Object, Object> byId = new HashMap<>();
+    byId.put(1, objectMap("password", "hunter2"));
+    Map<String, Object> custom = new HashMap<>();
+    custom.put("rows", Collections.singletonList(byId));
+
+    Data result = t.transform(dataWithCustom(custom));
+
+    Map<?, ?> scrubbedById = (Map<?, ?>) ((List<?>) result.getCustom().get("rows")).get(0);
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE,
+        ((Map<?, ?>) scrubbedById.get(1)).get("password"));
+  }
+
+  private static Object nestInLists(Object leaf, int levels) {
+    Object current = leaf;
+    for (int i = 0; i < levels; i++) {
+      current = new ArrayList<>(Collections.singletonList(current));
+    }
+    return current;
+  }
+
+  private static Object unwrapLists(Object value, int levels) {
+    Object current = value;
+    for (int i = 0; i < levels; i++) {
+      current = ((List<?>) current).get(0);
+    }
+    return current;
   }
 
   private static Trace traceWithLocals(Map<String, Object> locals) {

@@ -17,9 +17,12 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -42,6 +45,10 @@ import java.util.regex.Pattern;
  * {@code Frame.locals} are scrubbed both in the top-level body content and in the trace chains
  * carried by {@code Body.rollbarThreads}.
  *
+ * <p>Nested data is walked recursively: maps reachable through other maps, through
+ * {@link Collection}s and through object arrays are all scrubbed, up to 8 levels of nesting. The
+ * surrounding shape is preserved, so a list stays a list and an array stays an array.
+ *
  * <p>The built-in header deny-list above applies to {@code Request.headers} only; every other
  * slot matches on the configured keys alone.
  */
@@ -57,7 +64,8 @@ public final class ScrubDataTransformer implements Transformer {
       ))
   );
 
-  // Recursion cap for nested Map values in custom data and Frame.locals.
+  // Recursion cap for nested containers in custom data, request payloads and Frame.locals. Every
+  // map, collection or array counts as one level; this also terminates cyclic structures.
   private static final int MAX_SCRUB_DEPTH = 8;
 
   private final List<Pattern> fieldPatterns;
@@ -323,33 +331,93 @@ public final class ScrubDataTransformer implements Transformer {
     return result != null ? result : map;
   }
 
+  @SuppressWarnings("unchecked")
   private Map<String, Object> scrubObjectMap(Map<String, Object> map, List<Pattern> patterns,
       int depth) {
     if (map == null || patterns.isEmpty()) {
       return map;
     }
-    Map<String, Object> result = null;
-    for (Map.Entry<String, Object> entry : map.entrySet()) {
-      String key = entry.getKey();
+    // scrubMap only ever copies keys across, so a Map<String, Object> in stays one on the way out.
+    return (Map<String, Object>) scrubMap(map, patterns, depth);
+  }
+
+  /**
+   * Recursively scrubs a nested value. Maps are scrubbed by key; collections and object arrays are
+   * traversed so that the maps they contain are scrubbed too, preserving the surrounding shape.
+   * Every container counts as one level against {@code MAX_SCRUB_DEPTH}, which also terminates
+   * cyclic structures. Anything else is returned untouched.
+   */
+  private Object scrubNested(Object value, List<Pattern> patterns, int depth) {
+    if (depth >= MAX_SCRUB_DEPTH) {
+      return value;
+    }
+    if (value instanceof Map) {
+      return scrubMap((Map<?, ?>) value, patterns, depth + 1);
+    }
+    if (value instanceof Collection) {
+      return scrubCollection((Collection<?>) value, patterns, depth + 1);
+    }
+    if (value instanceof Object[]) {
+      return scrubArray((Object[]) value, patterns, depth + 1);
+    }
+    return value;
+  }
+
+  private Object scrubMap(Map<?, ?> map, List<Pattern> patterns, int depth) {
+    Map<Object, Object> result = null;
+    for (Map.Entry<?, ?> entry : map.entrySet()) {
+      Object key = entry.getKey();
       Object value = entry.getValue();
-      if (matchesAny(key, patterns)) {
+      // A non-String key cannot match a redactedKeys pattern, but its value is still traversed.
+      boolean keyMatches = key instanceof String && matchesAny((String) key, patterns);
+      Object scrubbed = keyMatches ? SCRUBBED_VALUE : scrubNested(value, patterns, depth);
+      if (keyMatches || scrubbed != value) {
         if (result == null) {
-          result = new HashMap<>(map);
+          result = new LinkedHashMap<>(map);
         }
-        result.put(key, SCRUBBED_VALUE);
-      } else if (value instanceof Map && depth < MAX_SCRUB_DEPTH) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> nested = (Map<String, Object>) value;
-        Map<String, Object> scrubbedNested = scrubObjectMap(nested, patterns, depth + 1);
-        if (scrubbedNested != nested) {
-          if (result == null) {
-            result = new HashMap<>(map);
-          }
-          result.put(key, scrubbedNested);
-        }
+        result.put(key, scrubbed);
       }
     }
     return result != null ? result : map;
+  }
+
+  private Object scrubCollection(Collection<?> collection, List<Pattern> patterns, int depth) {
+    if (collection.isEmpty()) {
+      return collection;
+    }
+    List<Object> scrubbed = new ArrayList<>(collection.size());
+    boolean changed = false;
+    for (Object element : collection) {
+      Object scrubbedElement = scrubNested(element, patterns, depth);
+      scrubbed.add(scrubbedElement);
+      if (scrubbedElement != element) {
+        changed = true;
+      }
+    }
+    if (!changed) {
+      return collection;
+    }
+    // Sets keep set semantics; any other Collection serializes as a JSON array either way.
+    // A SortedSet is deliberately downgraded to insertion order: a rebuilt map is not Comparable.
+    return collection instanceof Set ? new LinkedHashSet<>(scrubbed) : scrubbed;
+  }
+
+  private Object scrubArray(Object[] array, List<Pattern> patterns, int depth) {
+    Object[] result = null;
+    for (int i = 0; i < array.length; i++) {
+      Object scrubbedElement = scrubNested(array[i], patterns, depth);
+      if (scrubbedElement != array[i]) {
+        if (result == null) {
+          // Object[] rather than array.clone(): a rebuilt value may not fit the original component
+          // type (e.g. a HashMap[] receiving a LinkedHashMap), which would throw
+          // ArrayStoreException.
+          result = new Object[array.length];
+          System.arraycopy(array, 0, result, 0, array.length);
+        }
+        result[i] = scrubbedElement;
+      }
+    }
+    return result != null ? result : array;
   }
 
   private Map<String, List<String>> scrubMultiMap(Map<String, List<String>> map,
