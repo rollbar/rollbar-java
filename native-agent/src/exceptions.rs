@@ -13,9 +13,22 @@ use jvmti::{
     jvmtiFrameInfo, jvmtiLocalVariableEntry,
 };
 
-/// Upper bound on frames captured for a single throwable. Deep framework stacks
-/// otherwise walk a local variable table per frame plus a JVMTI call per slot.
-const MAX_FRAMES: jint = 64;
+/// Upper bound on how many frames we gather locals for. This bounds the genuinely
+/// expensive work -- a local variable table per frame plus a JVMTI call and a boxing
+/// allocation per slot -- without truncating the frame array itself, which
+/// `BodyFactory.frames()` aligns to the stack from the bottom.
+const MAX_LOCALS_FRAMES: jint = 64;
+
+/// Stacks deeper than this are not cached at all. One frame object per stack frame is
+/// proportional to depth, and a StackOverflowError fires this event with the stack at
+/// maximum depth -- thousands of JNI NewObject calls on a thread that has just run out
+/// of stack. Skipping is safe: no locals is what happens without the agent anyway,
+/// whereas a truncated array would silently misalign against the Java side.
+///
+/// 1024 also matches HotSpot's default `MaxJavaStackTraceDepth`, beyond which
+/// `Throwable.getStackTrace()` is itself truncated. Past that point the two arrays
+/// could not be aligned even if we captured everything.
+const MAX_TOTAL_FRAMES: jint = 1024;
 
 const ACC_STATIC: jint = 0x0008;
 
@@ -53,17 +66,22 @@ pub fn inner_callback(
         return Ok(());
     }
 
+    if num_frames > MAX_TOTAL_FRAMES {
+        debug!(
+            "skipping capture: {} frames exceeds the {} frame ceiling",
+            num_frames, MAX_TOTAL_FRAMES
+        );
+        return Ok(());
+    }
+
     let capture = cache::capture(&mut jni_env, core)?;
 
+    // The whole stack is captured. BodyFactory.frames() walks the CacheFrame[] and the
+    // StackTraceElement[] together from the bottom, resyncing by method name, so a
+    // subset taken from the top would align against the wrong region of the stack.
     let start_depth = 0;
-    let frames = build_stack_trace_frames(
-        jvmti_env,
-        jni_env,
-        capture,
-        thread,
-        start_depth,
-        num_frames.min(MAX_FRAMES),
-    )?;
+    let frames =
+        build_stack_trace_frames(jvmti_env, jni_env, capture, thread, start_depth, num_frames)?;
 
     jni_env.call_static_LAL_V_method(core.throwable_cache, core.add, exception, frames)?;
     trace!("on_exception exit");
@@ -101,6 +119,7 @@ fn build_stack_trace_frames(
 
     let result =
         jni_env.new_object_array(num_frames_returned, capture.cache_frame, ptr::null_mut())?;
+    let mut locals_budget = MAX_LOCALS_FRAMES;
     for i in 0..num_frames_returned {
         let frame = build_frame(
             &mut jvmti_env,
@@ -110,12 +129,14 @@ fn build_stack_trace_frames(
             start_depth + i,
             frames[i as usize].method,
             frames[i as usize].location,
+            &mut locals_budget,
         )?;
         jni_env.set_object_array_element(result, i, frame)?;
     }
     Ok(result)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn build_frame(
     jvmti_env: &mut JvmTiEnv,
     jni_env: &mut JniEnv,
@@ -124,15 +145,17 @@ fn build_frame(
     depth: jint,
     method: jmethodID,
     location: jlocation,
+    locals_budget: &mut jint,
 ) -> Result<jobject> {
-    // Locals are only useful for the user's own code. A framework stack is mostly
-    // library frames, and each one otherwise costs a GetLocalVariableTable plus a
-    // JVMTI call and a boxing allocation per slot. The frame object is still emitted
-    // so the array stays 1:1 with the stack -- BodyFactory.frames() indexes it
-    // positionally and dereferences every element.
-    if !filter::is_app_frame(jvmti_env, method) {
+    // Locals are only useful for the user's own code, and only worth a bounded amount
+    // of work: each one costs a GetLocalVariableTable plus a JVMTI call and a boxing
+    // allocation per slot. A frame object is emitted either way so the array stays 1:1
+    // with the stack -- BodyFactory.frames() aligns it positionally from the bottom
+    // and dereferences every element.
+    if *locals_budget <= 0 || !filter::is_app_frame(jvmti_env, method) {
         return make_frame_object(jvmti_env, jni_env, capture, method, ptr::null_mut());
     }
+    *locals_budget -= 1;
 
     let mut num_entries: jint = 0;
     let mut local_var_table: *mut jvmtiLocalVariableEntry = ptr::null_mut();
