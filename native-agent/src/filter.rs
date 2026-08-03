@@ -83,11 +83,13 @@ pub fn decide(
         KNOWN_VERSION.store(version, Ordering::Relaxed);
     }
 
-    match stack_has_app_frame(jvmti_env, thread) {
-        Ok(true) => Decision::AskJava,
-        Ok(false) => Decision::NoAppFrame,
-        // Never fail closed: if the native scan breaks, let Java decide.
-        Err(_) => Decision::AskJava,
+    match scan_for_app_frame(jvmti_env, thread) {
+        Ok(Scan::AppFrame) => Decision::AskJava,
+        Ok(Scan::NoAppFrame) => Decision::NoAppFrame,
+        // Never fail closed. Both a truncated scan and a failed one are inconclusive:
+        // the Java filter walks the entire trace, so anything this scan has not ruled
+        // out must still go to it.
+        Ok(Scan::Truncated) | Err(_) => Decision::AskJava,
     }
 }
 
@@ -119,7 +121,17 @@ fn refresh(jni_env: &mut JniEnv, core: &Core, snapshot_method: jmethodID) -> Res
     Ok(())
 }
 
-fn stack_has_app_frame(jvmti_env: &mut JvmTiEnv, thread: jthread) -> Result<bool> {
+/// Outcome of scanning the stack for an app frame.
+enum Scan {
+    AppFrame,
+    /// The whole stack was examined and contained no app frame.
+    NoAppFrame,
+    /// The scan window filled up, so frames below it were never examined. This proves
+    /// only "no app frame in the top MAX_SCAN_FRAMES", not "no app frame".
+    Truncated,
+}
+
+fn scan_for_app_frame(jvmti_env: &mut JvmTiEnv, thread: jthread) -> Result<Scan> {
     let mut frames = [jvmtiFrameInfo::default(); MAX_SCAN_FRAMES as usize];
     let mut returned: jint = 0;
     jvmti_env.get_stack_trace(
@@ -133,10 +145,17 @@ fn stack_has_app_frame(jvmti_env: &mut JvmTiEnv, thread: jthread) -> Result<bool
     let returned = returned.max(0).min(MAX_SCAN_FRAMES) as usize;
     for frame in frames.iter().take(returned) {
         if is_app_method(jvmti_env, frame.method)? {
-            return Ok(true);
+            return Ok(Scan::AppFrame);
         }
     }
-    Ok(false)
+
+    // A full buffer means the stack may continue past it. A stack of exactly
+    // MAX_SCAN_FRAMES is reported as truncated too and takes the Java path
+    // needlessly, which is harmless and not worth distinguishing.
+    if returned == MAX_SCAN_FRAMES as usize {
+        return Ok(Scan::Truncated);
+    }
+    Ok(Scan::NoAppFrame)
 }
 
 /// Whether a frame belongs to app code, for deciding if its locals are worth
