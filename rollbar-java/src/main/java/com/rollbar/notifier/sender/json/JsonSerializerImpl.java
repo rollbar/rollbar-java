@@ -187,7 +187,20 @@ public class JsonSerializerImpl implements JsonSerializer {
       serializeString(builder, "<toString() threw " + e.getClass().getName() + ">");
       return;
     }
+    serializeNullableString(builder, str);
+  }
 
+  /**
+   * Serializes a string in value position, emitting the JSON null literal when it is
+   * null. Not usable for object keys, which must always be quoted - see
+   * {@link #serializeString}.
+   *
+   * <p>The null check lives here rather than inline in {@link #serializeToString}
+   * because {@code Object.toString()} is declared non-null, so static analysis reads a
+   * check on its result as redundant. An overriding implementation can still return
+   * null at runtime, which is exactly the case being handled.
+   */
+  private static void serializeNullableString(StringBuilder builder, String str) {
     if (str == null) {
       serializeNull(builder);
       return;
