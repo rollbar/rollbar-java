@@ -451,7 +451,7 @@ impl JniEnv {
             );
         }
         if self.exception_occurred() || result.is_null() {
-            let message = "new string utf failed".to_owned();
+            let message = "reflected method lookup failed".to_owned();
             self.diagnose_exception(&message)?;
             bail!(ErrorKind::Jni(message))
         } else {
@@ -459,14 +459,236 @@ impl JniEnv {
         }
     }
 
-    pub fn value_of<T>(
+    /// Boxes a primitive using an already-resolved class/`valueOf` pair. The
+    /// uncached `value_of` did a `FindClass` + `GetStaticMethodID` per local
+    /// variable, which dominated the capture path.
+    pub fn value_of_cached<T>(
         &mut self,
-        class: &str,
-        signature: &str,
+        class: ::jvmti::jclass,
+        value_of: ::jvmti::jmethodID,
         val: T,
     ) -> Result<::jvmti::jobject> {
-        let reflect_class = self.find_class(class)?;
-        let value_of = self.get_static_method_id(reflect_class, "valueOf", signature)?;
-        self.call_static_object_method(reflect_class, value_of, val)
+        self.call_static_object_method(class, value_of, val)
+    }
+
+    /// Clears any pending exception without describing it. The description path
+    /// (`diagnose_exception`) costs a Java upcall, so it must stay off the hot path,
+    /// but the clear itself is mandatory or the next JNI call misbehaves.
+    pub fn clear_pending_exception(&mut self) {
+        if !self.exception_occurred() {
+            return;
+        }
+        unsafe {
+            (**self.jni)
+                .ExceptionClear
+                .expect("ExceptionClear function not found")(self.jni);
+        }
+    }
+
+    pub fn new_global_ref(&mut self, obj: ::jvmti::jobject) -> Result<::jvmti::jobject> {
+        if obj.is_null() {
+            return Ok(ptr::null_mut());
+        }
+        let result;
+        unsafe {
+            result = (**self.jni)
+                .NewGlobalRef
+                .expect("NewGlobalRef function not found")(self.jni, obj);
+        }
+        if result.is_null() {
+            bail!(ErrorKind::Jni("NewGlobalRef failed".to_owned()))
+        }
+        Ok(result)
+    }
+
+    pub fn delete_global_ref(&mut self, obj: ::jvmti::jobject) {
+        if obj.is_null() {
+            return;
+        }
+        unsafe {
+            (**self.jni)
+                .DeleteGlobalRef
+                .expect("DeleteGlobalRef function not found")(self.jni, obj);
+        }
+    }
+
+    /// Bounds the local references created during one callback. Capturing a deep
+    /// stack creates thousands of refs; without a frame they all stay live until
+    /// the callback returns.
+    pub fn push_local_frame(&mut self, capacity: ::jvmti::jint) -> Result<()> {
+        let rc;
+        unsafe {
+            rc = (**self.jni)
+                .PushLocalFrame
+                .expect("PushLocalFrame function not found")(self.jni, capacity);
+        }
+        if rc != 0 {
+            self.clear_pending_exception();
+            bail!(ErrorKind::Jni("PushLocalFrame failed".to_owned()))
+        }
+        Ok(())
+    }
+
+    pub fn pop_local_frame(&mut self) {
+        unsafe {
+            (**self.jni)
+                .PopLocalFrame
+                .expect("PopLocalFrame function not found")(self.jni, ptr::null_mut());
+        }
+    }
+
+    pub fn new_string_utf_str(&mut self, s: &str) -> Result<::jvmti::jstring> {
+        let c = CString::new(s)?;
+        self.new_string_utf(c.as_ptr())
+    }
+
+    /// Resolves a static field, returning `None` (rather than an error) when the
+    /// field is absent so the agent stays compatible with older rollbar-java jars.
+    pub fn get_static_field_id_opt(
+        &mut self,
+        class: ::jvmti::jclass,
+        name: &str,
+        signature: &str,
+    ) -> Option<::jvmti::jfieldID> {
+        let c_name = match CString::new(name) {
+            Ok(s) => s,
+            Err(_) => return None,
+        };
+        let c_signature = match CString::new(signature) {
+            Ok(s) => s,
+            Err(_) => return None,
+        };
+        let field_id;
+        unsafe {
+            field_id = (**self.jni)
+                .GetStaticFieldID
+                .expect("GetStaticFieldID function not found")(
+                self.jni,
+                class,
+                c_name.as_ptr(),
+                c_signature.as_ptr(),
+            );
+        }
+        // A missing field leaves a pending NoSuchFieldError that must be cleared.
+        self.clear_pending_exception();
+        if field_id.is_null() {
+            None
+        } else {
+            Some(field_id)
+        }
+    }
+
+    /// Resolves a static method, returning `None` rather than an error when absent,
+    /// so the agent stays compatible with older rollbar-java jars.
+    pub fn get_static_method_id_opt(
+        &mut self,
+        class: ::jvmti::jclass,
+        method: &str,
+        signature: &str,
+    ) -> Option<::jvmti::jmethodID> {
+        let c_method = CString::new(method).ok()?;
+        let c_signature = CString::new(signature).ok()?;
+        let method_id = self.get_static_method_id_internal(class, &c_method, &c_signature);
+        // A missing method leaves a pending NoSuchMethodError that must be cleared.
+        self.clear_pending_exception();
+        method_id
+    }
+
+    pub fn get_static_int_field(
+        &mut self,
+        class: ::jvmti::jclass,
+        field: ::jvmti::jfieldID,
+    ) -> ::jvmti::jint {
+        unsafe {
+            (**self.jni)
+                .GetStaticIntField
+                .expect("GetStaticIntField function not found")(self.jni, class, field)
+        }
+    }
+
+    pub fn call_static_object_method0(
+        &mut self,
+        class: ::jvmti::jclass,
+        method_id: ::jvmti::jmethodID,
+    ) -> Result<::jvmti::jobject> {
+        let result;
+        unsafe {
+            result = (**self.jni)
+                .CallStaticObjectMethod
+                .expect("CallStaticObjectMethod not found")(self.jni, class, method_id);
+        }
+        if self.exception_occurred() || result.is_null() {
+            let message = "static no-arg call failed".to_owned();
+            self.diagnose_exception(&message)?;
+            bail!(ErrorKind::Jni(message));
+        }
+        Ok(result)
+    }
+
+    pub fn get_array_length(&mut self, array: ::jvmti::jarray) -> ::jvmti::jsize {
+        unsafe {
+            (**self.jni)
+                .GetArrayLength
+                .expect("GetArrayLength function not found")(self.jni, array)
+        }
+    }
+
+    pub fn get_object_array_element(
+        &mut self,
+        array: ::jvmti::jobjectArray,
+        index: ::jvmti::jsize,
+    ) -> ::jvmti::jobject {
+        unsafe {
+            (**self.jni)
+                .GetObjectArrayElement
+                .expect("GetObjectArrayElement function not found")(self.jni, array, index)
+        }
+    }
+
+    /// Copies a Java string out as owned bytes.
+    pub fn string_to_bytes(&mut self, s: ::jvmti::jstring) -> Option<Vec<u8>> {
+        if s.is_null() {
+            return None;
+        }
+        let (utf_chars, cstr) = self.get_string_utf_chars(s);
+        if utf_chars.is_null() {
+            return None;
+        }
+        let bytes = cstr.to_bytes().to_vec();
+        self.release_string_utf_chars(s, utf_chars);
+        Some(bytes)
+    }
+
+    /// `Class.forName(name, false, loader)`. Used to resolve `CacheFrame` and
+    /// `LocalVariable` through `ThrowableCache`'s own loader; plain `FindClass`
+    /// resolves against the system loader and so fails inside a Spring Boot fat jar.
+    pub fn class_for_name(
+        &mut self,
+        class_class: ::jvmti::jclass,
+        for_name: ::jvmti::jmethodID,
+        name: &str,
+        loader: ::jvmti::jobject,
+    ) -> Result<::jvmti::jclass> {
+        let j_name = self.new_string_utf_str(name)?;
+        let result;
+        unsafe {
+            result = (**self.jni)
+                .CallStaticObjectMethod
+                .expect("CallStaticObjectMethod not found")(
+                self.jni,
+                class_class,
+                for_name,
+                j_name,
+                // jboolean is u8, but C varargs promote it to int.
+                ::jvmti::JNI_FALSE as ::std::os::raw::c_int,
+                loader,
+            );
+        }
+        if self.exception_occurred() || result.is_null() {
+            let message = format!("Class.forName({}) failed", name);
+            self.diagnose_exception(&message)?;
+            bail!(ErrorKind::Jni(message))
+        }
+        Ok(result as ::jvmti::jclass)
     }
 }
