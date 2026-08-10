@@ -17,18 +17,30 @@ public final class UrlSanitizer {
     }
     try {
       URI uri = new URI(rawUrl);
-      // Use getAuthority() rather than getHost(): URI parses authorities that fail RFC 2396
+      // Use the authority rather than getHost(): URI parses authorities that fail RFC 2396
       // server-based grammar (e.g. underscores in Kubernetes/AD internal DNS) in registry-based
       // mode, where getHost() returns null and the host would be silently dropped. Strip userinfo
       // from the authority manually.
-      String authority = uri.getAuthority();
-      if (authority != null) {
-        int at = authority.indexOf('@');
-        if (at >= 0) {
-          authority = authority.substring(at + 1);
-        }
+      //
+      // Use the *raw* (still percent-encoded) components: getAuthority()/getUserInfo() decode their
+      // value, so a password holding an encoded '@' — https://user:p%40ss@example.com/path —
+      // decodes to user:p@ss@example.com and the delimiter search would keep 'ss@example.com',
+      // recording part of the credential as the host.
+      String authority = uri.getRawAuthority();
+      if (authority == null) {
+        // No authority to strip (relative URI, or opaque URI such as mailto:); dropping query and
+        // fragment with plain string ops is all that is left to do.
+        return fallbackSanitize(rawUrl);
       }
-      return new URI(uri.getScheme(), authority, uri.getPath(), null, null).toString();
+      // Last '@' wins: unencoded '@' is illegal inside userinfo, so a second one means a malformed
+      // authority that registry-based parsing let through — strip through it rather than leak it.
+      int at = authority.lastIndexOf('@');
+      if (at >= 0) {
+        authority = authority.substring(at + 1);
+      }
+      String path = uri.getRawPath() != null ? uri.getRawPath() : "";
+      String scheme = uri.getScheme();
+      return (scheme != null ? scheme + "://" : "//") + authority + path;
     } catch (URISyntaxException e) {
       return fallbackSanitize(rawUrl);
     }

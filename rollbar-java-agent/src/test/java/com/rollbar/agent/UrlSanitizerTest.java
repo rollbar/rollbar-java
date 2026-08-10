@@ -79,6 +79,37 @@ public class UrlSanitizerTest {
   }
 
   @Test
+  public void encodedAtSignInUserinfo_stripsWholeCredential() {
+    // getAuthority() decodes %40 to '@', which would make the delimiter search stop inside the
+    // password and record 'ss@example.com' as the host. The raw authority must be used instead.
+    assertEquals(
+        "https://example.com/path",
+        UrlSanitizer.sanitize("https://user:p%40ss@example.com/path?token=secret")
+    );
+  }
+
+  @Test
+  public void encodedAtSignInUserinfo_withoutPassword_stripsWholeCredential() {
+    assertEquals(
+        "https://example.com/path",
+        UrlSanitizer.sanitize("https://user%40example.com@example.com/path")
+    );
+  }
+
+  @Test
+  public void encodedPathIsPreserved() {
+    assertEquals(
+        "https://example.com/a%20b/c",
+        UrlSanitizer.sanitize("https://example.com/a%20b/c?x=1")
+    );
+  }
+
+  @Test
+  public void relativeUrl_stripsQueryKeepsPath() {
+    assertEquals("/api/redirect", UrlSanitizer.sanitize("/api/redirect?url=https://other.com/foo"));
+  }
+
+  @Test
   public void nullUrl_returnsNull() {
     assertNull(UrlSanitizer.sanitize(null));
   }
