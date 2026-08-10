@@ -1,8 +1,8 @@
 # Rollbar Java Agent
 
-A zero-code-change Java instrumentation agent that automatically captures HTTP network errors (4xx and 5xx responses) as Rollbar telemetry events.
+A Java instrumentation agent that automatically captures HTTP network errors (4xx and 5xx responses) as Rollbar telemetry events, with no changes at your HTTP call sites.
 
-It works by attaching to the JVM at startup via `-javaagent:` and using ByteBuddy to intercept HTTP calls across all major clients — no library dependencies or code changes are needed in your application.
+It works by attaching to the JVM at startup via `-javaagent:` and using ByteBuddy to intercept HTTP calls across all major clients. Your request code stays exactly as it is, and you add no HTTP-related library dependencies. Setup is a one-time wiring step in your Rollbar configuration — see [What "no code changes" means here](#what-no-code-changes-means-here).
 
 ## Instrumented HTTP clients
 
@@ -41,6 +41,22 @@ application uses and never pins or shadows your chosen SDK version.
 
 ## Installation
 
+### What "no code changes" means here
+
+All four steps below are **required**. Steps 3 and 4 touch your application once, at setup:
+
+- **What you never change:** your HTTP call sites. Every request through `HttpURLConnection`,
+  `java.net.http.HttpClient`, or Apache HC 4.x/5.x is instrumented as written — no wrappers, no
+  interceptors, no per-call bookkeeping, and nothing to remember when you add the next HTTP call.
+- **What you change once:** the agent JAR goes on your application classpath (step 3), and your
+  `Rollbar.init(...)` passes `RollbarAgent.getTelemetryTracker()` to the config builder (step 4).
+
+That wiring cannot be made automatic today. `ConfigBuilder.build()` installs its default
+`RollbarTelemetryEventTracker` whenever `telemetryEventTracker(...)` was not called, and the SDK
+exposes no global registry or `ServiceLoader` hook that an agent could claim instead — so the
+tracker has to be handed to the builder by the application. Skipping step 4 is silent: the agent
+still records events, but into a store nothing ever reads (see [Behavior](#behavior)).
+
 ### 1. Build the agent JAR
 
 ```bash
@@ -78,9 +94,11 @@ jvmArgs("-javaagent:/path/to/rollbar-java-agent-<version>.jar")
 JAVA_TOOL_OPTIONS="-javaagent:/path/to/rollbar-java-agent-<version>.jar"
 ```
 
-### 3. Also add the JAR to your classpath
+### 3. Also add the JAR to your classpath (required, for compile time)
 
-The agent JAR must also be available on the regular application classpath so that your code can call `RollbarAgent.getTelemetryTracker()`:
+At runtime the JVM already appends a `-javaagent:` JAR to the system class path, so this step is not
+about making the agent load. It is about **compiling** step 4: your build needs the JAR as an
+ordinary dependency to resolve the `RollbarAgent` symbol.
 
 **Gradle:**
 ```kotlin
@@ -98,7 +116,7 @@ dependencies {
 </dependency>
 ```
 
-### 4. Wire into your Rollbar configuration
+### 4. Wire into your Rollbar configuration (required)
 
 ```java
 import com.rollbar.agent.RollbarAgent;
@@ -114,7 +132,7 @@ Rollbar rollbar = Rollbar.init(
 );
 ```
 
-That's it. All HTTP calls your application makes from that point on will automatically produce telemetry events in the Rollbar error report for any 4xx or 5xx response.
+That's the last application change you make. From here on, every HTTP call — including ones you add later — automatically produces a telemetry event in the Rollbar error report for any 4xx or 5xx response, with no further code changes.
 
 ## Behavior
 
@@ -124,7 +142,7 @@ That's it. All HTTP calls your application makes from that point on will automat
 | Response status `>= 400` | Records a network telemetry event with `Level.CRITICAL` |
 | Connection failure / I/O error (connection refused, DNS failure, timeout) | Records a `Network error: <message>` telemetry event with `Level.CRITICAL` |
 | The same request seen through several entry points | Deduplicated — one event per request |
-| No Rollbar config wired | Events accumulate in the agent store (capacity 100); nothing is sent |
+| Installation step 4 not done | **Misconfiguration.** Events accumulate in the agent store (capacity 100) and are never sent — the agent is recording into a tracker your `Rollbar` instance does not read. Silent apart from the missing telemetry. |
 
 The agent never throws into your application: every advice body swallows all errors, so a failure inside the instrumentation cannot break an HTTP call.
 
