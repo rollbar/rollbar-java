@@ -7,13 +7,25 @@ plugins {
     id("com.gradleup.shadow") version "9.4.3"
 }
 
+// Dependencies that get relocated into the fat jar, kept apart from the ones that must stay
+// external. shadowJar merges runtimeClasspath by default, which would embed the Rollbar SDK and
+// its transitive dependencies (SLF4J) unrelocated: the agent sits alongside the application's own
+// Rollbar SDK, so duplicate com.rollbar.* classes can pin an older SDK version or — where the
+// agent and the application resolve them from different classloaders — split class identity, so
+// the TelemetryEvent the agent records is not the TelemetryEvent the SDK expects.
+val shaded: Configuration by configurations.creating
+
+// compileOnly: these are inside the jar, so they must not also be published as runtime
+// dependencies of the agent.
+configurations.compileOnly.configure { extendsFrom(shaded) }
+
 dependencies {
     // Byte Buddy must be able to parse the class files of the JDK it runs on: the agent
     // instruments JDK classes, which always carry the running JDK's class file version. A version
     // older than the runtime fails to transform them (see the compatibility table at
     // https://github.com/raphw/byte-buddy#java-version-compatibility), so keep this current.
-    implementation("net.bytebuddy:byte-buddy:1.18.11")
-    implementation("net.bytebuddy:byte-buddy-agent:1.18.11")
+    shaded("net.bytebuddy:byte-buddy:1.18.11")
+    shaded("net.bytebuddy:byte-buddy-agent:1.18.11")
     api(project(":rollbar-api"))
     implementation(project(":rollbar-java"))
     compileOnly("org.apache.httpcomponents:httpclient:4.5.14")
@@ -43,6 +55,10 @@ listOf(configurations.apiElements, configurations.runtimeElements).forEach { cfg
 
 tasks.shadowJar {
     archiveClassifier.set("")
+    // Embed only the `shaded` configuration, not the default runtimeClasspath. Everything else —
+    // rollbar-api, rollbar-java, SLF4J — stays an ordinary external dependency resolved from the
+    // application's own classpath.
+    configurations.set(listOf(shaded))
     manifest {
         attributes(
             "Premain-Class" to "com.rollbar.agent.RollbarAgent",

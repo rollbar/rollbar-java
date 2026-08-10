@@ -34,6 +34,11 @@ Exactly one event is recorded per connection, even when your code hits several o
 - Java 11 or higher
 - `rollbar-java` on the application classpath (for `Rollbar.init(...)`)
 
+The agent bundles only ByteBuddy, under a relocated package name. It does **not** bundle the
+Rollbar SDK: `rollbar-api` and `rollbar-java` are ordinary dependencies resolved from your
+application's classpath, so the agent records telemetry against the same SDK classes your
+application uses and never pins or shadows your chosen SDK version.
+
 ## Installation
 
 ### 1. Build the agent JAR
