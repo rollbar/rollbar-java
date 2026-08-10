@@ -24,8 +24,11 @@ dependencies {
     // instruments JDK classes, which always carry the running JDK's class file version. A version
     // older than the runtime fails to transform them (see the compatibility table at
     // https://github.com/raphw/byte-buddy#java-version-compatibility), so keep this current.
+    // byte-buddy alone: AgentBuilder ships in the core artifact. byte-buddy-agent supplies
+    // ByteBuddyAgent/VirtualMachine for attaching to a *running* JVM, which is the attaching
+    // process's job, not this agent's — premain/agentmain receive their Instrumentation from the
+    // JVM directly.
     shaded("net.bytebuddy:byte-buddy:1.18.11")
-    shaded("net.bytebuddy:byte-buddy-agent:1.18.11")
     api(project(":rollbar-api"))
     implementation(project(":rollbar-java"))
     compileOnly("org.apache.httpcomponents:httpclient:4.5.14")
