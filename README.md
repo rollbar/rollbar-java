@@ -46,6 +46,16 @@ For actual usage, the easiest way to get started is by looking at the examples:
 - [rollbar-spring-boot-webmvc](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-spring-boot-webmvc)
 - [rollbar-reactive-streams-reactor](https://github.com/rollbar/rollbar-java/tree/master/examples/rollbar-reactive-streams-reactor)
 
+## Data scrubbing
+
+Payloads are scrubbed before they are sent, with no configuration required: a deny-list of
+authentication headers is redacted, and URLs have their userinfo, query string and fragment
+stripped. You can add your own keys with `redactedKeys` and change the URL handling with
+`urlSanitizer`.
+
+See [SCRUBBING.md](SCRUBBING.md) for what is redacted by default, how to configure it, and the
+migration impact if you are upgrading.
+
 ## Release History & Changelog
 
 See our [Releases](https://github.com/rollbar/rollbar-java/releases) page for a list of all releases, including changes.
