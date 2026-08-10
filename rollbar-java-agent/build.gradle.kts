@@ -1,11 +1,19 @@
 plugins {
     `java-library`
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    // Successor to the abandoned com.github.johnrengelman.shadow. Required at 9.x: Byte Buddy 1.18
+    // ships Java 24 class files under META-INF/versions/24 (its bridge to the JDK's own class file
+    // API), which older shadow releases cannot read. 9.5+ needs Gradle 9, so 9.4.3 is the ceiling
+    // until this build's Gradle is upgraded.
+    id("com.gradleup.shadow") version "9.4.3"
 }
 
 dependencies {
-    implementation("net.bytebuddy:byte-buddy:1.14.18")
-    implementation("net.bytebuddy:byte-buddy-agent:1.14.18")
+    // Byte Buddy must be able to parse the class files of the JDK it runs on: the agent
+    // instruments JDK classes, which always carry the running JDK's class file version. A version
+    // older than the runtime fails to transform them (see the compatibility table at
+    // https://github.com/raphw/byte-buddy#java-version-compatibility), so keep this current.
+    implementation("net.bytebuddy:byte-buddy:1.18.11")
+    implementation("net.bytebuddy:byte-buddy-agent:1.18.11")
     api(project(":rollbar-api"))
     implementation(project(":rollbar-java"))
     compileOnly("org.apache.httpcomponents:httpclient:4.5.14")
