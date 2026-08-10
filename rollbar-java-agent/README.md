@@ -31,7 +31,10 @@ Exactly one event is recorded per connection, even when your code hits several o
 
 ## Requirements
 
-- Java 11 or higher
+- Java 11 or higher **to run** the agent
+- Java 17 or higher **to build** it from source — the shadow plugin that packages the fat JAR
+  requires a Java 17+ JVM, so on an older JDK the module is excluded from the build entirely and
+  `:rollbar-java-agent` tasks fail as unknown. The JAR it produces still targets Java 11.
 - `rollbar-java` on the application classpath (for `Rollbar.init(...)`)
 
 The agent bundles only ByteBuddy, under a relocated package name. It does **not** bundle the
