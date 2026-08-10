@@ -32,6 +32,29 @@ public class NetworkEventBridgeTest {
   }
 
   @Test
+  public void composeUrl_keepsBaseWhenNestedUrlAppearsInQuery() {
+    // '://' inside the query (OAuth redirect, URL shortener, proxy-style API) must not be read as
+    // a scheme — otherwise the target host is dropped and sanitizing leaves a hostless path.
+    assertEquals("https://api.example.com/api/redirect?url=https://other.example.com/foo",
+        NetworkEventBridge.composeUrl(
+            "https://api.example.com", "/api/redirect?url=https://other.example.com/foo"));
+  }
+
+  @Test
+  public void composeUrl_keepsBaseWhenNestedUrlAppearsInPath() {
+    assertEquals("https://api.example.com/proxy/https://other.example.com/foo",
+        NetworkEventBridge.composeUrl(
+            "https://api.example.com", "/proxy/https://other.example.com/foo"));
+  }
+
+  @Test
+  public void composeUrl_keepsBaseWhenNestedUrlAppearsInFragment() {
+    assertEquals("https://api.example.com/page#https://other.example.com",
+        NetworkEventBridge.composeUrl(
+            "https://api.example.com", "/page#https://other.example.com"));
+  }
+
+  @Test
   public void composeUrl_withoutBase_returnsRequestUri() {
     assertEquals("/charge", NetworkEventBridge.composeUrl(null, "/charge"));
   }

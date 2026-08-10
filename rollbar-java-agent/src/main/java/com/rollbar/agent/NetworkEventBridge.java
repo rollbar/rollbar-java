@@ -142,7 +142,7 @@ public final class NetworkEventBridge {
     if (requestUri == null || requestUri.isEmpty()) {
       return baseUri != null ? baseUri : "";
     }
-    if (requestUri.contains("://")) {
+    if (isAbsolute(requestUri)) {
       return requestUri;
     }
     if (baseUri == null) {
@@ -152,6 +152,24 @@ public final class NetworkEventBridge {
       return baseUri.concat(requestUri);
     }
     return baseUri.concat("/").concat(requestUri);
+  }
+
+  // Bound the "://" search to the characters before the first '/', '?', or '#', i.e. to where a
+  // scheme could legally appear. A relative request URI can carry a nested absolute URL in its
+  // query or path — /api/redirect?url=https://other.example.com/foo from an OAuth redirect
+  // endpoint, URL shortener, or proxy-style API — and treating that as already-absolute would drop
+  // the target host, leaving the sanitized telemetry URL as a bare path with no host at all.
+  private static boolean isAbsolute(String requestUri) {
+    for (int i = 0; i < requestUri.length(); i++) {
+      char character = requestUri.charAt(i);
+      if (character == '/' || character == '?' || character == '#') {
+        return false;
+      }
+      if (character == ':' && requestUri.startsWith("://", i)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
