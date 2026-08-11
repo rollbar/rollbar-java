@@ -14,10 +14,10 @@ import static org.junit.Assert.assertThat;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.Gson;
 import com.rollbar.api.payload.data.Data;
 import com.rollbar.api.payload.data.Level;
+import com.rollbar.api.payload.data.Request;
 import com.rollbar.notifier.config.Config;
 import com.rollbar.notifier.config.ConfigBuilder;
 import com.rollbar.notifier.scrubbing.ScrubDataTransformer;
@@ -94,25 +94,81 @@ public class ScrubbingITest {
 
   @Test
   public void reconfigurationChangesTheRedactedKeys() {
+    // Keys outside the built-in list, so that only the reconfiguration can explain the change.
     Rollbar rollbar = new Rollbar(configBuilder
-        .redactedKeys(Collections.singletonList("password"))
+        .redactedKeys(Collections.singletonList("ssn"))
         .build());
 
-    rollbar.error("boom", objectMap("password", "hunter2", "token", "secret-token"));
+    rollbar.error("boom", objectMap("ssn", "123-45-6789", "pin", "1234"));
 
     Map<String, Object> before = getValue(sentData(0), "custom");
-    assertThat(before.get("password"), is(SCRUBBED));
-    assertThat(before.get("token"), is("secret-token"));
+    assertThat(before.get("ssn"), is(SCRUBBED));
+    assertThat(before.get("pin"), is("1234"));
 
     rollbar.configure(configBuilder
-        .redactedKeys(Collections.singletonList("token"))
+        .redactedKeys(Collections.singletonList("pin"))
         .build());
 
-    rollbar.error("boom", objectMap("password", "hunter2", "token", "secret-token"));
+    rollbar.error("boom", objectMap("ssn", "123-45-6789", "pin", "1234"));
 
     Map<String, Object> after = getValue(sentData(1), "custom");
-    assertThat(after.get("password"), is("hunter2"));
-    assertThat(after.get("token"), is(SCRUBBED));
+    assertThat(after.get("ssn"), is("123-45-6789"));
+    assertThat(after.get("pin"), is(SCRUBBED));
+  }
+
+  /**
+   * The whole point of the built-in key list: a {@code /login?password=hunter2} request must not
+   * leak the secret through any of the slots the request is serialized into, without the
+   * application configuring anything.
+   */
+  @Test
+  public void secretsAreRedactedFromEveryRequestRepresentationWithoutConfiguration() {
+    Config config = configBuilder
+        .request(() -> new Request.Builder()
+            .url("https://example.com/login?password=hunter2")
+            .method("POST")
+            .headers(objectStringMap("Authorization", "Bearer hunter2", "Accept", "text/html"))
+            .params(objectStringMap("password", "hunter2", "userId", "42"))
+            .get(Collections.singletonMap("password", Collections.singletonList("hunter2")))
+            .post(objectMap("password", "hunter2", "username", "alice"))
+            .metadata(objectMap("access_token", "hunter2", "region", "us-east-1"))
+            .queryString("password=hunter2")
+            .build())
+        .build();
+
+    new Rollbar(config).error("boom", objectMap("password", "hunter2", "username", "alice"));
+
+    // Nothing anywhere in the payload — telemetry, notifier metadata and all — carries the secret.
+    assertThat(sentPayload(0).contains("hunter2"), is(false));
+
+    Map<String, Object> request = getValue(sentData(0), "request");
+    assertThat(request.get("url"), is("https://example.com/login"));
+    assertThat(request.get("query_string"), is("password=" + SCRUBBED));
+    assertThat(getValue(request, "get", "password"), is(SCRUBBED));
+    assertThat(getValue(request, "post", "password"), is(SCRUBBED));
+    assertThat(getValue(request, "params", "password"), is(SCRUBBED));
+    assertThat(getValue(request, "headers", "Authorization"), is(SCRUBBED));
+    // Request.metadata is flattened onto the request object itself.
+    assertThat(request.get("access_token"), is(SCRUBBED));
+    assertThat(getValue(sentData(0), "custom", "password"), is(SCRUBBED));
+
+    // Non-sensitive siblings are untouched.
+    assertThat(getValue(request, "post", "username"), is("alice"));
+    assertThat(getValue(request, "params", "userId"), is("42"));
+    assertThat(getValue(request, "headers", "Accept"), is("text/html"));
+    assertThat(request.get("region"), is("us-east-1"));
+    assertThat(getValue(sentData(0), "custom", "username"), is("alice"));
+  }
+
+  @Test
+  public void defaultRedactedKeysCanBeTurnedOff() {
+    Config config = configBuilder
+        .useDefaultRedactedKeys(false)
+        .build();
+
+    new Rollbar(config).error("boom", objectMap("password", "hunter2"));
+
+    assertThat(getValue(sentData(0), "custom", "password"), is("hunter2"));
   }
 
   @Test
@@ -159,13 +215,16 @@ public class ScrubbingITest {
     return new SyncSender.Builder().url(url).accessToken(ScrubbingITest.ACCESS_TOKEN).build();
   }
 
+  /** The raw JSON body of the nth payload WireMock received. */
+  private String sentPayload(int index) {
+    return WireMock.findAll(postRequestedFor(urlEqualTo("/api/1/item/")))
+        .get(index).getBodyAsString();
+  }
+
   /** The parsed {@code data} object of the nth payload WireMock received. */
   @SuppressWarnings("unchecked")
   private Map<String, Object> sentData(int index) {
-    List<LoggedRequest> requests =
-        WireMock.findAll(postRequestedFor(urlEqualTo("/api/1/item/")));
-    Map<String, Object> payload =
-        new Gson().fromJson(requests.get(index).getBodyAsString(), Map.class);
+    Map<String, Object> payload = new Gson().fromJson(sentPayload(index), Map.class);
     return getValue(payload, "data");
   }
 
@@ -191,6 +250,14 @@ public class ScrubbingITest {
 
   private static Map<String, Object> objectMap(String... kvPairs) {
     Map<String, Object> map = new HashMap<>();
+    for (int i = 0; i < kvPairs.length; i += 2) {
+      map.put(kvPairs[i], kvPairs[i + 1]);
+    }
+    return map;
+  }
+
+  private static Map<String, String> objectStringMap(String... kvPairs) {
+    Map<String, String> map = new HashMap<>();
     for (int i = 0; i < kvPairs.length; i += 2) {
       map.put(kvPairs[i], kvPairs[i + 1]);
     }

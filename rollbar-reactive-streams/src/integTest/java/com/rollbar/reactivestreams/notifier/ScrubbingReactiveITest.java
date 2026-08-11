@@ -100,6 +100,26 @@ public class ScrubbingReactiveITest {
   }
 
   @Test
+  public void defaultRedactedKeysApplyWithoutConfiguration() throws Exception {
+    try (Rollbar rollbar = new Rollbar(configBuilder.build())) {
+      await(rollbar.error("boom", customWith("password", "hunter2")));
+    }
+
+    assertThat(getValue(sentData(), "custom", "password"), is(SCRUBBED));
+  }
+
+  @Test
+  public void defaultRedactedKeysCanBeTurnedOff() throws Exception {
+    Config config = configBuilder.useDefaultRedactedKeys(false).build();
+
+    try (Rollbar rollbar = new Rollbar(config)) {
+      await(rollbar.error("boom", customWith("password", "hunter2")));
+    }
+
+    assertThat(getValue(sentData(), "custom", "password"), is("hunter2"));
+  }
+
+  @Test
   public void networkTelemetryUrlsAreSanitized() throws Exception {
     try (Rollbar rollbar = new Rollbar(configBuilder.build())) {
       rollbar.recordNetworkEventFor(Level.CRITICAL, "GET",
@@ -114,6 +134,12 @@ public class ScrubbingReactiveITest {
   }
 
   // --- helpers ---
+
+  private static Map<String, Object> customWith(String key, String value) {
+    Map<String, Object> custom = new HashMap<>();
+    custom.put(key, value);
+    return custom;
+  }
 
   private static Map<String, Object> nestedCustom() {
     Map<String, Object> custom = new HashMap<>();
