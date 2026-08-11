@@ -38,23 +38,43 @@ import java.util.regex.Pattern;
  * {@code X-Auth-Token}, {@code X-Access-Token}, {@code X-Secret},
  * {@code Proxy-Authorization}, {@code WWW-Authenticate}.
  *
- * <p>Additional keys can be configured via {@code ConfigBuilder.redactedKeys(List)}. They are
- * matched as case-insensitive regexes against header names, routing parameter keys
+ * <p>Field keys are matched against {@link #DEFAULT_REDACTED_KEYS} plus any key configured via
+ * {@code ConfigBuilder.redactedKeys(List)}; the two lists are additive. They are matched as
+ * case-insensitive regexes against header names, routing parameter keys
  * ({@code Request.params}), query and POST parameter keys, request metadata keys
  * ({@code Request.metadata}), custom data keys, and {@code Frame.locals} keys.
  * {@code Frame.locals} are scrubbed both in the top-level body content and in the trace chains
- * carried by {@code Body.rollbarThreads}.
+ * carried by {@code Body.rollbarThreads}. The built-in defaults can be turned off with
+ * {@code ConfigBuilder.useDefaultRedactedKeys(false)}, leaving only the configured keys.
  *
  * <p>Nested data is walked recursively: maps reachable through other maps, through
  * {@link Collection}s and through object arrays are all scrubbed, up to 8 levels of nesting. The
  * surrounding shape is preserved, so a list stays a list and an array stays an array.
  *
  * <p>The built-in header deny-list above applies to {@code Request.headers} only; every other
- * slot matches on the configured keys alone.
+ * slot matches on the field keys alone.
  */
 public final class ScrubDataTransformer implements Transformer {
 
   public static final String SCRUBBED_VALUE = "***";
+
+  /**
+   * Field keys redacted out of the box, matched as case-insensitive regexes anywhere in the key
+   * unless anchored. Substring matching makes these cover the usual variants: {@code password}
+   * also matches {@code user_password} and {@code passwordConfirmation}, {@code token} also
+   * matches {@code access_token}, {@code auth_token} and {@code csrfToken}, and {@code secret}
+   * also matches {@code client_secret}.
+   *
+   * <p>{@code auth} is anchored so that only a key that is exactly {@code auth} matches; leaving
+   * it unanchored would redact innocuous keys such as {@code author}. Its longer forms are listed
+   * separately.
+   */
+  public static final List<String> DEFAULT_REDACTED_KEYS = Collections.unmodifiableList(
+      Arrays.asList(
+          "password", "passwd", "secret", "token", "authorization", "authentication", "^auth$",
+          "api[-_]?key"
+      )
+  );
 
   // O(1) set lookup; avoids Matcher allocation on every header key.
   private static final Set<String> DEFAULT_HEADERS = Collections.unmodifiableSet(
@@ -72,24 +92,50 @@ public final class ScrubDataTransformer implements Transformer {
   private final StringUrlSanitizer urlSanitizer;
 
   /**
-   * Constructor.
+   * Constructor using the built-in {@link #DEFAULT_REDACTED_KEYS}.
    *
-   * @param redactedKeys keys to redact, matched as case-insensitive regexes. May be {@code null}
-   *     or empty, in which case only the built-in header deny-list and the URL sanitizer apply.
+   * @param redactedKeys keys to redact on top of the defaults, matched as case-insensitive
+   *     regexes. May be {@code null} or empty.
    * @param urlSanitizer sanitizer applied to the request URL. Falls back to
    *     {@link DefaultUrlSanitizer#INSTANCE} when {@code null}.
    */
   public ScrubDataTransformer(List<String> redactedKeys, StringUrlSanitizer urlSanitizer) {
+    this(redactedKeys, urlSanitizer, true);
+  }
+
+  /**
+   * Constructor.
+   *
+   * @param redactedKeys keys to redact, matched as case-insensitive regexes. May be {@code null}
+   *     or empty.
+   * @param urlSanitizer sanitizer applied to the request URL. Falls back to
+   *     {@link DefaultUrlSanitizer#INSTANCE} when {@code null}.
+   * @param useDefaultRedactedKeys whether {@link #DEFAULT_REDACTED_KEYS} are matched in addition
+   *     to {@code redactedKeys}. When {@code false} only {@code redactedKeys} apply, so passing
+   *     an empty list leaves the header deny-list and the URL sanitizer as the only redaction.
+   */
+  public ScrubDataTransformer(List<String> redactedKeys, StringUrlSanitizer urlSanitizer,
+      boolean useDefaultRedactedKeys) {
     this.urlSanitizer = urlSanitizer != null ? urlSanitizer : DefaultUrlSanitizer.INSTANCE;
-    if (redactedKeys == null || redactedKeys.isEmpty()) {
-      this.fieldPatterns = Collections.emptyList();
-    } else {
-      List<Pattern> patterns = new ArrayList<>(redactedKeys.size());
-      for (String key : redactedKeys) {
-        patterns.add(Pattern.compile(key, Pattern.CASE_INSENSITIVE));
-      }
-      this.fieldPatterns = Collections.unmodifiableList(patterns);
+    this.fieldPatterns = compile(redactedKeys, useDefaultRedactedKeys);
+  }
+
+  private static List<Pattern> compile(List<String> redactedKeys, boolean useDefaultRedactedKeys) {
+    List<String> keys = new ArrayList<>();
+    if (useDefaultRedactedKeys) {
+      keys.addAll(DEFAULT_REDACTED_KEYS);
     }
+    if (redactedKeys != null) {
+      keys.addAll(redactedKeys);
+    }
+    if (keys.isEmpty()) {
+      return Collections.emptyList();
+    }
+    List<Pattern> patterns = new ArrayList<>(keys.size());
+    for (String key : keys) {
+      patterns.add(Pattern.compile(key, Pattern.CASE_INSENSITIVE));
+    }
+    return Collections.unmodifiableList(patterns);
   }
 
   @Override
