@@ -229,13 +229,27 @@ public interface CommonConfig {
   /**
    * Keys (matched as case-insensitive regex) whose values should be redacted in headers,
    * query/POST parameters, custom data, and {@code Frame.locals} before sending to Rollbar.
-   * The default header deny-list (Authorization, Cookie, etc.) is always applied regardless
-   * of this list.
+   * These are additive to
+   * {@link com.rollbar.notifier.scrubbing.ScrubDataTransformer#DEFAULT_REDACTED_KEYS} (unless
+   * {@link #useDefaultRedactedKeys()} is false) and to the default header deny-list
+   * (Authorization, Cookie, etc.), which is always applied regardless of this list.
    *
    * @return list of regex patterns; empty list by default.
    */
   default List<String> redactedKeys() {
     return Collections.emptyList();
+  }
+
+  /**
+   * Whether {@link com.rollbar.notifier.scrubbing.ScrubDataTransformer#DEFAULT_REDACTED_KEYS}
+   * (password, secret, token, etc.) are redacted in addition to {@link #redactedKeys()}. Set to
+   * false to match only the keys you configure; the header deny-list and the URL sanitizer still
+   * apply.
+   *
+   * @return true to apply the built-in key list; true by default.
+   */
+  default boolean useDefaultRedactedKeys() {
+    return true;
   }
 
   /**

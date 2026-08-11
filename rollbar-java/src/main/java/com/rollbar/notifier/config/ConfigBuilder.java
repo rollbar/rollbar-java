@@ -14,6 +14,7 @@ import com.rollbar.notifier.fingerprint.FingerprintGenerator;
 import com.rollbar.notifier.provider.Provider;
 import com.rollbar.notifier.provider.notifier.NotifierProvider;
 import com.rollbar.notifier.provider.timestamp.TimestampProvider;
+import com.rollbar.notifier.scrubbing.ScrubDataTransformer;
 import com.rollbar.notifier.sender.BufferedSender;
 import com.rollbar.notifier.sender.Sender;
 import com.rollbar.notifier.sender.SyncSender;
@@ -93,6 +94,8 @@ public class ConfigBuilder {
 
   protected List<String> redactedKeys;
 
+  protected boolean useDefaultRedactedKeys = true;
+
   protected StringUrlSanitizer urlSanitizer;
 
   private int maximumTelemetryData =
@@ -149,6 +152,7 @@ public class ConfigBuilder {
     this.maximumTelemetryData = config.maximumTelemetryData();
     this.telemetryEventTracker = config.telemetryEventTracker();
     this.redactedKeys = config.redactedKeys();
+    this.useDefaultRedactedKeys = config.useDefaultRedactedKeys();
     this.urlSanitizer = config.urlSanitizer();
   }
 
@@ -533,14 +537,29 @@ public class ConfigBuilder {
 
   /**
    * Keys (matched as case-insensitive regex) whose values will be redacted in request headers,
-   * query/POST parameters, custom data, and {@code Frame.locals}. These are additive to the
-   * built-in header deny-list (Authorization, Cookie, etc.).
+   * query/POST parameters, custom data, and {@code Frame.locals}. These are additive to
+   * {@link ScrubDataTransformer#DEFAULT_REDACTED_KEYS} and to the built-in header deny-list
+   * (Authorization, Cookie, etc.).
    *
    * @param redactedKeys list of regex patterns.
    * @return the builder instance.
    */
   public ConfigBuilder redactedKeys(List<String> redactedKeys) {
     this.redactedKeys = redactedKeys;
+    return this;
+  }
+
+  /**
+   * Whether {@link ScrubDataTransformer#DEFAULT_REDACTED_KEYS} (password, secret, token, etc.)
+   * are redacted in addition to {@link #redactedKeys(List)}. Defaults to true; set to false to
+   * match only the keys you configure. The header deny-list and the URL sanitizer apply either
+   * way.
+   *
+   * @param useDefaultRedactedKeys true to apply the built-in key list.
+   * @return the builder instance.
+   */
+  public ConfigBuilder useDefaultRedactedKeys(boolean useDefaultRedactedKeys) {
+    this.useDefaultRedactedKeys = useDefaultRedactedKeys;
     return this;
   }
 
@@ -659,6 +678,8 @@ public class ConfigBuilder {
 
     private final List<String> redactedKeys;
 
+    private final boolean useDefaultRedactedKeys;
+
     private final StringUrlSanitizer urlSanitizer;
 
     ConfigImpl(ConfigBuilder builder) {
@@ -697,7 +718,8 @@ public class ConfigBuilder {
       this.maximumTelemetryData = builder.maximumTelemetryData;
       this.telemetryEventTracker = builder.telemetryEventTracker;
       this.redactedKeys = builder.redactedKeys != null
-          ? builder.redactedKeys : Collections.<String>emptyList();
+          ? builder.redactedKeys : Collections.emptyList();
+      this.useDefaultRedactedKeys = builder.useDefaultRedactedKeys;
       this.urlSanitizer = builder.urlSanitizer != null
           ? builder.urlSanitizer : DefaultUrlSanitizer.INSTANCE;
     }
@@ -865,6 +887,11 @@ public class ConfigBuilder {
     @Override
     public List<String> redactedKeys() {
       return redactedKeys;
+    }
+
+    @Override
+    public boolean useDefaultRedactedKeys() {
+      return useDefaultRedactedKeys;
     }
 
     @Override

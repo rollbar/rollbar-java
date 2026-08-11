@@ -65,7 +65,8 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
     this.bodyFactory = bodyFactory;
     this.emptyResult = emptyResult;
     this.telemetryEventTracker = config.telemetryEventTracker();
-    this.builtInScrubber = new ScrubDataTransformer(config.redactedKeys(), config.urlSanitizer());
+    this.builtInScrubber = new ScrubDataTransformer(
+        config.redactedKeys(), config.urlSanitizer(), config.useDefaultRedactedKeys());
     this.telemetryUrlSanitizer = urlSanitizerOf(config);
   }
 
@@ -144,7 +145,8 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
       this.config = config;
       configureTruncation(config);
       processAppPackages(config);
-      this.builtInScrubber = new ScrubDataTransformer(config.redactedKeys(), config.urlSanitizer());
+      this.builtInScrubber = new ScrubDataTransformer(
+          config.redactedKeys(), config.urlSanitizer(), config.useDefaultRedactedKeys());
       this.telemetryUrlSanitizer = urlSanitizerOf(config);
     } finally {
       this.configWriteLock.unlock();
