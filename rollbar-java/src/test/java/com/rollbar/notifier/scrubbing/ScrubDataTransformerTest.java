@@ -118,6 +118,138 @@ public class ScrubDataTransformerTest {
     assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, result.getRequest().getHeaders().get("authorization"));
   }
 
+  // --- built-in default field keys ---
+
+  @Test
+  public void defaultKeysRedactRequestParametersWithoutConfiguration() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.emptyList(), NO_OP_SANITIZER);
+    Request req = new Request.Builder()
+        .get(getParams("password", "hunter2"))
+        .post(objectMap("access_token", "abc123", "username", "alice"))
+        .params(headers("token", "reset-me", "userId", "42"))
+        .metadata(objectMap("apiKey", "key-12345", "region", "us-east-1"))
+        .queryString("password=hunter2&page=1")
+        .build();
+
+    Data result = t.transform(dataWithRequest(req));
+    Request scrubbed = result.getRequest();
+
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, scrubbed.getGet().get("password").get(0));
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, scrubbed.getPost().get("access_token"));
+    assertEquals("alice", scrubbed.getPost().get("username"));
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, scrubbed.getParams().get("token"));
+    assertEquals("42", scrubbed.getParams().get("userId"));
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, scrubbed.getMetadata().get("apiKey"));
+    assertEquals("us-east-1", scrubbed.getMetadata().get("region"));
+    assertEquals("password=" + ScrubDataTransformer.SCRUBBED_VALUE + "&page=1",
+        scrubbed.getQueryString());
+  }
+
+  @Test
+  public void defaultKeysRedactCustomDataWithoutConfiguration() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.emptyList(), NO_OP_SANITIZER);
+    Map<String, Object> custom = objectMap("secret", "shhh", "colour", "blue");
+
+    Data result = t.transform(dataWithCustom(custom));
+
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, result.getCustom().get("secret"));
+    assertEquals("blue", result.getCustom().get("colour"));
+  }
+
+  @Test
+  public void defaultKeysRedactFrameLocalsWithoutConfiguration() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.emptyList(), NO_OP_SANITIZER);
+    Body body = new Body.Builder()
+        .bodyContent(traceWithLocals(objectMap("passwd", "hunter2", "userId", "42")))
+        .build();
+    Data data = new Data.Builder().environment("test").body(body).build();
+
+    Data result = t.transform(data);
+
+    List<Frame> frames = ((Trace) result.getBody().getContents()).getFrames();
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, frames.get(0).getLocals().get("passwd"));
+    assertEquals("42", frames.get(0).getLocals().get("userId"));
+  }
+
+  @Test
+  public void defaultKeyVariantsMatchedBySubstring() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.emptyList(), NO_OP_SANITIZER);
+    String[] sensitive = {
+        "password", "Password", "user_password", "passwordConfirmation", "passwd",
+        "secret", "client_secret", "secretKey",
+        "token", "access_token", "accessToken", "auth_token", "csrfToken", "refresh_token",
+        "authorization", "Authentication", "auth",
+        "api_key", "apiKey", "API-KEY", "apikey"
+    };
+    for (String key : sensitive) {
+      Data result = t.transform(dataWithCustom(objectMap(key, "hunter2")));
+      assertEquals(key + " should be redacted by default",
+          ScrubDataTransformer.SCRUBBED_VALUE, result.getCustom().get(key));
+    }
+  }
+
+  @Test
+  public void defaultKeysDoNotMatchInnocuousKeys() {
+    // "auth" is anchored precisely so that keys like "author" survive.
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.emptyList(), NO_OP_SANITIZER);
+    String[] innocuous = {"author", "authorName", "unauthorized_count", "username", "email"};
+    for (String key : innocuous) {
+      Data result = t.transform(dataWithCustom(objectMap(key, "visible")));
+      assertEquals(key + " should not be redacted", "visible", result.getCustom().get(key));
+    }
+  }
+
+  @Test
+  public void configuredKeysAreAdditiveToTheDefaults() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("ssn"), NO_OP_SANITIZER);
+    Map<String, Object> custom = objectMap("ssn", "123-45-6789", "password", "hunter2", "id", "7");
+
+    Data result = t.transform(dataWithCustom(custom));
+
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, result.getCustom().get("ssn"));
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, result.getCustom().get("password"));
+    assertEquals("7", result.getCustom().get("id"));
+  }
+
+  @Test
+  public void defaultKeysCanBeDisabled() {
+    ScrubDataTransformer t =
+        new ScrubDataTransformer(Collections.emptyList(), NO_OP_SANITIZER, false);
+    Map<String, Object> custom = objectMap("password", "hunter2");
+    Map<String, String> hdrs = headers("Authorization", "Bearer xyz", "Content-Type", "text/html");
+    Request req = new Request.Builder().headers(hdrs).build();
+    Data data = new Data.Builder().environment("test").request(req).custom(custom).build();
+
+    Data result = t.transform(data);
+
+    // The header deny-list still applies; the built-in field keys no longer do.
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE,
+        result.getRequest().getHeaders().get("Authorization"));
+    assertEquals("text/html", result.getRequest().getHeaders().get("Content-Type"));
+    assertEquals("hunter2", result.getCustom().get("password"));
+  }
+
+  @Test
+  public void configuredKeysStillApplyWhenDefaultsAreDisabled() {
+    ScrubDataTransformer t =
+        new ScrubDataTransformer(Collections.singletonList("ssn"), NO_OP_SANITIZER, false);
+    Map<String, Object> custom = objectMap("ssn", "123-45-6789", "password", "hunter2");
+
+    Data result = t.transform(dataWithCustom(custom));
+
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, result.getCustom().get("ssn"));
+    assertEquals("hunter2", result.getCustom().get("password"));
+  }
+
+  @Test
+  public void nullRedactedKeysUsesTheDefaults() {
+    ScrubDataTransformer t = new ScrubDataTransformer(null, NO_OP_SANITIZER);
+
+    Data result = t.transform(dataWithCustom(objectMap("password", "hunter2")));
+
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, result.getCustom().get("password"));
+  }
+
   // --- user redactedKeys ---
 
   @Test
@@ -200,11 +332,11 @@ public class ScrubDataTransformerTest {
     ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
     Map<String, Object> inner = objectMap("password", "hunter2", "user", "alice");
     Map<String, Object> metadata = new HashMap<>();
-    metadata.put("auth", inner);
+    metadata.put("login", inner);
     Request req = new Request.Builder().metadata(metadata).build();
     Data result = t.transform(dataWithRequest(req));
     @SuppressWarnings("unchecked")
-    Map<String, Object> scrubbed = (Map<String, Object>) result.getRequest().getMetadata().get("auth");
+    Map<String, Object> scrubbed = (Map<String, Object>) result.getRequest().getMetadata().get("login");
     assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, scrubbed.get("password"));
     assertEquals("alice", scrubbed.get("user"));
   }
@@ -389,21 +521,6 @@ public class ScrubDataTransformerTest {
   }
 
   @Test
-  public void emptyRedactedKeysOnlyScrubsDefaultHeaders() {
-    ScrubDataTransformer t = new ScrubDataTransformer(Collections.emptyList(), NO_OP_SANITIZER);
-    Map<String, Object> custom = objectMap("myApiKey", "visible");
-    Map<String, String> hdrs = headers("Authorization", "Bearer xyz", "Content-Type", "text/html");
-    Request req = new Request.Builder().headers(hdrs).build();
-    Data data = new Data.Builder().environment("test").request(req).custom(custom).build();
-
-    Data result = t.transform(data);
-    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, result.getRequest().getHeaders().get("Authorization"));
-    assertEquals("text/html", result.getRequest().getHeaders().get("Content-Type"));
-    // custom key not in default deny-list → not scrubbed
-    assertEquals("visible", result.getCustom().get("myApiKey"));
-  }
-
-  @Test
   public void nullDataReturnsNull() {
     ScrubDataTransformer t = new ScrubDataTransformer(Collections.<String>emptyList(), NO_OP_SANITIZER);
     assertNull(t.transform(null));
@@ -436,11 +553,11 @@ public class ScrubDataTransformerTest {
     ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
     Map<String, Object> inner = objectMap("password", "hunter2", "user", "alice");
     Map<String, Object> custom = new HashMap<>();
-    custom.put("auth", inner);
+    custom.put("login", inner);
     custom.put("visible", "yes");
     Data result = t.transform(dataWithCustom(custom));
     @SuppressWarnings("unchecked")
-    Map<String, Object> scrubbed = (Map<String, Object>) result.getCustom().get("auth");
+    Map<String, Object> scrubbed = (Map<String, Object>) result.getCustom().get("login");
     assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, scrubbed.get("password"));
     assertEquals("alice", scrubbed.get("user"));
     assertEquals("yes", result.getCustom().get("visible"));
