@@ -19,6 +19,22 @@ applies to it; scrub that JSON yourself before passing it in.
 
 ## What is redacted without any configuration
 
+- **Fields whose key names a secret**, wherever they appear in the payload. The built-in list is
+
+  | Pattern | Also matches |
+  | --- | --- |
+  | `password` | `user_password`, `passwordConfirmation`, `passwordHash` |
+  | `passwd` | |
+  | `secret` | `client_secret`, `secretKey` |
+  | `token` | `access_token`, `auth_token`, `csrfToken`, `refreshToken` |
+  | `authorization` | `proxy_authorization` |
+  | `authentication` | |
+  | `^auth$` | anchored on purpose, so `author` is left alone |
+  | `api[-_]?key` | `api_key`, `apiKey`, `API-KEY` |
+
+  Matching is case-insensitive and, apart from `^auth$`, matches anywhere in the key. So
+  `GET /login?password=hunter2` arrives with `request.get.password`, `request.query_string` and
+  the `request.url` query all redacted.
 - **Request headers**, matched case-insensitively against a built-in deny-list:
   `Authorization`, `Cookie`, `Set-Cookie`, `X-Api-Key`, `X-Auth-Token`, `X-Access-Token`,
   `X-Secret`, `Proxy-Authorization`, `WWW-Authenticate`. The value becomes `***`.
@@ -27,14 +43,17 @@ applies to it; scrub that JSON yourself before passing it in.
   `https://user:pass@example.com/orders?token=secret` is reported as
   `https://example.com/orders`.
 
+Not covered: `request.body`, which is a raw string the notifier cannot parse. If you populate it,
+scrub it yourself.
+
 ## Redacting your own keys
 
-`redactedKeys` takes a list of **case-insensitive regexes**. A key is redacted when the regex is
-found anywhere in it, so `"password"` also matches `user_password`.
+`redactedKeys` takes a list of **case-insensitive regexes**, added to the built-in list above. A
+key is redacted when the regex is found anywhere in it, so `"pin"` also matches `pin_code`.
 
 ```java
 Config config = ConfigBuilder.withAccessToken(ACCESS_TOKEN)
-    .redactedKeys(Arrays.asList("password", "secret", "ssn"))
+    .redactedKeys(Arrays.asList("ssn", "pin", "date_of_birth"))
     .build();
 ```
 
@@ -42,6 +61,16 @@ They are matched against the keys of: request headers, routing parameters (`requ
 GET and POST parameters, `request.metadata`, the raw `request.query_string`, custom data, and
 `Frame.locals` — including the copies carried by `body.threads` when JVMTI locals capture is
 enabled. Matching values are replaced with `***`.
+
+To match only your own keys, turn the built-in list off. The header deny-list and the URL
+sanitizer still apply:
+
+```java
+Config config = ConfigBuilder.withAccessToken(ACCESS_TOKEN)
+    .redactedKeys(Arrays.asList("ssn"))
+    .useDefaultRedactedKeys(false)
+    .build();
+```
 
 Nested data is walked recursively through maps, collections and arrays, up to 8 levels of
 nesting, and the surrounding shape is preserved. Given `redactedKeys(["password"])`:
@@ -81,7 +110,9 @@ options.
 This is a behaviour change: no configuration is required to get the redaction above, and it
 cannot be disabled from a `Transformer`. If you are upgrading, expect that
 
-- values matching the header deny-list or your `redactedKeys` now arrive as `***`;
+- values matching the built-in key list, the header deny-list or your `redactedKeys` now arrive
+  as `***` — including keys you may not consider sensitive, such as `tokenCount`. Set
+  `useDefaultRedactedKeys(false)` if the built-in list is too broad for your payloads;
 - `request.url` and network telemetry URLs no longer carry credentials, query strings or
   fragments. If you rely on query parameters for grouping or search, configure a
   `urlSanitizer` that preserves them.
