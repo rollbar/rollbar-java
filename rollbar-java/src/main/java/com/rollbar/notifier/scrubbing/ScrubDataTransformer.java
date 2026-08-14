@@ -68,11 +68,15 @@ public final class ScrubDataTransformer implements Transformer {
    * <p>{@code auth} is anchored so that only a key that is exactly {@code auth} matches; leaving
    * it unanchored would redact innocuous keys such as {@code author}. Its longer forms are listed
    * separately.
+   *
+   * <p>The api key spellings are listed one by one rather than as {@code api[-_]?key} so that the
+   * whole default list is free of regex syntax, which lets {@link KeyMatcher} match it without
+   * allocating.
    */
   public static final List<String> DEFAULT_REDACTED_KEYS = Collections.unmodifiableList(
       Arrays.asList(
           "password", "passwd", "secret", "token", "authorization", "authentication", "^auth$",
-          "api[-_]?key"
+          "apikey", "api_key", "api-key"
       )
   );
 
@@ -88,7 +92,7 @@ public final class ScrubDataTransformer implements Transformer {
   // map, collection or array counts as one level; this also terminates cyclic structures.
   private static final int MAX_SCRUB_DEPTH = 8;
 
-  private final List<Pattern> fieldPatterns;
+  private final KeyMatcher fieldKeys;
   private final StringUrlSanitizer urlSanitizer;
 
   /**
@@ -117,25 +121,7 @@ public final class ScrubDataTransformer implements Transformer {
   public ScrubDataTransformer(List<String> redactedKeys, StringUrlSanitizer urlSanitizer,
       boolean useDefaultRedactedKeys) {
     this.urlSanitizer = urlSanitizer != null ? urlSanitizer : DefaultUrlSanitizer.INSTANCE;
-    this.fieldPatterns = compile(redactedKeys, useDefaultRedactedKeys);
-  }
-
-  private static List<Pattern> compile(List<String> redactedKeys, boolean useDefaultRedactedKeys) {
-    List<String> keys = new ArrayList<>();
-    if (useDefaultRedactedKeys) {
-      keys.addAll(DEFAULT_REDACTED_KEYS);
-    }
-    if (redactedKeys != null) {
-      keys.addAll(redactedKeys);
-    }
-    if (keys.isEmpty()) {
-      return Collections.emptyList();
-    }
-    List<Pattern> patterns = new ArrayList<>(keys.size());
-    for (String key : keys) {
-      patterns.add(Pattern.compile(key, Pattern.CASE_INSENSITIVE));
-    }
-    return Collections.unmodifiableList(patterns);
+    this.fieldKeys = KeyMatcher.of(redactedKeys, useDefaultRedactedKeys);
   }
 
   @Override
@@ -149,7 +135,7 @@ public final class ScrubDataTransformer implements Transformer {
     Body originalBody = data.getBody();
 
     Request scrubbedRequest = scrubRequest(originalRequest);
-    Map<String, Object> scrubbedCustom = scrubObjectMap(originalCustom, fieldPatterns, 0);
+    Map<String, Object> scrubbedCustom = scrubObjectMap(originalCustom, fieldKeys, 0);
     Body scrubbedBody = scrubBody(originalBody);
 
     boolean changed = scrubbedRequest != originalRequest
@@ -188,11 +174,11 @@ public final class ScrubDataTransformer implements Transformer {
 
     String scrubbedUrl = originalUrl != null ? urlSanitizer.sanitize(originalUrl) : null;
     Map<String, String> scrubbedHeaders = scrubHeaders(originalHeaders);
-    Map<String, String> scrubbedParams = scrubStringMap(originalParams, fieldPatterns);
-    Map<String, List<String>> scrubbedGet = scrubMultiMap(originalGet, fieldPatterns);
-    Map<String, Object> scrubbedPost = scrubObjectMap(originalPost, fieldPatterns, 0);
-    Map<String, Object> scrubbedMetadata = scrubObjectMap(originalMetadata, fieldPatterns, 0);
-    String scrubbedQueryString = scrubQueryString(originalQueryString, fieldPatterns);
+    Map<String, String> scrubbedParams = scrubStringMap(originalParams, fieldKeys);
+    Map<String, List<String>> scrubbedGet = scrubMultiMap(originalGet, fieldKeys);
+    Map<String, Object> scrubbedPost = scrubObjectMap(originalPost, fieldKeys, 0);
+    Map<String, Object> scrubbedMetadata = scrubObjectMap(originalMetadata, fieldKeys, 0);
+    String scrubbedQueryString = scrubQueryString(originalQueryString, fieldKeys);
 
     boolean changed = !equal(originalUrl, scrubbedUrl)
         || scrubbedHeaders != originalHeaders
@@ -218,7 +204,7 @@ public final class ScrubDataTransformer implements Transformer {
   }
 
   private Body scrubBody(Body body) {
-    if (body == null || fieldPatterns.isEmpty()) {
+    if (body == null || fieldKeys.isEmpty()) {
       return body;
     }
 
@@ -330,7 +316,7 @@ public final class ScrubDataTransformer implements Transformer {
       return null;
     }
     Map<String, Object> locals = frame.getLocals();
-    Map<String, Object> scrubbedLocals = scrubObjectMap(locals, fieldPatterns, 0);
+    Map<String, Object> scrubbedLocals = scrubObjectMap(locals, fieldKeys, 0);
     if (scrubbedLocals == locals) {
       return frame;
     }
@@ -344,7 +330,7 @@ public final class ScrubDataTransformer implements Transformer {
     Map<String, String> result = null;
     for (Map.Entry<String, String> entry : map.entrySet()) {
       String key = entry.getKey();
-      if (matchesDefaultHeader(key) || matchesAny(key, fieldPatterns)) {
+      if (matchesDefaultHeader(key) || fieldKeys.matches(key)) {
         if (result == null) {
           result = new HashMap<>(map);
         }
@@ -360,14 +346,14 @@ public final class ScrubDataTransformer implements Transformer {
    * {@code /cookie/:id} is not one. This keeps routing params consistent with the GET/POST
    * parameter maps, which also match on {@code redactedKeys} alone.
    */
-  private Map<String, String> scrubStringMap(Map<String, String> map, List<Pattern> patterns) {
-    if (map == null || patterns.isEmpty()) {
+  private Map<String, String> scrubStringMap(Map<String, String> map, KeyMatcher keys) {
+    if (map == null || keys.isEmpty()) {
       return map;
     }
     Map<String, String> result = null;
     for (Map.Entry<String, String> entry : map.entrySet()) {
       String key = entry.getKey();
-      if (matchesAny(key, patterns)) {
+      if (keys.matches(key)) {
         if (result == null) {
           result = new HashMap<>(map);
         }
@@ -378,13 +364,13 @@ public final class ScrubDataTransformer implements Transformer {
   }
 
   @SuppressWarnings("unchecked")
-  private Map<String, Object> scrubObjectMap(Map<String, Object> map, List<Pattern> patterns,
+  private Map<String, Object> scrubObjectMap(Map<String, Object> map, KeyMatcher keys,
       int depth) {
-    if (map == null || patterns.isEmpty()) {
+    if (map == null || keys.isEmpty()) {
       return map;
     }
     // scrubMap only ever copies keys across, so a Map<String, Object> in stays one on the way out.
-    return (Map<String, Object>) scrubMap(map, patterns, depth);
+    return (Map<String, Object>) scrubMap(map, keys, depth);
   }
 
   /**
@@ -393,30 +379,30 @@ public final class ScrubDataTransformer implements Transformer {
    * Every container counts as one level against {@code MAX_SCRUB_DEPTH}, which also terminates
    * cyclic structures. Anything else is returned untouched.
    */
-  private Object scrubNested(Object value, List<Pattern> patterns, int depth) {
+  private Object scrubNested(Object value, KeyMatcher keys, int depth) {
     if (depth >= MAX_SCRUB_DEPTH) {
       return value;
     }
     if (value instanceof Map) {
-      return scrubMap((Map<?, ?>) value, patterns, depth + 1);
+      return scrubMap((Map<?, ?>) value, keys, depth + 1);
     }
     if (value instanceof Collection) {
-      return scrubCollection((Collection<?>) value, patterns, depth + 1);
+      return scrubCollection((Collection<?>) value, keys, depth + 1);
     }
     if (value instanceof Object[]) {
-      return scrubArray((Object[]) value, patterns, depth + 1);
+      return scrubArray((Object[]) value, keys, depth + 1);
     }
     return value;
   }
 
-  private Object scrubMap(Map<?, ?> map, List<Pattern> patterns, int depth) {
+  private Object scrubMap(Map<?, ?> map, KeyMatcher keys, int depth) {
     Map<Object, Object> result = null;
     for (Map.Entry<?, ?> entry : map.entrySet()) {
       Object key = entry.getKey();
       Object value = entry.getValue();
       // A non-String key cannot match a redactedKeys pattern, but its value is still traversed.
-      boolean keyMatches = key instanceof String && matchesAny((String) key, patterns);
-      Object scrubbed = keyMatches ? SCRUBBED_VALUE : scrubNested(value, patterns, depth);
+      boolean keyMatches = key instanceof String && keys.matches((String) key);
+      Object scrubbed = keyMatches ? SCRUBBED_VALUE : scrubNested(value, keys, depth);
       if (keyMatches || scrubbed != value) {
         if (result == null) {
           result = new LinkedHashMap<>(map);
@@ -427,14 +413,14 @@ public final class ScrubDataTransformer implements Transformer {
     return result != null ? result : map;
   }
 
-  private Object scrubCollection(Collection<?> collection, List<Pattern> patterns, int depth) {
+  private Object scrubCollection(Collection<?> collection, KeyMatcher keys, int depth) {
     if (collection.isEmpty()) {
       return collection;
     }
     List<Object> scrubbed = new ArrayList<>(collection.size());
     boolean changed = false;
     for (Object element : collection) {
-      Object scrubbedElement = scrubNested(element, patterns, depth);
+      Object scrubbedElement = scrubNested(element, keys, depth);
       scrubbed.add(scrubbedElement);
       if (scrubbedElement != element) {
         changed = true;
@@ -448,10 +434,10 @@ public final class ScrubDataTransformer implements Transformer {
     return collection instanceof Set ? new LinkedHashSet<>(scrubbed) : scrubbed;
   }
 
-  private Object scrubArray(Object[] array, List<Pattern> patterns, int depth) {
+  private Object scrubArray(Object[] array, KeyMatcher keys, int depth) {
     Object[] result = null;
     for (int i = 0; i < array.length; i++) {
-      Object scrubbedElement = scrubNested(array[i], patterns, depth);
+      Object scrubbedElement = scrubNested(array[i], keys, depth);
       if (scrubbedElement != array[i]) {
         if (result == null) {
           // Object[] rather than array.clone(): a rebuilt value may not fit the original component
@@ -467,13 +453,13 @@ public final class ScrubDataTransformer implements Transformer {
   }
 
   private Map<String, List<String>> scrubMultiMap(Map<String, List<String>> map,
-      List<Pattern> patterns) {
-    if (map == null || patterns.isEmpty()) {
+      KeyMatcher keys) {
+    if (map == null || keys.isEmpty()) {
       return map;
     }
     Map<String, List<String>> result = null;
     for (Map.Entry<String, List<String>> entry : map.entrySet()) {
-      if (matchesAny(entry.getKey(), patterns)) {
+      if (keys.matches(entry.getKey())) {
         if (result == null) {
           result = new HashMap<>(map);
         }
@@ -483,8 +469,8 @@ public final class ScrubDataTransformer implements Transformer {
     return result != null ? result : map;
   }
 
-  private String scrubQueryString(String queryString, List<Pattern> patterns) {
-    if (queryString == null || queryString.isEmpty() || patterns.isEmpty()) {
+  private String scrubQueryString(String queryString, KeyMatcher keys) {
+    if (queryString == null || queryString.isEmpty() || keys.isEmpty()) {
       return queryString;
     }
     String[] pairs = queryString.split("&", -1);
@@ -495,7 +481,7 @@ public final class ScrubDataTransformer implements Transformer {
       int eq = pair.indexOf('=');
       // A value-less param (e.g. "?token") is treated as key-only and scrubbed the same way.
       String key = eq >= 0 ? pair.substring(0, eq) : pair;
-      if (matchesAny(key, patterns) || matchesAny(decodeParamName(key), patterns)) {
+      if (keys.matches(key) || keys.matches(decodeParamName(key))) {
         output[i] = key + "=" + SCRUBBED_VALUE;
         changed = true;
       } else {
@@ -534,16 +520,111 @@ public final class ScrubDataTransformer implements Transformer {
     return DEFAULT_HEADERS.contains(key.toLowerCase(Locale.ROOT));
   }
 
-  private static boolean matchesAny(String key, List<Pattern> patterns) {
-    for (Pattern p : patterns) {
-      if (p.matcher(key).find()) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   private static boolean equal(String a, String b) {
     return a == null ? b == null : a.equals(b);
+  }
+
+  /**
+   * Matches a key against the redacted key list. Keys are documented as case-insensitive regexes
+   * and keep those semantics, but running a {@link Pattern} over every key of every payload
+   * allocates a {@code Matcher} per key per pattern, which on a ~100 key payload is the bulk of
+   * what this transformer costs. In practice almost every key is a plain name - the whole
+   * built-in list is - so plain names are matched with one lowercase pass and a substring search,
+   * and only keys that actually carry regex syntax reach {@link Pattern}.
+   *
+   * <p>{@code String.toLowerCase} returns the receiver when there is nothing to fold, so a key
+   * that is already lower case costs no allocation at all.
+   */
+  private static final class KeyMatcher {
+
+    // Special outside a character class, or the opening of one. '-' is deliberately absent: it
+    // only carries meaning inside a class, so "x-api-key" stays a literal.
+    private static final String METACHARACTERS = "\\.[]{}()*+?^$|";
+
+    private final String[] contains;
+    private final String[] exact;
+    private final Pattern[] patterns;
+
+    private KeyMatcher(List<String> contains, List<String> exact, List<Pattern> patterns) {
+      this.contains = contains.toArray(new String[0]);
+      this.exact = exact.toArray(new String[0]);
+      this.patterns = patterns.toArray(new Pattern[0]);
+    }
+
+    static KeyMatcher of(List<String> redactedKeys, boolean useDefaultRedactedKeys) {
+      List<String> keys = new ArrayList<>();
+      if (useDefaultRedactedKeys) {
+        keys.addAll(DEFAULT_REDACTED_KEYS);
+      }
+      if (redactedKeys != null) {
+        keys.addAll(redactedKeys);
+      }
+
+      List<String> contains = new ArrayList<>();
+      List<String> exact = new ArrayList<>();
+      List<Pattern> patterns = new ArrayList<>();
+      for (String key : keys) {
+        String anchored = anchoredLiteral(key);
+        if (anchored != null) {
+          exact.add(anchored.toLowerCase(Locale.ROOT));
+        } else if (isLiteral(key)) {
+          contains.add(key.toLowerCase(Locale.ROOT));
+        } else {
+          // Compiled up front, so an invalid regex still fails when the notifier is configured
+          // rather than when the first payload is scrubbed.
+          patterns.add(Pattern.compile(key, Pattern.CASE_INSENSITIVE));
+        }
+      }
+      return new KeyMatcher(contains, exact, patterns);
+    }
+
+    boolean isEmpty() {
+      return contains.length == 0 && exact.length == 0 && patterns.length == 0;
+    }
+
+    boolean matches(String key) {
+      if (contains.length > 0 || exact.length > 0) {
+        // CASE_INSENSITIVE folds ASCII only while toLowerCase folds the whole of Unicode, so an
+        // exotic key can match here where the equivalent regex would not. That direction only
+        // ever redacts more, which is the safe way to differ.
+        String lower = key.toLowerCase(Locale.ROOT);
+        for (String needle : contains) {
+          if (lower.contains(needle)) {
+            return true;
+          }
+        }
+        for (String name : exact) {
+          if (lower.equals(name)) {
+            return true;
+          }
+        }
+      }
+      for (Pattern pattern : patterns) {
+        if (pattern.matcher(key).find()) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    /**
+     * The literal inside an anchored key such as {@code ^auth$}, or null if it is not one.
+     */
+    private static String anchoredLiteral(String key) {
+      if (key.length() <= 2 || key.charAt(0) != '^' || key.charAt(key.length() - 1) != '$') {
+        return null;
+      }
+      String inner = key.substring(1, key.length() - 1);
+      return isLiteral(inner) ? inner : null;
+    }
+
+    private static boolean isLiteral(String key) {
+      for (int i = 0; i < key.length(); i++) {
+        if (METACHARACTERS.indexOf(key.charAt(i)) >= 0) {
+          return false;
+        }
+      }
+      return true;
+    }
   }
 }

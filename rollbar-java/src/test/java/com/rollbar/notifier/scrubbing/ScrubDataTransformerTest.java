@@ -250,6 +250,62 @@ public class ScrubDataTransformerTest {
     assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, result.getCustom().get("password"));
   }
 
+  // --- key matching: literal fast path and regex keys must behave identically ---
+
+  @Test
+  public void literalAndRegexKeysMatchTheSameWay() {
+    // "user.name" is a regex key (the dot matches any character); "user_name" is a literal one.
+    // Both must redact the same keys, whichever path they are matched on.
+    ScrubDataTransformer regex =
+        new ScrubDataTransformer(Collections.singletonList("user.name"), NO_OP_SANITIZER, false);
+    ScrubDataTransformer literal =
+        new ScrubDataTransformer(Collections.singletonList("user_name"), NO_OP_SANITIZER, false);
+
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE,
+        regex.transform(dataWithCustom(objectMap("user_name", "alice"))).getCustom().get("user_name"));
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE,
+        literal.transform(dataWithCustom(objectMap("user_name", "alice"))).getCustom().get("user_name"));
+    // Only the regex key matches the wildcard position.
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE,
+        regex.transform(dataWithCustom(objectMap("user-name", "alice"))).getCustom().get("user-name"));
+    assertEquals("alice",
+        literal.transform(dataWithCustom(objectMap("user-name", "alice"))).getCustom().get("user-name"));
+  }
+
+  @Test
+  public void hyphenatedKeyIsMatchedAsALiteral() {
+    // '-' only carries meaning inside a character class, so this stays a plain name.
+    ScrubDataTransformer t =
+        new ScrubDataTransformer(Collections.singletonList("x-tenant-secret"), NO_OP_SANITIZER, false);
+    Data result = t.transform(dataWithCustom(objectMap("X-Tenant-Secret", "hidden", "id", "7")));
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, result.getCustom().get("X-Tenant-Secret"));
+    assertEquals("7", result.getCustom().get("id"));
+  }
+
+  @Test
+  public void anchoredLiteralKeyMatchesTheWholeKeyOnly() {
+    ScrubDataTransformer t =
+        new ScrubDataTransformer(Collections.singletonList("^pin$"), NO_OP_SANITIZER, false);
+    Data result = t.transform(dataWithCustom(objectMap("pin", "1234", "pinned", "no", "PIN", "9")));
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, result.getCustom().get("pin"));
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, result.getCustom().get("PIN"));
+    assertEquals("no", result.getCustom().get("pinned"));
+  }
+
+  @Test
+  public void anchorsAroundARegexAreStillMatchedAsARegex() {
+    ScrubDataTransformer t =
+        new ScrubDataTransformer(Collections.singletonList("^pin[0-9]$"), NO_OP_SANITIZER, false);
+    Data result = t.transform(dataWithCustom(objectMap("pin7", "1234", "pin", "5")));
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, result.getCustom().get("pin7"));
+    assertEquals("5", result.getCustom().get("pin"));
+  }
+
+  @Test(expected = java.util.regex.PatternSyntaxException.class)
+  public void invalidRegexKeyStillFailsWhenTheNotifierIsConfigured() {
+    new ScrubDataTransformer(Collections.singletonList("[unclosed"), NO_OP_SANITIZER);
+  }
+
   // --- user redactedKeys ---
 
   @Test
