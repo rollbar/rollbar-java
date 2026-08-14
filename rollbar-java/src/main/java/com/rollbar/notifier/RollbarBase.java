@@ -8,8 +8,11 @@ import com.rollbar.api.payload.data.Source;
 import com.rollbar.api.payload.data.TelemetryEvent;
 import com.rollbar.api.payload.data.TelemetryType;
 import com.rollbar.api.payload.data.body.Body;
+import com.rollbar.api.scrubbing.DefaultUrlSanitizer;
+import com.rollbar.api.scrubbing.StringUrlSanitizer;
 import com.rollbar.jvmti.ThrowableCache;
 import com.rollbar.notifier.config.CommonConfig;
+import com.rollbar.notifier.scrubbing.ScrubDataTransformer;
 import com.rollbar.notifier.telemetry.TelemetryEventTracker;
 import com.rollbar.notifier.truncation.PayloadTruncator;
 import com.rollbar.notifier.util.BodyFactory;
@@ -43,6 +46,13 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
 
   protected C config;
 
+  private volatile ScrubDataTransformer builtInScrubber;
+
+  // Network telemetry URLs are sanitized when they are recorded rather than when the payload is
+  // built: TelemetryEvent is opaque once constructed, and an event is recorded once but can be
+  // attached to many payloads.
+  private volatile StringUrlSanitizer telemetryUrlSanitizer;
+
   protected final ReadWriteLock configReadWriteLock = new ReentrantReadWriteLock();
   protected final Lock configReadLock = configReadWriteLock.readLock();
   protected final Lock configWriteLock = configReadWriteLock.writeLock();
@@ -55,6 +65,9 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
     this.bodyFactory = bodyFactory;
     this.emptyResult = emptyResult;
     this.telemetryEventTracker = config.telemetryEventTracker();
+    this.builtInScrubber = new ScrubDataTransformer(
+        config.redactedKeys(), config.urlSanitizer(), config.useDefaultRedactedKeys());
+    this.telemetryUrlSanitizer = urlSanitizerOf(config);
   }
 
   /**
@@ -93,6 +106,12 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
    * Record network telemetry event with method, url, and status code.
    * ({@link TelemetryType#NETWORK}).
    *
+   * <p>The url is sanitized with the configured
+   * {@link CommonConfig#urlSanitizer() url sanitizer} before it is recorded, so credentials and
+   * query strings do not reach Rollbar. Callers that record through
+   * {@link #getTelemetryEventTracker()} directly bypass this and are responsible for sanitizing
+   * themselves.
+   *
    * @param level      the TelemetryEvent severity (e.g. {@link Level#DEBUG}).
    * @param method     the verb used (e.g. "POST").
    * @param url        the api url (e.g. "<a href="http://rollbar.com/test/api">
@@ -100,7 +119,10 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
    * @param statusCode the response status code (e.g. "404").
    */
   public void recordNetworkEventFor(Level level, String method, String url, String statusCode) {
-    telemetryEventTracker.recordNetworkEventFor(level, getSource(), method, url, statusCode);
+    StringUrlSanitizer sanitizer = this.telemetryUrlSanitizer;
+    String sanitizedUrl = url != null ? sanitizer.sanitize(url) : null;
+    telemetryEventTracker.recordNetworkEventFor(level, getSource(), method, sanitizedUrl,
+        statusCode);
   }
 
   /**
@@ -123,9 +145,22 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
       this.config = config;
       configureTruncation(config);
       processAppPackages(config);
+      this.builtInScrubber = new ScrubDataTransformer(
+          config.redactedKeys(), config.urlSanitizer(), config.useDefaultRedactedKeys());
+      this.telemetryUrlSanitizer = urlSanitizerOf(config);
     } finally {
       this.configWriteLock.unlock();
     }
+  }
+
+  /**
+   * {@link CommonConfig#urlSanitizer()} is documented as never {@code null}, but it is a default
+   * method a third-party implementation can override, so fall back the same way
+   * {@link ScrubDataTransformer} does.
+   */
+  private static StringUrlSanitizer urlSanitizerOf(CommonConfig config) {
+    StringUrlSanitizer sanitizer = config.urlSanitizer();
+    return sanitizer != null ? sanitizer : DefaultUrlSanitizer.INSTANCE;
   }
 
   private void configureTruncation(C config) {
@@ -250,10 +285,12 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
   protected RESULT process(ThrowableWrapper error, Map<String, Object> custom, String description,
                            Level level, boolean isUncaught) {
     C config;
+    ScrubDataTransformer scrubber;
 
     this.configReadLock.lock();
     try {
       config = this.config;
+      scrubber = this.builtInScrubber;
     } finally {
       this.configReadLock.unlock();
     }
@@ -279,6 +316,10 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
       LOGGER.debug("Transforming the data.");
       data = config.transformer().transform(data);
     }
+
+    // Built-in scrubbing always runs after the user transformer
+    LOGGER.debug("Applying built-in scrubber.");
+    data = scrubber.transform(data);
 
     // Append if needed uuid or fingerprint data.
     if (config.uuidGenerator() != null || config.fingerPrintGenerator() != null) {

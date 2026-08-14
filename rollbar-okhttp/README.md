@@ -93,3 +93,14 @@ OkHttpClient client = new OkHttpClient.Builder()
 ```
 
 When using a custom sanitizer, you are responsible for ensuring that sensitive query parameters are removed before the URL reaches Rollbar.
+
+To keep the interceptor and the notifier redacting identically, share the sanitizer from your Rollbar config:
+
+```java
+OkHttpClient client = new OkHttpClient.Builder()
+    .addInterceptor(RollbarOkHttpInterceptor.withSharedUrlSanitizer(
+        recorder, config.urlSanitizer()))
+    .build();
+```
+
+See [SCRUBBING.md](../SCRUBBING.md) for the notifier's scrubbing behaviour.
