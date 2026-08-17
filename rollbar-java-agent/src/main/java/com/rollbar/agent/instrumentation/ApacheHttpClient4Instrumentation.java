@@ -5,9 +5,6 @@ import java.lang.instrument.Instrumentation;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.matcher.ElementMatchers;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
 
 /**
  * Installs ByteBuddy advice on Apache HttpClient 4.x to capture network errors.
@@ -63,8 +60,78 @@ public final class ApacheHttpClient4Instrumentation {
   }
 
   /**
-   * Apache HC 4.x runs in the application classloader, so we can reference Rollbar classes
-   * directly without the TCCL reflection bridge.
+   * Records a 4xx/5xx HC 4.x response as telemetry; other statuses are ignored. Called by
+   * {@link DoExecuteAdvice}, which cannot name {@code org.apache.http} types itself.
+   *
+   * <p>Members are read through the public {@code org.apache.http} interfaces rather than the
+   * concrete class of each object, because HC 4.x hands back package-private implementations —
+   * {@code doExecute} returns {@code org.apache.http.impl.execchain.HttpResponseProxy} — and a
+   * {@link java.lang.reflect.Method} looked up on such a class cannot be invoked. The reflection
+   * runs once per request, which is immaterial next to the HTTP call it describes.
+   *
+   * @param target the request target the client dispatched to, or null
+   * @param request the executed request
+   * @param response the response returned by {@code doExecute}
+   */
+  public static void recordResponse(Object target, Object request, Object response) {
+    try {
+      Object statusLine = invokeVia("org.apache.http.HttpResponse", response, "getStatusLine");
+      if (statusLine == null) {
+        return;
+      }
+      int statusCode =
+          (Integer) invokeVia("org.apache.http.StatusLine", statusLine, "getStatusCode");
+      if (statusCode < 400) {
+        return;
+      }
+      Object requestLine = invokeVia("org.apache.http.HttpRequest", request, "getRequestLine");
+      if (requestLine == null) {
+        return;
+      }
+      String method = (String) invokeVia("org.apache.http.RequestLine", requestLine, "getMethod");
+      String requestUri = (String) invokeVia("org.apache.http.RequestLine", requestLine, "getUri");
+      // The host-based overloads carry the target separately from a request whose URI may be
+      // just a path, so rejoin the two rather than reading the request URI alone.
+      String base = target != null
+          ? (String) invokeVia("org.apache.http.HttpHost", target, "toURI") : null;
+      NetworkEventBridge.recordNetworkEvent(
+          response,
+          method,
+          NetworkEventBridge.composeUrl(base, requestUri),
+          String.valueOf(statusCode)
+      );
+    } catch (Throwable ignored) {
+      // Telemetry must never disrupt the instrumented request
+    }
+  }
+
+  /**
+   * Invokes {@code methodName} on {@code receiver} through the named public API type, resolved from
+   * the receiver's own classloader — the one that loaded HC 4.x, which the agent's classloader may
+   * not be able to see.
+   */
+  private static Object invokeVia(String apiTypeName, Object receiver, String methodName)
+      throws ReflectiveOperationException {
+    ClassLoader classLoader = receiver.getClass().getClassLoader();
+    Class<?> apiType = Class.forName(apiTypeName, false,
+        classLoader != null ? classLoader : ClassLoader.getSystemClassLoader());
+    return apiType.getMethod(methodName).invoke(receiver);
+  }
+
+  /**
+   * Apache HC 4.x runs in the application classloader, so the advice body can reference Rollbar
+   * classes directly without the TCCL reflection bridge.
+   *
+   * <p>The advice signature, however, must not name {@code org.apache.http} types.
+   * {@code Advice.to(DoExecuteAdvice.class)} resolves this method's parameter and return types via
+   * {@link Class#getDeclaredMethods()}, in the classloader that loaded the advice class — the
+   * agent's, which under {@code -javaagent} is the system classloader. Wherever HC 4.x is loaded by
+   * a child classloader the agent cannot see (Spring Boot executable jars, per-WAR container
+   * classloaders, OSGi bundles), that lookup throws {@link NoClassDefFoundError} inside the
+   * transformer; the AgentBuilder reports it and moves on, and HC 4.x is silently never
+   * instrumented. So everything the advice touches is typed {@link Object} and read reflectively in
+   * {@link ApacheHttpClient4Instrumentation#recordResponse}, which runs after the weave and can
+   * resolve those types from the client's own classloader.
    *
    * <p>String concatenation in the advice body must use {@link String#concat} or
    * {@link StringBuilder} rather than the {@code +} operator. Apache HC 4.x jars are compiled at
@@ -84,9 +151,9 @@ public final class ApacheHttpClient4Instrumentation {
      */
     @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void onExit(
-        @Advice.Argument(0) HttpHost target,
-        @Advice.Argument(1) HttpRequest request,
-        @Advice.Return HttpResponse response,
+        @Advice.Argument(0) Object target,
+        @Advice.Argument(1) Object request,
+        @Advice.Return Object response,
         @Advice.Thrown Throwable thrown
     ) {
       try {
@@ -100,20 +167,7 @@ public final class ApacheHttpClient4Instrumentation {
         }
 
         if (response != null && request != null) {
-          int statusCode = response.getStatusLine().getStatusCode();
-          if (statusCode >= 400) {
-            // The host-based overloads carry the target separately from a request whose URI may be
-            // just a path, so rejoin the two rather than reading the request URI alone.
-            String base = target != null ? target.toURI() : null;
-            String requestUri = request.getRequestLine() != null
-                ? request.getRequestLine().getUri() : null;
-            NetworkEventBridge.recordNetworkEvent(
-                response,
-                request.getRequestLine().getMethod(),
-                NetworkEventBridge.composeUrl(base, requestUri),
-                String.valueOf(statusCode)
-            );
-          }
+          ApacheHttpClient4Instrumentation.recordResponse(target, request, response);
         }
       } catch (Throwable ignored) {
         // Advice must never throw

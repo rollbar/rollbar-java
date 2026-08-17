@@ -16,6 +16,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 
@@ -161,5 +162,35 @@ public class ApacheHttpClient5InstrumentationTest {
     assertTrue(url.contains("localhost"), "URL should include host: " + url);
     assertTrue(url.contains("/path"), "URL should include path: " + url);
     assertFalse(url.contains("secret"), "URL should not contain query params: " + url);
+  }
+
+  /**
+   * ByteBuddy resolves an advice method's parameter and return types in the classloader that loaded
+   * the advice class — the agent's. Naming an {@code org.apache.hc} type here throws
+   * NoClassDefFoundError at weave time wherever HC 5.x lives in a classloader the agent cannot see
+   * (Spring Boot executable jars, per-WAR container classloaders, OSGi), silently disabling this
+   * instrumentation. A flat test classpath cannot reproduce that, so pin the signature instead.
+   */
+  @Test
+  public void adviceSignature_namesNoApacheTypes() {
+    for (Method method
+        : ApacheHttpClient5Instrumentation.DoExecuteAdvice.class.getDeclaredMethods()) {
+      if (method.isSynthetic()) {
+        continue; // e.g. JaCoCo's $jacocoInit(), which ByteBuddy never resolves as advice
+      }
+      for (Class<?> parameterType : method.getParameterTypes()) {
+        assertTrue(isAgentVisible(parameterType),
+            "advice parameter type must be resolvable from the agent's classloader: "
+                + parameterType.getName());
+      }
+      assertTrue(isAgentVisible(method.getReturnType()),
+          "advice return type must be resolvable from the agent's classloader: "
+              + method.getReturnType().getName());
+    }
+  }
+
+  private static boolean isAgentVisible(Class<?> type) {
+    String name = type.getName();
+    return type.isPrimitive() || name.startsWith("java.") || name.startsWith("com.rollbar.");
   }
 }
