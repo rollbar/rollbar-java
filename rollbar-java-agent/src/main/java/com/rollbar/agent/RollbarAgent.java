@@ -12,6 +12,7 @@ import java.lang.instrument.Instrumentation;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.utility.JavaModule;
 
@@ -38,12 +39,26 @@ public class RollbarAgent {
   }
 
   private static void installInstrumentation(Instrumentation inst) {
-    // Override ByteBuddy's default which ignores all java.* and javax.* classes,
-    // so we can instrument JDK HTTP clients (HttpURLConnection, HttpClient).
-    // We still ignore ByteBuddy's own classes to avoid instrumentation loops.
+    // Override ByteBuddy's default ignore matcher, which excludes everything loaded by the
+    // bootstrap and extension classloaders, so we can instrument the JDK HTTP clients
+    // (HttpURLConnection, HttpClient) that live there.
+    //
+    // ignore() replaces that default rather than adding to it, so the rest of the default has to
+    // be restored by hand. Only the classloader exclusion is deliberately dropped:
+    //   - net.bytebuddy.*/com.rollbar.agent.shaded.* — avoids instrumentation loops.
+    //   - sun.reflect.*/jdk.internal.reflect.* — the reflection machinery an advice body itself
+    //     runs through.
+    //   - isSynthetic() — this matcher is the pre-gate on *every* class load in the JVM. Without
+    //     it, every lambda and dynamic proxy the application ever generates is handed to all four
+    //     type matchers below, two of which run the hasSuperType() hierarchy walk their own
+    //     comments call relatively costly. None of them can ever match a synthetic class, so that
+    //     work is pure overhead — paid application-wide, for the life of the process.
     AgentBuilder builder = new AgentBuilder.Default()
-        .ignore(ElementMatchers.nameStartsWith("net.bytebuddy.")
-            .or(ElementMatchers.nameStartsWith("com.rollbar.agent.shaded.")))
+        .ignore(ElementMatchers.<TypeDescription>nameStartsWith("net.bytebuddy.")
+            .or(ElementMatchers.nameStartsWith("com.rollbar.agent.shaded."))
+            .or(ElementMatchers.nameStartsWith("sun.reflect."))
+            .or(ElementMatchers.nameStartsWith("jdk.internal.reflect."))
+            .or(ElementMatchers.isSynthetic()))
         .with(new ErrorReportingListener())
         .with(AgentBuilder.InitializationStrategy.NoOp.INSTANCE)
         .with(AgentBuilder.TypeStrategy.Default.REDEFINE);
