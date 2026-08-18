@@ -141,8 +141,13 @@ public final class HttpUrlConnectionInstrumentation {
     /**
      * Fires after {@code getResponseCode()} returns or throws, recording 4xx/5xx as telemetry.
      *
-     * <p>Uses the connection instance as a deduplication key since {@code getResponseCode()} is
-     * called re-entrantly up to 3 times per request internally.
+     * <p>Uses the connection instance as a deduplication key (on both branches) since
+     * {@code getResponseCode()} is called re-entrantly up to 3 times per request internally.
+     * Keying the error branch on the {@code Throwable} instead does not deduplicate: a
+     * connection-level failure (refused, DNS, TLS, connect timeout) leaves {@code responseCode} at
+     * -1, so the JDK retries {@code getInputStream()} internally and constructs a <em>fresh</em>
+     * exception object per attempt. The identity set then sees several distinct objects and lets
+     * each through, recording one "Network error" event per retry for a single failed request.
      */
     @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void onExit(
@@ -159,7 +164,7 @@ public final class HttpUrlConnectionInstrumentation {
 
         if (thrown != null) {
           Boolean recorded = (Boolean) bridge
-              .getMethod("markAsRecorded", Object.class).invoke(null, thrown);
+              .getMethod("markAsRecorded", Object.class).invoke(null, connection);
           if (recorded) {
             String msg = thrown.getMessage() != null
                 ? thrown.getMessage() : thrown.getClass().getName();

@@ -189,6 +189,38 @@ public class HttpUrlConnectionInstrumentationTest {
         "error event should carry a network-error message");
   }
 
+  @Test
+  public void getResponseCode_connectionRefused_recordsSingleError() throws IOException {
+    // The other entry point into the same failure. Deduplicating on the thrown exception recorded
+    // three events here: responseCode stays -1, so the JDK retries getInputStream() internally and
+    // builds a fresh exception object per attempt, which an identity-keyed set cannot collapse.
+    // The connection instance is the one identity that is stable across those retries.
+    int closedPort;
+    try (ServerSocket socket = new ServerSocket(0)) {
+      closedPort = socket.getLocalPort();
+    } // socket closed here → connections to closedPort are refused
+
+    HttpURLConnection conn = (HttpURLConnection) new URL(
+        "http://127.0.0.1:" + closedPort + "/x").openConnection();
+    conn.setConnectTimeout(1000);
+    conn.setReadTimeout(1000);
+    try {
+      conn.getResponseCode();
+      fail("expected connection to be refused");
+    } catch (IOException expected) {
+      // expected: nothing is listening on the port
+    }
+    conn.disconnect();
+
+    List<TelemetryEvent> events = AgentTelemetryStore.getInstance().getAll();
+    assertEquals(1, events.size(), "connection failure should record exactly one event");
+    Map<String, Object> json = events.get(0).asJson();
+    assertEquals("manual", json.get("type"));
+    Map<?, ?> body = (Map<?, ?>) json.get("body");
+    assertTrue(body.get("message").toString().contains("Network error"),
+        "error event should carry a network-error message");
+  }
+
   private void makeRequest(String method, String path) throws IOException {
     HttpURLConnection conn = (HttpURLConnection) new URL(server.baseUrl() + path).openConnection();
     conn.setRequestMethod(method);
