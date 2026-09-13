@@ -14,6 +14,7 @@ import com.rollbar.jvmti.CacheFrame;
 import com.rollbar.jvmti.LocalVariable;
 import com.rollbar.jvmti.ThrowableCache;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
@@ -159,6 +160,57 @@ public class BodyFactoryFrameAlignmentTest {
         appLocals == null || appLocals.isEmpty());
   }
 
+  /**
+   * A stack with a constructor frame in it. The agent reflects {@code <init>} through
+   * {@code ToReflectedMethod}, which hands back a {@code Constructor}, and
+   * {@code Constructor.getName()} is the declaring class name - it can never equal the
+   * {@code "<init>"} that the stack trace element reports. A name-based resync would take that
+   * mismatch as a miss, walk {@code j} off the front of the array and drop the locals of every
+   * frame above the constructor.
+   *
+   * <p>A {@code Constructor} cannot be placed in {@code CacheFrame.method} from Java -
+   * {@code Field.set} type checks what JNI does not - so the mismatch is reproduced here with a
+   * reflected method whose name simply differs from the element's. The alignment must not depend
+   * on names at all when the arrays are the same length.
+   */
+  @Test
+  public void shouldKeepLocalsAboveAConstructorFrame() throws Exception {
+    // Stack, top first: the throwing app method, the constructor that called it, the entry point.
+    StackTraceElement[] elements = {
+        new StackTraceElement(APP_CLASS, "invoke", "Service.java", 42),
+        new StackTraceElement(APP_CLASS, "<init>", "Service.java", 20),
+        new StackTraceElement(ENTRY_CLASS, "entryPoint", "Main.java", 7),
+    };
+
+    Method appInvoke = App.class.getDeclaredMethod("invoke");
+    Method entryPoint = App.class.getDeclaredMethod("entryPoint");
+
+    CacheFrame[] cached = {
+        new CacheFrame(appInvoke, new LocalVariable[] {new LocalVariable("appMarker", 777)}),
+        // Stands in for the Constructor the agent stores: a name that cannot match "<init>".
+        new CacheFrame(entryPoint, new LocalVariable[0]),
+        new CacheFrame(entryPoint, new LocalVariable[0]),
+    };
+
+    List<Frame> frames = framesFor(elements, cached);
+
+    assertThat(localsOf(frames, APP_CLASS, "invoke"), hasEntry("appMarker", (Object) 777));
+  }
+
+  /**
+   * The fallback resync, used only when the cache does not span the whole stack, must report
+   * {@code "<init>"} for a constructor so it can still match the stack trace element.
+   */
+  @Test
+  public void shouldReportInitAsTheMethodNameOfAConstructor() throws Exception {
+    Constructor<App> appConstructor = App.class.getDeclaredConstructor();
+
+    assertThat(BodyFactory.methodNameOf(appConstructor), is(equalTo("<init>")));
+    assertThat(BodyFactory.methodNameOf(App.class.getDeclaredMethod("invoke")),
+        is(equalTo("invoke")));
+    assertThat(BodyFactory.methodNameOf(null), is(equalTo("")));
+  }
+
   @Test
   public void shouldProduceFramesWhenNothingIsCached() {
     StackTraceElement[] elements = {
@@ -197,5 +249,15 @@ public class BodyFactoryFrameAlignmentTest {
       }
     }
     throw new AssertionError("no frame for " + className);
+  }
+
+  private static Map<String, Object> localsOf(List<Frame> frames, String className,
+      String methodName) {
+    for (Frame frame : frames) {
+      if (className.equals(frame.getClassName()) && methodName.equals(frame.getMethod())) {
+        return frame.getLocals();
+      }
+    }
+    throw new AssertionError("no frame for " + className + "." + methodName);
   }
 }
