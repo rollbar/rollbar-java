@@ -32,6 +32,10 @@ impl JniEnv {
         }
     }
 
+    /// `arg` is forwarded to a C-variadic function, so it must already be promoted to the
+    /// type the callee reads: `c_double` for a `jfloat`, `c_int` for anything narrower than
+    /// an int. rustc's E0617 only fires on a concrete argument type, so a generic `T` slips
+    /// past it and the mismatch shows up as garbage values at runtime, never as an error.
     pub fn call_static_object_method<T>(
         &mut self,
         class: ::jvmti::jclass,

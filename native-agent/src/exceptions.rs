@@ -246,14 +246,34 @@ fn make_local_variable(
     entry: &jvmtiLocalVariableEntry,
     index: jint,
 ) -> Result<()> {
+    // JVMTI defines a local's valid range as half-open: [start_location, start_location +
+    // length). At the end offset the slot may already have been reused for another variable,
+    // so reading it yields either an unrelated value or a JVMTI error.
     let in_scope = location >= entry.start_location
-        && location <= entry.start_location + i64::from(entry.length);
+        && location < entry.start_location + i64::from(entry.length);
 
     // Building the name string only matters for slots we actually emit.
     let local = if in_scope {
-        let name = jni_env.new_string_utf(entry.name)?;
-        let value = get_local_value(jvmti_env, jni_env, capture, thread, depth, entry)?;
-        jni_env.new_object_StringL(capture.local_variable, capture.local_variable_ctor, name, value)?
+        // A slot that cannot be read is dropped on its own. Propagating would abort the whole
+        // capture, so a single unreadable slot would cost every frame on the stack its locals.
+        match get_local_value(jvmti_env, jni_env, capture, thread, depth, entry) {
+            Ok(value) => {
+                let name = jni_env.new_string_utf(entry.name)?;
+                jni_env.new_object_StringL(
+                    capture.local_variable,
+                    capture.local_variable_ctor,
+                    name,
+                    value,
+                )?
+            }
+            Err(e) => {
+                debug!("skipping local variable in slot {}: {}", entry.slot, e);
+                // The failing paths clear the pending exception themselves; this is belt and
+                // braces, because leaving one pending would break the next JNI call.
+                jni_env.clear_pending_exception();
+                ptr::null_mut()
+            }
+        }
     } else {
         ptr::null_mut()
     };
@@ -314,7 +334,15 @@ fn get_local_value(
         b'F' => {
             let mut val: jfloat = 0.0;
             jvmti_env.get_local_float(thread, depth, entry.slot, &mut val)?;
-            box_value(jni_env, &capture.float_box, val)
+            // C varargs promote float to double, and HotSpot's argument pusher reads a
+            // jdouble for an F parameter. rustc's E0617 cannot catch this because the value
+            // reaches the variadic call through a generic; passing the jfloat unpromoted
+            // makes the JVM read 8 bytes where 4 were written.
+            box_value(
+                jni_env,
+                &capture.float_box,
+                val as ::std::os::raw::c_double,
+            )
         }
         b'D' => {
             let mut val: jdouble = 0.0;
