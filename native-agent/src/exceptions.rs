@@ -76,9 +76,10 @@ pub fn inner_callback(
 
     let capture = cache::capture(&mut jni_env, core)?;
 
-    // The whole stack is captured. BodyFactory.frames() walks the CacheFrame[] and the
-    // StackTraceElement[] together from the bottom, resyncing by method name, so a
-    // subset taken from the top would align against the wrong region of the stack.
+    // The whole stack is captured. BodyFactory.frames() aligns the CacheFrame[] against the
+    // StackTraceElement[] positionally, which it can only do while the two arrays have the
+    // same length. A subset taken from the top would drop it into its name-based fallback
+    // resync, which aligns against the wrong region of the stack.
     let start_depth = 0;
     let frames =
         build_stack_trace_frames(jvmti_env, jni_env, capture, thread, start_depth, num_frames)?;
@@ -121,7 +122,7 @@ fn build_stack_trace_frames(
         jni_env.new_object_array(num_frames_returned, capture.cache_frame, ptr::null_mut())?;
     let mut locals_budget = MAX_LOCALS_FRAMES;
     for i in 0..num_frames_returned {
-        let frame = build_frame(
+        let frame = match build_frame(
             &mut jvmti_env,
             &mut jni_env,
             capture,
@@ -130,7 +131,17 @@ fn build_stack_trace_frames(
             frames[i as usize].method,
             frames[i as usize].location,
             &mut locals_budget,
-        )?;
+        ) {
+            Ok(frame) => frame,
+            Err(e) => {
+                // Leave the element null rather than skip it: the array has to stay 1:1 with
+                // the stack for BodyFactory to align it positionally, and it null-checks every
+                // element. Propagating instead would cost every other frame its locals.
+                debug!("skipping frame at depth {}: {}", start_depth + i, e);
+                jni_env.clear_pending_exception();
+                continue;
+            }
+        };
         jni_env.set_object_array_element(result, i, frame)?;
     }
     Ok(result)
@@ -150,8 +161,7 @@ fn build_frame(
     // Locals are only useful for the user's own code, and only worth a bounded amount
     // of work: each one costs a GetLocalVariableTable plus a JVMTI call and a boxing
     // allocation per slot. A frame object is emitted either way so the array stays 1:1
-    // with the stack -- BodyFactory.frames() aligns it positionally from the bottom
-    // and dereferences every element.
+    // with the stack -- BodyFactory.frames() aligns it positionally from the bottom.
     if *locals_budget <= 0 || !filter::is_app_frame(jvmti_env, method) {
         return make_frame_object(jvmti_env, jni_env, capture, method, ptr::null_mut());
     }
@@ -254,18 +264,10 @@ fn make_local_variable(
 
     // Building the name string only matters for slots we actually emit.
     let local = if in_scope {
-        // A slot that cannot be read is dropped on its own. Propagating would abort the whole
-        // capture, so a single unreadable slot would cost every frame on the stack its locals.
-        match get_local_value(jvmti_env, jni_env, capture, thread, depth, entry) {
-            Ok(value) => {
-                let name = jni_env.new_string_utf(entry.name)?;
-                jni_env.new_object_StringL(
-                    capture.local_variable,
-                    capture.local_variable_ctor,
-                    name,
-                    value,
-                )?
-            }
+        // A slot that cannot be materialised is dropped on its own. Propagating would abort
+        // the whole capture, so one bad slot would cost every frame on the stack its locals.
+        match build_local_variable(jvmti_env, jni_env, capture, thread, depth, entry) {
+            Ok(local) => local,
             Err(e) => {
                 debug!("skipping local variable in slot {}: {}", entry.slot, e);
                 // The failing paths clear the pending exception themselves; this is belt and
@@ -277,8 +279,31 @@ fn make_local_variable(
     } else {
         ptr::null_mut()
     };
+    // The store is the one step still worth propagating: if it fails, this frame's local
+    // array is already unusable and there is nothing left to salvage from it.
     jni_env.set_object_array_element(locals, index, local)?;
     Ok(())
+}
+
+/// Reads one slot and wraps it in a `LocalVariable`. Every step can fail -- the JVMTI read,
+/// and the two JNI allocations that follow it -- and all of them mean the same thing to the
+/// caller: this one slot cannot be emitted.
+fn build_local_variable(
+    jvmti_env: &mut JvmTiEnv,
+    jni_env: &mut JniEnv,
+    capture: &Capture,
+    thread: jthread,
+    depth: jint,
+    entry: &jvmtiLocalVariableEntry,
+) -> Result<jobject> {
+    let value = get_local_value(jvmti_env, jni_env, capture, thread, depth, entry)?;
+    let name = jni_env.new_string_utf(entry.name)?;
+    jni_env.new_object_StringL(
+        capture.local_variable,
+        capture.local_variable_ctor,
+        name,
+        value,
+    )
 }
 
 fn make_frame_object(

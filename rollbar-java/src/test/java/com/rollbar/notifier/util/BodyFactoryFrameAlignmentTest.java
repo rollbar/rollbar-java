@@ -26,12 +26,11 @@ import org.junit.Test;
  * Pins down how {@link BodyFactory} aligns the {@link CacheFrame} array supplied by the
  * native agent against the throwable's own stack trace.
  *
- * <p>The alignment walks both arrays from the bottom and resyncs by method <em>name</em>,
- * which only holds if the cached array spans the same frames as the stack trace. An
- * agent that cached a subset taken from the top of the stack would align against the
- * wrong region: locals would normally vanish, and could be attached to an unrelated
- * frame whenever method names collide - and names like {@code invoke} recur constantly
- * in framework stacks.
+ * <p>A cache that spans the whole stack lines up positionally, and no name matching happens
+ * at all. Only a shorter array - what older agents produced - falls back to walking both
+ * arrays from the bottom and resyncing by method <em>name</em>, which aligns against the
+ * wrong region: locals normally vanish, and can be attached to an unrelated frame whenever
+ * method names collide - and names like {@code invoke} recur constantly in framework stacks.
  *
  * <p>These tests need no native agent; they populate the cache directly.
  */
