@@ -44,9 +44,10 @@ import org.reactivestreams.Subscription;
 
 /**
  * The reactive {@link ConfigBuilder} duplicates the {@code redactedKeys} and {@code urlSanitizer}
- * plumbing of the synchronous one, so it needs its own end-to-end coverage. The scrubbing itself
- * is inherited from {@code RollbarBase} and is exercised in depth by
- * {@code com.rollbar.notifier.ScrubbingITest}.
+ * plumbing of the synchronous one, so it needs its own end-to-end coverage: the ordering against
+ * a user transformer, reconfiguration, the built-in key list and its opt-out, and the telemetry
+ * URL sanitizer. The scrubbing itself is inherited from {@code RollbarBase} and is exercised in
+ * depth by {@code com.rollbar.notifier.ScrubbingITest}.
  */
 public class ScrubbingReactiveITest {
 
@@ -61,12 +62,7 @@ public class ScrubbingReactiveITest {
 
   @Before
   public void setUp() {
-    AsyncSender sender = new AsyncSender.Builder(new ApacheAsyncHttpClient.Builder().build(),
-        getUrl())
-        .accessToken(ACCESS_TOKEN)
-        .build();
-
-    this.configBuilder = withAccessToken(ACCESS_TOKEN).sender(sender);
+    this.configBuilder = withAccessToken(ACCESS_TOKEN).sender(newSender());
 
     stubFor(post(urlEqualTo("/api/1/item/"))
         .willReturn(aResponse()
@@ -119,6 +115,42 @@ public class ScrubbingReactiveITest {
     assertThat(getValue(sentData(), "custom", "password"), is("hunter2"));
   }
 
+  /**
+   * The reactive notifier has no public {@code configure}, so reconfiguring it means rebuilding
+   * the config with {@link ConfigBuilder#withConfig(Config)} and constructing a new notifier. The
+   * rebuilt notifier must scrub by the new key list and stop scrubbing by the old one, which is
+   * the reactive counterpart of
+   * {@code ScrubbingITest.reconfigurationChangesTheRedactedKeys}.
+   */
+  @Test
+  public void reconfigurationChangesTheRedactedKeys() throws Exception {
+    // Keys outside the built-in list, so that only the reconfiguration can explain the change.
+    Config before = configBuilder.redactedKeys(Collections.singletonList("ssn")).build();
+
+    try (Rollbar rollbar = new Rollbar(before)) {
+      await(rollbar.error("boom", customWith("ssn", "123-45-6789", "pin", "1234")));
+    }
+
+    Map<String, Object> beforeCustom = getValue(sentData(0), "custom");
+    assertThat(beforeCustom.get("ssn"), is(SCRUBBED));
+    assertThat(beforeCustom.get("pin"), is("1234"));
+
+    // A sender of its own: withConfig would carry the first one over, and closing the first
+    // notifier has already closed it.
+    Config after = ConfigBuilder.withConfig(before)
+        .sender(newSender())
+        .redactedKeys(Collections.singletonList("pin"))
+        .build();
+
+    try (Rollbar rollbar = new Rollbar(after)) {
+      await(rollbar.error("boom", customWith("ssn", "123-45-6789", "pin", "1234")));
+    }
+
+    Map<String, Object> afterCustom = getValue(sentData(1), "custom");
+    assertThat(afterCustom.get("ssn"), is("123-45-6789"));
+    assertThat(afterCustom.get("pin"), is(SCRUBBED));
+  }
+
   @Test
   public void networkTelemetryUrlsAreSanitized() throws Exception {
     try (Rollbar rollbar = new Rollbar(configBuilder.build())) {
@@ -135,9 +167,17 @@ public class ScrubbingReactiveITest {
 
   // --- helpers ---
 
-  private static Map<String, Object> customWith(String key, String value) {
+  private AsyncSender newSender() {
+    return new AsyncSender.Builder(new ApacheAsyncHttpClient.Builder().build(), getUrl())
+        .accessToken(ACCESS_TOKEN)
+        .build();
+  }
+
+  private static Map<String, Object> customWith(String... kvPairs) {
     Map<String, Object> custom = new HashMap<>();
-    custom.put(key, value);
+    for (int i = 0; i < kvPairs.length; i += 2) {
+      custom.put(kvPairs[i], kvPairs[i + 1]);
+    }
     return custom;
   }
 
@@ -175,13 +215,20 @@ public class ScrubbingReactiveITest {
     assertTrue("Timed out waiting for the payload to be sent", latch.await(20, TimeUnit.SECONDS));
   }
 
+  /**
+   * The parsed {@code data} object of the first payload WireMock received.
+   */
+  private Map<String, Object> sentData() {
+    return sentData(0);
+  }
+
   /** The parsed {@code data} object of the nth payload WireMock received. */
   @SuppressWarnings("unchecked")
-  private Map<String, Object> sentData() {
+  private Map<String, Object> sentData(int index) {
     List<LoggedRequest> requests =
         WireMock.findAll(postRequestedFor(urlEqualTo("/api/1/item/")));
     Map<String, Object> payload =
-        new Gson().fromJson(requests.get(0).getBodyAsString(), Map.class);
+        new Gson().fromJson(requests.get(index).getBodyAsString(), Map.class);
     return getValue(payload, "data");
   }
 

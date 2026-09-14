@@ -6,6 +6,7 @@ import com.rollbar.api.payload.data.body.Body;
 import com.rollbar.api.payload.data.body.BodyContent;
 import com.rollbar.api.payload.data.body.Frame;
 import com.rollbar.api.payload.data.body.Group;
+import com.rollbar.api.payload.data.body.Message;
 import com.rollbar.api.payload.data.body.RollbarThread;
 import com.rollbar.api.payload.data.body.Trace;
 import com.rollbar.api.payload.data.body.TraceChain;
@@ -42,7 +43,8 @@ import java.util.regex.Pattern;
  * {@code ConfigBuilder.redactedKeys(List)}; the two lists are additive. They are matched as
  * case-insensitive regexes against header names, routing parameter keys
  * ({@code Request.params}), query and POST parameter keys, request metadata keys
- * ({@code Request.metadata}), custom data keys, and {@code Frame.locals} keys.
+ * ({@code Request.metadata}), message metadata keys ({@code Message.metadata}), custom data
+ * keys, and {@code Frame.locals} keys.
  * {@code Frame.locals} are scrubbed both in the top-level body content and in the trace chains
  * carried by {@code Body.rollbarThreads}. The built-in defaults can be turned off with
  * {@code ConfigBuilder.useDefaultRedactedKeys(false)}, leaving only the configured keys.
@@ -53,6 +55,12 @@ import java.util.regex.Pattern;
  *
  * <p>The built-in header deny-list above applies to {@code Request.headers} only; every other
  * slot matches on the field keys alone.
+ *
+ * <p>Deliberately not scrubbed: {@code Request.body}, which is an opaque string this notifier
+ * cannot parse; the bodies of {@link com.rollbar.api.payload.data.TelemetryEvent}, of which only
+ * a network event's URL is protected, and that at record time rather than here; and
+ * {@code Data.person} and {@code Data.server}, whose fields are fixed identifiers rather than
+ * caller-supplied keys.
  */
 public final class ScrubDataTransformer implements Transformer {
 
@@ -229,8 +237,30 @@ public final class ScrubDataTransformer implements Transformer {
       return scrubTrace((Trace) content);
     } else if (content instanceof TraceChain) {
       return scrubTraceChain((TraceChain) content);
+    } else if (content instanceof Message) {
+      return scrubMessage((Message) content);
     }
     return content;
+  }
+
+  /**
+   * {@code Message.metadata} is flattened straight onto {@code body.message}, exactly as
+   * {@code Request.metadata} is flattened onto the request object, so it is scrubbed the same way.
+   * Nothing in this notifier populates it - it is reachable through a user {@link Transformer} or
+   * a hand-built {@link Message} - which is also true of {@code Request.metadata}.
+   */
+  private Message scrubMessage(Message message) {
+    Map<String, Object> metadata = message.getMetadata();
+    Map<String, Object> scrubbedMetadata = scrubObjectMap(metadata, fieldKeys, 0);
+    if (scrubbedMetadata == metadata) {
+      return message;
+    }
+    // Both fields are set explicitly rather than left to the copy constructor, which carries the
+    // body over but not the metadata.
+    return new Message.Builder(message)
+        .body(message.getBody())
+        .metadata(scrubbedMetadata)
+        .build();
   }
 
   /**
@@ -564,6 +594,12 @@ public final class ScrubDataTransformer implements Transformer {
       List<String> exact = new ArrayList<>();
       List<Pattern> patterns = new ArrayList<>();
       for (String key : keys) {
+        // A null or blank entry - a stray comma or a blank line in a config file - would become
+        // a needle that every key contains, silently redacting the whole payload. Pattern.compile
+        // behaves the same way, so this is dropped before either path sees it.
+        if (key == null || key.trim().isEmpty()) {
+          continue;
+        }
         String anchored = anchoredLiteral(key);
         if (anchored != null) {
           exact.add(anchored.toLowerCase(Locale.ROOT));

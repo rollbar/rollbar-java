@@ -5,6 +5,7 @@ import com.rollbar.api.payload.data.Request;
 import com.rollbar.api.payload.data.body.Body;
 import com.rollbar.api.payload.data.body.Frame;
 import com.rollbar.api.payload.data.body.Group;
+import com.rollbar.api.payload.data.body.Message;
 import com.rollbar.api.payload.data.body.RollbarThread;
 import com.rollbar.api.payload.data.body.Trace;
 import com.rollbar.api.payload.data.body.TraceChain;
@@ -716,6 +717,79 @@ public class ScrubDataTransformerTest {
     assertNull(result.getBody().getRollbarThreads());
   }
 
+  // --- body.message metadata ---
+
+  @Test
+  public void messageMetadataKeysScrubbed() {
+    // Message.metadata is flattened onto body.message the same way Request.metadata is flattened
+    // onto the request, so it must be redacted the same way.
+    ScrubDataTransformer t = new ScrubDataTransformer(null, NO_OP_SANITIZER);
+
+    Data result = t.transform(dataWithMessage(
+        "boom", objectMap("access_token", "hunter2", "region", "us-east-1")));
+
+    Message message = (Message) result.getBody().getContents();
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, message.getMetadata().get("access_token"));
+    assertEquals("us-east-1", message.getMetadata().get("region"));
+    assertEquals("boom", message.getBody());
+  }
+
+  @Test
+  public void nestedMessageMetadataKeysScrubbed() {
+    ScrubDataTransformer t =
+        new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    Map<String, Object> metadata = new HashMap<>();
+    metadata.put("users", Collections.singletonList(objectMap("password", "hunter2")));
+
+    Data result = t.transform(dataWithMessage("boom", metadata));
+
+    Message message = (Message) result.getBody().getContents();
+    Map<?, ?> user = (Map<?, ?>) ((List<?>) message.getMetadata().get("users")).get(0);
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, user.get("password"));
+  }
+
+  @Test
+  public void messageWithNoMatchReturnsSameDataInstance() {
+    ScrubDataTransformer t = new ScrubDataTransformer(null, NO_OP_SANITIZER);
+    Data data = dataWithMessage("boom", objectMap("region", "us-east-1"));
+    assertSame(data, t.transform(data));
+  }
+
+  @Test
+  public void messageWithNullMetadataNoNpe() {
+    ScrubDataTransformer t = new ScrubDataTransformer(null, NO_OP_SANITIZER);
+    Data data = dataWithMessage("boom", null);
+
+    Data result = t.transform(data);
+
+    assertSame(data, result);
+    assertEquals("boom", ((Message) result.getBody().getContents()).getBody());
+  }
+
+  // --- blank redacted keys ---
+
+  @Test
+  public void blankRedactedKeysAreIgnored() {
+    // An empty entry is a substring of every key, so keeping it would redact the whole payload.
+    ScrubDataTransformer t = new ScrubDataTransformer(
+        Arrays.asList("", "   ", null, "ssn"), NO_OP_SANITIZER, false);
+
+    Data result = t.transform(dataWithCustom(objectMap("ssn", "123-45-6789", "name", "alice")));
+
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, result.getCustom().get("ssn"));
+    assertEquals("alice", result.getCustom().get("name"));
+  }
+
+  @Test
+  public void onlyBlankRedactedKeysLeaveTheMatcherEmpty() {
+    ScrubDataTransformer t = new ScrubDataTransformer(
+        Arrays.asList("", null), NO_OP_SANITIZER, false);
+
+    Data data = dataWithCustom(objectMap("ssn", "123-45-6789"));
+
+    assertSame(data, t.transform(data));
+  }
+
   // --- collections and arrays (P1 fix) ---
 
   @Test
@@ -917,6 +991,14 @@ public class ScrubDataTransformerTest {
       current = ((List<?>) current).get(0);
     }
     return current;
+  }
+
+  private static Data dataWithMessage(String body, Map<String, Object> metadata) {
+    Message message = new Message.Builder().body(body).metadata(metadata).build();
+    return new Data.Builder()
+        .environment("test")
+        .body(new Body.Builder().bodyContent(message).build())
+        .build();
   }
 
   private static Trace traceWithLocals(Map<String, Object> locals) {

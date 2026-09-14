@@ -18,6 +18,8 @@ import com.google.gson.Gson;
 import com.rollbar.api.payload.data.Data;
 import com.rollbar.api.payload.data.Level;
 import com.rollbar.api.payload.data.Request;
+import com.rollbar.api.payload.data.body.Body;
+import com.rollbar.api.payload.data.body.Message;
 import com.rollbar.notifier.config.Config;
 import com.rollbar.notifier.config.ConfigBuilder;
 import com.rollbar.notifier.scrubbing.ScrubDataTransformer;
@@ -158,6 +160,33 @@ public class ScrubbingITest {
     assertThat(getValue(request, "headers", "Accept"), is("text/html"));
     assertThat(request.get("region"), is("us-east-1"));
     assertThat(getValue(sentData(0), "custom", "username"), is("alice"));
+  }
+
+  /**
+   * {@code Message.metadata} is flattened onto {@code body.message}, so a secret parked there
+   * would ship alongside the message text. Nothing in the notifier populates it, so a transformer
+   * is how an application reaches it - the same way {@code Request.metadata} is reached.
+   */
+  @Test
+  public void messageMetadataIsRedacted() {
+    Transformer addMetadata = data -> new Data.Builder(data)
+        .body(new Body.Builder()
+            .bodyContent(new Message.Builder()
+                .body("boom")
+                .metadata(objectMap("access_token", "hunter2", "region", "us-east-1"))
+                .build())
+            .build())
+        .build();
+
+    new Rollbar(configBuilder.transformer(addMetadata).build()).error("boom");
+
+    assertThat(sentPayload(0).contains("hunter2"), is(false));
+
+    Map<String, Object> message = getValue(sentData(0), "body", "message");
+    // The metadata is flattened onto body.message itself, next to the message text.
+    assertThat(message.get("access_token"), is(SCRUBBED));
+    assertThat(message.get("region"), is("us-east-1"));
+    assertThat(message.get("body"), is("boom"));
   }
 
   @Test
