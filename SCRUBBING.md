@@ -19,7 +19,8 @@ applies to it; scrub that JSON yourself before passing it in.
 
 ## What is redacted without any configuration
 
-- **Fields whose key names a secret**, wherever they appear in the payload. The built-in list is
+- **Fields whose key names a secret**, in the payload slots the notifier can parse — the full
+  list of slots is [below](#redacting-your-own-keys). The built-in key list is
 
   | Pattern | Also matches |
   | --- | --- |
@@ -43,8 +44,17 @@ applies to it; scrub that JSON yourself before passing it in.
   `https://user:pass@example.com/orders?token=secret` is reported as
   `https://example.com/orders`.
 
-Not covered: `request.body`, which is a raw string the notifier cannot parse. If you populate it,
-scrub it yourself.
+Not covered — you should scrub these before handing them to the notifier:
+
+- **`request.body`**, a raw string the notifier cannot parse.
+- **Telemetry event bodies.** The `body` map of a telemetry event is sent verbatim. The only
+  protection is the URL of a network event, and that is applied when the event is recorded rather
+  than when the payload is scrubbed, so `recordLogEventFor`, `recordManualEventFor` and
+  `recordNavigationEventFor` ship whatever message you give them. This matters most on Android,
+  where the logcat capture records raw log lines from the whole app UID — third-party libraries
+  included.
+- **`data.person` and `data.server`**, whose fields are sent exactly as your `person` and
+  `server` providers supply them.
 
 ## Redacting your own keys
 
@@ -58,9 +68,15 @@ Config config = ConfigBuilder.withAccessToken(ACCESS_TOKEN)
 ```
 
 They are matched against the keys of: request headers, routing parameters (`request.params`),
-GET and POST parameters, `request.metadata`, the raw `request.query_string`, custom data, and
-`Frame.locals` — including the copies carried by `body.threads` when JVMTI locals capture is
-enabled. Matching values are replaced with `***`.
+GET and POST parameters, `request.metadata`, the raw `request.query_string`, the metadata of a
+`Message` body (`body.message`), custom data, and `Frame.locals` — including the copies carried
+by `body.threads` when JVMTI locals capture is enabled. Matching values are replaced with `***`.
+
+Keys outside that set are left alone; see [what is not covered](#what-is-redacted-without-any-configuration)
+above.
+
+Empty and whitespace-only entries are ignored, so a stray blank line or trailing comma in a
+config file cannot turn into a pattern that matches every key.
 
 Keys that contain no regex syntax — plain names such as `ssn` or `x-tenant-secret`, and anchored
 names such as `^pin$` — are matched without running the regex engine. This is an internal
