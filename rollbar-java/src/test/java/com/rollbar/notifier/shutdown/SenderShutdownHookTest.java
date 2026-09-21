@@ -104,7 +104,7 @@ public class SenderShutdownHookTest {
     final Sender replacement = mock(Sender.class);
     final AtomicBoolean replaced = new AtomicBoolean(false);
 
-    Provider<Sender> provider = () -> replaced.get() ? replacement : null;
+    Provider<Sender> provider = () -> replaced.get() ? replacement : original;
     Thread hook = new SenderShutdownHook(provider, TIMEOUT);
 
     replaced.set(true);
