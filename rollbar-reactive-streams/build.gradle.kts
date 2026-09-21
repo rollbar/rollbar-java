@@ -19,7 +19,7 @@ dependencies {
     testImplementation("org.apache.commons:commons-lang3:3.12.0")
     testImplementation("com.google.code.gson:gson:2.13.2")
 
-    testImplementation(platform("io.projectreactor:reactor-bom:2020.0.6"))
+    testImplementation(platform("io.projectreactor:reactor-bom:2025.0.4"))
     testImplementation("io.projectreactor:reactor-core")
 
     // Reuse some of the tests since we're providing compatible implementations
