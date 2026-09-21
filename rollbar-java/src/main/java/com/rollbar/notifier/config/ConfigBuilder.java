@@ -33,6 +33,17 @@ import java.util.Map;
  */
 public class ConfigBuilder {
 
+  /**
+   * Whether a JVM shutdown hook that flushes buffered payloads is registered by default.
+   */
+  public static final boolean DEFAULT_FLUSH_ON_SHUTDOWN = true;
+
+  /**
+   * The default hard bound, in milliseconds, on the shutdown flush. Kept short because it delays
+   * JVM exit, and the flush only has to drain what the background sender has not sent yet.
+   */
+  public static final long DEFAULT_SHUTDOWN_TIMEOUT_MILLIS = 2000L;
+
   protected String accessToken;
 
   protected String endpoint;
@@ -89,6 +100,10 @@ public class ConfigBuilder {
 
   protected boolean compressPayload;
 
+  protected boolean flushOnShutdown;
+
+  protected long shutdownTimeoutMillis;
+
   private int maximumTelemetryData =
       RollbarTelemetryEventTracker.MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS;
 
@@ -104,6 +119,8 @@ public class ConfigBuilder {
     this.handleUncaughtErrors = true;
     this.enabled = true;
     this.compressPayload = true;
+    this.flushOnShutdown = DEFAULT_FLUSH_ON_SHUTDOWN;
+    this.shutdownTimeoutMillis = DEFAULT_SHUTDOWN_TIMEOUT_MILLIS;
     this.defaultLevels = new DefaultLevels();
   }
 
@@ -140,6 +157,8 @@ public class ConfigBuilder {
     this.defaultLevels = new DefaultLevels(config);
     this.truncateLargePayloads = config.truncateLargePayloads();
     this.compressPayload = config.compressPayload();
+    this.flushOnShutdown = config.flushOnShutdown();
+    this.shutdownTimeoutMillis = config.shutdownTimeoutMillis();
     this.maximumTelemetryData = config.maximumTelemetryData();
     this.telemetryEventTracker = config.telemetryEventTracker();
   }
@@ -498,6 +517,50 @@ public class ConfigBuilder {
 
   /**
    * <p>
+   * If set to true (the default), a JVM shutdown hook is registered that flushes any payloads
+   * still buffered in the sender before the process exits.
+   * </p>
+   * <p>
+   * The default sender buffers payloads in memory and drains them on a background daemon thread
+   * every few seconds, so without this hook an occurrence captured shortly before the JVM
+   * terminates is discarded. That covers short-lived processes as well as {@code SIGTERM} during
+   * a rolling deploy or container eviction.
+   * </p>
+   * <p>
+   * Set to false when the application manages the notifier lifecycle itself, for example by
+   * calling {@link com.rollbar.notifier.Rollbar#close(boolean)}, or when a durable queue already
+   * persists payloads across restarts.
+   * </p>
+   *
+   * @param flushOnShutdown true to flush buffered payloads on JVM shutdown.
+   * @return the builder instance.
+   */
+  public ConfigBuilder flushOnShutdown(boolean flushOnShutdown) {
+    this.flushOnShutdown = flushOnShutdown;
+    return this;
+  }
+
+  /**
+   * <p>
+   * The maximum time, in milliseconds, that the shutdown hook will spend flushing buffered
+   * payloads before letting the JVM continue to exit. Default: 2000. Ignored when
+   * {@link #flushOnShutdown(boolean)} is false.
+   * </p>
+   * <p>
+   * This is a hard bound rather than a target, and shutdown proceeds once it elapses even if
+   * payloads remain unsent. Values of zero or less start the flush without waiting for it.
+   * </p>
+   *
+   * @param shutdownTimeoutMillis the shutdown flush timeout in milliseconds.
+   * @return the builder instance.
+   */
+  public ConfigBuilder shutdownTimeoutMillis(long shutdownTimeoutMillis) {
+    this.shutdownTimeoutMillis = shutdownTimeoutMillis;
+    return this;
+  }
+
+  /**
+   * <p>
    * Maximum Telemetry events sent in a payload, only for the default TelemetryEventTracker, if
    * a custom implementation is used this value will be ignored. Default is
    * {@value RollbarTelemetryEventTracker#MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS}.
@@ -620,6 +683,10 @@ public class ConfigBuilder {
 
     private final boolean compressPayload;
 
+    private final boolean flushOnShutdown;
+
+    private final long shutdownTimeoutMillis;
+
     private final int maximumTelemetryData;
 
     private final TelemetryEventTracker telemetryEventTracker;
@@ -657,6 +724,8 @@ public class ConfigBuilder {
       this.defaultLevels = builder.defaultLevels;
       this.truncateLargePayloads = builder.truncateLargePayloads;
       this.compressPayload = builder.compressPayload;
+      this.flushOnShutdown = builder.flushOnShutdown;
+      this.shutdownTimeoutMillis = builder.shutdownTimeoutMillis;
       this.maximumTelemetryData = builder.maximumTelemetryData;
       this.telemetryEventTracker = builder.telemetryEventTracker;
     }
@@ -809,6 +878,16 @@ public class ConfigBuilder {
     @Override
     public boolean compressPayload() {
       return this.compressPayload;
+    }
+
+    @Override
+    public boolean flushOnShutdown() {
+      return this.flushOnShutdown;
+    }
+
+    @Override
+    public long shutdownTimeoutMillis() {
+      return this.shutdownTimeoutMillis;
     }
 
     @Override
