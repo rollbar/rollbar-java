@@ -15,6 +15,8 @@ import com.rollbar.jvmti.ThrowableCache;
 import com.rollbar.notifier.wrapper.RollbarThrowableWrapper;
 import com.rollbar.notifier.wrapper.ThrowableWrapper;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -211,6 +213,13 @@ public class BodyFactory {
   private static List<Frame> frames(ThrowableWrapper throwableWrapper) {
     StackTraceElement[] elements = throwableWrapper.getStackTrace();
     CacheFrame[] cachedFrames = ThrowableCache.get(throwableWrapper.getThrowable());
+
+    // The native agent caches one CacheFrame per stack frame, so the arrays line up
+    // positionally and no name matching is needed. Taking this path also means
+    // getMethod() is never queried for a name, which matters because the agent stores a
+    // Constructor - not a Method - for every <init> frame. See methodNameOf below.
+    boolean aligned = cachedFrames != null && cachedFrames.length == elements.length;
+
     int j = 0;
     if (cachedFrames != null) {
       j = cachedFrames.length - 1;
@@ -221,10 +230,15 @@ public class BodyFactory {
       StackTraceElement element = elements[i];
       Map<String, Object> locals = null;
       if (cachedFrames != null) {
-        while (j >= 0 && !cachedFrames[j].getMethod().getName().equals(element.getMethodName())) {
-          j--;
+        if (!aligned) {
+          // Fallback for caches that do not span the whole stack, as produced by older
+          // agents: resync by method name walking both arrays from the bottom.
+          while (j >= 0 && !methodNameOf(methodOf(cachedFrames[j]))
+              .equals(element.getMethodName())) {
+            j--;
+          }
         }
-        if (j >= 0) {
+        if (j >= 0 && cachedFrames[j] != null) {
           locals = cachedFrames[j].getLocals();
         }
       }
@@ -242,6 +256,30 @@ public class BodyFactory {
     }
 
     return result;
+  }
+
+  private static Object methodOf(CacheFrame cachedFrame) {
+    return cachedFrame == null ? null : cachedFrame.getMethod();
+  }
+
+  /**
+   * The name a {@link StackTraceElement} would report for this frame's method.
+   *
+   * <p>{@code CacheFrame.getMethod()} is declared to return a {@link Method}, but the native
+   * agent fills that field through {@code JNI ToReflectedMethod}, which yields a
+   * {@link Constructor} for every {@code <init>} frame, and JNI does not type check what it
+   * stores. {@code Constructor.getName()} is the declaring class name, never {@code "<init>"},
+   * so a raw {@code getName()} here would never match the stack trace element and would strand
+   * the resync walk.
+   */
+  static String methodNameOf(Object method) {
+    if (method == null) {
+      return "";
+    }
+    if (method instanceof Constructor) {
+      return "<init>";
+    }
+    return ((Method) method).getName();
   }
 
   private static ExceptionInfo info(ThrowableWrapper throwableWrapper, String description) {

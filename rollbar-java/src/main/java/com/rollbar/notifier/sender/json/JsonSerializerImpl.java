@@ -5,8 +5,6 @@ import static java.util.regex.Pattern.compile;
 import com.rollbar.api.json.JsonSerializable;
 import com.rollbar.api.payload.Payload;
 import com.rollbar.notifier.sender.result.Result;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -165,13 +163,49 @@ public class JsonSerializerImpl implements JsonSerializer {
   }
 
   private static void serializeThrowable(StringBuilder builder, Throwable value) {
-    final StringWriter writer = new StringWriter();
-    value.printStackTrace(new PrintWriter(writer));
-    serializeString(builder, value.toString());
+    serializeToString(builder, value);
   }
 
   private static void serializeDefault(StringBuilder builder, Object value) {
-    serializeString(builder, value == null ? "" : value.toString());
+    serializeToString(builder, value);
+  }
+
+  /**
+   * Serializes an arbitrary object via toString(). The value is never null here -
+   * serializeValue handles that case - but toString() itself is application code and
+   * may return null or throw, and neither may be allowed to break the whole payload.
+   * This matters because the JVMTI agent puts captured local variables, i.e. arbitrary
+   * application objects, into the payload.
+   */
+  private static void serializeToString(StringBuilder builder, Object value) {
+    String str;
+    try {
+      str = value.toString();
+    } catch (Exception e) {
+      // Deliberately not catching Error: a StackOverflowError from a recursive
+      // toString() should propagate rather than be silently swallowed here.
+      serializeString(builder, "<toString() threw " + e.getClass().getName() + ">");
+      return;
+    }
+    serializeNullableString(builder, str);
+  }
+
+  /**
+   * Serializes a string in value position, emitting the JSON null literal when it is
+   * null. Not usable for object keys, which must always be quoted - see
+   * {@link #serializeString}.
+   *
+   * <p>The null check lives here rather than inline in {@link #serializeToString}
+   * because {@code Object.toString()} is declared non-null, so static analysis reads a
+   * check on its result as redundant. An overriding implementation can still return
+   * null at runtime, which is exactly the case being handled.
+   */
+  private static void serializeNullableString(StringBuilder builder, String str) {
+    if (str == null) {
+      serializeNull(builder);
+      return;
+    }
+    serializeString(builder, str);
   }
 
   private static void serializeNumber(StringBuilder builder, Number value) {
@@ -222,6 +256,14 @@ public class JsonSerializerImpl implements JsonSerializer {
   // Borrowed from
   // https://github.com/google/gson/blob/59edfc1caf2bb30e30f523f8502f23e8f8edc38e/gson/src/main/java/com/google/gson/stream/JsonWriter.java
   private static void serializeString(StringBuilder builder, String str) {
+    // Emit an empty string rather than the bare null literal: this is also used for
+    // object keys, where an unquoted null would be invalid JSON. Callers that want a
+    // real JSON null for a null value route to serializeNull themselves.
+    if (str == null) {
+      builder.append("\"\"");
+      return;
+    }
+
     builder.append('"');
     int last = 0;
     int length = str.length();

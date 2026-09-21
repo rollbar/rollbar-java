@@ -10,6 +10,12 @@ import java.util.Map;
  * variables for later use.
  */
 public final class CacheFrame {
+  /**
+   * Declared as {@link Method}, but the native agent populates it with {@code JNI
+   * ToReflectedMethod}, which returns a {@link java.lang.reflect.Constructor} for {@code <init>}
+   * frames -- and {@code JNI NewObject} does not type check its arguments. Callers that need the
+   * method name must handle both; {@code Constructor.getName()} is the declaring class name.
+   */
   private Method method;
   private final LocalVariable[] locals;
 

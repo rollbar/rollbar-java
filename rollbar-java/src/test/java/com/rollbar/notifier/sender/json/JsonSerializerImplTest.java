@@ -1,10 +1,12 @@
 package com.rollbar.notifier.sender.json;
 
+import static com.rollbar.notifier.sender.json.JsonTestHelper.assertValidJson;
 import static com.rollbar.notifier.sender.json.JsonTestHelper.fromString;
 import static com.rollbar.notifier.sender.json.JsonTestHelper.getValue;
 import static java.lang.String.format;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 
 import com.rollbar.api.payload.Payload;
@@ -135,6 +137,88 @@ public class JsonSerializerImplTest {
 
     String result = getValue(recovered, "data", "custom", "object");
     assertThat(result, equalTo("Object(\"quoted\")"));
+  }
+
+  @Test
+  public void shouldSerializeObjectWhoseToStringReturnsNullAsJsonNull() {
+    // The JVMTI agent puts captured local variables into the payload, so toString()
+    // here is arbitrary application code. Returning null is a common accident.
+    Object obj = new Object() {
+      @Override
+      public String toString() {
+        return null;
+      }
+    };
+
+    Payload payload = payloadWithCustom("object", obj);
+
+    String serialized = new JsonSerializerImpl().toJson(payload);
+
+    assertValidJson(serialized);
+    Map<String, Object> custom = getValue(fromString(serialized), "data", "custom");
+    assertThat(custom.containsKey("object"), is(true));
+    assertThat(custom.get("object"), is(nullValue()));
+  }
+
+  @Test
+  public void shouldSerializeObjectWhoseToStringThrows() {
+    Object obj = new Object() {
+      @Override
+      public String toString() {
+        throw new IllegalStateException("boom");
+      }
+    };
+
+    Payload payload = payloadWithCustom("object", obj);
+
+    String serialized = new JsonSerializerImpl().toJson(payload);
+
+    assertValidJson(serialized);
+    String result = getValue(fromString(serialized), "data", "custom", "object");
+    assertThat(result, equalTo("<toString() threw java.lang.IllegalStateException>"));
+  }
+
+  @Test
+  public void shouldSerializeThrowableWhoseToStringReturnsNullAsJsonNull() {
+    Throwable t = new Throwable() {
+      @Override
+      public String toString() {
+        return null;
+      }
+    };
+
+    Payload payload = payloadWithCustom("throwable", t);
+
+    String serialized = new JsonSerializerImpl().toJson(payload);
+
+    assertValidJson(serialized);
+    Map<String, Object> custom = getValue(fromString(serialized), "data", "custom");
+    assertThat(custom.containsKey("throwable"), is(true));
+    assertThat(custom.get("throwable"), is(nullValue()));
+  }
+
+  @Test
+  public void shouldSerializeNullMapValueAsJsonNull() {
+    Payload payload = payloadWithCustom("nothing", null);
+
+    String serialized = new JsonSerializerImpl().toJson(payload);
+
+    assertValidJson(serialized);
+    Map<String, Object> custom = getValue(fromString(serialized), "data", "custom");
+    assertThat(custom.containsKey("nothing"), is(true));
+    assertThat(custom.get("nothing"), is(nullValue()));
+  }
+
+  @Test
+  public void shouldSerializeNullMapKeyWithoutProducingInvalidJson() {
+    // HashMap permits a null key, and nothing upstream filters it out.
+    Payload payload = payloadWithCustom(null, "a value");
+
+    String serialized = new JsonSerializerImpl().toJson(payload);
+
+    assertValidJson(serialized);
+    Map<String, Object> custom = getValue(fromString(serialized), "data", "custom");
+    assertThat(custom.get(""), equalTo((Object) "a value"));
   }
 
   private Payload payloadWithCustom(String key, Object value) {

@@ -1,8 +1,8 @@
+use std::ffi::CStr;
 use std::mem::size_of;
-use std::os::raw::{c_uchar, c_void};
+use std::os::raw::{c_char, c_uchar, c_void};
 use std::ptr;
 
-use c_on_exception;
 use errors::*;
 
 macro_rules! jvmtifn (
@@ -23,9 +23,8 @@ macro_rules! jvmtifn (
 
 use jvmti::{
     jclass, jdouble, jfloat, jint, jlong, jmethodID, jobject, jthread, jvmtiCapabilities, jvmtiEnv,
-    jvmtiError_JVMTI_ERROR_NONE, jvmtiEventCallbacks, jvmtiEventMode_JVMTI_ENABLE,
-    jvmtiEvent_JVMTI_EVENT_EXCEPTION, jvmtiFrameInfo, jvmtiLocalVariableEntry, JavaVM, JNI_ERR,
-    JNI_OK, JVMTI_VERSION,
+    jvmtiError_JVMTI_ERROR_NONE, jvmtiEvent, jvmtiEventCallbacks, jvmtiEventMode, jvmtiFrameInfo,
+    jvmtiLocalVariableEntry, JavaVM, JNI_ERR, JNI_OK, JVMTI_VERSION_1_2,
 };
 
 /// JvmTiEnv is a wrapper around the JVMTI environment which is obtained
@@ -47,10 +46,14 @@ impl JvmTiEnv {
         let mut penv: *mut c_void = ptr::null_mut();
         let rc;
         unsafe {
+            // Request 1.2 explicitly rather than the JVMTI_VERSION baked in by bindgen
+            // at build time: that constant tracks the JDK the agent was *compiled*
+            // against, so a JDK 21 build would be rejected with JNI_EVERSION by a
+            // JDK 17 runtime. Nothing here needs anything newer than 1.2.
             rc = (**vm).GetEnv.expect("GetEnv function not found")(
                 vm,
                 &mut penv,
-                JVMTI_VERSION as i32,
+                JVMTI_VERSION_1_2 as i32,
             );
         }
         if rc as u32 != JNI_OK {
@@ -74,29 +77,82 @@ impl JvmTiEnv {
         jvmtifn!(self.jvmti, AddCapabilities, &capabilities)
     }
 
-    pub fn set_exception_handler(&mut self) -> Result<()> {
-        let callbacks = jvmtiEventCallbacks {
-            Exception: Some(c_on_exception),
-            ..Default::default()
-        };
-
-        // This binding is necessary, the type checker can't handle ? here
-        let a: Result<()> = jvmtifn!(
+    /// Registers the whole callback table in one shot. `SetEventCallbacks` replaces
+    /// the entire struct, so every callback the agent will ever use must be passed
+    /// here; delivery is then controlled independently via `set_event_mode`.
+    pub fn set_event_callbacks(&mut self, callbacks: &jvmtiEventCallbacks) -> Result<()> {
+        jvmtifn!(
             self.jvmti,
             SetEventCallbacks,
-            &callbacks,
+            callbacks,
             size_of::<jvmtiEventCallbacks>() as i32
-        );
-        if a.is_err() {
-            return a;
-        }
+        )
+    }
+
+    /// Enables or disables one event globally (all threads).
+    pub fn set_event_mode(&mut self, mode: jvmtiEventMode, event: jvmtiEvent) -> Result<()> {
         jvmtifn!(
             self.jvmti,
             SetEventNotificationMode,
-            jvmtiEventMode_JVMTI_ENABLE,
-            jvmtiEvent_JVMTI_EVENT_EXCEPTION,
+            mode,
+            event,
             ptr::null_mut()
         )
+    }
+
+    /// Compares a class signature without allocating a Rust `String`. This runs for
+    /// every class the VM prepares until the agent arms, so it stays on the cheap path.
+    pub fn class_signature_is(&mut self, klass: jclass, expected: &CStr) -> Result<bool> {
+        let mut sig: *mut c_char = ptr::null_mut();
+        // The macro needs a typed binding; `?` alone cannot infer the error type.
+        let rc: Result<()> = jvmtifn!(
+            self.jvmti,
+            GetClassSignature,
+            klass,
+            &mut sig,
+            ptr::null_mut()
+        );
+        rc?;
+        if sig.is_null() {
+            return Ok(false);
+        }
+        let matches = unsafe { CStr::from_ptr(sig) } == expected;
+        let _ = self.dealloc(sig);
+        Ok(matches)
+    }
+
+    /// Returns a class signature (e.g. `Lcom/foo/Bar;`) as owned bytes.
+    pub fn get_class_signature(&mut self, klass: jclass) -> Result<Vec<u8>> {
+        let mut sig: *mut c_char = ptr::null_mut();
+        let rc: Result<()> = jvmtifn!(
+            self.jvmti,
+            GetClassSignature,
+            klass,
+            &mut sig,
+            ptr::null_mut()
+        );
+        rc?;
+        if sig.is_null() {
+            return Ok(Vec::new());
+        }
+        let owned = unsafe { CStr::from_ptr(sig) }.to_bytes().to_vec();
+        let _ = self.dealloc(sig);
+        Ok(owned)
+    }
+
+    /// The defining loader of `klass`, or null for the bootstrap loader.
+    pub fn get_class_loader(&mut self, klass: jclass) -> Result<jobject> {
+        let mut loader: jobject = ptr::null_mut();
+        let rc: Result<()> = jvmtifn!(self.jvmti, GetClassLoader, klass, &mut loader);
+        rc?;
+        Ok(loader)
+    }
+
+    pub fn get_method_modifiers(&mut self, method: jmethodID) -> Result<jint> {
+        let mut modifiers: jint = 0;
+        let rc: Result<()> = jvmtifn!(self.jvmti, GetMethodModifiers, method, &mut modifiers);
+        rc?;
+        Ok(modifiers)
     }
 
     pub fn get_frame_count(&mut self, thread: jthread) -> Result<jint> {

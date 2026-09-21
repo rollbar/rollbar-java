@@ -1,5 +1,6 @@
 package com.rollbar.jvmti;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -10,7 +11,20 @@ import java.util.WeakHashMap;
  * of an exception which can be queried later by the notifier for enhancing payloads.
  */
 public final class ThrowableCache {
-  private static Set<String> appPackages = new HashSet<>();
+  /**
+   * Copy-on-write so the native agent, which reads this from arbitrary throwing threads, never
+   * observes a partially updated set.
+   */
+  private static volatile Set<String> appPackages = Collections.emptySet();
+
+  /**
+   * Incremented whenever {@link #appPackages} changes. The native agent reads this field
+   * directly via JNI {@code GetStaticIntField} on every exception so it can skip all further
+   * work while it is zero, and refresh its own copy of the prefixes when it changes. Zero means
+   * "no app packages configured", in which case {@link #shouldCacheThrowable} can only return
+   * false. Do not rename or change the type without updating native-agent/src/filter.rs.
+   */
+  static volatile int appPackagesVersion = 0;
 
   private static ThreadLocal<WeakHashMap<Throwable, CacheFrame[]>> cache =
       new ThreadLocal<WeakHashMap<Throwable, CacheFrame[]>>() {
@@ -84,7 +98,23 @@ public final class ThrowableCache {
    *
    * @param newAppPackage a string to add to the set of packages in your app.
    */
-  public static void addAppPackage(String newAppPackage) {
-    appPackages.add(newAppPackage);
+  public static synchronized void addAppPackage(String newAppPackage) {
+    Set<String> updated = new HashSet<>(appPackages);
+    updated.add(newAppPackage);
+    // Publish the set before bumping the version: a reader that sees the new version is then
+    // guaranteed to see the new set.
+    appPackages = Collections.unmodifiableSet(updated);
+    appPackagesVersion++;
+  }
+
+  /**
+   * Snapshot of the configured app packages, read by the native agent so it can apply the same
+   * prefix filter without calling back into Java for every exception.
+   *
+   * @return the currently configured package prefixes.
+   */
+  static String[] appPackagesSnapshot() {
+    Set<String> current = appPackages;
+    return current.toArray(new String[0]);
   }
 }
