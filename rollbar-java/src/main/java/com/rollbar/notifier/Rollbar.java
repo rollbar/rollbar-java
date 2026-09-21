@@ -5,6 +5,9 @@ import com.rollbar.api.payload.data.Level;
 import com.rollbar.notifier.config.Config;
 import com.rollbar.notifier.config.ConfigBuilder;
 import com.rollbar.notifier.config.ConfigProvider;
+import com.rollbar.notifier.provider.Provider;
+import com.rollbar.notifier.sender.Sender;
+import com.rollbar.notifier.shutdown.SenderShutdownHook;
 import com.rollbar.notifier.uncaughtexception.RollbarUncaughtExceptionHandler;
 import com.rollbar.notifier.util.BodyFactory;
 import com.rollbar.notifier.util.ObjectsUtils;
@@ -26,6 +29,10 @@ public class Rollbar extends RollbarBase<Void, Config> {
 
   private static volatile Rollbar notifier;
 
+  private final Object shutdownHookLock = new Object();
+
+  private Thread shutdownHook;
+
   /**
    * Constructor.
    *
@@ -41,7 +48,93 @@ public class Rollbar extends RollbarBase<Void, Config> {
     if (config.handleUncaughtErrors()) {
       this.handleUncaughtErrors();
     }
+    if (config.flushOnShutdown()) {
+      this.registerShutdownHook(config);
+    }
     processAppPackages(config);
+  }
+
+  /**
+   * Registers a JVM shutdown hook that flushes buffered payloads before the process exits.
+   *
+   * <p>
+   * Mirrors {@link #handleUncaughtErrors()} in being driven from the configuration at
+   * construction time, so replacing the configuration later via
+   * {@link #configure(ConfigProvider)} does not add or remove the hook.
+   * </p>
+   */
+  private void registerShutdownHook(Config config) {
+    if (config.sender() == null) {
+      return;
+    }
+
+    Thread hook = new SenderShutdownHook(new CurrentSenderProvider(),
+        config.shutdownTimeoutMillis());
+    try {
+      Runtime.getRuntime().addShutdownHook(hook);
+      synchronized (shutdownHookLock) {
+        this.shutdownHook = hook;
+      }
+      LOGGER.debug("Registered the Rollbar shutdown hook.");
+    } catch (IllegalStateException e) {
+      // The JVM is already shutting down, so there is nothing left to flush later.
+      LOGGER.debug("The JVM is already shutting down, the Rollbar shutdown hook was not "
+          + "registered.");
+    } catch (SecurityException e) {
+      LOGGER.warn("No permission to register the Rollbar shutdown hook. Payloads buffered when "
+          + "the JVM exits will not be sent.", e);
+    }
+  }
+
+  /**
+   * Resolves the sender from the configuration in force when the hook actually runs, so that a
+   * configuration replaced through {@link #configure(ConfigProvider)} after the hook was
+   * registered does not leave a stale sender being flushed.
+   */
+  private class CurrentSenderProvider implements Provider<Sender> {
+    @Override
+    public Sender provide() {
+      configReadLock.lock();
+      try {
+        return config.sender();
+      } finally {
+        configReadLock.unlock();
+      }
+    }
+  }
+
+  /**
+   * The registered shutdown hook, or null if none was registered. Visible for testing.
+   */
+  Thread shutdownHook() {
+    synchronized (shutdownHookLock) {
+      return this.shutdownHook;
+    }
+  }
+
+  /**
+   * Removes the shutdown hook, if one was registered. Called when the notifier is closed
+   * explicitly, both to avoid flushing twice and to let the hook be garbage collected.
+   */
+  private void unregisterShutdownHook() {
+    Thread hook;
+    synchronized (shutdownHookLock) {
+      hook = this.shutdownHook;
+      this.shutdownHook = null;
+    }
+
+    if (hook == null) {
+      return;
+    }
+
+    try {
+      Runtime.getRuntime().removeShutdownHook(hook);
+    } catch (IllegalStateException e) {
+      // Shutdown is already in progress, the hook may be running right now. Nothing to do.
+      LOGGER.debug("The JVM is already shutting down, the Rollbar shutdown hook was not removed.");
+    } catch (SecurityException e) {
+      LOGGER.debug("No permission to remove the Rollbar shutdown hook.");
+    }
   }
 
   /**
@@ -652,6 +745,9 @@ public class Rollbar extends RollbarBase<Void, Config> {
   }
 
   public void close(boolean wait) throws Exception {
+    // Dropped first: the notifier is being shut down explicitly, so the hook would either flush a
+    // sender that is already closed or duplicate the work being done here.
+    unregisterShutdownHook();
     this.config.sender().close(wait);
   }
 
