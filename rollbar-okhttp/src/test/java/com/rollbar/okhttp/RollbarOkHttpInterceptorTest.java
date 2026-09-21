@@ -1,6 +1,8 @@
 package com.rollbar.okhttp;
 
 import com.rollbar.api.payload.data.Level;
+import com.rollbar.api.scrubbing.DefaultUrlSanitizer;
+import com.rollbar.api.scrubbing.StringUrlSanitizer;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -234,6 +236,60 @@ public class RollbarOkHttpInterceptorTest {
 
     assertEquals(500, response.code());
     verify(recorder, never()).recordNetworkEvent(any(), any(), any(), any());
+  }
+
+  /**
+   * {@code DefaultUrlSanitizer.INSTANCE} is what {@code CommonConfig.urlSanitizer()} returns by
+   * default, so passing it here is the shared-sanitizer path a notifier user would configure.
+   * rollbar-okhttp only depends on rollbar-api, so the notifier config is not referenced directly.
+   */
+  @Test
+  public void sharedUrlSanitizer_redactsIdenticallyToTheNotifier() throws IOException {
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    OkHttpClient sharedClient = new OkHttpClient.Builder()
+        .addInterceptor(RollbarOkHttpInterceptor.withSharedUrlSanitizer(
+            recorder, DefaultUrlSanitizer.INSTANCE))
+        .build();
+
+    HttpUrl url = server.url("/charge")
+        .newBuilder()
+        .username("anyUser")
+        .password("anyPassword")
+        .addQueryParameter("token", "abc")
+        .fragment("section")
+        .build();
+
+    Response response = sharedClient.newCall(new Request.Builder().url(url).build()).execute();
+    response.close();
+
+    verify(recorder).recordNetworkEvent(
+        eq(Level.CRITICAL), eq("GET"),
+        eq(DefaultUrlSanitizer.INSTANCE.sanitize(url.toString())),
+        eq("500"));
+  }
+
+  @Test
+  public void sharedUrlSanitizer_appliesACustomSanitizer() throws IOException {
+    server.enqueue(new MockResponse().setResponseCode(500));
+
+    StringUrlSanitizer sanitizer = url -> "shared-sanitized";
+    OkHttpClient sharedClient = new OkHttpClient.Builder()
+        .addInterceptor(RollbarOkHttpInterceptor.withSharedUrlSanitizer(recorder, sanitizer))
+        .build();
+
+    Request request = new Request.Builder().url(server.url("/path?secret=abc")).build();
+    Response response = sharedClient.newCall(request).execute();
+    response.close();
+
+    verify(recorder).recordNetworkEvent(
+        eq(Level.CRITICAL), eq("GET"), eq("shared-sanitized"), eq("500"));
+  }
+
+  @Test
+  public void sharedUrlSanitizer_rejectsANullSanitizer() {
+    assertThrows(NullPointerException.class,
+        () -> RollbarOkHttpInterceptor.withSharedUrlSanitizer(recorder, null));
   }
 
   @Test
