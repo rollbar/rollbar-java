@@ -97,6 +97,27 @@ public class UrlSanitizerTest {
   }
 
   @Test
+  public void unencodedAtSignInUserinfo_fallback_stripsWholeCredential() {
+    // The trailing '%' is a malformed escape, so this takes the fallback path. Stripping through
+    // the *first* '@' would leave "http://ss@example.com/path%" — the tail of the password, in
+    // the URL that ships to Rollbar. The primary path already strips through the last '@'.
+    assertEquals(
+        "http://example.com/path%",
+        UrlSanitizer.sanitize("http://user:pa@ss@example.com/path%")
+    );
+  }
+
+  @Test
+  public void unencodedAtSignInUserinfo_fallback_doesNotReachIntoThePath() {
+    // The last '@' rule stays inside the authority: an '@' in the path must not be treated as the
+    // userinfo delimiter, or the real host is deleted and a path segment promoted to host.
+    assertEquals(
+        "http://example.com/@johndoe/a%",
+        UrlSanitizer.sanitize("http://user:pa@ss@example.com/@johndoe/a%")
+    );
+  }
+
+  @Test
   public void encodedPathIsPreserved() {
     assertEquals(
         "https://example.com/a%20b/c",

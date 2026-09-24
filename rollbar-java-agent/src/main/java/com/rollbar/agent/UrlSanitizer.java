@@ -76,8 +76,11 @@ public final class UrlSanitizer {
           break;
         }
       }
-      int atSign = result.indexOf('@', authorityStart);
-      if (atSign >= 0 && atSign < authorityEnd) {
+      // Last '@' within those bounds wins, matching the primary path above: an unencoded '@' is
+      // illegal inside userinfo, so a second one means malformed credentials. Stopping at the
+      // first one would leave everything between them — the tail of a password — in the URL.
+      int atSign = result.lastIndexOf('@', authorityEnd - 1);
+      if (atSign >= authorityStart) {
         result = result.substring(0, authorityStart) + result.substring(atSign + 1);
       }
     }
