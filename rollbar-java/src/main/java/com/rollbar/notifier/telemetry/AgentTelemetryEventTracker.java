@@ -49,7 +49,6 @@ public class AgentTelemetryEventTracker implements TelemetryEventTracker {
 
   private static final String AGENT_STORE_CLASS = "com.rollbar.agent.AgentTelemetryStore";
   private static final String AGENT_STORE_GET_ALL_METHOD = "getAll";
-  private static final String AGENT_STORE_REGISTER_METHOD = "registerApplication";
 
   private static final String KEY_TYPE = "type";
   private static final String KEY_LEVEL = "level";
@@ -226,7 +225,7 @@ public class AgentTelemetryEventTracker implements TelemetryEventTracker {
    * own loader: {@code -javaagent:} puts the agent there, and a child loader holding the SDK can
    * always reach up to it, while the reverse never works.
    *
-   * <p>Both calls carry this class's own classloader, which is the application's: one agent serves
+   * <p>The call carries this class's own classloader, which is the application's: one agent serves
    * every application in the JVM, and that is what tells the store whose events to hand back. So
    * keep the SDK inside the application — {@code WEB-INF/lib}, not the container's shared
    * {@code lib} — or every deployment answers to the same classloader and to the same events.
@@ -239,24 +238,11 @@ public class AgentTelemetryEventTracker implements TelemetryEventTracker {
     private volatile Method getAll;
     private volatile boolean lookupFailed;
 
-    SystemClassLoaderAgentEventSource() {
-      // Announce this application now, while the Rollbar instance is being built, so the store
-      // knows how many applications share the JVM before anyone reports an error.
-      Method register = resolve(AGENT_STORE_REGISTER_METHOD);
-      if (register != null) {
-        try {
-          register.invoke(null, APPLICATION);
-        } catch (Exception e) {
-          LOGGER.warn("Could not register this application with the Rollbar Java agent", e);
-        }
-      }
-    }
-
     @Override
     @SuppressWarnings("unchecked")
     public List<Map<String, String>> getAll() {
       Method method = getAll;
-      if (method == null) {
+      if (method == null && !lookupFailed) {
         method = resolve(AGENT_STORE_GET_ALL_METHOD);
         getAll = method;
       }

@@ -8,7 +8,6 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.WeakHashMap;
 
 /**
@@ -37,15 +36,16 @@ import java.util.WeakHashMap;
  * WildFly — each with its own SDK, its own access token and its own Rollbar project. The agent is
  * loaded once for all of them, so a single shared buffer would put one application's hostnames,
  * paths and status codes into another's error reports, and let a busy application evict a quiet
- * one's events. Instead each event is filed under the context classloader of the thread that made
- * the HTTP call, which in a servlet container is the deployment's own classloader, and
- * {@link #getAll(ClassLoader)} returns only what the asking application is entitled to see: its
- * own events, and those recorded by classloaders nested inside it.
+ * one's events. Instead each event is filed under the classloader of the application that made the
+ * HTTP call, and {@link #getAll(ClassLoader)} returns only that application's own events and those
+ * recorded by classloaders nested inside it. Nothing is ever handed to a caller on the strength of
+ * being the only one asking: an application the agent has never heard from — one that does not use
+ * {@code AgentTelemetryEventTracker} at all — still has its traffic instrumented, and its events
+ * must not become somebody else's.
  *
- * <p>Events recorded by a classloader <em>above</em> the application — a thread whose context
- * classloader is the container's, such as a {@code ForkJoinPool.commonPool} worker — cannot be
- * attributed to any deployment. They are handed to the application only while it is the single
- * registered one in the JVM, which is the ordinary case of a fat jar or a standalone process.
+ * <p>An event whose application cannot be identified is filed under the classloader that loaded
+ * the agent, where only a caller from that same classloader can see it. That is the plain
+ * {@code java -cp} deployment, whose application really does live there.
  */
 public final class AgentTelemetryStore {
 
@@ -87,13 +87,13 @@ public final class AgentTelemetryStore {
 
   private static final Object LOCK = new Object();
 
+  private static final ClassLoader AGENT_LOADER = AgentTelemetryStore.class.getClassLoader();
+  private static final ClassLoader PLATFORM_LOADER = ClassLoader.getPlatformClassLoader();
+
   // Weak keys: an undeployed application's classloader must stay collectable, and it would not be
   // if the store held it. The buffered values are Strings only, so nothing here points back at a
   // key and keeps its entry alive.
   private static final Map<ClassLoader, Deque<Map<String, String>>> EVENTS = new WeakHashMap<>();
-
-  private static final Set<ClassLoader> APPLICATIONS =
-      Collections.newSetFromMap(new WeakHashMap<ClassLoader, Boolean>());
 
   private static final Comparator<Map<String, String>> BY_TIMESTAMP =
       new Comparator<Map<String, String>>() {
@@ -117,11 +117,29 @@ public final class AgentTelemetryStore {
    * @param statusCode the response status code, as a string.
    */
   public static void recordNetworkEvent(String method, String url, String statusCode) {
+    recordNetworkEvent(currentOrigin(), method, url, statusCode);
+  }
+
+  /**
+   * Records a network telemetry event against an application captured earlier.
+   *
+   * <p>For a response that arrives on a thread of the HTTP client's own — the completion of an
+   * async request — where neither the thread nor the stack still points at the caller. The
+   * instrumentation captures {@link #currentOrigin()} when the request is made and hands it back
+   * here.
+   *
+   * @param origin the application that made the request.
+   * @param method the HTTP verb (e.g. {@code GET}).
+   * @param url the sanitized request URL.
+   * @param statusCode the response status code, as a string.
+   */
+  public static void recordNetworkEvent(ClassLoader origin, String method, String url,
+      String statusCode) {
     Map<String, String> event = newEvent(TYPE_NETWORK);
     putIfPresent(event, BODY_KEY_METHOD, method);
     putIfPresent(event, BODY_KEY_URL, url);
     putIfPresent(event, BODY_KEY_STATUS_CODE, statusCode);
-    add(event);
+    add(event, orSystem(origin));
   }
 
   /**
@@ -130,28 +148,19 @@ public final class AgentTelemetryStore {
    * @param message the failure description.
    */
   public static void recordErrorEvent(String message) {
-    Map<String, String> event = newEvent(TYPE_MANUAL);
-    putIfPresent(event, BODY_KEY_MESSAGE, message);
-    add(event);
+    recordErrorEvent(currentOrigin(), message);
   }
 
   /**
-   * Announces an application that will read events, so the store can tell how many share this JVM.
+   * Records a manual telemetry event against an application captured earlier.
    *
-   * <p>The SDK-side tracker calls this from its constructor, which runs at {@code Rollbar.init}:
-   * every deployment has registered long before anything is reported, so whether an event can be
-   * attributed to one application does not depend on who reports an error first.
-   *
-   * <p>Part of the reflective contract with {@code rollbar-java} — {@code public static}, one
-   * {@link ClassLoader} argument.
-   *
-   * @param application the classloader of the application that will read events; {@code null} is
-   *                    read as the system classloader.
+   * @param origin the application that made the request.
+   * @param message the failure description.
    */
-  public static void registerApplication(ClassLoader application) {
-    synchronized (LOCK) {
-      APPLICATIONS.add(orSystem(application));
-    }
+  public static void recordErrorEvent(ClassLoader origin, String message) {
+    Map<String, String> event = newEvent(TYPE_MANUAL);
+    putIfPresent(event, BODY_KEY_MESSAGE, message);
+    add(event, orSystem(origin));
   }
 
   /**
@@ -169,10 +178,8 @@ public final class AgentTelemetryStore {
     List<Map<String, String>> snapshot = new ArrayList<>();
 
     synchronized (LOCK) {
-      APPLICATIONS.add(requester);
-      boolean unattributedAreMine = APPLICATIONS.size() == 1;
       for (Map.Entry<ClassLoader, Deque<Map<String, String>>> buffer : EVENTS.entrySet()) {
-        if (!visibleTo(buffer.getKey(), requester, unattributedAreMine)) {
+        if (!visibleTo(buffer.getKey(), requester)) {
           continue;
         }
         for (Map<String, String> event : buffer.getValue()) {
@@ -195,16 +202,15 @@ public final class AgentTelemetryStore {
    * @return the events visible to the caller, each an independent copy.
    */
   public static List<Map<String, String>> getAll() {
-    return getAll(contextClassLoader());
+    return getAll(currentOrigin());
   }
 
   /**
-   * Drops every buffered event and every registered application. For tests.
+   * Drops every buffered event. For tests.
    */
   public static void resetForTesting() {
     synchronized (LOCK) {
       EVENTS.clear();
-      APPLICATIONS.clear();
     }
     clock = new SystemClock();
   }
@@ -221,20 +227,12 @@ public final class AgentTelemetryStore {
   /**
    * Whether events recorded under {@code origin} belong to the application {@code requester}.
    *
-   * <p>Downward is safe: a classloader nested inside the application — a JSP or plugin loader — is
-   * still that application. Upward is not: the container's classloader is shared by every
-   * deployment, so events recorded there are attributed to no one unless there is only one
-   * application to attribute them to. Sideways is another deployment, and never visible.
+   * <p>Only downward: a classloader nested inside the application — a JSP or plugin loader — is
+   * still that application. Upward is the container's own classloader, shared by every deployment,
+   * and sideways is another deployment; neither is ever this application's to report.
    */
-  private static boolean visibleTo(ClassLoader origin, ClassLoader requester,
-      boolean unattributedAreMine) {
-    if (origin == requester || isNestedIn(origin, requester)) {
-      return true;
-    }
-    if (isNestedIn(requester, origin)) {
-      return unattributedAreMine;
-    }
-    return false;
+  private static boolean visibleTo(ClassLoader origin, ClassLoader requester) {
+    return origin == requester || isNestedIn(origin, requester);
   }
 
   /**
@@ -264,8 +262,7 @@ public final class AgentTelemetryStore {
     }
   }
 
-  private static void add(Map<String, String> event) {
-    ClassLoader origin = contextClassLoader();
+  private static void add(Map<String, String> event, ClassLoader origin) {
     synchronized (LOCK) {
       Deque<Map<String, String>> buffer = EVENTS.get(origin);
       if (buffer == null) {
@@ -279,11 +276,56 @@ public final class AgentTelemetryStore {
     }
   }
 
-  // The thread that made the HTTP call is the only cheap evidence of which application made it: a
-  // servlet container sets the context classloader to the deployment's own before handing it a
-  // request, and a thread pool an application creates inherits it.
-  private static ClassLoader contextClassLoader() {
-    return orSystem(Thread.currentThread().getContextClassLoader());
+  /**
+   * The application the calling code belongs to.
+   *
+   * <p>Two pieces of evidence, because neither alone is enough. A servlet container sets the
+   * context classloader to the deployment's own before handing it a request, and a thread pool the
+   * application created inherits it — but a {@code ForkJoinPool.commonPool} worker carries the
+   * container's, and a parallel stream or {@code CompletableFuture.supplyAsync} lands there. The
+   * stack says who actually called: the first frame below the JDK and the agent is application
+   * code, whatever thread it runs on.
+   *
+   * <p>When one of the two is nested inside the other, the nested one wins, being the closer of
+   * the two to a single deployment: that is what rescues the call made on a shared pool, where the
+   * thread belongs to the container and the stack to the application. When neither contains the
+   * other — a library loaded beside the application rather than within it — the thread's owner
+   * wins, since a container states thread ownership deliberately and the agent has no business
+   * filing an event under a deployment the thread does not belong to.
+   *
+   * <p>Walking the stack costs more than reading a field, which is why this runs only when an
+   * event is recorded — a 4xx, a 5xx or a connection failure — and never on a successful request.
+   */
+  static ClassLoader currentOrigin() {
+    ClassLoader context = orSystem(Thread.currentThread().getContextClassLoader());
+    ClassLoader caller = callingApplication();
+    if (caller == null || caller == context) {
+      return context;
+    }
+    return isNestedIn(caller, context) ? caller : context;
+  }
+
+  private static ClassLoader callingApplication() {
+    try {
+      return StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
+          .walk(frames -> frames
+              .map(StackWalker.StackFrame::getDeclaringClass)
+              .map(Class::getClassLoader)
+              .filter(AgentTelemetryStore::isApplicationClassLoader)
+              .findFirst()
+              .orElse(null));
+    } catch (Throwable ignored) {
+      // A SecurityManager can refuse the walk, and an agent must never break the call it observes.
+      // The context classloader still answers.
+      return null;
+    }
+  }
+
+  // Everything the JDK and the agent itself are loaded by is infrastructure, not an application.
+  // In a plain `java -cp app.jar` deployment the application is loaded by the agent's own
+  // classloader too, and is correctly left to the context classloader to identify.
+  private static boolean isApplicationClassLoader(ClassLoader loader) {
+    return loader != null && loader != AGENT_LOADER && loader != PLATFORM_LOADER;
   }
 
   private static ClassLoader orSystem(ClassLoader classLoader) {

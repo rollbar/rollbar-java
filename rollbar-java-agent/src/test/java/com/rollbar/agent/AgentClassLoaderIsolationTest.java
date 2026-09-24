@@ -145,6 +145,38 @@ public class AgentClassLoaderIsolationTest {
     }
   }
 
+  @Test
+  public void callOnAThreadOwnedByNoApplication_isStillAttributedToTheCallingApplication()
+      throws Exception {
+    // A ForkJoinPool.commonPool worker carries the container's classloader, not the application's,
+    // so the thread alone cannot say whose call this is — and an event nobody can claim is an
+    // event nobody is shown. The stack still names the caller, which is what keeps telemetry from
+    // quietly disappearing whenever an application calls out from a shared pool.
+    Class<?> store = systemClassLoaderStore();
+    store.getMethod("resetForTesting").invoke(null);
+
+    try (URLClassLoader app = new ApplicationClassLoader(applicationUrls())) {
+      Class<?> applicationCode = app.loadClass(CallingApplication.class.getName());
+      assertEquals(app, applicationCode.getClassLoader(),
+          "the calling class must belong to the application, not to the test");
+
+      ClassLoader previous = Thread.currentThread().getContextClassLoader();
+      Thread.currentThread().setContextClassLoader(ClassLoader.getSystemClassLoader());
+      try {
+        applicationCode.getMethod("makeCall", String.class)
+            .invoke(null, "https://first.internal/charge");
+      } finally {
+        Thread.currentThread().setContextClassLoader(previous);
+      }
+
+      String seen = telemetryOf(newTracker(app)).toString();
+      assertTrue(seen.contains("https://first.internal/charge"),
+          "the application must still be shown the call its own code made: " + seen);
+    } finally {
+      store.getMethod("resetForTesting").invoke(null);
+    }
+  }
+
   private static Class<?> systemClassLoaderStore() throws ClassNotFoundException {
     return ClassLoader.getSystemClassLoader().loadClass(AgentTelemetryStore.class.getName());
   }
@@ -178,6 +210,13 @@ public class AgentClassLoaderIsolationTest {
         codeSourceOf("com.rollbar.api.payload.data.TelemetryEvent"),
         codeSourceOf("org.slf4j.Logger"),
     };
+  }
+
+  /** The SDK, plus this test's own classes, so the application can have its own calling code. */
+  private static URL[] applicationUrls() {
+    List<URL> urls = new ArrayList<>(Arrays.asList(sdkUrls()));
+    urls.add(CallingApplication.class.getProtectionDomain().getCodeSource().getLocation());
+    return urls.toArray(new URL[0]);
   }
 
   private static URL codeSourceOf(String className) {
@@ -243,8 +282,14 @@ public class AgentClassLoaderIsolationTest {
    */
   private static final class ApplicationClassLoader extends URLClassLoader {
 
-    private static final List<String> OWNED_PACKAGES =
-        Arrays.asList("com.rollbar.notifier.", "com.rollbar.api.", "org.slf4j.");
+    private static final List<String> OWNED_PACKAGES = Arrays.asList(
+        "com.rollbar.notifier.",
+        "com.rollbar.api.",
+        "org.slf4j.",
+        // The application's own calling code. Named class by class, because the rest of
+        // com.rollbar.agent is the agent itself and must stay shared with the parent — one store
+        // for the JVM is the whole point.
+        CallingApplication.class.getName());
 
     ApplicationClassLoader(URL[] urls) {
       super(urls, ClassLoader.getSystemClassLoader());

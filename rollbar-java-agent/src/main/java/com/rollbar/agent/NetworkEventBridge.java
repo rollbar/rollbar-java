@@ -90,13 +90,17 @@ public final class NetworkEventBridge {
    */
   public static java.util.function.BiConsumer<Object, Throwable> createAsyncCallback(
       Object request) {
+    // Captured here, on the thread that issued the request: by the time the callback runs, the
+    // HTTP client's own thread carries neither the caller's context classloader nor its stack, so
+    // the application that made the call could no longer be identified.
+    ClassLoader origin = AgentTelemetryStore.currentOrigin();
     return (response, thrown) -> {
       try {
         if (thrown != null) {
           if (markAsRecorded(thrown)) {
             String message = thrown.getMessage() != null
                 ? thrown.getMessage() : thrown.getClass().getName();
-            recordError(message);
+            AgentTelemetryStore.recordErrorEvent(origin, errorMessage(message));
           }
           return;
         }
@@ -107,10 +111,11 @@ public final class NetworkEventBridge {
           Class<?> httpResponseIface = Class.forName("java.net.http.HttpResponse");
           Class<?> httpRequestIface = Class.forName("java.net.http.HttpRequest");
           int statusCode = (Integer) httpResponseIface.getMethod("statusCode").invoke(response);
-          if (statusCode >= 400) {
+          if (statusCode >= 400 && markAsRecorded(response)) {
             Object uri = httpRequestIface.getMethod("uri").invoke(request);
             String method = (String) httpRequestIface.getMethod("method").invoke(request);
-            recordNetworkEvent(response, method, uri.toString(), String.valueOf(statusCode));
+            AgentTelemetryStore.recordNetworkEvent(origin, method,
+                UrlSanitizer.sanitize(uri.toString()), String.valueOf(statusCode));
           }
         }
       } catch (Throwable ignored) {
@@ -174,7 +179,10 @@ public final class NetworkEventBridge {
    * <p>Called when an HTTP request fails with an I/O exception rather than a status code.
    */
   public static void recordError(String message) {
-    AgentTelemetryStore.recordErrorEvent(
-        "Network error: " + (message != null ? message : "unknown"));
+    AgentTelemetryStore.recordErrorEvent(errorMessage(message));
+  }
+
+  private static String errorMessage(String message) {
+    return "Network error: " + (message != null ? message : "unknown");
   }
 }

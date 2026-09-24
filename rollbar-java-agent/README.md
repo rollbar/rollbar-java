@@ -157,23 +157,33 @@ A servlet container — Tomcat, WildFly — runs many deployments in one JVM, ea
 the SDK, its own access token and its own Rollbar project. The agent is attached once for the whole
 JVM, so it keeps **one buffer per application** rather than one for the process.
 
-Each event is filed under the context classloader of the thread that made the HTTP call, which in a
-servlet container is the deployment's own classloader, and each application is handed back only its
-own events and those recorded by classloaders nested inside it (a JSP or plugin loader). One
-deployment's internal hostnames, paths and status codes never reach another's error reports, and a
-busy deployment cannot evict a quiet one's events — the 100-event cap is per application.
+Each event is filed under the classloader of the application that made the HTTP call, and each
+application is handed back only its own events and those recorded by classloaders nested inside it
+(a JSP or plugin loader). One deployment's internal hostnames, paths and status codes never reach
+another's error reports, and a busy deployment cannot evict a quiet one's events — the 100-event cap
+is per application.
 
-Two limits are worth knowing:
+Which application made the call is decided from two pieces of evidence, because neither is enough
+on its own:
 
-- **Calls made on threads that belong to no deployment.** A `ForkJoinPool.commonPool` worker carries
-  the container's classloader, not any application's, so a call made there cannot be attributed.
-  Those events are reported while a single application is registered in the JVM — the ordinary case
-  of a fat jar or a standalone process — and withheld from everyone once several are, since there is
-  no way to tell whose they were. To keep them attributed, hand your async work an executor your
-  application created; its threads inherit your classloader.
-- **Keep `rollbar-java` inside the application** (`WEB-INF/lib`), not in the container's shared
-  `lib`. The classloader that loads the SDK is what identifies the application; one shared copy
-  makes every deployment answer to the same identity.
+- **The thread.** A servlet container sets the context classloader to the deployment's own before
+  handing it a request, and a thread pool the application created inherits it.
+- **The stack.** The first frame below the JDK and the agent is application code, whatever thread it
+  runs on. This is what attributes a call made from a shared pool — a `ForkJoinPool.commonPool`
+  worker carries the container's classloader, and `CompletableFuture.supplyAsync` and parallel
+  streams land there.
+
+When one classloader is nested inside the other, the nested one wins; when neither contains the
+other, the thread's owner does. An event that still cannot be tied to an application is filed under
+the agent's own classloader, where only a caller from there can see it — a plain `java -cp`
+deployment, whose application really does live there. It is never handed to somebody else merely for
+being the only one asking: the JVM's other applications need not use `AgentTelemetryEventTracker` at
+all, and their traffic is instrumented just the same.
+
+One deployment rule follows from this: **keep `rollbar-java` inside the application**
+(`WEB-INF/lib`), not in the container's shared `lib`. The classloader that loads the SDK is what
+identifies the application when it reads its events; one shared copy makes every deployment answer
+to the same identity.
 
 ## Security
 
@@ -190,18 +200,15 @@ https://api.example.com/charge
 
 ## Internal API
 
-Two methods form the contract between the agent and `rollbar-java`. `AgentTelemetryEventTracker`
-calls both reflectively, so neither signature can change without changing both sides.
+`AgentTelemetryStore.getAll(ClassLoader application)` is the contract between the agent and
+`rollbar-java`: it returns the events that application may see as `List<Map<String, String>>`, each
+map carrying `type`, `level`, `source` and `timestamp_ms` alongside the event body.
+`AgentTelemetryEventTracker` calls it reflectively, so the signature cannot change without changing
+both sides.
 
-- `AgentTelemetryStore.getAll(ClassLoader application)` — the events that application may see, as
-  `List<Map<String, String>>`, each map carrying `type`, `level`, `source` and `timestamp_ms`
-  alongside the event body.
-- `AgentTelemetryStore.registerApplication(ClassLoader application)` — called at `Rollbar.init`, so
-  the store knows how many applications share the JVM before anything is reported.
-
-`AgentTelemetryStore.getAll()` (no argument) returns what the *calling thread's* context classloader
-may see. It is for diagnostics; an application reads its own events through the one-argument form,
-which does not depend on which thread happens to ask.
+`AgentTelemetryStore.getAll()` (no argument) answers for whichever application the calling code
+belongs to. It is a read like any other — it is for diagnostics, and calling it changes nothing
+about what anyone else is shown.
 
 Two methods exist for tests only. Do not call them in production code.
 

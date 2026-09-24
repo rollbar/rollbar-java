@@ -95,12 +95,9 @@ public class AgentTelemetryStoreTest {
     // part of the contract too: the maps cross a classloader boundary, so they may hold only
     // types both classloaders agree on.
     Method getAll = AgentTelemetryStore.class.getMethod("getAll", ClassLoader.class);
-    Method register = AgentTelemetryStore.class.getMethod("registerApplication", ClassLoader.class);
 
-    for (Method method : new Method[] {getAll, register}) {
-      assertTrue(Modifier.isPublic(method.getModifiers()), method.getName());
-      assertTrue(Modifier.isStatic(method.getModifiers()), method.getName());
-    }
+    assertTrue(Modifier.isPublic(getAll.getModifiers()));
+    assertTrue(Modifier.isStatic(getAll.getModifiers()));
     assertEquals("java.util.List<java.util.Map<java.lang.String, java.lang.String>>",
         getAll.getGenericReturnType().getTypeName());
   }
@@ -110,9 +107,6 @@ public class AgentTelemetryStoreTest {
     // Two WARs in one container: the agent is loaded once for both, so without partitioning the
     // hostnames and paths of one would appear in the other's Rollbar reports.
     try (URLClassLoader firstApp = application(); URLClassLoader secondApp = application()) {
-      AgentTelemetryStore.registerApplication(firstApp);
-      AgentTelemetryStore.registerApplication(secondApp);
-
       recordAs(firstApp, "https://first.internal/charge");
       recordAs(secondApp, "https://second.internal/refund");
 
@@ -126,8 +120,6 @@ public class AgentTelemetryStoreTest {
     // A JSP or plugin classloader inside the deployment is still the deployment.
     try (URLClassLoader app = application();
         URLClassLoader nested = new URLClassLoader(new URL[0], app)) {
-      AgentTelemetryStore.registerApplication(app);
-
       recordAs(nested, "https://first.internal/charge");
 
       assertEquals(singletonList("https://first.internal/charge"), urlsSeenBy(app));
@@ -135,29 +127,32 @@ public class AgentTelemetryStoreTest {
   }
 
   @Test
-  public void getAll_givesUnattributedEventsToTheOnlyApplication() throws Exception {
-    // ForkJoinPool.commonPool workers carry the system classloader, so calls made there cannot be
-    // pinned to a deployment. With a single application — a fat jar, a plain process — they are
-    // unambiguous, and dropping them would silently lose telemetry.
+  public void getAll_withholdsEventsItCannotAttributeEvenFromTheOnlyCaller() throws Exception {
+    // The JVM's other applications need not use AgentTelemetryEventTracker at all — their traffic
+    // is instrumented regardless, and the agent never hears from them. So "nobody else is asking"
+    // is not evidence that an unattributable event belongs to the one application that is.
     try (URLClassLoader app = application()) {
-      AgentTelemetryStore.registerApplication(app);
+      // Filed against the agent's own classloader, which is where an event lands when neither the
+      // thread nor the stack names an application.
+      AgentTelemetryStore.recordNetworkEvent(AgentTelemetryStore.class.getClassLoader(),
+          "GET", "https://someone-elses.internal/charge", "500");
 
-      recordAs(ClassLoader.getSystemClassLoader(), "https://shared.internal/charge");
-
-      assertEquals(singletonList("https://shared.internal/charge"), urlsSeenBy(app));
+      assertTrue(AgentTelemetryStore.getAll(app).isEmpty(),
+          "an event that could not be attributed is nobody's to report");
     }
   }
 
   @Test
-  public void getAll_withholdsUnattributedEventsWhenApplicationsShareTheJvm() throws Exception {
-    try (URLClassLoader firstApp = application(); URLClassLoader secondApp = application()) {
-      AgentTelemetryStore.registerApplication(firstApp);
-      AgentTelemetryStore.registerApplication(secondApp);
+  public void getAll_doesNotRegisterOrOtherwiseChangeWhatOthersSee() throws Exception {
+    // getAll is a read. A diagnostic call from anywhere must not alter what an application is
+    // shown afterwards.
+    try (URLClassLoader app = application()) {
+      recordAs(app, "https://first.internal/charge");
 
-      recordAs(ClassLoader.getSystemClassLoader(), "https://shared.internal/charge");
+      AgentTelemetryStore.getAll();
+      AgentTelemetryStore.getAll(ClassLoader.getSystemClassLoader());
 
-      assertTrue(urlsSeenBy(firstApp).isEmpty(), "ambiguous events must not be handed out");
-      assertTrue(urlsSeenBy(secondApp).isEmpty(), "ambiguous events must not be handed out");
+      assertEquals(singletonList("https://first.internal/charge"), urlsSeenBy(app));
     }
   }
 
@@ -165,9 +160,6 @@ public class AgentTelemetryStoreTest {
   public void getAll_capacityIsPerApplication() throws Exception {
     // A busy deployment must not evict a quiet one's events.
     try (URLClassLoader firstApp = application(); URLClassLoader secondApp = application()) {
-      AgentTelemetryStore.registerApplication(firstApp);
-      AgentTelemetryStore.registerApplication(secondApp);
-
       recordAs(secondApp, "https://second.internal/refund");
       for (int i = 0; i < AgentTelemetryStore.MAX_EVENTS + 5; i++) {
         recordAs(firstApp, "https://first.internal/" + i);
