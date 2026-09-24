@@ -48,7 +48,8 @@ public class AgentTelemetryEventTracker implements TelemetryEventTracker {
       LoggerFactory.getLogger(AgentTelemetryEventTracker.class);
 
   private static final String AGENT_STORE_CLASS = "com.rollbar.agent.AgentTelemetryStore";
-  private static final String AGENT_STORE_METHOD = "getAll";
+  private static final String AGENT_STORE_GET_ALL_METHOD = "getAll";
+  private static final String AGENT_STORE_REGISTER_METHOD = "registerApplication";
 
   private static final String KEY_TYPE = "type";
   private static final String KEY_LEVEL = "level";
@@ -224,38 +225,59 @@ public class AgentTelemetryEventTracker implements TelemetryEventTracker {
    * <p>The lookup goes through {@link ClassLoader#getSystemClassLoader()} rather than this class's
    * own loader: {@code -javaagent:} puts the agent there, and a child loader holding the SDK can
    * always reach up to it, while the reverse never works.
+   *
+   * <p>Both calls carry this class's own classloader, which is the application's: one agent serves
+   * every application in the JVM, and that is what tells the store whose events to hand back. So
+   * keep the SDK inside the application — {@code WEB-INF/lib}, not the container's shared
+   * {@code lib} — or every deployment answers to the same classloader and to the same events.
    */
   private static final class SystemClassLoaderAgentEventSource implements AgentEventSource {
+
+    private static final ClassLoader APPLICATION =
+        AgentTelemetryEventTracker.class.getClassLoader();
 
     private volatile Method getAll;
     private volatile boolean lookupFailed;
 
+    SystemClassLoaderAgentEventSource() {
+      // Announce this application now, while the Rollbar instance is being built, so the store
+      // knows how many applications share the JVM before anyone reports an error.
+      Method register = resolve(AGENT_STORE_REGISTER_METHOD);
+      if (register != null) {
+        try {
+          register.invoke(null, APPLICATION);
+        } catch (Exception e) {
+          LOGGER.warn("Could not register this application with the Rollbar Java agent", e);
+        }
+      }
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public List<Map<String, String>> getAll() {
-      Method method = resolve();
+      Method method = getAll;
+      if (method == null) {
+        method = resolve(AGENT_STORE_GET_ALL_METHOD);
+        getAll = method;
+      }
       if (method == null) {
         return Collections.emptyList();
       }
       try {
-        return (List<Map<String, String>>) method.invoke(null);
+        return (List<Map<String, String>>) method.invoke(null, APPLICATION);
       } catch (Exception e) {
         LOGGER.warn("Could not read telemetry events from the Rollbar Java agent", e);
         return Collections.emptyList();
       }
     }
 
-    private Method resolve() {
-      Method resolved = getAll;
-      if (resolved != null || lookupFailed) {
-        return resolved;
+    private Method resolve(String name) {
+      if (lookupFailed) {
+        return null;
       }
-      // Benign race: two threads may both resolve, and land on the same Method.
       try {
         Class<?> store = ClassLoader.getSystemClassLoader().loadClass(AGENT_STORE_CLASS);
-        resolved = store.getMethod(AGENT_STORE_METHOD);
-        getAll = resolved;
-        return resolved;
+        return store.getMethod(name, ClassLoader.class);
       } catch (ClassNotFoundException e) {
         LOGGER.info("The Rollbar Java agent is not attached to this JVM; only telemetry events "
             + "recorded by the application will be reported. Add -javaagent:<rollbar-java-agent "

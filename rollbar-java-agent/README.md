@@ -147,9 +147,33 @@ That's the last application change you make. From here on, every HTTP call — i
 | Response status `>= 400` | Records a network telemetry event with `Level.CRITICAL` |
 | Connection failure / I/O error (connection refused, DNS failure, timeout) | Records a `Network error: <message>` telemetry event with `Level.CRITICAL` |
 | The same request seen through several entry points | Deduplicated — one event per request |
-| Installation step 3 not done | **Misconfiguration.** Events accumulate in the agent's buffer (capacity 100, oldest dropped) and are never sent — nothing reads them into your `Rollbar` instance. Silent apart from the missing telemetry. |
+| Installation step 3 not done | **Misconfiguration.** Events accumulate in the agent's buffer (capacity 100 per application, oldest dropped) and are never sent — nothing reads them into your `Rollbar` instance. Silent apart from the missing telemetry. |
 
 The agent never throws into your application: every advice body swallows all errors, so a failure inside the instrumentation cannot break an HTTP call.
+
+## Several applications in one JVM
+
+A servlet container — Tomcat, WildFly — runs many deployments in one JVM, each with its own copy of
+the SDK, its own access token and its own Rollbar project. The agent is attached once for the whole
+JVM, so it keeps **one buffer per application** rather than one for the process.
+
+Each event is filed under the context classloader of the thread that made the HTTP call, which in a
+servlet container is the deployment's own classloader, and each application is handed back only its
+own events and those recorded by classloaders nested inside it (a JSP or plugin loader). One
+deployment's internal hostnames, paths and status codes never reach another's error reports, and a
+busy deployment cannot evict a quiet one's events — the 100-event cap is per application.
+
+Two limits are worth knowing:
+
+- **Calls made on threads that belong to no deployment.** A `ForkJoinPool.commonPool` worker carries
+  the container's classloader, not any application's, so a call made there cannot be attributed.
+  Those events are reported while a single application is registered in the JVM — the ordinary case
+  of a fat jar or a standalone process — and withheld from everyone once several are, since there is
+  no way to tell whose they were. To keep them attributed, hand your async work an executor your
+  application created; its threads inherit your classloader.
+- **Keep `rollbar-java` inside the application** (`WEB-INF/lib`), not in the container's shared
+  `lib`. The classloader that loads the SDK is what identifies the application; one shared copy
+  makes every deployment answer to the same identity.
 
 ## Security
 
@@ -166,10 +190,18 @@ https://api.example.com/charge
 
 ## Internal API
 
-`AgentTelemetryStore.getAll()` is the contract between the agent and `rollbar-java`: it returns the
-buffered events as `List<Map<String, String>>`, each map carrying `type`, `level`, `source` and
-`timestamp_ms` alongside the event body. `AgentTelemetryEventTracker` calls it reflectively, so its
-signature cannot change without changing both sides.
+Two methods form the contract between the agent and `rollbar-java`. `AgentTelemetryEventTracker`
+calls both reflectively, so neither signature can change without changing both sides.
+
+- `AgentTelemetryStore.getAll(ClassLoader application)` — the events that application may see, as
+  `List<Map<String, String>>`, each map carrying `type`, `level`, `source` and `timestamp_ms`
+  alongside the event body.
+- `AgentTelemetryStore.registerApplication(ClassLoader application)` — called at `Rollbar.init`, so
+  the store knows how many applications share the JVM before anything is reported.
+
+`AgentTelemetryStore.getAll()` (no argument) returns what the *calling thread's* context classloader
+may see. It is for diagnostics; an application reads its own events through the one-argument form,
+which does not depend on which thread happens to ask.
 
 Two methods exist for tests only. Do not call them in production code.
 

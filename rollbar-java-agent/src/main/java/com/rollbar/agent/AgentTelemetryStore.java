@@ -3,13 +3,17 @@ package com.rollbar.agent;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
 
 /**
- * Bounded, in-memory buffer of the telemetry events the agent's instrumentation records.
+ * Bounded, in-memory buffer of the telemetry events the agent's instrumentation records, kept one
+ * buffer per application.
  *
  * <p><strong>Nothing in this package may reference a {@code com.rollbar.api} or
  * {@code com.rollbar.notifier} type.</strong> The agent jar is appended to the <em>system</em>
@@ -28,6 +32,20 @@ import java.util.Map;
  *
  * <p>Each map carries the reserved keys {@link #KEY_TYPE}, {@link #KEY_LEVEL}, {@link #KEY_SOURCE}
  * and {@link #KEY_TIMESTAMP_MS}; every other entry is the event body.
+ *
+ * <p><strong>Partitioning.</strong> One JVM can host several applications — WARs in Tomcat or
+ * WildFly — each with its own SDK, its own access token and its own Rollbar project. The agent is
+ * loaded once for all of them, so a single shared buffer would put one application's hostnames,
+ * paths and status codes into another's error reports, and let a busy application evict a quiet
+ * one's events. Instead each event is filed under the context classloader of the thread that made
+ * the HTTP call, which in a servlet container is the deployment's own classloader, and
+ * {@link #getAll(ClassLoader)} returns only what the asking application is entitled to see: its
+ * own events, and those recorded by classloaders nested inside it.
+ *
+ * <p>Events recorded by a classloader <em>above</em> the application — a thread whose context
+ * classloader is the container's, such as a {@code ForkJoinPool.commonPool} worker — cannot be
+ * attributed to any deployment. They are handed to the application only while it is the single
+ * registered one in the JVM, which is the ordinary case of a fat jar or a standalone process.
  */
 public final class AgentTelemetryStore {
 
@@ -52,7 +70,8 @@ public final class AgentTelemetryStore {
   public static final String KEY_TIMESTAMP_MS = "timestamp_ms";
 
   /**
-   * Maximum number of buffered events; the oldest are dropped once it is reached.
+   * Maximum number of buffered events <em>per application</em>; the oldest are dropped once it is
+   * reached.
    */
   public static final int MAX_EVENTS = 100;
 
@@ -66,7 +85,23 @@ public final class AgentTelemetryStore {
   private static final String BODY_KEY_STATUS_CODE = "status_code";
   private static final String BODY_KEY_MESSAGE = "message";
 
-  private static final Deque<Map<String, String>> EVENTS = new ArrayDeque<>();
+  private static final Object LOCK = new Object();
+
+  // Weak keys: an undeployed application's classloader must stay collectable, and it would not be
+  // if the store held it. The buffered values are Strings only, so nothing here points back at a
+  // key and keeps its entry alive.
+  private static final Map<ClassLoader, Deque<Map<String, String>>> EVENTS = new WeakHashMap<>();
+
+  private static final Set<ClassLoader> APPLICATIONS =
+      Collections.newSetFromMap(new WeakHashMap<ClassLoader, Boolean>());
+
+  private static final Comparator<Map<String, String>> BY_TIMESTAMP =
+      new Comparator<Map<String, String>>() {
+        @Override
+        public int compare(Map<String, String> left, Map<String, String> right) {
+          return Long.compare(timestampOf(left), timestampOf(right));
+        }
+      };
 
   // Overridable so tests can assert on timestamps. Not a java.util.function type: keeping this
   // class free of anything but the most basic JDK types is what lets any classloader read it.
@@ -101,30 +136,75 @@ public final class AgentTelemetryStore {
   }
 
   /**
-   * Returns a snapshot of the buffered events, oldest first.
+   * Announces an application that will read events, so the store can tell how many share this JVM.
    *
-   * <p>This is the method the SDK-side tracker invokes reflectively, so its signature is part of
-   * the agent's contract: it must stay {@code public static}, take no arguments, and return only
-   * JDK types.
+   * <p>The SDK-side tracker calls this from its constructor, which runs at {@code Rollbar.init}:
+   * every deployment has registered long before anything is reported, so whether an event can be
+   * attributed to one application does not depend on who reports an error first.
    *
-   * @return the recorded events, each an independent copy.
+   * <p>Part of the reflective contract with {@code rollbar-java} — {@code public static}, one
+   * {@link ClassLoader} argument.
+   *
+   * @param application the classloader of the application that will read events; {@code null} is
+   *                    read as the system classloader.
    */
-  public static List<Map<String, String>> getAll() {
-    synchronized (EVENTS) {
-      List<Map<String, String>> snapshot = new ArrayList<>(EVENTS.size());
-      for (Map<String, String> event : EVENTS) {
-        snapshot.add(Collections.unmodifiableMap(new HashMap<>(event)));
-      }
-      return snapshot;
+  public static void registerApplication(ClassLoader application) {
+    synchronized (LOCK) {
+      APPLICATIONS.add(orSystem(application));
     }
   }
 
   /**
-   * Drops every buffered event. For tests.
+   * Returns a snapshot of the events the given application may see, oldest first.
+   *
+   * <p>Part of the reflective contract with {@code rollbar-java} — {@code public static}, one
+   * {@link ClassLoader} argument, returning only JDK types.
+   *
+   * @param application the classloader of the application asking, normally the one that loaded the
+   *                    SDK; {@code null} is read as the system classloader.
+   * @return the events visible to it, each an independent copy.
+   */
+  public static List<Map<String, String>> getAll(ClassLoader application) {
+    ClassLoader requester = orSystem(application);
+    List<Map<String, String>> snapshot = new ArrayList<>();
+
+    synchronized (LOCK) {
+      APPLICATIONS.add(requester);
+      boolean unattributedAreMine = APPLICATIONS.size() == 1;
+      for (Map.Entry<ClassLoader, Deque<Map<String, String>>> buffer : EVENTS.entrySet()) {
+        if (!visibleTo(buffer.getKey(), requester, unattributedAreMine)) {
+          continue;
+        }
+        for (Map<String, String> event : buffer.getValue()) {
+          snapshot.add(Collections.unmodifiableMap(new HashMap<>(event)));
+        }
+      }
+    }
+
+    // Several buffers can contribute, and they interleave in time.
+    snapshot.sort(BY_TIMESTAMP);
+    return snapshot;
+  }
+
+  /**
+   * Returns the events visible to the calling thread's context classloader.
+   *
+   * <p>For diagnostics and tests. An application reads its own events through
+   * {@link #getAll(ClassLoader)}, which does not depend on which thread happens to ask.
+   *
+   * @return the events visible to the caller, each an independent copy.
+   */
+  public static List<Map<String, String>> getAll() {
+    return getAll(contextClassLoader());
+  }
+
+  /**
+   * Drops every buffered event and every registered application. For tests.
    */
   public static void resetForTesting() {
-    synchronized (EVENTS) {
+    synchronized (LOCK) {
       EVENTS.clear();
+      APPLICATIONS.clear();
     }
     clock = new SystemClock();
   }
@@ -136,6 +216,37 @@ public final class AgentTelemetryStore {
    */
   static void setClockForTesting(Clock clock) {
     AgentTelemetryStore.clock = clock;
+  }
+
+  /**
+   * Whether events recorded under {@code origin} belong to the application {@code requester}.
+   *
+   * <p>Downward is safe: a classloader nested inside the application — a JSP or plugin loader — is
+   * still that application. Upward is not: the container's classloader is shared by every
+   * deployment, so events recorded there are attributed to no one unless there is only one
+   * application to attribute them to. Sideways is another deployment, and never visible.
+   */
+  private static boolean visibleTo(ClassLoader origin, ClassLoader requester,
+      boolean unattributedAreMine) {
+    if (origin == requester || isNestedIn(origin, requester)) {
+      return true;
+    }
+    if (isNestedIn(requester, origin)) {
+      return unattributedAreMine;
+    }
+    return false;
+  }
+
+  /**
+   * Whether {@code loader} is a strict descendant of {@code ancestor} in the delegation chain.
+   */
+  private static boolean isNestedIn(ClassLoader loader, ClassLoader ancestor) {
+    for (ClassLoader parent = loader.getParent(); parent != null; parent = parent.getParent()) {
+      if (parent == ancestor) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static Map<String, String> newEvent(String type) {
@@ -154,11 +265,36 @@ public final class AgentTelemetryStore {
   }
 
   private static void add(Map<String, String> event) {
-    synchronized (EVENTS) {
-      if (EVENTS.size() >= MAX_EVENTS) {
-        EVENTS.pollFirst();
+    ClassLoader origin = contextClassLoader();
+    synchronized (LOCK) {
+      Deque<Map<String, String>> buffer = EVENTS.get(origin);
+      if (buffer == null) {
+        buffer = new ArrayDeque<>();
+        EVENTS.put(origin, buffer);
       }
-      EVENTS.addLast(event);
+      if (buffer.size() >= MAX_EVENTS) {
+        buffer.pollFirst();
+      }
+      buffer.addLast(event);
+    }
+  }
+
+  // The thread that made the HTTP call is the only cheap evidence of which application made it: a
+  // servlet container sets the context classloader to the deployment's own before handing it a
+  // request, and a thread pool an application creates inherits it.
+  private static ClassLoader contextClassLoader() {
+    return orSystem(Thread.currentThread().getContextClassLoader());
+  }
+
+  private static ClassLoader orSystem(ClassLoader classLoader) {
+    return classLoader != null ? classLoader : ClassLoader.getSystemClassLoader();
+  }
+
+  private static long timestampOf(Map<String, String> event) {
+    try {
+      return Long.parseLong(event.get(KEY_TIMESTAMP_MS));
+    } catch (RuntimeException e) {
+      return 0L;
     }
   }
 

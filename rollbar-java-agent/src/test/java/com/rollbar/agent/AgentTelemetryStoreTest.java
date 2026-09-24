@@ -12,8 +12,13 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static java.util.Collections.singletonList;
 
 public class AgentTelemetryStoreTest {
 
@@ -85,15 +90,115 @@ public class AgentTelemetryStoreTest {
 
   @Test
   public void getAll_keepsTheSignatureTheSdkLooksUpReflectively() throws Exception {
-    // AgentTelemetryEventTracker resolves this method by name and casts its result, so a change
-    // here breaks the SDK at runtime rather than at compile time. The element types are part of
-    // the contract too: the maps cross a classloader boundary, so they may hold only types both
-    // classloaders agree on.
-    Method getAll = AgentTelemetryStore.class.getMethod("getAll");
+    // AgentTelemetryEventTracker resolves these methods by name and casts getAll's result, so a
+    // change here breaks the SDK at runtime rather than at compile time. The element types are
+    // part of the contract too: the maps cross a classloader boundary, so they may hold only
+    // types both classloaders agree on.
+    Method getAll = AgentTelemetryStore.class.getMethod("getAll", ClassLoader.class);
+    Method register = AgentTelemetryStore.class.getMethod("registerApplication", ClassLoader.class);
 
-    assertTrue(Modifier.isPublic(getAll.getModifiers()));
-    assertTrue(Modifier.isStatic(getAll.getModifiers()));
+    for (Method method : new Method[] {getAll, register}) {
+      assertTrue(Modifier.isPublic(method.getModifiers()), method.getName());
+      assertTrue(Modifier.isStatic(method.getModifiers()), method.getName());
+    }
     assertEquals("java.util.List<java.util.Map<java.lang.String, java.lang.String>>",
         getAll.getGenericReturnType().getTypeName());
+  }
+
+  @Test
+  public void getAll_doesNotShowOneApplicationTheEventsOfAnother() throws Exception {
+    // Two WARs in one container: the agent is loaded once for both, so without partitioning the
+    // hostnames and paths of one would appear in the other's Rollbar reports.
+    try (URLClassLoader firstApp = application(); URLClassLoader secondApp = application()) {
+      AgentTelemetryStore.registerApplication(firstApp);
+      AgentTelemetryStore.registerApplication(secondApp);
+
+      recordAs(firstApp, "https://first.internal/charge");
+      recordAs(secondApp, "https://second.internal/refund");
+
+      assertEquals(singletonList("https://first.internal/charge"), urlsSeenBy(firstApp));
+      assertEquals(singletonList("https://second.internal/refund"), urlsSeenBy(secondApp));
+    }
+  }
+
+  @Test
+  public void getAll_includesEventsRecordedByLoadersNestedInTheApplication() throws Exception {
+    // A JSP or plugin classloader inside the deployment is still the deployment.
+    try (URLClassLoader app = application();
+        URLClassLoader nested = new URLClassLoader(new URL[0], app)) {
+      AgentTelemetryStore.registerApplication(app);
+
+      recordAs(nested, "https://first.internal/charge");
+
+      assertEquals(singletonList("https://first.internal/charge"), urlsSeenBy(app));
+    }
+  }
+
+  @Test
+  public void getAll_givesUnattributedEventsToTheOnlyApplication() throws Exception {
+    // ForkJoinPool.commonPool workers carry the system classloader, so calls made there cannot be
+    // pinned to a deployment. With a single application — a fat jar, a plain process — they are
+    // unambiguous, and dropping them would silently lose telemetry.
+    try (URLClassLoader app = application()) {
+      AgentTelemetryStore.registerApplication(app);
+
+      recordAs(ClassLoader.getSystemClassLoader(), "https://shared.internal/charge");
+
+      assertEquals(singletonList("https://shared.internal/charge"), urlsSeenBy(app));
+    }
+  }
+
+  @Test
+  public void getAll_withholdsUnattributedEventsWhenApplicationsShareTheJvm() throws Exception {
+    try (URLClassLoader firstApp = application(); URLClassLoader secondApp = application()) {
+      AgentTelemetryStore.registerApplication(firstApp);
+      AgentTelemetryStore.registerApplication(secondApp);
+
+      recordAs(ClassLoader.getSystemClassLoader(), "https://shared.internal/charge");
+
+      assertTrue(urlsSeenBy(firstApp).isEmpty(), "ambiguous events must not be handed out");
+      assertTrue(urlsSeenBy(secondApp).isEmpty(), "ambiguous events must not be handed out");
+    }
+  }
+
+  @Test
+  public void getAll_capacityIsPerApplication() throws Exception {
+    // A busy deployment must not evict a quiet one's events.
+    try (URLClassLoader firstApp = application(); URLClassLoader secondApp = application()) {
+      AgentTelemetryStore.registerApplication(firstApp);
+      AgentTelemetryStore.registerApplication(secondApp);
+
+      recordAs(secondApp, "https://second.internal/refund");
+      for (int i = 0; i < AgentTelemetryStore.MAX_EVENTS + 5; i++) {
+        recordAs(firstApp, "https://first.internal/" + i);
+      }
+
+      assertEquals(AgentTelemetryStore.MAX_EVENTS, urlsSeenBy(firstApp).size());
+      assertEquals(singletonList("https://second.internal/refund"), urlsSeenBy(secondApp));
+    }
+  }
+
+  /** A stand-in for a deployment's classloader: its own, parented to the system classloader. */
+  private static URLClassLoader application() {
+    return new URLClassLoader(new URL[0], ClassLoader.getSystemClassLoader());
+  }
+
+  /** Records an event the way an HTTP call made by {@code origin}'s code would. */
+  private static void recordAs(ClassLoader origin, String url) {
+    ClassLoader previous = Thread.currentThread().getContextClassLoader();
+    Thread.currentThread().setContextClassLoader(origin);
+    try {
+      AgentTelemetryStore.recordNetworkEvent("GET", url, "500");
+    } finally {
+      Thread.currentThread().setContextClassLoader(previous);
+    }
+  }
+
+  private static List<String> urlsSeenBy(ClassLoader application) {
+    List<String> urls = new ArrayList<>();
+    for (Map<String, String> event : AgentTelemetryStore.getAll(application)) {
+      urls.add(event.get("url"));
+    }
+    return urls;
   }
 }

@@ -1,6 +1,7 @@
 package com.rollbar.agent;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -10,7 +11,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
@@ -88,11 +88,8 @@ public class AgentClassLoaderIsolationTest {
     // Simulates the Spring Boot / WAR layout: the agent's store in the system classloader, the SDK
     // in a child of it. The SDK-side tracker has to reach *up* for the events, which is the only
     // direction that works.
-    Class<?> store = ClassLoader.getSystemClassLoader().loadClass(AgentTelemetryStore.class
-        .getName());
+    Class<?> store = systemClassLoaderStore();
     store.getMethod("resetForTesting").invoke(null);
-    store.getMethod("recordNetworkEvent", String.class, String.class, String.class)
-        .invoke(null, "GET", "https://api.example.com/charge", "503");
 
     try (URLClassLoader applicationLoader = new ApplicationClassLoader(sdkUrls())) {
       Class<?> trackerClass = applicationLoader
@@ -100,9 +97,11 @@ public class AgentClassLoaderIsolationTest {
       assertEquals(applicationLoader, trackerClass.getClassLoader(),
           "the tracker must come from the child loader, not from the system class path");
 
+      // Recorded on a thread belonging to that application, as a servlet container would.
+      recordAs(applicationLoader, store, "https://api.example.com/charge", "503");
+
       Object tracker = trackerClass.getDeclaredConstructor().newInstance();
-      Method getAll = trackerClass.getMethod("getAll");
-      List<?> events = (List<?>) getAll.invoke(tracker);
+      List<?> events = (List<?>) trackerClass.getMethod("getAll").invoke(tracker);
 
       assertEquals(1, events.size(), "the SDK must see the event the agent recorded");
       String event = events.get(0).toString();
@@ -110,6 +109,65 @@ public class AgentClassLoaderIsolationTest {
       assertTrue(event.contains("https://api.example.com/charge"), event);
     } finally {
       store.getMethod("resetForTesting").invoke(null);
+    }
+  }
+
+  @Test
+  public void twoApplicationsInOneJvm_doNotSeeEachOthersEvents() throws Exception {
+    // Two WARs in one container, each with its own copy of the SDK and its own access token. The
+    // agent is loaded once for the whole JVM, so without partitioning one deployment's internal
+    // hostnames and paths would be attached to the other deployment's Rollbar reports.
+    Class<?> store = systemClassLoaderStore();
+    store.getMethod("resetForTesting").invoke(null);
+
+    try (URLClassLoader firstApp = new ApplicationClassLoader(sdkUrls());
+        URLClassLoader secondApp = new ApplicationClassLoader(sdkUrls())) {
+      Object firstTracker = newTracker(firstApp);
+      Object secondTracker = newTracker(secondApp);
+
+      recordAs(firstApp, store, "https://first.internal/charge", "500");
+      recordAs(secondApp, store, "https://second.internal/refund", "503");
+
+      String firstSees = telemetryOf(firstTracker).toString();
+      String secondSees = telemetryOf(secondTracker).toString();
+
+      assertEquals(1, telemetryOf(firstTracker).size(), firstSees);
+      assertTrue(firstSees.contains("https://first.internal/charge"), firstSees);
+      assertFalse(firstSees.contains("second.internal"),
+          "the other deployment's URLs must not reach this one's report: " + firstSees);
+
+      assertEquals(1, telemetryOf(secondTracker).size(), secondSees);
+      assertTrue(secondSees.contains("https://second.internal/refund"), secondSees);
+      assertFalse(secondSees.contains("first.internal"),
+          "the other deployment's URLs must not reach this one's report: " + secondSees);
+    } finally {
+      store.getMethod("resetForTesting").invoke(null);
+    }
+  }
+
+  private static Class<?> systemClassLoaderStore() throws ClassNotFoundException {
+    return ClassLoader.getSystemClassLoader().loadClass(AgentTelemetryStore.class.getName());
+  }
+
+  private static Object newTracker(ClassLoader application) throws Exception {
+    return application.loadClass("com.rollbar.notifier.telemetry.AgentTelemetryEventTracker")
+        .getDeclaredConstructor().newInstance();
+  }
+
+  private static List<?> telemetryOf(Object tracker) throws Exception {
+    return (List<?>) tracker.getClass().getMethod("getAll").invoke(tracker);
+  }
+
+  /** Records an event the way an HTTP call made by that application's code would. */
+  private static void recordAs(ClassLoader application, Class<?> store, String url,
+      String statusCode) throws Exception {
+    ClassLoader previous = Thread.currentThread().getContextClassLoader();
+    Thread.currentThread().setContextClassLoader(application);
+    try {
+      store.getMethod("recordNetworkEvent", String.class, String.class, String.class)
+          .invoke(null, "GET", url, statusCode);
+    } finally {
+      Thread.currentThread().setContextClassLoader(previous);
     }
   }
 
