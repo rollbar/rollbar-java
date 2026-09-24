@@ -10,6 +10,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Map;
 
@@ -82,16 +84,16 @@ public class AgentTelemetryStoreTest {
   }
 
   @Test
-  public void getAll_returnsOnlyJdkTypes() {
-    // The SDK reads these maps through the system classloader, so every object in them has to be
-    // a type both classloaders agree on.
-    AgentTelemetryStore.recordNetworkEvent("GET", "https://api.example.com/charge", "404");
+  public void getAll_keepsTheSignatureTheSdkLooksUpReflectively() throws Exception {
+    // AgentTelemetryEventTracker resolves this method by name and casts its result, so a change
+    // here breaks the SDK at runtime rather than at compile time. The element types are part of
+    // the contract too: the maps cross a classloader boundary, so they may hold only types both
+    // classloaders agree on.
+    Method getAll = AgentTelemetryStore.class.getMethod("getAll");
 
-    for (Map<String, String> event : AgentTelemetryStore.getAll()) {
-      for (Map.Entry<String, String> entry : event.entrySet()) {
-        assertTrue(entry.getKey().getClass().getName().startsWith("java."));
-        assertTrue(entry.getValue().getClass().getName().startsWith("java."));
-      }
-    }
+    assertTrue(Modifier.isPublic(getAll.getModifiers()));
+    assertTrue(Modifier.isStatic(getAll.getModifiers()));
+    assertEquals("java.util.List<java.util.Map<java.lang.String, java.lang.String>>",
+        getAll.getGenericReturnType().getTypeName());
   }
 }
