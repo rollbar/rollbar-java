@@ -118,6 +118,34 @@ public class UrlSanitizerTest {
   }
 
   @Test
+  public void schemeRelativeUrl_fallback_stripsUserinfo() {
+    // No scheme, so userinfo stripping cannot key off "://" — the authority still starts right
+    // after the two slashes, and the credentials in it still have to go.
+    assertEquals(
+        "//example.com/path%",
+        UrlSanitizer.sanitize("//user:pass@example.com/path%")
+    );
+  }
+
+  @Test
+  public void schemeRelativeUrl_fallback_stripsUserinfoBeforeNestedUrlInPath() {
+    // The first "://" here belongs to the nested URL in the path. Keying off it would leave the
+    // real authority, credentials included, untouched.
+    assertEquals(
+        "//example.com/proxy/https://other.example.com/a%",
+        UrlSanitizer.sanitize("//user:pass@example.com/proxy/https://other.example.com/a%")
+    );
+  }
+
+  @Test
+  public void schemeRelativeUrl_fallback_keepsAtSignInPath() {
+    assertEquals(
+        "//example.com/@johndoe/a%",
+        UrlSanitizer.sanitize("//example.com/@johndoe/a%")
+    );
+  }
+
+  @Test
   public void encodedPathIsPreserved() {
     assertEquals(
         "https://example.com/a%20b/c",

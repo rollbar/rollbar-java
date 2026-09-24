@@ -65,25 +65,44 @@ public final class UrlSanitizer {
     // the authority component (before the first '/', '?', or '#') so an '@' inside the path — e.g.
     // /@handle or /@scope/pkg — is not mistaken for the userinfo separator, which would delete the
     // real host and promote a path segment to host.
-    int schemeEnd = result.indexOf("://");
-    if (schemeEnd >= 0) {
-      int authorityStart = schemeEnd + 3;
-      int authorityEnd = result.length();
-      for (int i = authorityStart; i < result.length(); i++) {
-        char c = result.charAt(i);
-        if (c == '/' || c == '?' || c == '#') {
-          authorityEnd = i;
-          break;
-        }
-      }
-      // Last '@' within those bounds wins, matching the primary path above: an unencoded '@' is
-      // illegal inside userinfo, so a second one means malformed credentials. Stopping at the
-      // first one would leave everything between them — the tail of a password — in the URL.
-      int atSign = result.lastIndexOf('@', authorityEnd - 1);
-      if (atSign >= authorityStart) {
-        result = result.substring(0, authorityStart) + result.substring(atSign + 1);
+    int authorityStart = authorityStart(result);
+    if (authorityStart < 0) {
+      return result;
+    }
+
+    int authorityEnd = result.length();
+    for (int i = authorityStart; i < result.length(); i++) {
+      char c = result.charAt(i);
+      if (c == '/' || c == '?' || c == '#') {
+        authorityEnd = i;
+        break;
       }
     }
+
+    // Last '@' within those bounds wins, matching the primary path above: an unencoded '@' is
+    // illegal inside userinfo, so a second one means malformed credentials. Stopping at the
+    // first one would leave everything between them — the tail of a password — in the URL.
+    int atSign = result.lastIndexOf('@', authorityEnd - 1);
+    if (atSign >= authorityStart) {
+      result = result.substring(0, authorityStart) + result.substring(atSign + 1);
+    }
     return result;
+  }
+
+  /**
+   * Where the authority begins, or -1 for a URL that has none.
+   *
+   * <p>A leading {@code //} is checked first, and not only after {@code ://} fails to match: in a
+   * network-path reference such as {@code //host/proxy/https://elsewhere}, the first {@code ://}
+   * belongs to a nested URL in the path, and taking it would leave the real authority — where the
+   * credentials are — unstripped.
+   */
+  private static int authorityStart(String url) {
+    if (url.startsWith("//")) {
+      // RFC 3986 network-path reference: the authority follows the two slashes, scheme omitted.
+      return 2;
+    }
+    int schemeEnd = url.indexOf("://");
+    return schemeEnd >= 0 ? schemeEnd + 3 : -1;
   }
 }
