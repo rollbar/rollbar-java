@@ -1,47 +1,15 @@
 package com.rollbar.agent;
 
-import com.rollbar.api.payload.data.TelemetryEvent;
-import com.rollbar.notifier.telemetry.TelemetryEventTracker;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.List;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 
 public class RollbarAgentTest {
-
-  @BeforeEach
-  public void setUp() {
-    AgentTelemetryStore.initForTesting(System::currentTimeMillis);
-  }
-
-  @Test
-  public void getTelemetryTracker_returnsSingletonInstance() {
-    TelemetryEventTracker first = RollbarAgent.getTelemetryTracker();
-    TelemetryEventTracker second = RollbarAgent.getTelemetryTracker();
-    assertSame(first, second);
-  }
-
-  @Test
-  public void init_withCustomTimestamp_usesProvidedTimestamp() {
-    long fixedTime = 1_000_000L;
-    AgentTelemetryStore.initForTesting(() -> fixedTime);
-
-    AgentTelemetryStore.getInstance().recordManualEventFor(
-        com.rollbar.api.payload.data.Level.WARNING,
-        com.rollbar.api.payload.data.Source.CLIENT,
-        "test"
-    );
-
-    List<TelemetryEvent> events = AgentTelemetryStore.getInstance().getAll();
-    assertEquals(1, events.size());
-    assertEquals(fixedTime, events.get(0).asJson().get("timestamp_ms"));
-  }
 
   @Test
   public void errorReportingListener_reportsFailureToStderr() {

@@ -7,12 +7,10 @@ plugins {
     id("com.gradleup.shadow") version "9.4.3"
 }
 
-// Dependencies that get relocated into the fat jar, kept apart from the ones that must stay
-// external. shadowJar merges runtimeClasspath by default, which would embed the Rollbar SDK and
-// its transitive dependencies (SLF4J) unrelocated: the agent sits alongside the application's own
-// Rollbar SDK, so duplicate com.rollbar.* classes can pin an older SDK version or — where the
-// agent and the application resolve them from different classloaders — split class identity, so
-// the TelemetryEvent the agent records is not the TelemetryEvent the SDK expects.
+// Dependencies that get relocated into the fat jar. shadowJar merges runtimeClasspath by default,
+// which is why this configuration exists: Byte Buddy is the only thing that belongs inside the
+// agent jar. The agent's own code compiles against no Rollbar module at all — see
+// AgentTelemetryStore for why nothing the agent loads may name an SDK type.
 val shaded: Configuration by configurations.creating
 
 // compileOnly: these are inside the jar, so they must not also be published as runtime
@@ -29,8 +27,6 @@ dependencies {
     // process's job, not this agent's — premain/agentmain receive their Instrumentation from the
     // JVM directly.
     shaded("net.bytebuddy:byte-buddy:1.18.11")
-    api(project(":rollbar-api"))
-    implementation(project(":rollbar-java"))
     compileOnly("org.apache.httpcomponents:httpclient:4.5.14")
     compileOnly("org.apache.httpcomponents.client5:httpclient5:5.3.1")
 
@@ -38,6 +34,11 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.mockito:mockito-core:5.11.0")
+    // Test-only: AgentTelemetryEventTrackerIntegrationTest wires the SDK-side tracker to this
+    // agent the way an application does. Main code must not depend on these — the agent jar is
+    // loaded by the system classloader, which in a Spring Boot fat jar or a WAR cannot see the
+    // application's copy of the SDK.
+    testImplementation(project(":rollbar-java"))
     testImplementation("org.wiremock:wiremock:3.13.2")
     testImplementation("org.apache.httpcomponents:httpclient:4.5.14")
     testImplementation("org.apache.httpcomponents.client5:httpclient5:5.3.1")
@@ -88,5 +89,7 @@ tasks.test {
     // Also put on test classpath — the TCCL reflection bridge finds agent classes via the
     // system classloader; mirrors production use where rollbar-java-agent is a Gradle/Maven dep
     classpath += files(agentJar)
+    // AgentClassLoaderIsolationTest inspects the shipped jar and launches a JVM with it.
+    systemProperty("rollbar.agent.jar", agentJar.absolutePath)
     dependsOn(tasks.shadowJar)
 }

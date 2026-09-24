@@ -4,12 +4,7 @@ import com.rollbar.agent.instrumentation.ApacheHttpClient4Instrumentation;
 import com.rollbar.agent.instrumentation.ApacheHttpClient5Instrumentation;
 import com.rollbar.agent.instrumentation.HttpUrlConnectionInstrumentation;
 import com.rollbar.agent.instrumentation.JavaHttpClientInstrumentation;
-import com.rollbar.api.payload.data.Level;
-import com.rollbar.api.payload.data.Source;
-import com.rollbar.api.payload.data.TelemetryEvent;
-import com.rollbar.notifier.telemetry.TelemetryEventTracker;
 import java.lang.instrument.Instrumentation;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
@@ -22,9 +17,17 @@ import net.bytebuddy.utility.JavaModule;
  * <p>Wire into your Rollbar configuration with:
  * <pre>
  *   Rollbar.init(withAccessToken("...")
- *       .telemetryEventTracker(RollbarAgent.getTelemetryTracker())
+ *       .telemetryEventTracker(new AgentTelemetryEventTracker())
  *       .build());
  * </pre>
+ *
+ * <p>{@code AgentTelemetryEventTracker} ships in {@code rollbar-java}, not here, and no method of
+ * this class may mention a Rollbar SDK type. The JVM calls {@code getDeclaredMethods()} on the
+ * {@code Premain-Class} to find {@code premain}, which loads every type named in every declared
+ * signature; an SDK type there is looked up in the system classloader, where an application that
+ * keeps its dependencies in a child loader (Spring Boot fat jar, WAR) does not have it, and the
+ * resulting {@code NoClassDefFoundError} kills the JVM at startup with "processing of -javaagent
+ * failed". See {@link AgentTelemetryStore}.
  */
 public class RollbarAgent {
 
@@ -103,44 +106,6 @@ public class RollbarAgent {
             + "if these mention an unsupported class file version, this agent's ByteBuddy is "
             + "older than the JDK it is running on");
       }
-    }
-  }
-
-  public static TelemetryEventTracker getTelemetryTracker() {
-    return DelegatingTracker.INSTANCE;
-  }
-
-  private static final class DelegatingTracker implements TelemetryEventTracker {
-
-    static final DelegatingTracker INSTANCE = new DelegatingTracker();
-
-    private DelegatingTracker() {}
-
-    @Override
-    public List<TelemetryEvent> getAll() {
-      return AgentTelemetryStore.getInstance().getAll();
-    }
-
-    @Override
-    public void recordLogEventFor(Level level, Source source, String message) {
-      AgentTelemetryStore.getInstance().recordLogEventFor(level, source, message);
-    }
-
-    @Override
-    public void recordManualEventFor(Level level, Source source, String message) {
-      AgentTelemetryStore.getInstance().recordManualEventFor(level, source, message);
-    }
-
-    @Override
-    public void recordNavigationEventFor(Level level, Source source, String from, String to) {
-      AgentTelemetryStore.getInstance().recordNavigationEventFor(level, source, from, to);
-    }
-
-    @Override
-    public void recordNetworkEventFor(
-        Level level, Source source, String method, String url, String statusCode) {
-      AgentTelemetryStore.getInstance().recordNetworkEventFor(
-          level, source, method, url, statusCode);
     }
   }
 }

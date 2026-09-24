@@ -1,8 +1,5 @@
 package com.rollbar.agent;
 
-import com.rollbar.api.payload.data.Level;
-import com.rollbar.api.payload.data.Source;
-
 import java.util.Collections;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -11,9 +8,13 @@ import java.util.WeakHashMap;
  * Called by JDK-class advice via reflection to bridge the classloader gap.
  *
  * <p>ByteBuddy advice inlined into bootstrap/platform classloader classes (e.g.
- * {@code HttpURLConnection}, {@code HttpClient}) cannot directly reference application-classloader
- * classes. Advice code uses {@code Thread.currentThread().getContextClassLoader().loadClass(...)}
- * to reach this class and delegates all Rollbar-specific logic here.
+ * {@code HttpURLConnection}, {@code HttpClient}) cannot directly reference classes loaded further
+ * down the delegation chain. Advice code uses
+ * {@code Thread.currentThread().getContextClassLoader().loadClass(...)} to reach this class and
+ * delegates all Rollbar-specific logic here.
+ *
+ * <p>Like the rest of this package, it must not name any Rollbar SDK type — see
+ * {@link AgentTelemetryStore} for why.
  */
 public final class NetworkEventBridge {
 
@@ -76,21 +77,16 @@ public final class NetworkEventBridge {
     if (!markAsRecorded(key)) {
       return; // deduplicate re-entrant calls for the same connection
     }
-    AgentTelemetryStore.getInstance().recordNetworkEventFor(
-        Level.CRITICAL,
-        Source.SERVER,
-        method,
-        UrlSanitizer.sanitize(url),
-        statusCode
-    );
+    AgentTelemetryStore.recordNetworkEvent(method, UrlSanitizer.sanitize(url), statusCode);
   }
 
   /**
    * Returns a {@link java.util.function.BiConsumer} that records telemetry when an async
    * HTTP response completes. Intended to be chained via {@code CompletableFuture.whenComplete}.
    *
-   * <p>The callback is created here (in the app classloader) so it can reference Rollbar types
-   * directly, avoiding the reflection overhead that advice code needs to cross the classloader gap.
+   * <p>The callback is created here, in the agent's own classloader, so it can call the rest of
+   * this class directly — advice inlined into the JDK's HTTP client cannot, and would pay the
+   * reflection cost of crossing the classloader gap on every completion.
    */
   public static java.util.function.BiConsumer<Object, Throwable> createAsyncCallback(
       Object request) {
@@ -178,10 +174,7 @@ public final class NetworkEventBridge {
    * <p>Called when an HTTP request fails with an I/O exception rather than a status code.
    */
   public static void recordError(String message) {
-    AgentTelemetryStore.getInstance().recordManualEventFor(
-        Level.CRITICAL,
-        Source.SERVER,
-        "Network error: " + (message != null ? message : "unknown")
-    );
+    AgentTelemetryStore.recordErrorEvent(
+        "Network error: " + (message != null ? message : "unknown"));
   }
 }

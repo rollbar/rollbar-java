@@ -35,30 +35,46 @@ Exactly one event is recorded per connection, even when your code hits several o
 - Java 17 or higher **to build** it from source — the shadow plugin that packages the fat JAR
   requires a Java 17+ JVM, so on an older JDK the module is excluded from the build entirely and
   `:rollbar-java-agent` tasks fail as unknown. The JAR it produces still targets Java 11.
-- `rollbar-java` on the application classpath (for `Rollbar.init(...)`)
+- `rollbar-java` 2.3.0-beta.1 or newer on the application classpath — it supplies
+  `AgentTelemetryEventTracker`, the class that reads the agent's events (step 3)
 
-The agent bundles only ByteBuddy, under a relocated package name. It does **not** bundle the
-Rollbar SDK: `rollbar-api` and `rollbar-java` are ordinary dependencies resolved from your
-application's classpath, so the agent records telemetry against the same SDK classes your
-application uses and never pins or shadows your chosen SDK version.
+The agent bundles only ByteBuddy, under a relocated package name, and depends on nothing else —
+not even the Rollbar SDK.
+
+### Why the agent carries no Rollbar classes
+
+`-javaagent:` appends the agent jar to the JVM's **system** class path, and most applications do
+not keep their dependencies there: a Spring Boot fat jar loads them from `BOOT-INF/lib`, a WAR from
+`WEB-INF/lib`, both through a child classloader. Parent delegation only looks upward, so any SDK
+type named from agent code would resolve against the system classloader and not be found.
+
+In a method signature of the agent's `Premain-Class` that is fatal *before your application
+starts*: the JVM calls `getDeclaredMethods()` on it to locate `premain`, which loads every type in
+every declared signature, and the resulting `NoClassDefFoundError` aborts startup with
+`FATAL ERROR in native method: processing of -javaagent failed`.
+
+So the split runs the other way. The agent holds its events as plain string maps and never names
+an SDK type; `AgentTelemetryEventTracker`, which ships in `rollbar-java` and therefore loads in
+your application's classloader, reaches *up* to the system classloader to read them and turns them
+into `TelemetryEvent`s. Reaching up always works; reaching down never does.
 
 ## Installation
 
 ### What "no code changes" means here
 
-All four steps below are **required**. Steps 3 and 4 touch your application once, at setup:
+All three steps below are **required**. Step 3 touches your application once, at setup:
 
 - **What you never change:** your HTTP call sites. Every request through `HttpURLConnection`,
   `java.net.http.HttpClient`, or Apache HC 4.x/5.x is instrumented as written — no wrappers, no
   interceptors, no per-call bookkeeping, and nothing to remember when you add the next HTTP call.
-- **What you change once:** the agent JAR goes on your application classpath (step 3), and your
-  `Rollbar.init(...)` passes `RollbarAgent.getTelemetryTracker()` to the config builder (step 4).
+- **What you change once:** the agent JAR goes on your JVM's command line (step 2), and your
+  `Rollbar.init(...)` passes an `AgentTelemetryEventTracker` to the config builder (step 3).
 
 That wiring cannot be made automatic today. `ConfigBuilder.build()` installs its default
 `RollbarTelemetryEventTracker` whenever `telemetryEventTracker(...)` was not called, and the SDK
 exposes no global registry or `ServiceLoader` hook that an agent could claim instead — so the
-tracker has to be handed to the builder by the application. Skipping step 4 is silent: the agent
-still records events, but into a store nothing ever reads (see [Behavior](#behavior)).
+tracker has to be handed to the builder by the application. Skipping step 3 is silent: the agent
+still records events, but into a buffer nothing ever reads (see [Behavior](#behavior)).
 
 ### 1. Build the agent JAR
 
@@ -72,7 +88,7 @@ The fat JAR (with ByteBuddy bundled and relocated) is written to:
 rollbar-java-agent/build/libs/rollbar-java-agent-<version>.jar
 ```
 
-This fat JAR is the module's only artifact — the thin `jar` task is disabled, and the shaded JAR is what Gradle consumers and the published Maven artifact resolve to. So the JAR you pass to `-javaagent:` and the JAR you put on the classpath (steps 2 and 3) are always the same file.
+This fat JAR is the module's only artifact — the thin `jar` task is disabled, and the shaded JAR is what Gradle consumers and the published Maven artifact resolve to.
 
 ### 2. Add the agent JVM flag
 
@@ -97,43 +113,29 @@ jvmArgs("-javaagent:/path/to/rollbar-java-agent-<version>.jar")
 JAVA_TOOL_OPTIONS="-javaagent:/path/to/rollbar-java-agent-<version>.jar"
 ```
 
-### 3. Also add the JAR to your classpath (required, for compile time)
-
-At runtime the JVM already appends a `-javaagent:` JAR to the system class path, so this step is not
-about making the agent load. It is about **compiling** step 4: your build needs the JAR as an
-ordinary dependency to resolve the `RollbarAgent` symbol.
-
-**Gradle:**
-```kotlin
-dependencies {
-    implementation(files("/path/to/rollbar-java-agent-<version>.jar"))
-}
-```
-
-**Maven:**
-```xml
-<dependency>
-    <groupId>com.rollbar</groupId>
-    <artifactId>rollbar-java-agent</artifactId>
-    <version>${rollbar.version}</version>
-</dependency>
-```
-
-### 4. Wire into your Rollbar configuration (required)
+### 3. Wire into your Rollbar configuration (required)
 
 ```java
-import com.rollbar.agent.RollbarAgent;
 import com.rollbar.notifier.Rollbar;
+import com.rollbar.notifier.telemetry.AgentTelemetryEventTracker;
 
 import static com.rollbar.notifier.config.ConfigBuilder.withAccessToken;
 
 Rollbar rollbar = Rollbar.init(
     withAccessToken("your-access-token")
         .environment("production")
-        .telemetryEventTracker(RollbarAgent.getTelemetryTracker())
+        .telemetryEventTracker(new AgentTelemetryEventTracker())
         .build()
 );
 ```
+
+`AgentTelemetryEventTracker` comes from `rollbar-java`, which your application already depends on,
+so the agent JAR itself is **not** a compile dependency — it only needs to be on the `-javaagent:`
+flag. The tracker also records the events your application reports itself, exactly as the default
+`RollbarTelemetryEventTracker` does, and merges both streams in timestamp order.
+
+Without the agent attached the tracker just works as the default one, and says so once in the log —
+useful when the same build runs with and without the agent.
 
 That's the last application change you make. From here on, every HTTP call — including ones you add later — automatically produces a telemetry event in the Rollbar error report for any 4xx or 5xx response, with no further code changes.
 
@@ -145,7 +147,7 @@ That's the last application change you make. From here on, every HTTP call — i
 | Response status `>= 400` | Records a network telemetry event with `Level.CRITICAL` |
 | Connection failure / I/O error (connection refused, DNS failure, timeout) | Records a `Network error: <message>` telemetry event with `Level.CRITICAL` |
 | The same request seen through several entry points | Deduplicated — one event per request |
-| Installation step 4 not done | **Misconfiguration.** Events accumulate in the agent store (capacity 100) and are never sent — the agent is recording into a tracker your `Rollbar` instance does not read. Silent apart from the missing telemetry. |
+| Installation step 3 not done | **Misconfiguration.** Events accumulate in the agent's buffer (capacity 100, oldest dropped) and are never sent — nothing reads them into your `Rollbar` instance. Silent apart from the missing telemetry. |
 
 The agent never throws into your application: every advice body swallows all errors, so a failure inside the instrumentation cannot break an HTTP call.
 
@@ -164,9 +166,14 @@ https://api.example.com/charge
 
 ## Internal API
 
-Two methods exist for tests only. Do not call them in production code — use `RollbarAgent.getTelemetryTracker()` as shown above.
+`AgentTelemetryStore.getAll()` is the contract between the agent and `rollbar-java`: it returns the
+buffered events as `List<Map<String, String>>`, each map carrying `type`, `level`, `source` and
+`timestamp_ms` alongside the event body. `AgentTelemetryEventTracker` calls it reflectively, so its
+signature cannot change without changing both sides.
 
-- `AgentTelemetryStore.initForTesting(Provider<Long> timestampProvider)` — replaces the internal tracker with one backed by the given timestamp provider, so tests can assert on event timestamps.
+Two methods exist for tests only. Do not call them in production code.
+
+- `AgentTelemetryStore.resetForTesting()` — drops every buffered event and restores the default clock.
 - `NetworkEventBridge.resetRecordedForTesting()` — clears the deduplication state, so events from a previous test do not suppress recording in the next one.
 
 ## Testing
@@ -188,8 +195,8 @@ This runs the full test suite (WireMock-backed integration tests for each instru
 
 2. Write a small program that triggers a 4xx or 5xx:
    ```java
-   import com.rollbar.agent.RollbarAgent;
    import com.rollbar.notifier.Rollbar;
+   import com.rollbar.notifier.telemetry.AgentTelemetryEventTracker;
 
    import java.net.HttpURLConnection;
    import java.net.URL;
@@ -201,7 +208,7 @@ This runs the full test suite (WireMock-backed integration tests for each instru
            Rollbar rollbar = Rollbar.init(
                withAccessToken("your-access-token")
                    .environment("test")
-                   .telemetryEventTracker(RollbarAgent.getTelemetryTracker())
+                   .telemetryEventTracker(new AgentTelemetryEventTracker())
                    .build()
            );
 
@@ -221,7 +228,7 @@ This runs the full test suite (WireMock-backed integration tests for each instru
 3. Run with the agent:
    ```bash
    java -javaagent:rollbar-java-agent/build/libs/rollbar-java-agent-<version>.jar \
-        -cp "rollbar-java-agent/build/libs/rollbar-java-agent-<version>.jar:your-app.jar" \
+        -cp "your-app.jar" \
         SmokeTest
    ```
 

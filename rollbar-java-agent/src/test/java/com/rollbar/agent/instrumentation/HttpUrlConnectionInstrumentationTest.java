@@ -4,7 +4,6 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.rollbar.agent.AgentTelemetryStore;
 import com.rollbar.agent.NetworkEventBridge;
-import com.rollbar.api.payload.data.TelemetryEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +26,7 @@ public class HttpUrlConnectionInstrumentationTest {
   public void setUp() {
     server = new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort());
     server.start();
-    AgentTelemetryStore.initForTesting(System::currentTimeMillis);
+    AgentTelemetryStore.resetForTesting();
     NetworkEventBridge.resetRecordedForTesting();
   }
 
@@ -42,7 +41,7 @@ public class HttpUrlConnectionInstrumentationTest {
 
     makeRequest("GET", "/ok");
 
-    assertTrue(AgentTelemetryStore.getInstance().getAll().isEmpty());
+    assertTrue(AgentTelemetryStore.getAll().isEmpty());
   }
 
   @Test
@@ -51,14 +50,13 @@ public class HttpUrlConnectionInstrumentationTest {
 
     makeRequest("GET", "/not-found");
 
-    List<TelemetryEvent> events = AgentTelemetryStore.getInstance().getAll();
+    List<Map<String, String>> events = AgentTelemetryStore.getAll();
     assertEquals(1, events.size());
-    Map<String, Object> json = events.get(0).asJson();
-    assertEquals("network", json.get("type"));
-    Map<?, ?> body = (Map<?, ?>) json.get("body");
-    assertEquals("404", body.get("status_code"));
-    assertEquals("GET", body.get("method"));
-    assertTrue(body.get("url").toString().contains("/not-found"));
+    Map<String, String> event = events.get(0);
+    assertEquals("network", event.get("type"));
+    assertEquals("404", event.get("status_code"));
+    assertEquals("GET", event.get("method"));
+    assertTrue(event.get("url").contains("/not-found"));
   }
 
   @Test
@@ -67,10 +65,10 @@ public class HttpUrlConnectionInstrumentationTest {
 
     makeRequest("GET", "/error");
 
-    List<TelemetryEvent> events = AgentTelemetryStore.getInstance().getAll();
+    List<Map<String, String>> events = AgentTelemetryStore.getAll();
     assertEquals(1, events.size());
-    Map<?, ?> body = (Map<?, ?>) events.get(0).asJson().get("body");
-    assertEquals("500", body.get("status_code"));
+    Map<String, String> event = events.get(0);
+    assertEquals("500", event.get("status_code"));
   }
 
   @Test
@@ -83,7 +81,7 @@ public class HttpUrlConnectionInstrumentationTest {
     conn.getResponseCode();
     conn.disconnect();
 
-    assertTrue(AgentTelemetryStore.getInstance().getAll().isEmpty());
+    assertTrue(AgentTelemetryStore.getAll().isEmpty());
   }
 
   @Test
@@ -96,10 +94,10 @@ public class HttpUrlConnectionInstrumentationTest {
     conn.getResponseCode();
     conn.disconnect();
 
-    List<TelemetryEvent> events = AgentTelemetryStore.getInstance().getAll();
+    List<Map<String, String>> events = AgentTelemetryStore.getAll();
     assertEquals(1, events.size());
-    Map<?, ?> body = (Map<?, ?>) events.get(0).asJson().get("body");
-    String url = body.get("url").toString();
+    Map<String, String> event = events.get(0);
+    String url = event.get("url");
     assertTrue(url.contains("/path"));
     assertFalse(url.contains("secret"));
     assertFalse(url.contains("token"));
@@ -119,11 +117,11 @@ public class HttpUrlConnectionInstrumentationTest {
     }
     conn.disconnect();
 
-    List<TelemetryEvent> events = AgentTelemetryStore.getInstance().getAll();
+    List<Map<String, String>> events = AgentTelemetryStore.getAll();
     assertEquals(1, events.size());
-    Map<?, ?> body = (Map<?, ?>) events.get(0).asJson().get("body");
-    assertEquals("404", body.get("status_code"));
-    assertEquals("GET", body.get("method"));
+    Map<String, String> event = events.get(0);
+    assertEquals("404", event.get("status_code"));
+    assertEquals("GET", event.get("method"));
   }
 
   @Test
@@ -136,7 +134,7 @@ public class HttpUrlConnectionInstrumentationTest {
     conn.getInputStream().close();
     conn.disconnect();
 
-    assertTrue(AgentTelemetryStore.getInstance().getAll().isEmpty());
+    assertTrue(AgentTelemetryStore.getAll().isEmpty());
   }
 
   @Test
@@ -154,7 +152,7 @@ public class HttpUrlConnectionInstrumentationTest {
     conn.getErrorStream();
     conn.disconnect();
 
-    assertEquals(1, AgentTelemetryStore.getInstance().getAll().size());
+    assertEquals(1, AgentTelemetryStore.getAll().size());
   }
 
   @Test
@@ -180,12 +178,11 @@ public class HttpUrlConnectionInstrumentationTest {
     }
     conn.disconnect();
 
-    List<TelemetryEvent> events = AgentTelemetryStore.getInstance().getAll();
+    List<Map<String, String>> events = AgentTelemetryStore.getAll();
     assertEquals(1, events.size(), "connection failure should record exactly one event");
-    Map<String, Object> json = events.get(0).asJson();
-    assertEquals("manual", json.get("type"));
-    Map<?, ?> body = (Map<?, ?>) json.get("body");
-    assertTrue(body.get("message").toString().contains("Network error"),
+    Map<String, String> event = events.get(0);
+    assertEquals("manual", event.get("type"));
+    assertTrue(event.get("message").contains("Network error"),
         "error event should carry a network-error message");
   }
 
@@ -212,12 +209,11 @@ public class HttpUrlConnectionInstrumentationTest {
     }
     conn.disconnect();
 
-    List<TelemetryEvent> events = AgentTelemetryStore.getInstance().getAll();
+    List<Map<String, String>> events = AgentTelemetryStore.getAll();
     assertEquals(1, events.size(), "connection failure should record exactly one event");
-    Map<String, Object> json = events.get(0).asJson();
-    assertEquals("manual", json.get("type"));
-    Map<?, ?> body = (Map<?, ?>) json.get("body");
-    assertTrue(body.get("message").toString().contains("Network error"),
+    Map<String, String> event = events.get(0);
+    assertEquals("manual", event.get("type"));
+    assertTrue(event.get("message").contains("Network error"),
         "error event should carry a network-error message");
   }
 

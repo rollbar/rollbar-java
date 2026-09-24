@@ -4,7 +4,6 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.rollbar.agent.AgentTelemetryStore;
 import com.rollbar.agent.NetworkEventBridge;
-import com.rollbar.api.payload.data.TelemetryEvent;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -33,7 +32,7 @@ public class ApacheHttpClient5InstrumentationTest {
     server = new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort());
     server.start();
     client = HttpClients.createDefault();
-    AgentTelemetryStore.initForTesting(System::currentTimeMillis);
+    AgentTelemetryStore.resetForTesting();
     NetworkEventBridge.resetRecordedForTesting();
   }
 
@@ -52,7 +51,7 @@ public class ApacheHttpClient5InstrumentationTest {
       // consume response
     }
 
-    assertTrue(AgentTelemetryStore.getInstance().getAll().isEmpty());
+    assertTrue(AgentTelemetryStore.getAll().isEmpty());
   }
 
   @Test
@@ -64,14 +63,13 @@ public class ApacheHttpClient5InstrumentationTest {
       // consume response
     }
 
-    List<TelemetryEvent> events = AgentTelemetryStore.getInstance().getAll();
+    List<Map<String, String>> events = AgentTelemetryStore.getAll();
     assertEquals(1, events.size());
-    Map<String, Object> json = events.get(0).asJson();
-    assertEquals("network", json.get("type"));
-    Map<?, ?> body = (Map<?, ?>) json.get("body");
-    assertEquals("404", body.get("status_code"));
-    assertEquals("GET", body.get("method"));
-    String url = body.get("url").toString();
+    Map<String, String> event = events.get(0);
+    assertEquals("network", event.get("type"));
+    assertEquals("404", event.get("status_code"));
+    assertEquals("GET", event.get("method"));
+    String url = event.get("url");
     assertTrue(url.startsWith("http://"), "URL should include scheme: " + url);
     assertTrue(url.contains("localhost"), "URL should include host: " + url);
     assertTrue(url.contains("/not-found"), "URL should include path: " + url);
@@ -86,11 +84,11 @@ public class ApacheHttpClient5InstrumentationTest {
       // consume response
     }
 
-    List<TelemetryEvent> events = AgentTelemetryStore.getInstance().getAll();
+    List<Map<String, String>> events = AgentTelemetryStore.getAll();
     assertEquals(1, events.size());
-    Map<?, ?> body = (Map<?, ?>) events.get(0).asJson().get("body");
-    assertEquals("500", body.get("status_code"));
-    assertEquals("POST", body.get("method"));
+    Map<String, String> event = events.get(0);
+    assertEquals("500", event.get("status_code"));
+    assertEquals("POST", event.get("method"));
   }
 
   @Test
@@ -105,11 +103,11 @@ public class ApacheHttpClient5InstrumentationTest {
         new BasicClassicHttpRequest("GET", server.baseUrl() + "/handler"), handler);
 
     assertEquals(404, status);
-    List<TelemetryEvent> events = AgentTelemetryStore.getInstance().getAll();
+    List<Map<String, String>> events = AgentTelemetryStore.getAll();
     assertEquals(1, events.size());
-    Map<?, ?> body = (Map<?, ?>) events.get(0).asJson().get("body");
-    assertEquals("404", body.get("status_code").toString());
-    assertTrue(body.get("url").toString().endsWith("/handler"));
+    Map<String, String> event = events.get(0);
+    assertEquals("404", event.get("status_code").toString());
+    assertTrue(event.get("url").endsWith("/handler"));
   }
 
   @Test
@@ -121,11 +119,11 @@ public class ApacheHttpClient5InstrumentationTest {
     HttpHost target = new HttpHost("http", "localhost", server.port());
     client.execute(target, new BasicClassicHttpRequest("GET", "/charge")).close();
 
-    List<TelemetryEvent> events = AgentTelemetryStore.getInstance().getAll();
+    List<Map<String, String>> events = AgentTelemetryStore.getAll();
     assertEquals(1, events.size());
-    Map<?, ?> body = (Map<?, ?>) events.get(0).asJson().get("body");
-    assertEquals("500", body.get("status_code").toString());
-    assertEquals(server.baseUrl() + "/charge", body.get("url").toString());
+    Map<String, String> event = events.get(0);
+    assertEquals("500", event.get("status_code").toString());
+    assertEquals(server.baseUrl() + "/charge", event.get("url"));
   }
 
   @Test
@@ -138,11 +136,11 @@ public class ApacheHttpClient5InstrumentationTest {
       assertEquals(503, response.getCode());
     }
 
-    List<TelemetryEvent> events = AgentTelemetryStore.getInstance().getAll();
+    List<Map<String, String>> events = AgentTelemetryStore.getAll();
     assertEquals(1, events.size());
-    Map<?, ?> body = (Map<?, ?>) events.get(0).asJson().get("body");
-    assertEquals("503", body.get("status_code").toString());
-    assertEquals(server.baseUrl() + "/charge", body.get("url").toString());
+    Map<String, String> event = events.get(0);
+    assertEquals("503", event.get("status_code").toString());
+    assertEquals(server.baseUrl() + "/charge", event.get("url"));
   }
 
   @Test
@@ -154,10 +152,10 @@ public class ApacheHttpClient5InstrumentationTest {
       // consume response
     }
 
-    List<TelemetryEvent> events = AgentTelemetryStore.getInstance().getAll();
+    List<Map<String, String>> events = AgentTelemetryStore.getAll();
     assertEquals(1, events.size());
-    Map<?, ?> body = (Map<?, ?>) events.get(0).asJson().get("body");
-    String url = body.get("url").toString();
+    Map<String, String> event = events.get(0);
+    String url = event.get("url");
     assertTrue(url.startsWith("http://"), "URL should include scheme: " + url);
     assertTrue(url.contains("localhost"), "URL should include host: " + url);
     assertTrue(url.contains("/path"), "URL should include path: " + url);
