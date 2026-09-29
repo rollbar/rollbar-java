@@ -1,5 +1,19 @@
 # Change Log
 
+# 2.4.0-beta.1
+
+### rollbar-java
+- Add built in scrubbing [#377](https://github.com/rollbar/rollbar-java/pull/377)
+
+### rollbar-java-agent
+- Add java agent for network telemetry events [#374](https://github.com/rollbar/rollbar-java/pull/374)
+
+### native-agent
+- Fix: Native agent 10x start up [#379](https://github.com/rollbar/rollbar-java/pull/379)
+
+### Maintenance
+- Bump io.projectreactor:reactor-bom from 2020.0.6 to 2025.0.4 [#368](https://github.com/rollbar/rollbar-java/pull/368)
+
 # 2.3.1
 
 ### rollbar-logback
