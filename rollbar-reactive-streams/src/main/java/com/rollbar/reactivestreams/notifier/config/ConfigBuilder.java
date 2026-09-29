@@ -6,6 +6,8 @@ import com.rollbar.api.payload.data.Notifier;
 import com.rollbar.api.payload.data.Person;
 import com.rollbar.api.payload.data.Request;
 import com.rollbar.api.payload.data.Server;
+import com.rollbar.api.scrubbing.DefaultUrlSanitizer;
+import com.rollbar.api.scrubbing.StringUrlSanitizer;
 import com.rollbar.notifier.Rollbar;
 import com.rollbar.notifier.config.DefaultLevels;
 import com.rollbar.notifier.filter.Filter;
@@ -13,6 +15,7 @@ import com.rollbar.notifier.fingerprint.FingerprintGenerator;
 import com.rollbar.notifier.provider.Provider;
 import com.rollbar.notifier.provider.notifier.NotifierProvider;
 import com.rollbar.notifier.provider.timestamp.TimestampProvider;
+import com.rollbar.notifier.scrubbing.ScrubDataTransformer;
 import com.rollbar.notifier.sender.SyncSender;
 import com.rollbar.notifier.sender.json.JsonSerializer;
 import com.rollbar.notifier.telemetry.RollbarTelemetryEventTracker;
@@ -62,6 +65,9 @@ public final class ConfigBuilder {
   private DefaultLevels defaultLevels;
   private boolean truncateLargePayloads;
   private boolean compressPayload;
+  private List<String> redactedKeys;
+  private boolean useDefaultRedactedKeys = true;
+  private StringUrlSanitizer urlSanitizer;
   private int maximumTelemetryData =
       RollbarTelemetryEventTracker.MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS;
   private TelemetryEventTracker telemetryEventTracker;
@@ -111,6 +117,9 @@ public final class ConfigBuilder {
     this.compressPayload = config.compressPayload();
     this.maximumTelemetryData = config.maximumTelemetryData();
     this.telemetryEventTracker = config.telemetryEventTracker();
+    this.redactedKeys = config.redactedKeys();
+    this.useDefaultRedactedKeys = config.useDefaultRedactedKeys();
+    this.urlSanitizer = config.urlSanitizer();
   }
 
   private ConfigBuilder(Sender sender) {
@@ -512,6 +521,46 @@ public final class ConfigBuilder {
   }
 
   /**
+   * Keys (matched as case-insensitive regex) whose values will be redacted in request headers,
+   * query/POST parameters, custom data, and {@code Frame.locals}. These are additive to
+   * {@link ScrubDataTransformer#DEFAULT_REDACTED_KEYS} and to the built-in header deny-list
+   * (Authorization, Cookie, etc.).
+   *
+   * @param redactedKeys list of regex patterns.
+   * @return the builder instance.
+   */
+  public ConfigBuilder redactedKeys(List<String> redactedKeys) {
+    this.redactedKeys = redactedKeys;
+    return this;
+  }
+
+  /**
+   * Whether {@link ScrubDataTransformer#DEFAULT_REDACTED_KEYS} (password, secret, token, etc.)
+   * are redacted in addition to {@link #redactedKeys(List)}. Defaults to true; set to false to
+   * match only the keys you configure. The header deny-list and the URL sanitizer apply either
+   * way.
+   *
+   * @param useDefaultRedactedKeys true to apply the built-in key list.
+   * @return the builder instance.
+   */
+  public ConfigBuilder useDefaultRedactedKeys(boolean useDefaultRedactedKeys) {
+    this.useDefaultRedactedKeys = useDefaultRedactedKeys;
+    return this;
+  }
+
+  /**
+   * URL sanitizer applied to the request URL before the payload is sent.
+   * Defaults to {@link DefaultUrlSanitizer#INSTANCE}.
+   *
+   * @param urlSanitizer the sanitizer.
+   * @return the builder instance.
+   */
+  public ConfigBuilder urlSanitizer(StringUrlSanitizer urlSanitizer) {
+    this.urlSanitizer = urlSanitizer;
+    return this;
+  }
+
+  /**
    * Builds the {@link Config config}.
    *
    * @return the config.
@@ -584,6 +633,9 @@ public final class ConfigBuilder {
     private final boolean compressPayload;
     private final int maximumTelemetryData;
     private final TelemetryEventTracker telemetryEventTracker;
+    private final List<String> redactedKeys;
+    private final boolean useDefaultRedactedKeys;
+    private final StringUrlSanitizer urlSanitizer;
 
     ConfigImpl(ConfigBuilder builder) {
       this.accessToken = builder.accessToken;
@@ -619,6 +671,11 @@ public final class ConfigBuilder {
       this.compressPayload = builder.compressPayload;
       this.maximumTelemetryData = builder.maximumTelemetryData;
       this.telemetryEventTracker = builder.telemetryEventTracker;
+      this.redactedKeys = builder.redactedKeys != null
+          ? builder.redactedKeys : Collections.emptyList();
+      this.useDefaultRedactedKeys = builder.useDefaultRedactedKeys;
+      this.urlSanitizer = builder.urlSanitizer != null
+          ? builder.urlSanitizer : DefaultUrlSanitizer.INSTANCE;
     }
 
     @Override
@@ -774,6 +831,21 @@ public final class ConfigBuilder {
     @Override
     public TelemetryEventTracker telemetryEventTracker() {
       return this.telemetryEventTracker;
+    }
+
+    @Override
+    public List<String> redactedKeys() {
+      return redactedKeys;
+    }
+
+    @Override
+    public boolean useDefaultRedactedKeys() {
+      return useDefaultRedactedKeys;
+    }
+
+    @Override
+    public StringUrlSanitizer urlSanitizer() {
+      return urlSanitizer;
     }
   }
 }
