@@ -6,13 +6,24 @@ import com.rollbar.api.json.JsonSerializable;
 import com.rollbar.api.payload.Payload;
 import com.rollbar.notifier.sender.result.Result;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * Implementation of the {@link JsonSerializer json serializer}.
+ *
+ * <p>
+ * Payloads carry arbitrary user data, such as custom maps and captured local variables, so the
+ * serializer guards against object graphs that would otherwise make it recurse without bound. A
+ * map, collection, array or {@link JsonSerializable} that refers back to one of its enclosing
+ * values is replaced by {@value #CIRCULAR_REFERENCE_PLACEHOLDER}, and one nested deeper than
+ * {@code maxDepth} levels is replaced by {@value #MAX_DEPTH_PLACEHOLDER}.
+ * </p>
  */
 public class JsonSerializerImpl implements JsonSerializer {
 
@@ -38,7 +49,18 @@ public class JsonSerializerImpl implements JsonSerializer {
     REPLACEMENT_CHARS['\f'] = "\\f";
   }
 
+  /**
+   * The default maximum nesting depth, see {@link #JsonSerializerImpl(boolean, int)}.
+   */
+  public static final int DEFAULT_MAX_DEPTH = 100;
+
+  static final String CIRCULAR_REFERENCE_PLACEHOLDER = "<circular reference>";
+
+  static final String MAX_DEPTH_PLACEHOLDER = "<max depth exceeded>";
+
   private final boolean prettyPrint;
+
+  private final int maxDepth;
 
   /**
    * Construct a JsonSerializerImpl that does <b>not</b> pretty print the Payload.
@@ -52,7 +74,22 @@ public class JsonSerializerImpl implements JsonSerializer {
    * @param prettyPrint whether or not to pretty print the payload.
    */
   public JsonSerializerImpl(boolean prettyPrint) {
+    this(prettyPrint, DEFAULT_MAX_DEPTH);
+  }
+
+  /**
+   * Construct a JsonSerializerImpl.
+   * @param prettyPrint whether or not to pretty print the payload.
+   * @param maxDepth the maximum number of nested maps, collections and arrays to serialize,
+   *                 counting the outermost object. Anything nested deeper is replaced by a
+   *                 placeholder string. Must be at least 1.
+   */
+  public JsonSerializerImpl(boolean prettyPrint, int maxDepth) {
+    if (maxDepth < 1) {
+      throw new IllegalArgumentException("The max depth must be at least 1, got " + maxDepth);
+    }
     this.prettyPrint = prettyPrint;
+    this.maxDepth = maxDepth;
   }
 
   @Override
@@ -71,7 +108,10 @@ public class JsonSerializerImpl implements JsonSerializer {
    */
   public String toJson(Map<String, Object> map) {
     StringBuilder builder = new StringBuilder();
-    serializeObject(map, builder, 0);
+    // Identity based: the values being tracked are the ones that may contain themselves, and the
+    // equals() and hashCode() of such a map or collection recurse forever as well.
+    Set<Object> visiting = Collections.newSetFromMap(new IdentityHashMap<Object, Boolean>());
+    serializeValue(builder, map, 0, visiting);
     return builder.toString();
   }
 
@@ -109,7 +149,8 @@ public class JsonSerializerImpl implements JsonSerializer {
   }
 
 
-  private void serializeObject(Map<String, Object> content, StringBuilder builder, int level) {
+  private void serializeObject(Map<String, Object> content, StringBuilder builder, int level,
+                               Set<Object> visiting) {
     builder.append('{');
 
     String comma = "";
@@ -128,7 +169,7 @@ public class JsonSerializerImpl implements JsonSerializer {
         builder.append(" ");
       }
 
-      serializeValue(builder, entry.getValue(), level + 1);
+      serializeValue(builder, entry.getValue(), level + 1, visiting);
     }
     if (prettyPrint) {
       builder.append("\n");
@@ -137,7 +178,8 @@ public class JsonSerializerImpl implements JsonSerializer {
     builder.append('}');
   }
 
-  private void serializeValue(StringBuilder builder, Object value, int level) {
+  private void serializeValue(StringBuilder builder, Object value, int level,
+                              Set<Object> visiting) {
     if (value == null) {
       serializeNull(builder);
     } else if (value instanceof Boolean) {
@@ -146,19 +188,48 @@ public class JsonSerializerImpl implements JsonSerializer {
       serializeNumber(builder, (Number) value);
     } else if (value instanceof String) {
       serializeString(builder, (String) value);
-    } else if (value instanceof JsonSerializable) {
-      serializeValue(builder, ((JsonSerializable) value).asJson(), level);
-    } else if (value instanceof Map) {
-      Map<String, Object> obj = asMap((Map) value);
-      serializeObject(obj, builder, level);
-    } else if (value instanceof Collection) {
-      serializeArray(builder, ((Collection) value).toArray(), level);
-    } else if (value instanceof Object[]) {
-      serializeArray(builder, (Object[]) value, level);
+    } else if (value instanceof JsonSerializable || value instanceof Map
+        || value instanceof Collection || value instanceof Object[]) {
+      serializeNested(builder, value, level, visiting);
     } else if (value instanceof Throwable) {
       serializeThrowable(builder, (Throwable) value);
     } else {
       serializeDefault(builder, value);
+    }
+  }
+
+  /**
+   * Serializes a value that can contain other values, unless doing so would recurse without
+   * bound. {@code visiting} holds the values enclosing this one, so finding the value there means
+   * it contains itself. Values are removed again on the way out, so the same value reached twice
+   * through different paths, without being its own ancestor, is serialized both times.
+   */
+  private void serializeNested(StringBuilder builder, Object value, int level,
+                               Set<Object> visiting) {
+    if (visiting.contains(value)) {
+      serializeString(builder, CIRCULAR_REFERENCE_PLACEHOLDER);
+      return;
+    }
+    if (level >= maxDepth) {
+      serializeString(builder, MAX_DEPTH_PLACEHOLDER);
+      return;
+    }
+
+    visiting.add(value);
+    try {
+      if (value instanceof JsonSerializable) {
+        // Not a level of its own: it stands for the value it converts to.
+        serializeValue(builder, ((JsonSerializable) value).asJson(), level, visiting);
+      } else if (value instanceof Map) {
+        Map<String, Object> obj = asMap((Map) value);
+        serializeObject(obj, builder, level, visiting);
+      } else if (value instanceof Collection) {
+        serializeArray(builder, ((Collection) value).toArray(), level, visiting);
+      } else {
+        serializeArray(builder, (Object[]) value, level, visiting);
+      }
+    } finally {
+      visiting.remove(value);
     }
   }
 
@@ -220,7 +291,8 @@ public class JsonSerializerImpl implements JsonSerializer {
     builder.append("null");
   }
 
-  private void serializeArray(StringBuilder builder, Object[] array, int level) {
+  private void serializeArray(StringBuilder builder, Object[] array, int level,
+                              Set<Object> visiting) {
     builder.append('[');
     String comma = "";
     for (Object obj : array) {
@@ -231,7 +303,7 @@ public class JsonSerializerImpl implements JsonSerializer {
         builder.append("\n");
         indent(builder, level);
       }
-      serializeValue(builder, obj, level + 1);
+      serializeValue(builder, obj, level + 1, visiting);
     }
     builder.append(']');
   }
