@@ -744,6 +744,12 @@ public class Rollbar extends RollbarBase<Void, Config> {
     }
   }
 
+  /**
+   * Close the notifier and its sender, unregistering the shutdown hook first.
+   *
+   * @param wait whether to wait for the sender to send any buffered payloads before closing.
+   * @throws Exception if closing the sender fails.
+   */
   public void close(boolean wait) throws Exception {
     // Dropped first: the notifier is being shut down explicitly, so the hook would either flush a
     // sender that is already closed or duplicate the work being done here.
