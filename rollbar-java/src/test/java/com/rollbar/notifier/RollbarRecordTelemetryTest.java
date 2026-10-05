@@ -115,6 +115,54 @@ public class RollbarRecordTelemetryTest {
     verify(telemetryEventTracker).recordNavigationEventFor(level, Source.CLIENT, from, to);
   }
 
+  @Test
+  public void shouldSanitizeTheNetworkEventUrlWithTheDefaultSanitizer() {
+    RollbarBase<Void, Config> sut = new RollbarBaseImpl(getConfigWith("any"), dummyFactory, null);
+
+    sut.recordNetworkEventFor(level, "GET", "https://user:pass@example.com/p?token=secret#f", "500");
+
+    verify(telemetryEventTracker)
+        .recordNetworkEventFor(level, Source.SERVER, "GET", "https://example.com/p", "500");
+  }
+
+  @Test
+  public void shouldSanitizeTheNetworkEventUrlWithTheConfiguredSanitizer() {
+    Config config = withAccessToken("dummy token")
+        .telemetryEventTracker(telemetryEventTracker)
+        .urlSanitizer(url -> "sanitized")
+        .build();
+    RollbarBase<Void, Config> sut = new RollbarBaseImpl(config, dummyFactory, null);
+
+    sut.recordNetworkEventFor(level, "GET", "https://example.com/p?token=secret", "500");
+
+    verify(telemetryEventTracker)
+        .recordNetworkEventFor(level, Source.SERVER, "GET", "sanitized", "500");
+  }
+
+  @Test
+  public void shouldUseTheReconfiguredSanitizerForLaterNetworkEvents() {
+    RollbarBaseImpl sut = new RollbarBaseImpl(getConfigWith("any"), dummyFactory, null);
+
+    sut.reconfigure(withAccessToken("dummy token")
+        .telemetryEventTracker(telemetryEventTracker)
+        .urlSanitizer(url -> "reconfigured")
+        .build());
+    sut.recordNetworkEventFor(level, "GET", "https://example.com/p?token=secret", "500");
+
+    verify(telemetryEventTracker)
+        .recordNetworkEventFor(level, Source.SERVER, "GET", "reconfigured", "500");
+  }
+
+  @Test
+  public void shouldRecordANetworkEventWithANullUrl() {
+    RollbarBase<Void, Config> sut = new RollbarBaseImpl(getConfigWith("any"), dummyFactory, null);
+
+    sut.recordNetworkEventFor(level, "GET", null, "500");
+
+    verify(telemetryEventTracker)
+        .recordNetworkEventFor(level, Source.SERVER, "GET", null, "500");
+  }
+
   private Config getConfigWith(String platform) {
     return withAccessToken("dummy token")
         .telemetryEventTracker(telemetryEventTracker)
@@ -126,6 +174,10 @@ public class RollbarRecordTelemetryTest {
 
     protected RollbarBaseImpl(Config config, BodyFactory bodyFactory, Void emptyResult) {
       super(config, bodyFactory, emptyResult);
+    }
+
+    void reconfigure(Config config) {
+      configure(config);
     }
 
     @Override

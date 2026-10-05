@@ -1,0 +1,165 @@
+package com.rollbar.agent;
+
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class UrlSanitizerTest {
+
+  @Test
+  public void normalUrl_stripsQueryAndFragment() {
+    assertEquals(
+        "https://example.com/path",
+        UrlSanitizer.sanitize("https://example.com/path?token=secret&key=value")
+    );
+  }
+
+  @Test
+  public void normalUrl_stripsUserinfo() {
+    assertEquals(
+        "https://example.com/path",
+        UrlSanitizer.sanitize("https://user:pass@example.com/path")
+    );
+  }
+
+  @Test
+  public void normalUrl_stripsFragment() {
+    assertEquals(
+        "https://example.com/path",
+        UrlSanitizer.sanitize("https://example.com/path#section")
+    );
+  }
+
+  @Test
+  public void urlWithUnescapedSpace_fallback_stripsQuery() {
+    // URI rejects unescaped spaces; fallback must still strip the query string.
+    String result = UrlSanitizer.sanitize("http://example.com/path with spaces?token=secret");
+    assertFalse(result.contains("token"), "query must be stripped even on parse failure");
+    assertFalse(result.contains("secret"), "secret value must be stripped even on parse failure");
+    assertTrue(result.contains("example.com"), "host should be preserved");
+  }
+
+  @Test
+  public void urlWithUnescapedSpace_fallback_stripsUserinfo() {
+    String result = UrlSanitizer.sanitize("http://user:pass@example.com/path with spaces");
+    assertFalse(result.contains("pass"), "userinfo must be stripped even on parse failure");
+    assertTrue(result.contains("example.com"), "host should be preserved");
+  }
+
+  @Test
+  public void urlWithBadPercentEncoding_fallback_stripsQuery() {
+    String result = UrlSanitizer.sanitize("http://example.com/path%zz?secret=abc");
+    assertFalse(result.contains("secret"), "query must be stripped even on parse failure");
+  }
+
+  @Test
+  public void underscoreHostname_preservesHost() {
+    // Underscore hostnames (Kubernetes service DNS, Windows/AD internal DNS) parse in URI's
+    // registry-based mode, where getHost() returns null. The host must not be dropped.
+    assertEquals(
+        "http://s3_bucket.example.com/path",
+        UrlSanitizer.sanitize("http://s3_bucket.example.com/path?token=secret")
+    );
+  }
+
+  @Test
+  public void underscoreHostname_withUserinfoAndPort_stripsUserinfoKeepsHost() {
+    assertEquals(
+        "http://my_svc.internal:8080/v1",
+        UrlSanitizer.sanitize("http://user:pass@my_svc.internal:8080/v1?x=1")
+    );
+  }
+
+  @Test
+  public void atSignInPath_fallback_doesNotPromotePathToHost() {
+    // Unescaped space forces the fallback; the '@' inside the path must not be mistaken for the
+    // userinfo separator (which would delete the host and promote 'johndoe' to host).
+    String result = UrlSanitizer.sanitize("http://example.com/@johndoe/messages?bad space");
+    assertEquals("http://example.com/@johndoe/messages", result);
+  }
+
+  @Test
+  public void encodedAtSignInUserinfo_stripsWholeCredential() {
+    // getAuthority() decodes %40 to '@', which would make the delimiter search stop inside the
+    // password and record 'ss@example.com' as the host. The raw authority must be used instead.
+    assertEquals(
+        "https://example.com/path",
+        UrlSanitizer.sanitize("https://user:p%40ss@example.com/path?token=secret")
+    );
+  }
+
+  @Test
+  public void encodedAtSignInUserinfo_withoutPassword_stripsWholeCredential() {
+    assertEquals(
+        "https://example.com/path",
+        UrlSanitizer.sanitize("https://user%40example.com@example.com/path")
+    );
+  }
+
+  @Test
+  public void unencodedAtSignInUserinfo_fallback_stripsWholeCredential() {
+    // The trailing '%' is a malformed escape, so this takes the fallback path. Stripping through
+    // the *first* '@' would leave "http://ss@example.com/path%" — the tail of the password, in
+    // the URL that ships to Rollbar. The primary path already strips through the last '@'.
+    assertEquals(
+        "http://example.com/path%",
+        UrlSanitizer.sanitize("http://user:pa@ss@example.com/path%")
+    );
+  }
+
+  @Test
+  public void unencodedAtSignInUserinfo_fallback_doesNotReachIntoThePath() {
+    // The last '@' rule stays inside the authority: an '@' in the path must not be treated as the
+    // userinfo delimiter, or the real host is deleted and a path segment promoted to host.
+    assertEquals(
+        "http://example.com/@johndoe/a%",
+        UrlSanitizer.sanitize("http://user:pa@ss@example.com/@johndoe/a%")
+    );
+  }
+
+  @Test
+  public void schemeRelativeUrl_fallback_stripsUserinfo() {
+    // No scheme, so userinfo stripping cannot key off "://" — the authority still starts right
+    // after the two slashes, and the credentials in it still have to go.
+    assertEquals(
+        "//example.com/path%",
+        UrlSanitizer.sanitize("//user:pass@example.com/path%")
+    );
+  }
+
+  @Test
+  public void schemeRelativeUrl_fallback_stripsUserinfoBeforeNestedUrlInPath() {
+    // The first "://" here belongs to the nested URL in the path. Keying off it would leave the
+    // real authority, credentials included, untouched.
+    assertEquals(
+        "//example.com/proxy/https://other.example.com/a%",
+        UrlSanitizer.sanitize("//user:pass@example.com/proxy/https://other.example.com/a%")
+    );
+  }
+
+  @Test
+  public void schemeRelativeUrl_fallback_keepsAtSignInPath() {
+    assertEquals(
+        "//example.com/@johndoe/a%",
+        UrlSanitizer.sanitize("//example.com/@johndoe/a%")
+    );
+  }
+
+  @Test
+  public void encodedPathIsPreserved() {
+    assertEquals(
+        "https://example.com/a%20b/c",
+        UrlSanitizer.sanitize("https://example.com/a%20b/c?x=1")
+    );
+  }
+
+  @Test
+  public void relativeUrl_stripsQueryKeepsPath() {
+    assertEquals("/api/redirect", UrlSanitizer.sanitize("/api/redirect?url=https://other.com/foo"));
+  }
+
+  @Test
+  public void nullUrl_returnsNull() {
+    assertNull(UrlSanitizer.sanitize(null));
+  }
+}

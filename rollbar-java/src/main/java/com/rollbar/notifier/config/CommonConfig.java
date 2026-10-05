@@ -6,6 +6,8 @@ import com.rollbar.api.payload.data.Notifier;
 import com.rollbar.api.payload.data.Person;
 import com.rollbar.api.payload.data.Request;
 import com.rollbar.api.payload.data.Server;
+import com.rollbar.api.scrubbing.DefaultUrlSanitizer;
+import com.rollbar.api.scrubbing.StringUrlSanitizer;
 import com.rollbar.notifier.filter.Filter;
 import com.rollbar.notifier.fingerprint.FingerprintGenerator;
 import com.rollbar.notifier.provider.Provider;
@@ -13,6 +15,7 @@ import com.rollbar.notifier.sender.json.JsonSerializer;
 import com.rollbar.notifier.telemetry.TelemetryEventTracker;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -221,6 +224,43 @@ public interface CommonConfig {
    */
   default boolean compressPayload() {
     return true;
+  }
+
+  /**
+   * Keys (matched as case-insensitive regex) whose values should be redacted in headers,
+   * query/POST parameters, custom data, and {@code Frame.locals} before sending to Rollbar.
+   * These are additive to
+   * {@link com.rollbar.notifier.scrubbing.ScrubDataTransformer#DEFAULT_REDACTED_KEYS} (unless
+   * {@link #useDefaultRedactedKeys()} is false) and to the default header deny-list
+   * (Authorization, Cookie, etc.), which is always applied regardless of this list.
+   *
+   * @return list of regex patterns; empty list by default.
+   */
+  default List<String> redactedKeys() {
+    return Collections.emptyList();
+  }
+
+  /**
+   * Whether {@link com.rollbar.notifier.scrubbing.ScrubDataTransformer#DEFAULT_REDACTED_KEYS}
+   * (password, secret, token, etc.) are redacted in addition to {@link #redactedKeys()}. Set to
+   * false to match only the keys you configure; the header deny-list and the URL sanitizer still
+   * apply.
+   *
+   * @return true to apply the built-in key list; true by default.
+   */
+  default boolean useDefaultRedactedKeys() {
+    return true;
+  }
+
+  /**
+   * URL sanitizer applied to {@link com.rollbar.api.payload.data.Request#getUrl()} before the
+   * payload is sent. Defaults to {@link DefaultUrlSanitizer#INSTANCE} which strips userinfo,
+   * query string, and fragment.
+   *
+   * @return the URL sanitizer; never {@code null}.
+   */
+  default StringUrlSanitizer urlSanitizer() {
+    return DefaultUrlSanitizer.INSTANCE;
   }
 
   int maximumTelemetryData();
