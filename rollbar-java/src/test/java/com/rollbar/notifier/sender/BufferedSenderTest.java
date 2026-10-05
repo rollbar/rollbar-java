@@ -20,7 +20,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 
@@ -30,6 +33,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.MockitoJUnit;
@@ -129,10 +133,60 @@ public class BufferedSenderTest {
 
     assertThat(queue.size(), is(0));
 
-    verify(executorService).shutdown();
+    InOrder inOrder = inOrder(executorService, sender);
+    inOrder.verify(executorService).shutdown();
+    inOrder.verify(executorService).awaitTermination(anyLong(), any(TimeUnit.class));
+    inOrder.verify(sender).send(payload1);
 
     verify(sender).send(payload1);
     verify(sender).send(payload2);
+    verify(sender).close();
+  }
+
+  @Test
+  public void shouldCloseWaitingForInFlightSend() throws Exception {
+    CountDownLatch sendStarted = new CountDownLatch(1);
+    CountDownLatch releaseSend = new CountDownLatch(1);
+    AtomicBoolean sendFinished = new AtomicBoolean(false);
+    Payload payload = mock(Payload.class);
+
+    doAnswer(invocation -> {
+      sendStarted.countDown();
+      releaseSend.await();
+      sendFinished.set(true);
+      return null;
+    }).when(sender).send(payload);
+
+    Queue<Payload> queue = new ConcurrentLinkedQueue<>();
+    queue.add(payload);
+
+    sut = new BufferedSender(new BufferedSender.Builder()
+        .queue(queue)
+        .sender(sender)
+        .initialFlushDelay(0),
+        Executors.newSingleThreadScheduledExecutor(new SenderThreadFactory()));
+
+    // The scheduled run has taken the payload off the queue and is still sending it.
+    assertThat(sendStarted.await(5, TimeUnit.SECONDS), is(true));
+    assertThat(queue.size(), is(0));
+
+    Thread closer = new Thread(() -> {
+      try {
+        sut.close(true);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    });
+    closer.start();
+
+    closer.join(200);
+    assertThat(closer.isAlive(), is(true));
+
+    releaseSend.countDown();
+    closer.join(5000);
+
+    assertThat(closer.isAlive(), is(false));
+    assertThat(sendFinished.get(), is(true));
     verify(sender).close();
   }
 
