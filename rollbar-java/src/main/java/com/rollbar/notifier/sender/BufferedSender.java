@@ -127,11 +127,23 @@ public class BufferedSender implements Sender {
 
   @Override
   public void close(boolean wait) throws Exception {
-    if (wait) {
-      this.flushQueue();
+    if (!wait) {
+      this.close();
+      return;
     }
 
-    this.close();
+    try {
+      // Stop scheduling further runs and wait for one already in progress. That run may have
+      // taken payloads off the queue that it is still sending, so the queue being empty does not
+      // mean everything has been sent. Callers that need a bound on this, such as the shutdown
+      // hook, impose it themselves.
+      this.executorService.shutdown();
+      this.executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+      // Drain what is left, including payloads the in-flight run re-queued for retry.
+      this.flushQueue();
+    } finally {
+      this.close();
+    }
   }
 
   private void notifyError(Payload payload, Exception e) {
