@@ -1,6 +1,7 @@
 package com.rollbar.notifier.shutdown;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doThrow;
@@ -10,16 +11,49 @@ import static org.mockito.Mockito.verify;
 import com.rollbar.notifier.provider.Provider;
 import com.rollbar.notifier.sender.Sender;
 
+import java.lang.Thread.UncaughtExceptionHandler;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.stubbing.Answer;
 
 public class SenderShutdownHookTest {
 
   private static final long TIMEOUT = 500L;
+
+  private static final String FLUSH_THREAD_NAME = "rollbar-shutdown-flush";
+
+  private final List<Throwable> uncaughtOnFlushThread = new CopyOnWriteArrayList<>();
+
+  private UncaughtExceptionHandler previousHandler;
+
+  /**
+   * The flush runs on its own thread, so anything it throws can never reach the thread that called
+   * {@link SenderShutdownHook#run()}. It would end up in the uncaught exception handler instead,
+   * so that is where these tests look for it.
+   */
+  @Before
+  public void setUp() {
+    previousHandler = Thread.getDefaultUncaughtExceptionHandler();
+    Thread.setDefaultUncaughtExceptionHandler((thread, error) -> {
+      if (FLUSH_THREAD_NAME.equals(thread.getName())) {
+        uncaughtOnFlushThread.add(error);
+      } else if (previousHandler != null) {
+        previousHandler.uncaughtException(thread, error);
+      }
+    });
+  }
+
+  @After
+  public void tearDown() {
+    Thread.setDefaultUncaughtExceptionHandler(previousHandler);
+  }
 
   @Test
   public void shouldFlushTheSender() throws Exception {
@@ -77,6 +111,7 @@ public class SenderShutdownHookTest {
     new SenderShutdownHook(providerOf(sender), TIMEOUT).run();
 
     verify(sender).close(true);
+    assertThat(uncaughtOnFlushThread, is(empty()));
   }
 
   @Test
@@ -114,12 +149,21 @@ public class SenderShutdownHookTest {
     verify(original, org.mockito.Mockito.never()).close(true);
   }
 
+  /**
+   * A notifier configured without a sender has nothing to flush, and that must not fail.
+   */
   @Test
   public void shouldDoNothingWhenThereIsNoSender() {
-    Provider<Sender> provider = () -> null;
+    final AtomicBoolean consulted = new AtomicBoolean(false);
+    Provider<Sender> provider = () -> {
+      consulted.set(true);
+      return null;
+    };
 
     new SenderShutdownHook(provider, TIMEOUT).run();
-    // No exception: a notifier configured without a sender has nothing to flush.
+
+    assertThat(consulted.get(), is(true));
+    assertThat(uncaughtOnFlushThread, is(empty()));
   }
 
   private Provider<Sender> providerOf(final Sender sender) {
