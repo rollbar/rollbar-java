@@ -1,4 +1,4 @@
-package com.rollbar.notifier.shutdown;
+package com.rollbar.notifier.sender;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
@@ -6,13 +6,17 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
+import com.rollbar.api.payload.Payload;
 import com.rollbar.notifier.provider.Provider;
-import com.rollbar.notifier.sender.Sender;
 
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -147,6 +151,40 @@ public class SenderShutdownHookTest {
 
     verify(replacement).close(true);
     verify(original, org.mockito.Mockito.never()).close(true);
+  }
+
+  /**
+   * Shutdown hooks run concurrently, so the application may still be logging after this hook
+   * finishes, for example while a web server drains in-flight requests. A buffered sender must
+   * therefore be flushed without being closed, and keep sending afterwards.
+   */
+  @Test
+  public void shouldKeepABufferedSenderSendingAfterTheHookRuns() throws Exception {
+    Sender delegate = mock(Sender.class);
+    Payload queued = mock(Payload.class);
+    final Payload loggedLater = mock(Payload.class);
+
+    Queue<Payload> queue = new ConcurrentLinkedQueue<>();
+    queue.add(queued);
+    BufferedSender sender = new BufferedSender.Builder()
+        .queue(queue)
+        .sender(delegate)
+        // Far enough out that only the hook can be the one sending.
+        .initialFlushDelay(TimeUnit.MINUTES.toMillis(1))
+        .flushFreq(TimeUnit.MINUTES.toMillis(1))
+        .build();
+
+    new SenderShutdownHook(providerOf(sender), TIMEOUT).run();
+
+    verify(delegate).send(queued);
+
+    sender.send(loggedLater);
+
+    verify(delegate, timeout(5000)).send(loggedLater);
+    verify(delegate, never()).close();
+    assertThat(uncaughtOnFlushThread, is(empty()));
+
+    sender.close();
   }
 
   /**

@@ -7,7 +7,7 @@ import com.rollbar.notifier.config.ConfigBuilder;
 import com.rollbar.notifier.config.ConfigProvider;
 import com.rollbar.notifier.provider.Provider;
 import com.rollbar.notifier.sender.Sender;
-import com.rollbar.notifier.shutdown.SenderShutdownHook;
+import com.rollbar.notifier.sender.SenderShutdownHooks;
 import com.rollbar.notifier.uncaughtexception.RollbarUncaughtExceptionHandler;
 import com.rollbar.notifier.util.BodyFactory;
 import com.rollbar.notifier.util.ObjectsUtils;
@@ -68,7 +68,7 @@ public class Rollbar extends RollbarBase<Void, Config> {
       return;
     }
 
-    Thread hook = new SenderShutdownHook(new CurrentSenderProvider(),
+    Thread hook = SenderShutdownHooks.create(new CurrentSenderProvider(),
         config.shutdownTimeoutMillis());
     try {
       Runtime.getRuntime().addShutdownHook(hook);

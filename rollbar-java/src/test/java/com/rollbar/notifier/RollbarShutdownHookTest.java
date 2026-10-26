@@ -15,7 +15,7 @@ import org.junit.Test;
 
 /**
  * Covers the registration side of the shutdown hook. The flushing behaviour itself is covered by
- * {@link com.rollbar.notifier.shutdown.SenderShutdownHookTest}.
+ * {@link com.rollbar.notifier.sender.SenderShutdownHookTest}.
  */
 public class RollbarShutdownHookTest {
 

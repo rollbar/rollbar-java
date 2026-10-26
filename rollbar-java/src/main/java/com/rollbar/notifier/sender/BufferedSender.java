@@ -10,7 +10,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -47,6 +50,8 @@ public class BufferedSender implements Sender {
   private ScheduledExecutorService executorService;
 
   private SendTask sendTask;
+
+  private volatile boolean sendImmediately;
 
   private static Logger LOGGER = LoggerFactory.getLogger(BufferedSender.class);
 
@@ -98,12 +103,62 @@ public class BufferedSender implements Sender {
 
   @Override
   public void send(Payload payload) {
+    if (!enqueue(payload)) {
+      return;
+    }
+
+    if (sendImmediately) {
+      try {
+        this.executorService.execute(this.sendTask);
+      } catch (RejectedExecutionException e) {
+        // Closed in the meantime. The payload stays queued, as it would for any closed sender.
+      }
+    }
+  }
+
+  private boolean enqueue(Payload payload) {
     try {
       // If the queue is full it will raise an exception and it will be notified.
       queue.add(payload);
+      return true;
     } catch (Exception e) {
       notifyError(payload, new SenderException(e));
+      return false;
     }
+  }
+
+  /**
+   * Sends the payloads still buffered, waiting for a send already in progress, and from then on
+   * sends each new payload as soon as it arrives instead of on the next scheduled run.
+   *
+   * <p>
+   * Meant for JVM shutdown. Unlike {@link #close(boolean) close(true)}, this leaves the sender
+   * open, because shutdown hooks run concurrently: the application may still be logging errors,
+   * for example from requests that fail while a web server drains, long after this returns. The
+   * background thread is a daemon, so keeping it running never keeps the JVM alive.
+   * </p>
+   *
+   * <p>
+   * This method does not time out. Callers that need a bound, such as the shutdown hook, impose
+   * it themselves.
+   * </p>
+   *
+   * @throws InterruptedException if interrupted while waiting for the payloads to be sent.
+   * @throws ExecutionException if sending the payloads fails.
+   */
+  void flushForShutdown() throws InterruptedException, ExecutionException {
+    this.sendImmediately = true;
+
+    Future<?> flush;
+    try {
+      // The executor runs one task at a time, so this only starts once a run already in progress
+      // has finished. That run may have taken payloads off the queue that it is still sending.
+      flush = this.executorService.submit(this::flushQueue);
+    } catch (RejectedExecutionException e) {
+      // Already closed, and closing flushes on its own.
+      return;
+    }
+    flush.get();
   }
 
   @Override
@@ -154,7 +209,11 @@ public class BufferedSender implements Sender {
 
   private void flushQueue() {
     while (queue.size() > 0) {
-      this.sendTask.run();
+      if (this.sendTask.sendBatch() == 0) {
+        // Nothing was taken off the queue, which is what happens while sending is suspended.
+        // Stop, rather than spin for as long as the suspension lasts.
+        break;
+      }
     }
   }
 
@@ -279,6 +338,15 @@ public class BufferedSender implements Sender {
 
     @Override
     public void run() {
+      sendBatch();
+    }
+
+    /**
+     * Sends up to one batch of payloads.
+     *
+     * @return the number of payloads taken off the queue, whether or not sending them succeeded.
+     */
+    int sendBatch() {
       Payload payload = null;
       int numberOfSent = 0;
 
@@ -314,6 +382,7 @@ public class BufferedSender implements Sender {
         // This could be OOM, stack overflow, etc... So we can't call the listeners. Hopefully
         // logging still works, that's all we can do.
       }
+      return numberOfSent;
     }
 
     private Payload getItemFromQueue() {
@@ -370,7 +439,10 @@ public class BufferedSender implements Sender {
           if (tooManySendAttempts(payload)) {
             LOGGER.warn("Discarding payload after " + payload.getSendAttemptCount() + " attempts");
           } else {
-            send(payload);
+            // Not send(): after flushForShutdown() that would start a run right away, and a
+            // network outage would then burn through every attempt back to back. A retry waits
+            // for the next scheduled run instead, as it always has.
+            enqueue(payload);
           }
           break;
         default:

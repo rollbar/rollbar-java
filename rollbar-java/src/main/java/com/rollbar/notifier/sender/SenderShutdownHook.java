@@ -1,7 +1,6 @@
-package com.rollbar.notifier.shutdown;
+package com.rollbar.notifier.sender;
 
 import com.rollbar.notifier.provider.Provider;
-import com.rollbar.notifier.sender.Sender;
 import com.rollbar.notifier.util.ObjectsUtils;
 
 import org.slf4j.Logger;
@@ -11,14 +10,26 @@ import org.slf4j.LoggerFactory;
  * A JVM shutdown hook that flushes the payloads still buffered in a {@link Sender sender}.
  *
  * <p>
+ * A {@link BufferedSender} is flushed without being closed, and keeps sending afterwards. The JVM
+ * runs shutdown hooks concurrently, so other hooks, such as a web server draining in-flight
+ * requests, may go on logging errors long after this one finishes. Other senders are closed with
+ * {@link Sender#close(boolean) close(true)}.
+ * </p>
+ *
+ * <p>
  * The hook is bounded by a timeout. Flushing performs blocking network I/O, and the sender does
  * not impose a socket timeout of its own, so an unbounded flush would be able to stall JVM
  * shutdown for as long as the remote end kept the connection open. Instead the flush runs on a
  * separate daemon thread and this hook waits for it for at most {@code timeoutMillis}; once that
  * elapses shutdown continues regardless, and the daemon thread is torn down with the JVM.
  * </p>
+ *
+ * <p>
+ * Package-private so that it can rely on {@link BufferedSender} internals without making them
+ * public. Created through {@link SenderShutdownHooks}.
+ * </p>
  */
-public class SenderShutdownHook extends Thread {
+class SenderShutdownHook extends Thread {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SenderShutdownHook.class);
 
@@ -41,7 +52,7 @@ public class SenderShutdownHook extends Thread {
    *                      less disable waiting: the flush is still started, but shutdown does not
    *                      block on it.
    */
-  public SenderShutdownHook(Provider<Sender> senderProvider, long timeoutMillis) {
+  SenderShutdownHook(Provider<Sender> senderProvider, long timeoutMillis) {
     super(HOOK_THREAD_NAME);
     ObjectsUtils.requireNonNull(senderProvider, "The sender provider can not be null");
     this.senderProvider = senderProvider;
@@ -81,7 +92,13 @@ public class SenderShutdownHook extends Thread {
         if (sender == null) {
           return;
         }
-        sender.close(true);
+        if (sender instanceof BufferedSender) {
+          // Not close(true): shutdown hooks run concurrently, so the application may keep logging
+          // after this returns, and a closed sender would leave those payloads queued forever.
+          ((BufferedSender) sender).flushForShutdown();
+        } else {
+          sender.close(true);
+        }
       } catch (Exception e) {
         LOGGER.error("Error flushing Rollbar payloads on shutdown.", e);
       } catch (Throwable e) {
