@@ -1,5 +1,9 @@
 # Change Log
 
+# 2.4.0
+
+- Switching to stable release
+
 # 2.4.0-beta.1
 
 ### rollbar-java
