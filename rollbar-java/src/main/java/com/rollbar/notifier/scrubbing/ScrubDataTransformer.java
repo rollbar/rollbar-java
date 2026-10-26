@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -51,7 +52,10 @@ import java.util.regex.Pattern;
  *
  * <p>Nested data is walked recursively: maps reachable through other maps, through
  * {@link Collection}s and through object arrays are all scrubbed, up to 8 levels of nesting. The
- * surrounding shape is preserved, so a list stays a list and an array stays an array.
+ * surrounding shape is preserved, so a list stays a list and an array stays an array. A container
+ * nested deeper than that is replaced by {@value #MAX_DEPTH_VALUE}, and one that contains itself is
+ * replaced by {@value #CIRCULAR_REFERENCE_VALUE} where it refers back, so no value this
+ * transformer has not walked is ever passed on.
  *
  * <p>The built-in header deny-list above applies to {@code Request.headers} only; every other
  * slot matches on the field keys alone.
@@ -97,8 +101,12 @@ public final class ScrubDataTransformer implements Transformer {
   );
 
   // Recursion cap for nested containers in custom data, request payloads and Frame.locals. Every
-  // map, collection or array counts as one level; this also terminates cyclic structures.
+  // map, collection or array counts as one level.
   private static final int MAX_SCRUB_DEPTH = 8;
+
+  static final String MAX_DEPTH_VALUE = "<max depth exceeded>";
+
+  static final String CIRCULAR_REFERENCE_VALUE = "<circular reference>";
 
   private final KeyMatcher fieldKeys;
   private final StringUrlSanitizer urlSanitizer;
@@ -399,40 +407,58 @@ public final class ScrubDataTransformer implements Transformer {
     if (map == null || keys.isEmpty()) {
       return map;
     }
+    // Identity based: the values being tracked are the ones that may contain themselves, and the
+    // equals() and hashCode() of such a map or collection recurse forever as well.
+    Set<Object> ancestors = Collections.newSetFromMap(new IdentityHashMap<>());
+    ancestors.add(map);
     // scrubMap only ever copies keys across, so a Map<String, Object> in stays one on the way out.
-    return (Map<String, Object>) scrubMap(map, keys, depth);
+    return (Map<String, Object>) scrubMap(map, keys, depth, ancestors);
   }
 
   /**
    * Recursively scrubs a nested value. Maps are scrubbed by key; collections and object arrays are
    * traversed so that the maps they contain are scrubbed too, preserving the surrounding shape.
-   * Every container counts as one level against {@code MAX_SCRUB_DEPTH}, which also terminates
-   * cyclic structures. Anything else is returned untouched.
+   * Anything else is returned untouched.
+   *
+   * <p>A container is never returned as is without having been walked, since whatever it holds
+   * would then reach the payload unscrubbed. Every container counts as one level against
+   * {@code MAX_SCRUB_DEPTH}, and one past it is replaced by {@link #MAX_DEPTH_VALUE}.
+   * {@code ancestors} holds the containers enclosing this value, so finding it there means it
+   * contains itself, and it is replaced by {@link #CIRCULAR_REFERENCE_VALUE}.
    */
-  private Object scrubNested(Object value, KeyMatcher keys, int depth) {
-    if (depth >= MAX_SCRUB_DEPTH) {
+  private Object scrubNested(Object value, KeyMatcher keys, int depth, Set<Object> ancestors) {
+    if (!(value instanceof Map || value instanceof Collection || value instanceof Object[])) {
       return value;
     }
-    if (value instanceof Map) {
-      return scrubMap((Map<?, ?>) value, keys, depth + 1);
+    if (ancestors.contains(value)) {
+      return CIRCULAR_REFERENCE_VALUE;
     }
-    if (value instanceof Collection) {
-      return scrubCollection((Collection<?>) value, keys, depth + 1);
+    if (depth >= MAX_SCRUB_DEPTH) {
+      return MAX_DEPTH_VALUE;
     }
-    if (value instanceof Object[]) {
-      return scrubArray((Object[]) value, keys, depth + 1);
+
+    ancestors.add(value);
+    try {
+      if (value instanceof Map) {
+        return scrubMap((Map<?, ?>) value, keys, depth + 1, ancestors);
+      }
+      if (value instanceof Collection) {
+        return scrubCollection((Collection<?>) value, keys, depth + 1, ancestors);
+      }
+      return scrubArray((Object[]) value, keys, depth + 1, ancestors);
+    } finally {
+      ancestors.remove(value);
     }
-    return value;
   }
 
-  private Object scrubMap(Map<?, ?> map, KeyMatcher keys, int depth) {
+  private Object scrubMap(Map<?, ?> map, KeyMatcher keys, int depth, Set<Object> ancestors) {
     Map<Object, Object> result = null;
     for (Map.Entry<?, ?> entry : map.entrySet()) {
       Object key = entry.getKey();
       Object value = entry.getValue();
       // A non-String key cannot match a redactedKeys pattern, but its value is still traversed.
       boolean keyMatches = key instanceof String && keys.matches((String) key);
-      Object scrubbed = keyMatches ? SCRUBBED_VALUE : scrubNested(value, keys, depth);
+      Object scrubbed = keyMatches ? SCRUBBED_VALUE : scrubNested(value, keys, depth, ancestors);
       if (keyMatches || scrubbed != value) {
         if (result == null) {
           result = new LinkedHashMap<>(map);
@@ -443,14 +469,15 @@ public final class ScrubDataTransformer implements Transformer {
     return result != null ? result : map;
   }
 
-  private Object scrubCollection(Collection<?> collection, KeyMatcher keys, int depth) {
+  private Object scrubCollection(Collection<?> collection, KeyMatcher keys, int depth,
+      Set<Object> ancestors) {
     if (collection.isEmpty()) {
       return collection;
     }
     List<Object> scrubbed = new ArrayList<>(collection.size());
     boolean changed = false;
     for (Object element : collection) {
-      Object scrubbedElement = scrubNested(element, keys, depth);
+      Object scrubbedElement = scrubNested(element, keys, depth, ancestors);
       scrubbed.add(scrubbedElement);
       if (scrubbedElement != element) {
         changed = true;
@@ -464,10 +491,11 @@ public final class ScrubDataTransformer implements Transformer {
     return collection instanceof Set ? new LinkedHashSet<>(scrubbed) : scrubbed;
   }
 
-  private Object scrubArray(Object[] array, KeyMatcher keys, int depth) {
+  private Object scrubArray(Object[] array, KeyMatcher keys, int depth,
+      Set<Object> ancestors) {
     Object[] result = null;
     for (int i = 0; i < array.length; i++) {
-      Object scrubbedElement = scrubNested(array[i], keys, depth);
+      Object scrubbedElement = scrubNested(array[i], keys, depth, ancestors);
       if (scrubbedElement != array[i]) {
         if (result == null) {
           // Object[] rather than array.clone(): a rebuilt value may not fit the original component

@@ -54,6 +54,14 @@ public class JsonSerializerImpl implements JsonSerializer {
    */
   public static final int DEFAULT_MAX_DEPTH = 100;
 
+  /**
+   * The lowest maximum nesting depth accepted, see {@link #JsonSerializerImpl(boolean, int)}.
+   * Depth counts from the root of the payload, whose own structure takes up the first levels:
+   * custom data starts at level 3 and the captured local variables of a stack trace at level 7,
+   * so a lower limit would cut the stack trace itself and leave a payload the API cannot use.
+   */
+  public static final int MIN_MAX_DEPTH = 10;
+
   static final String CIRCULAR_REFERENCE_PLACEHOLDER = "<circular reference>";
 
   static final String MAX_DEPTH_PLACEHOLDER = "<max depth exceeded>";
@@ -82,11 +90,12 @@ public class JsonSerializerImpl implements JsonSerializer {
    * @param prettyPrint whether or not to pretty print the payload.
    * @param maxDepth the maximum number of nested maps, collections and arrays to serialize,
    *                 counting the outermost object. Anything nested deeper is replaced by a
-   *                 placeholder string. Must be at least 1.
+   *                 placeholder string. Must be at least {@value #MIN_MAX_DEPTH}.
    */
   public JsonSerializerImpl(boolean prettyPrint, int maxDepth) {
-    if (maxDepth < 1) {
-      throw new IllegalArgumentException("The max depth must be at least 1, got " + maxDepth);
+    if (maxDepth < MIN_MAX_DEPTH) {
+      throw new IllegalArgumentException(
+          "The max depth must be at least " + MIN_MAX_DEPTH + ", got " + maxDepth);
     }
     this.prettyPrint = prettyPrint;
     this.maxDepth = maxDepth;

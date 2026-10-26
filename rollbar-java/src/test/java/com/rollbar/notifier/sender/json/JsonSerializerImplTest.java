@@ -315,21 +315,26 @@ public class JsonSerializerImplTest {
 
   @Test
   public void shouldReplaceValuesNestedDeeperThanMaxDepth() {
-    Map<String, Object> innermost = new HashMap<>();
-    innermost.put("key", "value");
-    Map<String, Object> middle = new HashMap<>();
-    middle.put("innermost", innermost);
-    Map<String, Object> outer = new HashMap<>();
-    outer.put("middle", middle);
-    outer.put("list", asList("a", "b"));
+    int maxDepth = JsonSerializerImpl.MIN_MAX_DEPTH;
+    Map<String, Object> root = new HashMap<>();
+    Map<String, Object> current = root;
+    for (int i = 1; i < maxDepth; i++) {
+      Map<String, Object> next = new HashMap<>();
+      current.put("next", next);
+      current = next;
+    }
+    current.put("list", asList("a", "b"));
+    current.put("next", new HashMap<>());
 
-    String serialized = new JsonSerializerImpl(false, 2).toJson(outer);
+    String serialized = new JsonSerializerImpl(false, maxDepth).toJson(root);
 
     assertValidJson(serialized);
-    Map<String, Object> result = fromString(serialized);
-    assertThat(result.get("list"), equalTo(asList("a", "b")));
-    Map<?, ?> serializedMiddle = (Map<?, ?>) result.get("middle");
-    assertThat(serializedMiddle.get("innermost"), equalTo(MAX_DEPTH_PLACEHOLDER));
+    Map<?, ?> deepest = fromString(serialized);
+    for (int i = 1; i < maxDepth; i++) {
+      deepest = (Map<?, ?>) deepest.get("next");
+    }
+    assertThat(deepest.get("list"), equalTo(MAX_DEPTH_PLACEHOLDER));
+    assertThat(deepest.get("next"), equalTo(MAX_DEPTH_PLACEHOLDER));
   }
 
   @Test
@@ -356,8 +361,13 @@ public class JsonSerializerImplTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void shouldRejectMaxDepthBelowOne() {
-    new JsonSerializerImpl(false, 0);
+  public void shouldRejectMaxDepthBelowMinimum() {
+    new JsonSerializerImpl(false, JsonSerializerImpl.MIN_MAX_DEPTH - 1);
+  }
+
+  @Test
+  public void shouldAcceptMinimumMaxDepth() {
+    new JsonSerializerImpl(false, JsonSerializerImpl.MIN_MAX_DEPTH);
   }
 
   private static class SelfReferencing implements JsonSerializable {

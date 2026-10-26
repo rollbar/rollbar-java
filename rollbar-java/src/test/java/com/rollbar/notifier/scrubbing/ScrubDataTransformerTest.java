@@ -1,5 +1,6 @@
 package com.rollbar.notifier.scrubbing;
 
+import com.rollbar.api.payload.Payload;
 import com.rollbar.api.payload.data.Data;
 import com.rollbar.api.payload.data.Request;
 import com.rollbar.api.payload.data.body.Body;
@@ -10,6 +11,7 @@ import com.rollbar.api.payload.data.body.RollbarThread;
 import com.rollbar.api.payload.data.body.Trace;
 import com.rollbar.api.payload.data.body.TraceChain;
 import com.rollbar.api.scrubbing.StringUrlSanitizer;
+import com.rollbar.notifier.sender.json.JsonSerializerImpl;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -935,15 +937,28 @@ public class ScrubDataTransformerTest {
   }
 
   @Test
-  public void collectionNestingBeyondDepthCapNotScrubbed() {
+  public void collectionNestingBeyondDepthCapReplacedByPlaceholder() {
     ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
     Map<String, Object> custom = new HashMap<>();
     custom.put("root", nestInLists(objectMap("password", "hunter2"), 8));
 
     Data result = t.transform(dataWithCustom(custom));
 
-    Map<?, ?> leaf = (Map<?, ?>) unwrapLists(result.getCustom().get("root"), 8);
-    assertEquals("hunter2", leaf.get("password"));
+    // Left as is, the leaf would reach the payload without ever having been scrubbed.
+    assertEquals(ScrubDataTransformer.MAX_DEPTH_VALUE,
+        unwrapLists(result.getCustom().get("root"), 8));
+  }
+
+  @Test
+  public void scalarsAtDepthCapKeptAsIs() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    Map<String, Object> custom = new HashMap<>();
+    custom.put("root", nestInLists("plain", 8));
+    custom.put("password", "hunter2");
+
+    Data result = t.transform(dataWithCustom(custom));
+
+    assertEquals("plain", unwrapLists(result.getCustom().get("root"), 8));
   }
 
   @Test
@@ -960,6 +975,79 @@ public class ScrubDataTransformerTest {
     List<?> scrubbed = (List<?>) result.getCustom().get("cycle");
     assertEquals(ScrubDataTransformer.SCRUBBED_VALUE,
         ((Map<?, ?>) scrubbed.get(0)).get("password"));
+    assertEquals(ScrubDataTransformer.CIRCULAR_REFERENCE_VALUE, scrubbed.get(1));
+  }
+
+  @Test
+  public void selfReferencingMapReplacedByPlaceholder() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    Map<String, Object> user = objectMap("password", "hunter2");
+    user.put("self", user);
+    Map<String, Object> custom = new HashMap<>();
+    custom.put("user", user);
+
+    Data result = t.transform(dataWithCustom(custom));
+
+    Map<?, ?> scrubbed = (Map<?, ?>) result.getCustom().get("user");
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, scrubbed.get("password"));
+    assertEquals(ScrubDataTransformer.CIRCULAR_REFERENCE_VALUE, scrubbed.get("self"));
+  }
+
+  @Test
+  public void customDataReferringToItselfReplacedByPlaceholder() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    Map<String, Object> custom = objectMap("password", "hunter2");
+    custom.put("self", custom);
+
+    Data result = t.transform(dataWithCustom(custom));
+
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE, result.getCustom().get("password"));
+    assertEquals(ScrubDataTransformer.CIRCULAR_REFERENCE_VALUE, result.getCustom().get("self"));
+  }
+
+  @Test
+  public void sameMapReachedThroughTwoPathsScrubbedBothTimes() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.singletonList("password"), NO_OP_SANITIZER);
+    Map<String, Object> shared = objectMap("password", "hunter2");
+    Map<String, Object> custom = new HashMap<>();
+    custom.put("first", shared);
+    custom.put("second", shared);
+
+    Data result = t.transform(dataWithCustom(custom));
+
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE,
+        ((Map<?, ?>) result.getCustom().get("first")).get("password"));
+    assertEquals(ScrubDataTransformer.SCRUBBED_VALUE,
+        ((Map<?, ?>) result.getCustom().get("second")).get("password"));
+  }
+
+  @Test
+  public void cyclicCustomDataDoesNotLeakSecretsThroughSerializer() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.emptyList(), NO_OP_SANITIZER);
+    Map<String, Object> user = objectMap("password", "hunter2");
+    user.put("self", user);
+    Map<String, Object> custom = new HashMap<>();
+    custom.put("user", user);
+
+    Data scrubbed = t.transform(dataWithCustom(custom));
+    String json = new JsonSerializerImpl().toJson(
+        new Payload.Builder().accessToken("token").data(scrubbed).build());
+
+    assertFalse(json, json.contains("hunter2"));
+    assertTrue(json, json.contains(ScrubDataTransformer.CIRCULAR_REFERENCE_VALUE));
+  }
+
+  @Test
+  public void deeplyNestedCustomDataDoesNotLeakSecretsThroughSerializer() {
+    ScrubDataTransformer t = new ScrubDataTransformer(Collections.emptyList(), NO_OP_SANITIZER);
+    Map<String, Object> custom = new HashMap<>();
+    custom.put("root", nestInLists(objectMap("password", "hunter2"), 20));
+
+    Data scrubbed = t.transform(dataWithCustom(custom));
+    String json = new JsonSerializerImpl().toJson(
+        new Payload.Builder().accessToken("token").data(scrubbed).build());
+
+    assertFalse(json, json.contains("hunter2"));
   }
 
   @Test
