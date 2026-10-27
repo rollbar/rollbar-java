@@ -19,8 +19,12 @@ import com.rollbar.notifier.sender.listener.SenderListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 
@@ -30,6 +34,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.MockitoJUnit;
@@ -129,10 +134,60 @@ public class BufferedSenderTest {
 
     assertThat(queue.size(), is(0));
 
-    verify(executorService).shutdown();
+    InOrder inOrder = inOrder(executorService, sender);
+    inOrder.verify(executorService).shutdown();
+    inOrder.verify(executorService).awaitTermination(anyLong(), any(TimeUnit.class));
+    inOrder.verify(sender).send(payload1);
 
     verify(sender).send(payload1);
     verify(sender).send(payload2);
+    verify(sender).close();
+  }
+
+  @Test
+  public void shouldCloseWaitingForInFlightSend() throws Exception {
+    CountDownLatch sendStarted = new CountDownLatch(1);
+    CountDownLatch releaseSend = new CountDownLatch(1);
+    AtomicBoolean sendFinished = new AtomicBoolean(false);
+    Payload payload = mock(Payload.class);
+
+    doAnswer(invocation -> {
+      sendStarted.countDown();
+      releaseSend.await();
+      sendFinished.set(true);
+      return null;
+    }).when(sender).send(payload);
+
+    Queue<Payload> queue = new ConcurrentLinkedQueue<>();
+    queue.add(payload);
+
+    sut = new BufferedSender(new BufferedSender.Builder()
+        .queue(queue)
+        .sender(sender)
+        .initialFlushDelay(0),
+        Executors.newSingleThreadScheduledExecutor(new SenderThreadFactory()));
+
+    // The scheduled run has taken the payload off the queue and is still sending it.
+    assertThat(sendStarted.await(5, TimeUnit.SECONDS), is(true));
+    assertThat(queue.size(), is(0));
+
+    Thread closer = new Thread(() -> {
+      try {
+        sut.close(true);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    });
+    closer.start();
+
+    closer.join(200);
+    assertThat(closer.isAlive(), is(true));
+
+    releaseSend.countDown();
+    closer.join(5000);
+
+    assertThat(closer.isAlive(), is(false));
+    assertThat(sendFinished.get(), is(true));
     verify(sender).close();
   }
 
@@ -158,6 +213,183 @@ public class BufferedSenderTest {
     verify(sender, never()).send(payload1);
     verify(sender, never()).send(payload2);
     verify(sender).close();
+  }
+
+  @Test(timeout = 5000)
+  public void shouldStopFlushingOnCloseWhileSendingIsSuspended() throws Exception {
+    Payload payload = mock(Payload.class);
+    Queue<Payload> queue = new ConcurrentLinkedQueue<>();
+    queue.add(payload);
+
+    SenderFailureStrategy strategy = mock(SenderFailureStrategy.class);
+    when(strategy.isSendingSuspended()).thenReturn(true);
+
+    sut = new BufferedSender(new BufferedSender.Builder()
+        .queue(queue)
+        .sender(sender)
+        .senderFailureStrategy(strategy),
+        executorService);
+
+    sut.close(true);
+
+    assertThat(queue.size(), is(1));
+    verify(sender, never()).send(payload);
+    verify(sender).close();
+  }
+
+  @Test
+  public void shouldFlushForShutdownWithoutClosing() throws Exception {
+    Payload payload1 = mock(Payload.class);
+    Payload payload2 = mock(Payload.class);
+
+    Queue<Payload> queue = new ConcurrentLinkedQueue<>();
+    queue.addAll(asList(payload1, payload2));
+
+    sut = bufferedSenderWithRealExecutor(queue);
+
+    sut.flushForShutdown();
+
+    assertThat(queue.size(), is(0));
+    verify(sender).send(payload1);
+    verify(sender).send(payload2);
+    verify(sender, never()).close();
+
+    sut.close();
+  }
+
+  @Test
+  public void shouldFlushForShutdownWaitingForInFlightSend() throws Exception {
+    CountDownLatch sendStarted = new CountDownLatch(1);
+    CountDownLatch releaseSend = new CountDownLatch(1);
+    AtomicBoolean sendFinished = new AtomicBoolean(false);
+    Payload inFlight = mock(Payload.class);
+    final Payload queued = mock(Payload.class);
+
+    doAnswer(invocation -> {
+      sendStarted.countDown();
+      releaseSend.await();
+      sendFinished.set(true);
+      return null;
+    }).when(sender).send(inFlight);
+
+    Queue<Payload> queue = new ConcurrentLinkedQueue<>();
+    queue.add(inFlight);
+
+    sut = new BufferedSender(new BufferedSender.Builder()
+        .queue(queue)
+        .sender(sender)
+        .initialFlushDelay(0)
+        .flushFreq(TimeUnit.MINUTES.toMillis(1)),
+        Executors.newSingleThreadScheduledExecutor(new SenderThreadFactory()));
+
+    // The scheduled run has taken the payload off the queue and is still sending it.
+    assertThat(sendStarted.await(5, TimeUnit.SECONDS), is(true));
+    queue.add(queued);
+
+    Thread flusher = new Thread(() -> {
+      try {
+        sut.flushForShutdown();
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    });
+    flusher.start();
+
+    flusher.join(200);
+    assertThat(flusher.isAlive(), is(true));
+
+    releaseSend.countDown();
+    flusher.join(5000);
+
+    assertThat(flusher.isAlive(), is(false));
+    assertThat(sendFinished.get(), is(true));
+    verify(sender).send(queued);
+    verify(sender, never()).close();
+
+    sut.close();
+  }
+
+  /**
+   * Shutdown hooks run concurrently, so the application may keep logging after the flush. Those
+   * payloads must be sent straight away, since the JVM could exit before the next scheduled run.
+   */
+  @Test
+  public void shouldSendNewPayloadsRightAwayAfterFlushForShutdown() throws Exception {
+    Payload beforeFlush = mock(Payload.class);
+    final Payload afterFlush = mock(Payload.class);
+
+    sut = bufferedSenderWithRealExecutor(new ConcurrentLinkedQueue<>());
+
+    sut.send(beforeFlush);
+    verify(sender, after(200).never()).send(beforeFlush);
+
+    sut.flushForShutdown();
+    verify(sender).send(beforeFlush);
+
+    sut.send(afterFlush);
+    verify(sender, timeout(5000)).send(afterFlush);
+
+    sut.close();
+  }
+
+  /**
+   * A retry must still wait for the next scheduled run, otherwise a network outage during
+   * shutdown would burn through every attempt back to back.
+   */
+  @Test
+  public void shouldNotRetryRightAwayAfterFlushForShutdown() throws Exception {
+    final Payload failing = mock(Payload.class);
+    final Payload fresh = mock(Payload.class);
+    queue = new ConcurrentLinkedQueue<>();
+
+    Response response = new Response.Builder().result(new Result.Builder().build()).build();
+    setSenderMockToCallListeners(sender, response, null);
+
+    SenderFailureStrategy strategy = mock(SenderFailureStrategy.class);
+    when(strategy.getAction(any(Payload.class), eq(response)))
+        .thenReturn(SenderFailureStrategy.PayloadAction.CAN_BE_RETRIED);
+
+    // A fresh mock, so that only this sender's scheduled task gets captured below.
+    executorService = mock(ScheduledExecutorService.class);
+    doReturn(CompletableFuture.completedFuture(null))
+        .when(executorService).submit(any(Runnable.class));
+
+    sut = new BufferedSender(new BufferedSender.Builder()
+        .queue(queue)
+        .sender(sender)
+        // One payload per run. The strategy never suspends sending, so a larger batch would keep
+        // taking the retried payload straight back off the queue.
+        .batchSize(1)
+        .senderFailureStrategy(strategy),
+        executorService);
+
+    ArgumentCaptor<SendTask> taskCaptor = ArgumentCaptor.forClass(SendTask.class);
+    verify(executorService).scheduleWithFixedDelay(
+        taskCaptor.capture(), anyLong(), anyLong(), any());
+
+    sut.flushForShutdown();
+
+    // A scheduled run sends the payload, which fails and is queued again for retry.
+    queue.add(failing);
+    taskCaptor.getValue().run();
+
+    verify(sender).send(failing);
+    assertThat(queue.peek(), is(failing));
+    verify(executorService, never()).execute(any(Runnable.class));
+
+    sut.send(fresh);
+
+    verify(executorService).execute(any(Runnable.class));
+  }
+
+  private BufferedSender bufferedSenderWithRealExecutor(Queue<Payload> queue) {
+    return new BufferedSender(new BufferedSender.Builder()
+        .queue(queue)
+        .sender(sender)
+        // Far enough out that no scheduled run gets in the way of the test.
+        .initialFlushDelay(TimeUnit.MINUTES.toMillis(1))
+        .flushFreq(TimeUnit.MINUTES.toMillis(1)),
+        Executors.newSingleThreadScheduledExecutor(new SenderThreadFactory()));
   }
 
   @Test

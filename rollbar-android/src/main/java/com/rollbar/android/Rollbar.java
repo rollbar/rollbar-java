@@ -486,7 +486,11 @@ public class Rollbar implements Closeable {
         .notifier(new NotifierProvider(context))
         .environment(environment == null ? DEFAULT_ENVIRONMENT : environment)
         .sender(sender)
-        .handleUncaughtErrors(false); // Use the global handler, not the default per thread one.
+        .handleUncaughtErrors(false) // Use the global handler, not the default per thread one.
+        // The DiskQueue above already persists payloads before the process dies, and they are
+        // transmitted on the next app start. Flushing at shutdown would attempt blocking network
+        // I/O while the app is being torn down, with nothing to gain.
+        .flushOnShutdown(false);
 
     Config config;
     if (configProvider != null) {
