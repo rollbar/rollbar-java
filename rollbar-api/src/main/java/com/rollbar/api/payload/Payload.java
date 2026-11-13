@@ -16,6 +16,10 @@ public class Payload implements JsonSerializable, StringTruncatable<Payload> {
 
   private static final long serialVersionUID = 3054041443735286159L;
 
+  private static final String TOKEN_MASK = "****";
+
+  private static final int UNMASKED_TOKEN_SUFFIX_LENGTH = 4;
+
   private final String accessToken;
 
   private final Data data;
@@ -86,9 +90,24 @@ public class Payload implements JsonSerializable, StringTruncatable<Payload> {
   @Override
   public String toString() {
     return "Payload{"
-        + "accessToken='" + accessToken + '\''
+        + "accessToken=" + maskAccessToken(accessToken)
         + ", data=" + data
         + '}';
+  }
+
+  /**
+   * Masks the token so it never ends up in logs. Keeps the last characters of long enough tokens
+   * so a misconfigured token can still be told apart from the right one.
+   */
+  private static String maskAccessToken(String accessToken) {
+    if (accessToken == null) {
+      return "null";
+    }
+    if (accessToken.length() <= UNMASKED_TOKEN_SUFFIX_LENGTH * 2) {
+      return "'" + TOKEN_MASK + "'";
+    }
+    return "'" + TOKEN_MASK
+        + accessToken.substring(accessToken.length() - UNMASKED_TOKEN_SUFFIX_LENGTH) + "'";
   }
 
   @Override
