@@ -518,7 +518,13 @@ public class ConfigBuilder {
    * <p>
    * Time in milliseconds the default sender waits while connecting to the Rollbar API.
    * Default: {@value SyncSender#DEFAULT_CONNECT_TIMEOUT_MILLIS}. Zero means wait forever, which
-   * is not recommended. Ignored when a custom {@link #sender(Sender) sender} is set.
+   * is not recommended.
+   * </p>
+   * <p>
+   * Only applies when this builder creates the default sender. It has no effect when a custom
+   * {@link #sender(Sender) sender} is set, or when the builder starts from an existing
+   * configuration, for example through {@code Rollbar.configure}, because that configuration's
+   * sender is reused.
    * </p>
    * @param connectTimeoutMillis the connect timeout in milliseconds.
    * @return the builder instance.
@@ -533,7 +539,13 @@ public class ConfigBuilder {
    * <p>
    * Time in milliseconds the default sender waits for data from the Rollbar API once connected.
    * Default: {@value SyncSender#DEFAULT_READ_TIMEOUT_MILLIS}. Zero means wait forever, which is
-   * not recommended. Ignored when a custom {@link #sender(Sender) sender} is set.
+   * not recommended.
+   * </p>
+   * <p>
+   * Only applies when this builder creates the default sender. It has no effect when a custom
+   * {@link #sender(Sender) sender} is set, or when the builder starts from an existing
+   * configuration, for example through {@code Rollbar.configure}, because that configuration's
+   * sender is reused.
    * </p>
    * @param readTimeoutMillis the read timeout in milliseconds.
    * @return the builder instance.
