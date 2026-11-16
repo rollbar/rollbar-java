@@ -6,7 +6,11 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
+import com.rollbar.api.payload.Payload;
 import com.rollbar.api.payload.data.Client;
 import com.rollbar.api.payload.data.Level;
 import com.rollbar.api.payload.data.Notifier;
@@ -20,12 +24,18 @@ import com.rollbar.notifier.provider.notifier.NotifierProvider;
 import com.rollbar.notifier.sender.BufferedSender;
 import com.rollbar.notifier.sender.Sender;
 import com.rollbar.notifier.sender.SyncSender;
+import com.rollbar.notifier.sender.exception.SenderException;
+import com.rollbar.notifier.sender.listener.SenderListener;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
+import java.net.InetAddress;
 import java.net.Proxy;
+import java.net.ServerSocket;
+import java.net.SocketTimeoutException;
 import java.util.Map;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
@@ -221,6 +231,34 @@ public class ConfigBuilderTest {
     assertThat(config.readTimeoutMillis(), is(5678));
     assertThat(copy.connectTimeoutMillis(), is(1234));
     assertThat(copy.readTimeoutMillis(), is(5678));
+  }
+
+  @Test(timeout = 10_000)
+  public void shouldApplyReadTimeoutToTheDefaultSender() throws Exception {
+    // Accepts the connection (via the backlog) but never responds. If the configured timeout did
+    // not reach the sender, it would wait for the 30 s default and this test would time out.
+    String host = "127.0.0.1";
+    try (ServerSocket silentServer = new ServerSocket(0, 1, InetAddress.getByName(host))) {
+      Config config = ConfigBuilder.withAccessToken(ACCESS_TOKEN)
+          .endpoint("http://" + host + ":" + silentServer.getLocalPort() + "/api/1/item/")
+          .readTimeoutMillis(200)
+          .build();
+      try {
+        Sender defaultSender = ((BufferedSender) config.sender()).sender();
+        assertThat(defaultSender, is(instanceOf(SyncSender.class)));
+        SenderListener listener = mock(SenderListener.class);
+        defaultSender.addListener(listener);
+        Payload payload = new Payload("{}");
+
+        defaultSender.send(payload);
+
+        ArgumentCaptor<SenderException> error = ArgumentCaptor.forClass(SenderException.class);
+        verify(listener).onError(eq(payload), error.capture());
+        assertThat(error.getValue().getCause(), is(instanceOf(SocketTimeoutException.class)));
+      } finally {
+        config.sender().close(false);
+      }
+    }
   }
 
   @Test(expected = IllegalArgumentException.class)
