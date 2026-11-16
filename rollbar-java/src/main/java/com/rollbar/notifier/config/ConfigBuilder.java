@@ -92,6 +92,10 @@ public class ConfigBuilder {
 
   protected boolean compressPayload;
 
+  protected int connectTimeoutMillis = SyncSender.DEFAULT_CONNECT_TIMEOUT_MILLIS;
+
+  protected int readTimeoutMillis = SyncSender.DEFAULT_READ_TIMEOUT_MILLIS;
+
   protected List<String> redactedKeys;
 
   protected boolean useDefaultRedactedKeys = true;
@@ -149,6 +153,8 @@ public class ConfigBuilder {
     this.defaultLevels = new DefaultLevels(config);
     this.truncateLargePayloads = config.truncateLargePayloads();
     this.compressPayload = config.compressPayload();
+    this.connectTimeoutMillis = config.connectTimeoutMillis();
+    this.readTimeoutMillis = config.readTimeoutMillis();
     this.maximumTelemetryData = config.maximumTelemetryData();
     this.telemetryEventTracker = config.telemetryEventTracker();
     this.redactedKeys = config.redactedKeys();
@@ -510,6 +516,43 @@ public class ConfigBuilder {
 
   /**
    * <p>
+   * Time in milliseconds the default sender waits while connecting to the Rollbar API.
+   * Default: {@value SyncSender#DEFAULT_CONNECT_TIMEOUT_MILLIS}. Zero means wait forever, which
+   * is not recommended. Ignored when a custom {@link #sender(Sender) sender} is set.
+   * </p>
+   * @param connectTimeoutMillis the connect timeout in milliseconds.
+   * @return the builder instance.
+   * @throws IllegalArgumentException if the timeout is negative.
+   */
+  public ConfigBuilder connectTimeoutMillis(int connectTimeoutMillis) {
+    this.connectTimeoutMillis = requireNonNegative(connectTimeoutMillis, "connectTimeoutMillis");
+    return this;
+  }
+
+  /**
+   * <p>
+   * Time in milliseconds the default sender waits for data from the Rollbar API once connected.
+   * Default: {@value SyncSender#DEFAULT_READ_TIMEOUT_MILLIS}. Zero means wait forever, which is
+   * not recommended. Ignored when a custom {@link #sender(Sender) sender} is set.
+   * </p>
+   * @param readTimeoutMillis the read timeout in milliseconds.
+   * @return the builder instance.
+   * @throws IllegalArgumentException if the timeout is negative.
+   */
+  public ConfigBuilder readTimeoutMillis(int readTimeoutMillis) {
+    this.readTimeoutMillis = requireNonNegative(readTimeoutMillis, "readTimeoutMillis");
+    return this;
+  }
+
+  private static int requireNonNegative(int value, String name) {
+    if (value < 0) {
+      throw new IllegalArgumentException(name + " must not be negative: " + value);
+    }
+    return value;
+  }
+
+  /**
+   * <p>
    * Maximum Telemetry events sent in a payload, only for the default TelemetryEventTracker, if
    * a custom implementation is used this value will be ignored. Default is
    * {@value RollbarTelemetryEventTracker#MAXIMUM_CAPACITY_FOR_TELEMETRY_EVENTS}.
@@ -595,7 +638,9 @@ public class ConfigBuilder {
           new SyncSender.Builder(this.endpoint)
           .accessToken(accessToken)
           .proxy(proxy)
-          .compressPayload(this.compressPayload);
+          .compressPayload(this.compressPayload)
+          .connectTimeoutMillis(this.connectTimeoutMillis)
+          .readTimeoutMillis(this.readTimeoutMillis);
       if (this.jsonSerializer != null) {
         innerSender.jsonSerializer(this.jsonSerializer);
       }
@@ -672,6 +717,10 @@ public class ConfigBuilder {
 
     private final boolean compressPayload;
 
+    private final int connectTimeoutMillis;
+
+    private final int readTimeoutMillis;
+
     private final int maximumTelemetryData;
 
     private final TelemetryEventTracker telemetryEventTracker;
@@ -715,6 +764,8 @@ public class ConfigBuilder {
       this.defaultLevels = builder.defaultLevels;
       this.truncateLargePayloads = builder.truncateLargePayloads;
       this.compressPayload = builder.compressPayload;
+      this.connectTimeoutMillis = builder.connectTimeoutMillis;
+      this.readTimeoutMillis = builder.readTimeoutMillis;
       this.maximumTelemetryData = builder.maximumTelemetryData;
       this.telemetryEventTracker = builder.telemetryEventTracker;
       this.redactedKeys = builder.redactedKeys != null
@@ -872,6 +923,16 @@ public class ConfigBuilder {
     @Override
     public boolean compressPayload() {
       return this.compressPayload;
+    }
+
+    @Override
+    public int connectTimeoutMillis() {
+      return this.connectTimeoutMillis;
+    }
+
+    @Override
+    public int readTimeoutMillis() {
+      return this.readTimeoutMillis;
     }
 
     @Override

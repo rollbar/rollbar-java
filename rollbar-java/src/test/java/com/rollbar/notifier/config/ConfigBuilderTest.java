@@ -19,6 +19,7 @@ import com.rollbar.notifier.provider.Provider;
 import com.rollbar.notifier.provider.notifier.NotifierProvider;
 import com.rollbar.notifier.sender.BufferedSender;
 import com.rollbar.notifier.sender.Sender;
+import com.rollbar.notifier.sender.SyncSender;
 import com.rollbar.notifier.transformer.Transformer;
 import com.rollbar.notifier.uuid.UuidGenerator;
 import java.net.Proxy;
@@ -97,6 +98,8 @@ public class ConfigBuilderTest {
     assertThat(config.handleUncaughtErrors(), is(true));
     assertThat(config.isEnabled(), is(true));
     assertThat(config.proxy(), is(nullValue()));
+    assertThat(config.connectTimeoutMillis(), is(SyncSender.DEFAULT_CONNECT_TIMEOUT_MILLIS));
+    assertThat(config.readTimeoutMillis(), is(SyncSender.DEFAULT_READ_TIMEOUT_MILLIS));
 
     assertThat(config.defaultMessageLevel(), equalTo(Level.WARNING));
     assertThat(config.defaultThrowableLevel(), equalTo(Level.ERROR));
@@ -203,5 +206,30 @@ public class ConfigBuilderTest {
     assertThat(config.handleUncaughtErrors(), is(copy.handleUncaughtErrors()));
     assertThat(config.isEnabled(), is(copy.isEnabled()));
     assertThat(config.maximumTelemetryData(), is(maximumTelemetryData));
+  }
+
+  @Test
+  public void shouldBuildWithTimeoutsAndCopyThem() {
+    Config config = ConfigBuilder.withAccessToken(ACCESS_TOKEN)
+        .connectTimeoutMillis(1234)
+        .readTimeoutMillis(5678)
+        .build();
+
+    Config copy = withConfig(config).build();
+
+    assertThat(config.connectTimeoutMillis(), is(1234));
+    assertThat(config.readTimeoutMillis(), is(5678));
+    assertThat(copy.connectTimeoutMillis(), is(1234));
+    assertThat(copy.readTimeoutMillis(), is(5678));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void shouldRejectNegativeConnectTimeout() {
+    ConfigBuilder.withAccessToken(ACCESS_TOKEN).connectTimeoutMillis(-1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void shouldRejectNegativeReadTimeout() {
+    ConfigBuilder.withAccessToken(ACCESS_TOKEN).readTimeoutMillis(-1);
   }
 }

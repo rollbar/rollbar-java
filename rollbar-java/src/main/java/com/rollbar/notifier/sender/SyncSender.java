@@ -26,6 +26,16 @@ public class SyncSender extends AbstractSender {
 
   public static final String UTF_8 = "UTF-8";
 
+  /**
+   * Default time in milliseconds to wait while establishing a connection to the Rollbar API.
+   */
+  public static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 30_000;
+
+  /**
+   * Default time in milliseconds to wait for data from the Rollbar API once connected.
+   */
+  public static final int DEFAULT_READ_TIMEOUT_MILLIS = 30_000;
+
   private final URL url;
 
   private final JsonSerializer jsonSerializer;
@@ -36,12 +46,18 @@ public class SyncSender extends AbstractSender {
 
   private final boolean compressPayload;
 
+  private final int connectTimeoutMillis;
+
+  private final int readTimeoutMillis;
+
   SyncSender(Builder builder) {
     this.url = builder.url;
     this.jsonSerializer = builder.jsonSerializer;
     this.accessToken = builder.accessToken;
     this.proxy = builder.proxy != null ? builder.proxy : Proxy.NO_PROXY;
     this.compressPayload = builder.compressPayload;
+    this.connectTimeoutMillis = builder.connectTimeoutMillis;
+    this.readTimeoutMillis = builder.readTimeoutMillis;
   }
 
   @Override
@@ -65,6 +81,10 @@ public class SyncSender extends AbstractSender {
   private HttpURLConnection getConnection() throws IOException {
     // By default, this will use the HTTPS Rollbar API URL defined in DEFAULT_API_ENDPOINT.
     HttpURLConnection connection = (HttpURLConnection) url.openConnection(this.proxy);
+
+    // Without these calls HttpURLConnection never times out, which could block the sender thread forever.
+    connection.setConnectTimeout(connectTimeoutMillis);
+    connection.setReadTimeout(readTimeoutMillis);
 
     if (accessToken != null && !"".equals(accessToken)) {
       connection.setRequestProperty("x-rollbar-access-token", accessToken);
@@ -144,6 +164,10 @@ public class SyncSender extends AbstractSender {
 
     private boolean compressPayload = true;
 
+    private int connectTimeoutMillis = DEFAULT_CONNECT_TIMEOUT_MILLIS;
+
+    private int readTimeoutMillis = DEFAULT_READ_TIMEOUT_MILLIS;
+
     public Builder() {
       this(DEFAULT_API_ENDPOINT);
     }
@@ -219,12 +243,45 @@ public class SyncSender extends AbstractSender {
     }
 
     /**
+     * Time in milliseconds to wait while establishing a connection to the Rollbar API.
+     * Default: {@value SyncSender#DEFAULT_CONNECT_TIMEOUT_MILLIS}. Zero means wait forever, which
+     * is not recommended: a single unresponsive connection would stop all reporting.
+     * @param connectTimeoutMillis the connect timeout in milliseconds.
+     * @return the builder instance.
+     * @throws IllegalArgumentException if the timeout is negative.
+     */
+    public Builder connectTimeoutMillis(int connectTimeoutMillis) {
+      this.connectTimeoutMillis = requireNonNegative(connectTimeoutMillis, "connectTimeoutMillis");
+      return this;
+    }
+
+    /**
+     * Time in milliseconds to wait for data from the Rollbar API once connected.
+     * Default: {@value SyncSender#DEFAULT_READ_TIMEOUT_MILLIS}. Zero means wait forever, which
+     * is not recommended: a single unresponsive connection would stop all reporting.
+     * @param readTimeoutMillis the read timeout in milliseconds.
+     * @return the builder instance.
+     * @throws IllegalArgumentException if the timeout is negative.
+     */
+    public Builder readTimeoutMillis(int readTimeoutMillis) {
+      this.readTimeoutMillis = requireNonNegative(readTimeoutMillis, "readTimeoutMillis");
+      return this;
+    }
+
+    /**
      * Builds the {@link SyncSender sync sender}.
      *
      * @return the sync sender.
      */
     public SyncSender build() {
       return new SyncSender(this);
+    }
+
+    private static int requireNonNegative(int value, String name) {
+      if (value < 0) {
+        throw new IllegalArgumentException(name + " must not be negative: " + value);
+      }
+      return value;
     }
 
     private static URL parseUrl(String url) {
