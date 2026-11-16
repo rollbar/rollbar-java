@@ -82,7 +82,8 @@ public class SyncSender extends AbstractSender {
     // By default, this will use the HTTPS Rollbar API URL defined in DEFAULT_API_ENDPOINT.
     HttpURLConnection connection = (HttpURLConnection) url.openConnection(this.proxy);
 
-    // Without these calls HttpURLConnection never times out, which could block the sender thread forever.
+    // Without these calls HttpURLConnection never times out, which could block the sender
+    // thread forever.
     connection.setConnectTimeout(connectTimeoutMillis);
     connection.setReadTimeout(readTimeoutMillis);
 
