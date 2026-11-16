@@ -298,9 +298,12 @@ public class SyncSenderTest {
 
   @Test(timeout = 10_000)
   public void shouldFailInsteadOfHangingWhenServerNeverResponds() throws Exception {
-    // Accepts the connection (via the backlog) but never reads or writes anything.
-    try (ServerSocket silentServer = new ServerSocket(0, 1, InetAddress.getLoopbackAddress())) {
-      String endpoint = "http://127.0.0.1:" + silentServer.getLocalPort() + "/api/1/item/";
+    // Accepts the connection (via the backlog) but never reads or writes anything. It binds to the
+    // same literal address the client connects to: getLoopbackAddress() returns ::1 when the JVM
+    // prefers IPv6, and the connection to 127.0.0.1 would then be refused instead of timing out.
+    String host = "127.0.0.1";
+    try (ServerSocket silentServer = new ServerSocket(0, 1, InetAddress.getByName(host))) {
+      String endpoint = "http://" + host + ":" + silentServer.getLocalPort() + "/api/1/item/";
       SyncSender realSender = new SyncSender.Builder(endpoint)
           .jsonSerializer(serializer)
           .readTimeoutMillis(200)
