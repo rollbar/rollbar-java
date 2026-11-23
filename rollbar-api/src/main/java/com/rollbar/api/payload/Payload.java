@@ -18,7 +18,7 @@ public class Payload implements JsonSerializable, StringTruncatable<Payload> {
 
   private static final String TOKEN_MASK = "****";
 
-  private static final int UNMASKED_TOKEN_SUFFIX_LENGTH = 4;
+  private static final int UNMASKED_TOKEN_PREFIX_LENGTH = 6;
 
   private final String accessToken;
 
@@ -96,18 +96,17 @@ public class Payload implements JsonSerializable, StringTruncatable<Payload> {
   }
 
   /**
-   * Masks the token so it never ends up in logs. Keeps the last characters of long enough tokens
-   * so a misconfigured token can still be told apart from the right one.
+   * Masks the token so it never ends up in logs. Keeps the first characters of long enough tokens,
+   * as other Rollbar SDKs do, so a misconfigured token can still be told apart from the right one.
    */
   private static String maskAccessToken(String accessToken) {
     if (accessToken == null) {
       return "null";
     }
-    if (accessToken.length() <= UNMASKED_TOKEN_SUFFIX_LENGTH * 2) {
+    if (accessToken.length() <= UNMASKED_TOKEN_PREFIX_LENGTH * 2) {
       return "'" + TOKEN_MASK + "'";
     }
-    return "'" + TOKEN_MASK
-        + accessToken.substring(accessToken.length() - UNMASKED_TOKEN_SUFFIX_LENGTH) + "'";
+    return "'" + accessToken.substring(0, UNMASKED_TOKEN_PREFIX_LENGTH) + TOKEN_MASK + "'";
   }
 
   @Override

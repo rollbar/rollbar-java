@@ -65,18 +65,18 @@ public class PayloadTest {
     String result = payload.toString();
 
     assertFalse(result.contains(ACCESS_TOKEN));
-    assertTrue(result.contains("accessToken='****ddsf'"));
+    assertTrue(result.contains("accessToken='asdf33****'"));
   }
 
   @Test
   public void toStringShouldFullyMaskShortAccessToken() {
     Payload payload = new Payload.Builder()
-        .accessToken("abcd1234")
+        .accessToken("abcdef123456")
         .build();
 
     String result = payload.toString();
 
-    assertFalse(result.contains("1234"));
+    assertFalse(result.contains("abcdef"));
     assertTrue(result.contains("accessToken='****'"));
   }
 
