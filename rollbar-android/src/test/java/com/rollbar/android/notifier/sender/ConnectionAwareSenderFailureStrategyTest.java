@@ -2,6 +2,7 @@ package com.rollbar.android.notifier.sender;
 
 import com.rollbar.api.payload.Payload;
 import com.rollbar.notifier.sender.SenderFailureStrategy;
+import com.rollbar.notifier.sender.exception.SenderException;
 import com.rollbar.notifier.sender.result.Response;
 import org.junit.Before;
 import org.junit.Test;
@@ -10,6 +11,7 @@ import org.junit.runners.Parameterized;
 import org.mockito.ArgumentCaptor;
 
 import java.net.ConnectException;
+import java.net.SocketTimeoutException;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -67,6 +69,48 @@ public abstract class ConnectionAwareSenderFailureStrategyTest {
 
   public static class GivenANetworkErrorTest extends ConnectionAwareSenderFailureStrategyTest {
     private final ConnectException exception = new ConnectException("No connection");
+
+    @Test
+    public void ifTheNetworkIsDownSendingShouldBeSuspendedFor5MinutesAndPayloadRetried() {
+      when(connectivityDetector.isNetworkAvailable()).thenReturn(false);
+
+      SenderFailureStrategy.PayloadAction action = sut.getAction(payload, exception);
+
+      assertThat(action, equalTo(SenderFailureStrategy.PayloadAction.CAN_BE_RETRIED));
+      assertThat(sut.isSendingSuspended(), is(true));
+
+      moveTimeForward(299999);
+
+      assertThat(sut.isSendingSuspended(), is(true));
+
+      moveTimeForward(1);
+
+      assertThat(sut.isSendingSuspended(), is(false));
+    }
+
+    @Test
+    public void ifTheNetworkIsUpSendingShouldBeSuspendedFor1SecAndPayloadRetried() {
+      when(connectivityDetector.isNetworkAvailable()).thenReturn(true);
+
+      SenderFailureStrategy.PayloadAction action = sut.getAction(payload, exception);
+
+      assertThat(action, equalTo(SenderFailureStrategy.PayloadAction.CAN_BE_RETRIED));
+      assertThat(sut.isSendingSuspended(), is(true));
+
+      moveTimeForward(999);
+
+      assertThat(sut.isSendingSuspended(), is(true));
+
+      moveTimeForward(1);
+
+      assertThat(sut.isSendingSuspended(), is(false));
+    }
+  }
+
+  public static class GivenATimeoutErrorTest extends ConnectionAwareSenderFailureStrategyTest {
+    // Wrapped the same way the sender reports it to the listeners.
+    private final SenderException exception =
+        new SenderException(new SocketTimeoutException("connect timed out"));
 
     @Test
     public void ifTheNetworkIsDownSendingShouldBeSuspendedFor5MinutesAndPayloadRetried() {
