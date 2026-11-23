@@ -22,7 +22,7 @@ dependencies {
     implementation 'org.springframework:spring-webmvc:' + springWebmvcVersion
     implementation group: 'javax.servlet', name: 'javax.servlet-api', version: javaxServletVersion
 
-    def tomcatVersion = '8.0.42'
+    def tomcatVersion = '8.5.2'
 
     tomcat "org.apache.tomcat.embed:tomcat-embed-core:${tomcatVersion}",
             "org.apache.tomcat.embed:tomcat-embed-logging-juli:${tomcatVersion}"
