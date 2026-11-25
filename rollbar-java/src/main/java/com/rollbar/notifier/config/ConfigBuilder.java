@@ -103,6 +103,10 @@ public class ConfigBuilder {
 
   protected boolean compressPayload;
 
+  protected int connectTimeoutMillis = SyncSender.DEFAULT_CONNECT_TIMEOUT_MILLIS;
+
+  protected int readTimeoutMillis = SyncSender.DEFAULT_READ_TIMEOUT_MILLIS;
+
   protected boolean flushOnShutdown;
 
   protected long shutdownTimeoutMillis;
@@ -166,6 +170,8 @@ public class ConfigBuilder {
     this.defaultLevels = new DefaultLevels(config);
     this.truncateLargePayloads = config.truncateLargePayloads();
     this.compressPayload = config.compressPayload();
+    this.connectTimeoutMillis = config.connectTimeoutMillis();
+    this.readTimeoutMillis = config.readTimeoutMillis();
     this.flushOnShutdown = config.flushOnShutdown();
     this.shutdownTimeoutMillis = config.shutdownTimeoutMillis();
     this.maximumTelemetryData = config.maximumTelemetryData();
@@ -529,6 +535,27 @@ public class ConfigBuilder {
 
   /**
    * <p>
+   * Time in milliseconds the default sender waits while connecting to the Rollbar API.
+   * Default: {@value SyncSender#DEFAULT_CONNECT_TIMEOUT_MILLIS}. Zero means wait forever, which
+   * is not recommended.
+   * </p>
+   * <p>
+   * Only applies when this builder creates the default sender. It has no effect when a custom
+   * {@link #sender(Sender) sender} is set, or when the builder starts from an existing
+   * configuration, for example through {@code Rollbar.configure}, because that configuration's
+   * sender is reused.
+   * </p>
+   * @param connectTimeoutMillis the connect timeout in milliseconds.
+   * @return the builder instance.
+   * @throws IllegalArgumentException if the timeout is negative.
+   */
+  public ConfigBuilder connectTimeoutMillis(int connectTimeoutMillis) {
+    this.connectTimeoutMillis = requireNonNegative(connectTimeoutMillis, "connectTimeoutMillis");
+    return this;
+  }
+
+  /**
+   * <p>
    * If set to true (the default), a JVM shutdown hook is registered that flushes any payloads
    * still buffered in the sender before the process exits.
    * </p>
@@ -550,6 +577,34 @@ public class ConfigBuilder {
   public ConfigBuilder flushOnShutdown(boolean flushOnShutdown) {
     this.flushOnShutdown = flushOnShutdown;
     return this;
+  }
+
+  /**
+   * <p>
+   * Time in milliseconds the default sender waits for data from the Rollbar API once connected.
+   * Default: {@value SyncSender#DEFAULT_READ_TIMEOUT_MILLIS}. Zero means wait forever, which is
+   * not recommended.
+   * </p>
+   * <p>
+   * Only applies when this builder creates the default sender. It has no effect when a custom
+   * {@link #sender(Sender) sender} is set, or when the builder starts from an existing
+   * configuration, for example through {@code Rollbar.configure}, because that configuration's
+   * sender is reused.
+   * </p>
+   * @param readTimeoutMillis the read timeout in milliseconds.
+   * @return the builder instance.
+   * @throws IllegalArgumentException if the timeout is negative.
+   */
+  public ConfigBuilder readTimeoutMillis(int readTimeoutMillis) {
+    this.readTimeoutMillis = requireNonNegative(readTimeoutMillis, "readTimeoutMillis");
+    return this;
+  }
+
+  private static int requireNonNegative(int value, String name) {
+    if (value < 0) {
+      throw new IllegalArgumentException(name + " must not be negative: " + value);
+    }
+    return value;
   }
 
   /**
@@ -658,7 +713,9 @@ public class ConfigBuilder {
           new SyncSender.Builder(this.endpoint)
           .accessToken(accessToken)
           .proxy(proxy)
-          .compressPayload(this.compressPayload);
+          .compressPayload(this.compressPayload)
+          .connectTimeoutMillis(this.connectTimeoutMillis)
+          .readTimeoutMillis(this.readTimeoutMillis);
       if (this.jsonSerializer != null) {
         innerSender.jsonSerializer(this.jsonSerializer);
       }
@@ -735,6 +792,10 @@ public class ConfigBuilder {
 
     private final boolean compressPayload;
 
+    private final int connectTimeoutMillis;
+
+    private final int readTimeoutMillis;
+
     private final boolean flushOnShutdown;
 
     private final long shutdownTimeoutMillis;
@@ -782,6 +843,8 @@ public class ConfigBuilder {
       this.defaultLevels = builder.defaultLevels;
       this.truncateLargePayloads = builder.truncateLargePayloads;
       this.compressPayload = builder.compressPayload;
+      this.connectTimeoutMillis = builder.connectTimeoutMillis;
+      this.readTimeoutMillis = builder.readTimeoutMillis;
       this.flushOnShutdown = builder.flushOnShutdown;
       this.shutdownTimeoutMillis = builder.shutdownTimeoutMillis;
       this.maximumTelemetryData = builder.maximumTelemetryData;
@@ -941,6 +1004,16 @@ public class ConfigBuilder {
     @Override
     public boolean compressPayload() {
       return this.compressPayload;
+    }
+
+    @Override
+    public int connectTimeoutMillis() {
+      return this.connectTimeoutMillis;
+    }
+
+    @Override
+    public int readTimeoutMillis() {
+      return this.readTimeoutMillis;
     }
 
     @Override

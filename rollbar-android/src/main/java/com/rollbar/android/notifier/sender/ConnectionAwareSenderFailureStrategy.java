@@ -8,6 +8,7 @@ import com.rollbar.notifier.sender.result.Result;
 import com.rollbar.notifier.util.ObjectsUtils;
 
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
 /**
@@ -148,7 +149,10 @@ public class ConnectionAwareSenderFailureStrategy implements SenderFailureStrate
       return NetworkStatus.OK;
     }
 
-    if (error instanceof SocketException || error instanceof UnknownHostException) {
+    // SocketTimeoutException is not a SocketException. It's what a connection that stops
+    // answering throws once the sender's timeouts expire, so it has to be listed on its own.
+    if (error instanceof SocketException || error instanceof SocketTimeoutException
+        || error instanceof UnknownHostException) {
       if (detector.isNetworkAvailable()) {
         return NetworkStatus.UNKNOWN_NETWORK_ISSUE;
       } else {

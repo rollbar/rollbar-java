@@ -23,7 +23,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.zip.GZIPInputStream;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.Proxy;
+import java.net.ServerSocket;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import org.junit.Before;
 import org.junit.Rule;
@@ -250,6 +253,69 @@ public class SyncSenderTest {
     verify(connection, org.mockito.Mockito.never())
         .setRequestProperty(org.mockito.ArgumentMatchers.eq("Content-Encoding"),
             org.mockito.ArgumentMatchers.anyString());
+  }
+
+  @Test
+  public void shouldApplyDefaultTimeouts() throws Exception {
+    when(connection.getResponseCode()).thenReturn(200);
+    when(connection.getInputStream())
+        .thenReturn(new ByteArrayInputStream("{}".getBytes(UTF_8)));
+
+    sut.send(payload);
+
+    verify(connection).setConnectTimeout(SyncSender.DEFAULT_CONNECT_TIMEOUT_MILLIS);
+    verify(connection).setReadTimeout(SyncSender.DEFAULT_READ_TIMEOUT_MILLIS);
+  }
+
+  @Test
+  public void shouldApplyConfiguredTimeouts() throws Exception {
+    when(connection.getResponseCode()).thenReturn(200);
+    when(connection.getInputStream())
+        .thenReturn(new ByteArrayInputStream("{}".getBytes(UTF_8)));
+
+    sut = new SyncSender.Builder()
+        .url(url)
+        .jsonSerializer(serializer)
+        .connectTimeoutMillis(1234)
+        .readTimeoutMillis(5678)
+        .build();
+
+    sut.send(payload);
+
+    verify(connection).setConnectTimeout(1234);
+    verify(connection).setReadTimeout(5678);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void shouldRejectNegativeConnectTimeout() {
+    new SyncSender.Builder().connectTimeoutMillis(-1);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void shouldRejectNegativeReadTimeout() {
+    new SyncSender.Builder().readTimeoutMillis(-1);
+  }
+
+  @Test(timeout = 10_000)
+  public void shouldFailInsteadOfHangingWhenServerNeverResponds() throws Exception {
+    // Accepts the connection (via the backlog) but never reads or writes anything. It binds to the
+    // same literal address the client connects to: getLoopbackAddress() returns ::1 when the JVM
+    // prefers IPv6, and the connection to 127.0.0.1 would then be refused instead of timing out.
+    String host = "127.0.0.1";
+    try (ServerSocket silentServer = new ServerSocket(0, 1, InetAddress.getByName(host))) {
+      String endpoint = "http://" + host + ":" + silentServer.getLocalPort() + "/api/1/item/";
+      SyncSender realSender = new SyncSender.Builder(endpoint)
+          .jsonSerializer(serializer)
+          .readTimeoutMillis(200)
+          .build();
+      realSender.addListener(listener);
+
+      realSender.send(payload);
+
+      ArgumentCaptor<SenderException> argument = ArgumentCaptor.forClass(SenderException.class);
+      verify(listener).onError(eq(payload), argument.capture());
+      assertThat(argument.getValue().getCause(), is(instanceOf(SocketTimeoutException.class)));
+    }
   }
 
   private void verifyHttp() throws Exception {
