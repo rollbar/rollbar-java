@@ -17,11 +17,12 @@ import org.slf4j.LoggerFactory;
  * </p>
  *
  * <p>
- * The hook is bounded by a timeout. Flushing performs blocking network I/O, and the sender does
- * not impose a socket timeout of its own, so an unbounded flush would be able to stall JVM
- * shutdown for as long as the remote end kept the connection open. Instead the flush runs on a
- * separate daemon thread and this hook waits for it for at most {@code timeoutMillis}; once that
- * elapses shutdown continues regardless, and the daemon thread is torn down with the JVM.
+ * The hook is bounded by a timeout. Flushing performs blocking network I/O, and the sender's
+ * socket timeouts (30 s by default) are much longer than this hook's budget, so an unbounded
+ * flush could stall JVM shutdown for that long, or forever if the timeouts are set to zero.
+ * Instead the flush runs on a separate daemon thread and this hook waits for it for at most
+ * {@code timeoutMillis}; once that elapses shutdown continues regardless, and the daemon thread
+ * is torn down with the JVM.
  * </p>
  *
  * <p>

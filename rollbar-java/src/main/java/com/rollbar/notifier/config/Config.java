@@ -43,7 +43,7 @@ public interface Config extends CommonConfig {
   default int readTimeoutMillis() {
     return SyncSender.DEFAULT_READ_TIMEOUT_MILLIS;
   }
-  
+
   /**
    * <p>
    * If set to true (the default), a JVM shutdown hook is registered that flushes any payloads
