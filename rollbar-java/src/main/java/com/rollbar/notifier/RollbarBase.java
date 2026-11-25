@@ -350,7 +350,11 @@ public abstract class RollbarBase<RESULT, C extends CommonConfig> {
         .accessToken(config.accessToken())
         .data(data).build();
 
-    LOGGER.debug("Payload built: {}", payload);
+    if (LOGGER.isDebugEnabled()) {
+      // Pass the masked string, not the Payload: structured encoders (e.g. Logstash) serialize
+      // arguments through their getters, and getAccessToken() returns the full token.
+      LOGGER.debug("Payload built: {}", payload.toString());
+    }
 
     payload = truncateIfNecessary(config, payload);
 

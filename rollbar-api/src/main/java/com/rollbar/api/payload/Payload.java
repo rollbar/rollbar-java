@@ -96,8 +96,9 @@ public class Payload implements JsonSerializable, StringTruncatable<Payload> {
   }
 
   /**
-   * Masks the token so it never ends up in logs. Keeps the first characters of long enough tokens,
-   * as other Rollbar SDKs do, so a misconfigured token can still be told apart from the right one.
+   * Masks the access token in the string returned by {@link #toString()}. Keeps the first
+   * characters of long enough tokens, as other Rollbar SDKs do, so a misconfigured token can still
+   * be told apart from the right one.
    */
   private static String maskAccessToken(String accessToken) {
     if (accessToken == null) {
